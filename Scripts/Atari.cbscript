@@ -315,6 +315,7 @@ function global_reset()
 		end
 	end
 	
+	# Fill in the pallete from 0, -8, 0 to 3, -1, 15
 	for $color_data in: atari_colors
 		$color: color_data[0]
 		$minlum: color_data[1]
@@ -327,6 +328,7 @@ function global_reset()
 		/fill 0 $y $zmin 3 $y $zmax $material
 	end
 	
+	# Clear the existing screen
 	/fill 0 0 0 159 100 0 air
 	/fill 0 101 0 159 200 0 air
 	/fill 0 201 0 159 252 0 air
@@ -463,17 +465,22 @@ function draw_controller()
 	end
 end
 
+# Check if the player right clicked with a carrot_on_a_stick.
 function check_right_click()
 	for @player in @a
 		if @s.right_click at @s ~ ~1.6 ~ rotated @s
 			@s.right_click = False
 			as create @Marker
 				/tp @s ~ ~ ~ ~ ~
+				
+				# Raycast to find the block on the crosshair
 				for i = 1 to 200
 					move @s ^ ^ ^2
 					at @s
 						/particle barrier ~ ~ ~
 					end
+					
+					# Find the lowest x,y,z coordinate in the block
 					at @s unless block ~ ~ ~ air
 						for j = 1 to 256
 							at @s unless block ~-1 ~ ~ air
@@ -489,10 +496,9 @@ function check_right_click()
 						i = 200
 					end
 				end
-				tell @a: (@s.x) (@s.y) (@s.z)
 				at @s unless block ~ ~ ~ air
 					<ROMX, ROMY, ROMZ> = @s.<pos>
-					tell @a: Loading ROM...
+					tell @a: Loading ROM at (ROMX), (ROMY), (ROMZ)...
 					global_reset()
 				end
 				
@@ -502,6 +508,7 @@ function check_right_click()
 	end
 end
 
+# Toggle Up on the controller
 function up()
 	Down = False
 	WasUp = Up
@@ -511,6 +518,7 @@ function up()
 	/gamerule sendCommandFeedback false
 end
 
+# Toggle Down on the controller
 function down()
 	Up = False
 	WasDown = Down
@@ -520,6 +528,7 @@ function down()
 	/gamerule sendCommandFeedback false
 end
 
+# Toggle Left on the controller
 function left()
 	Right = False
 	WasLeft = Left
@@ -529,6 +538,7 @@ function left()
 	/gamerule sendCommandFeedback false
 end
 
+# Toggle Right on the controller
 function right()
 	Left = False
 	WasRight = Right
@@ -538,6 +548,7 @@ function right()
 	/gamerule sendCommandFeedback false
 end
 
+# Toggle the Button on the controller
 function button()
 	WasPressed = Button
 	if WasPressed then Button = False
@@ -549,6 +560,7 @@ function button()
 	/gamerule sendCommandFeedback false
 end
 
+# Toggle the Reset Switch on the controller
 function reset_switch()
 	WasPressed = ResetSwitch
 	if WasPressed then ResetSwitch = False
@@ -557,6 +569,7 @@ function reset_switch()
 	/gamerule sendCommandFeedback false
 end
 
+# Toggle the Select Switch on the controller
 function select_switch()
 	WasPressed = SelectSwitch
 	if WasPressed then SelectSwitch = False
@@ -565,11 +578,13 @@ function select_switch()
 	/gamerule sendCommandFeedback false
 end
 
+# Get the Reset and NMI vectors
 function get_vectors()
 	Reset = ROM[0xFFFC] + ROM[0xFFFD] * 0x100
 	NMI = ROM[0xFFFE] + ROM[0xFFFF] * 0x100
 end
 
+# Read the ROM from dirt/stone
 function read_whole_rom()
 	as @Buffer
 		@s.y = ROMY
@@ -591,6 +606,7 @@ function read_whole_rom()
 	end
 end
 
+# Read the ROM address
 function read_rom(addr)
 	# 6507 only has 13 address pins
 	addr %= 0x1000
@@ -598,6 +614,7 @@ function read_rom(addr)
 	return ROM[addr]
 end
 
+# Read 3 bytes from the ROM, store in rom1, rom2 and rom3. This prevents multiple log-time lookups.
 function read_3bytes_rom(addr)
 	# 6507 only has 13 address pins
 	addr %= 0x2000
@@ -614,6 +631,7 @@ function read_3bytes_rom(addr)
 	end
 end
 
+# Read an arbitrary address in the memory space.
 function read_addr(addr)
 	# 6507 only has 13 address pins
 	addr %= 0x2000
@@ -938,13 +956,17 @@ function read_operands()
 	end
 	
 	if Debug
+		# Create Entities to display hex digits
 		hex_number(PC, 0, 4)
 		hex_number(Instruction, 8, 2)
 		hex_number(A, 10, 2)
 		hex_number(X, 12, 2)
 		hex_number(Y, 14, 2)
 		hex_number(Stack, 16, 2)
+		
+		# Get the mnemonic for the current instruction
 		mnemonic()
+		
 		switch OpLength
 			case 1
 				tell @a: (@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic)
@@ -1503,6 +1525,7 @@ function run_instruction()
 		end
 	end
 	
+	# Set new values for the processor status flags, from byte P
 	if DecodeP
 		Negative = False
 		Overflow = False
@@ -1657,6 +1680,7 @@ function draw_beam()
 			end_point = $ScreenEnd
 		end
 		
+		# Draw all the pixels
 		draw_range(start_point, end_point)
 		
 		Scan += Pixels
@@ -1669,6 +1693,7 @@ function draw_beam()
 	end
 end
 
+# Draw all pixels in the range
 function draw_range(x1, x2)
 	x = x1
 	for $reflect in: [0, 1]
@@ -1681,7 +1706,8 @@ function draw_range(x1, x2)
 		end
 	end
 end
-	
+
+# Draw pixels from $x to x2
 function draw_pixels<$x, $reflect>()
 	if x <= x2
 		$bit: (x/4) if x < 80 else ((19 - (x - 80)/4) if reflect else ((x-80)/4))
@@ -1708,6 +1734,7 @@ function draw_pixels<$x, $reflect>()
 	end
 end
 
+# Draw pixels in increments of four from $x to x2
 function draw_four_pixels<$x, $reflect>()
 	if x <= x2
 		$bit: (x/4) if x < 80 else ((19 - (x - 80)/4) if reflect else ((x-80)/4))
@@ -1728,8 +1755,6 @@ function draw_four_pixels<$x, $reflect>()
 			end
 		end
 		
-		#x += 4
-		
 		$next_x: x+4
 		if: next_x < ScreenWidth
 			draw_four_pixels<$next_x, $reflect>()
@@ -1737,6 +1762,7 @@ function draw_four_pixels<$x, $reflect>()
 	end
 end
 
+# Draw pixel at x for ball, sprites and missiles
 function draw_sprites_missiles_ball()
 	draw_ball_pixel()	
 	draw_sprite_pixel<0>()
@@ -1745,6 +1771,7 @@ function draw_sprites_missiles_ball()
 	draw_missile_pixel<1>()
 end
 
+# Draw ball pixel at x
 function draw_ball_pixel()
 	if ENABL
 		BallPixel = False
@@ -1760,6 +1787,7 @@ function draw_ball_pixel()
 	end
 end
 
+# Draw sprite pixels at x
 function draw_sprite_pixel<$player>()
 	if GRP[$player]
 		PlayerPixel[$player] = False
@@ -1810,6 +1838,7 @@ function draw_sprite_pixel<$player>()
 	end
 end
 
+# Draw missile pixels at x
 function draw_missile_pixel<$player>()
 	if ENAM[$player]
 		MissilePixel[$player] = False
@@ -2285,6 +2314,7 @@ macro $UpdateNumSize($player)
 	end
 end
 
+# Create digit entities for a hex number
 function hex_number(full_value, start_digit, num_digits)
 	for digit = start_digit + num_digits - 1 to start_digit by -1
 		hex_digit(digit, full_value % 0x10)
@@ -2292,6 +2322,7 @@ function hex_number(full_value, start_digit, num_digits)
 	end
 end
 
+# Create a digit entity to display a hex value
 function hex_digit(digit, nibble_value)
 	as create @Marker
 		@s.digit = digit
@@ -2304,11 +2335,13 @@ function hex_digit(digit, nibble_value)
 	end
 end
 
+# Kill all digit entities
 function clear_digits()
 	/kill @Marker[digit >= 0]
 	/kill @mnemonic
 end
 
+# Get the mnemonic for the current instruction
 function mnemonic()
 	as create @Marker
 		@s.mnemonic = True
