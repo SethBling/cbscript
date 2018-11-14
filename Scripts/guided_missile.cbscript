@@ -1,0 +1,25 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+
+$marker: '"Marker":1b, "Invisible":1b, "NoGravity":1b, "Invulnerable":1b'
+$holding_rocket_launcher: '{SelectedItem:{id:"minecraft:bow",tag:{display:{Name:"{\"text\":\"Rocket Launcher\"}"}}}}'
+
+define @Entity = @e
+	x = Pos[0] double 100
+	y = Pos[1] double 100
+	z = Pos[2] double 100
+	vx = Motion[0] double 100
+	vy = Motion[1] double 100
+	vz = Motion[2] double 100
+end
+
+@Player = @Entity[type=player]
+
+reset
+	/scoreboard objectives add shot minecraft.used:minecraft.bow	
+end
+
+clock main
+	as @Player[shot, nbt=$holding_rocket_launcher]
+		/say hi
+	end
+end

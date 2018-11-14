@@ -1,0 +1,392 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+desc: Roll up the world.
+
+$marker: "\"Marker\":1b, \"Invisible\":1b, \"NoGravity\":1b, \"Invulnerable\":1b"
+
+define @Entity = @e
+	x = Pos[0] double 256
+	y = Pos[1] double 256
+	z = Pos[2] double 256
+	<pos> = Pos double
+	vx = Motion[0] double 256
+	vy = Motion[1] double 256
+	vz = Motion[2] double 256
+	<vel> = Motion double
+	ry = Rotation[0] float 1
+	rx = Rotation[1] float 1
+	on_ground = OnGround byte 1
+	no_gravity = NoGravity byte 1
+end
+
+define @Ball = @Entity[type=slime,name=Katamari]
+	create: {CustomName:"\"Katamari\"", Silent:1b, Size:0, Invulnerable:1}
+	size = Size int 1
+end
+
+define @Marker = @Entity[type=armor_stand,name=Marker]
+	create: {CustomName:"\"Marker\"", $marker}
+end
+
+define @Angle = @Entity[type=armor_stand,name=Angle]
+	create: {CustomName:"\"Angle\"", $marker}
+end
+
+reset
+	/team add katamari
+	/team modify katamari collisionRule pushOtherTeams
+	
+	move @Ball ~ -100 ~
+	/kill @Ball
+	/kill @Angle
+	/kill @e[stuck > 0]
+	
+	as @a at @s ~ ~1.6 ~ at ^ ^ ^5
+		@s.ball = create @Ball
+		as @s.ball
+			@s.nonstick = True
+			@s.mass = 120
+			@s.radius = sqrt(@s.mass)*5
+			/team join katamari @s
+		end
+	end
+	
+	Debug = 0
+end
+
+clock main
+	@Ball.current = False
+	for @Cur in @a
+		at @s ~ ~1.6 ~ at ^ ^ ^5
+			create @Marker
+		end
+		
+		@CurMarker = @Marker[limit=1]
+		@CurMarker.nonstick = True
+		as @CurMarker
+			step = 0
+			while step < 200
+				move @s ~ ~-0.1 ~
+				at @s unless block ~ ~ ~ air do step = 200
+				step++
+			end
+			move @s ~ ~0.3 ~
+		end
+		
+		as @s.ball(@Ball)
+			@Ball.current_ball = True
+			@CurBall = @Ball[current_ball,limit=1]
+			dx = @CurMarker.x - @s.x
+			dz = @CurMarker.z - @s.z
+			
+			do_roll = False
+			speedsq = @s.vx^2 + @s.vz^2
+			if speedsq >= 2000
+				do_roll = True
+			end
+			
+			dist = sqrt(dx^2 + dz^2)
+			
+			@s.vx /= 3
+			@s.vz /= 3
+			at @s if @CurMarker[distance=..5] and dist > 100
+				sx = abs(@s.vx)
+				sz = abs(@s.vz)
+				if speedsq < 2000 at @s unless block ~ ~-1.5 ~ air
+					@s.vy = 30
+				end
+				
+				@s.vx = dx * 60 / dist
+				@s.vz = dz * 60 / dist
+				
+				do_roll = True
+			end
+			at @s unless @CurMarker[distance=..5]
+				@s.vx = 0
+				@s.vz = 0
+			end
+			
+			if do_roll				
+				roll_rotate_entities()
+			end
+			
+			ballx = @CurBall.x
+			bally = @CurBall.y
+			ballz = @CurBall.z
+							
+			for @CurEnt in @Entity[stuck]
+				@s.x = ballx + @s.dx
+				@s.y = bally + @s.dy
+				@s.z = ballz + @s.dz
+			end
+			
+			/data merge entity @s {OnGround:0b}
+			
+			at @s
+				for @CurEntity in @Entity[type=!player,distance=..5]
+					unless @s.nonstick
+						@s.dx = @s.x - ballx
+						@s.dy = @s.y - bally
+						@s.dz = @s.z - ballz
+						
+						distsq = @s.dx^2 + @s.dy^2 + @s.dz^2
+						sizesq = (2 * @CurBall.radius)^2
+						
+						@s.mass = 20
+						@s[type=chicken].mass = 15
+						@s[type=pig].mass = 35
+						@s[type=sheep].mass = 50
+						@s[type=cow].mass = 75
+						@s[type=bat].mass = 10
+						@s[type=blaze].mass = 50
+						@s[type=boat].mass = 25
+						@s[type=cave_spider].mass = 20
+						@s[type=chest_minecart].mass = 40
+						@s[type=cod].mass = 15
+						@s[type=creeper].mass = 50
+						@s[type=dolphin].mass = 75
+						@s[type=donkey].mass = 75
+						@s[type=drowned].mass = 50
+						@s[type=egg].mass = 30
+						@s[type=elder_guardian].mass = 120
+						@s[type=end_crystal].mass = 30
+						@s[type=ender_dragon].mass = 600
+						@s[type=enderman].mass = 100
+						@s[type=endermite].mass = 10
+						@s[type=evoker].mass = 50
+						@s[type=furnace_minecart].mass = 75
+						@s[type=ghast].mass = 400
+						@s[type=giant].mass = 800
+						@s[type=guardian].mass = 100
+						@s[type=hopper_minecart].mass = 75
+						@s[type=horse].mass = 100
+						@s[type=husk].mass = 50
+						@s[type=illusioner].mass = 50
+						@s[type=iron_golem].mass = 140
+						@s[type=item].mass = 5
+						@s[type=llama].mass = 100
+						@s[type=magma_cube].mass = 50
+						@s[type=minecart].mass = 50
+						@s[type=mooshroom].mass = 75
+						@s[type=mule].mass = 75
+						@s[type=ocelot].mass = 40
+						@s[type=parrot].mass = 15
+						@s[type=phantom].mass = 50
+						@s[type=polar_bear].mass = 130
+						@s[type=potion].mass = 10
+						@s[type=pufferfish].mass = 15
+						@s[type=rabbit].mass = 15
+						@s[type=salmon].mass = 10
+						@s[type=shulker].mass = 50
+						@s[type=silverfish].mass = 10
+						@s[type=skeleton].mass = 50
+						@s[type=skeleton_horse].mass = 100
+						@s[type=slime].mass = 50
+						@s[type=snow_golem].mass = 45
+						@s[type=spider].mass = 60
+						@s[type=squid].mass = 40
+						@s[type=stray].mass = 50
+						@s[type=tnt].mass = 50
+						@s[type=tnt_minecart].mass = 75
+						@s[type=tropical_fish].mass = 10
+						@s[type=turtle].mass = 30
+						@s[type=vex].mass = 50
+						@s[type=villager].mass = 50
+						@s[type=vindicator].mass = 50
+						@s[type=witch].mass = 50
+						@s[type=wither].mass = 400
+						@s[type=wither_skeleton].mass = 70
+						@s[type=wolf].mass = 50
+						@s[type=zombie].mass = 50
+						@s[type=zombie_horse].mass = 100
+						@s[type=zombie_pigman].mass = 50
+						@s[type=zombie_villager].mass = 50
+						mass_ratio = @CurBall.mass / @s.mass
+						
+						if distsq < sizesq and mass_ratio > 4
+							@s.nonstick = True
+							@s.stuck = @CurBall
+							/team join katamari @s
+							/data merge entity @s {NoAI:1b, Gravity:0b, Silent:1b, Invulnerable:1b}
+							at @s
+								/playsound minecraft:entity.item.pickup block @a
+							end
+							@CurBall.mass += @s.mass
+							@CurBall.radius = sqrt(@CurBall.mass) * 7
+							@CurBall.size = @CurBall.radius / 150
+						end
+					end
+				end
+			end
+			
+			@Ball.current_ball = False
+		end
+		
+		
+		/kill @CurMarker
+	end	
+end
+
+function roll_rotate_entities()
+	@CurBall = @Ball[current_ball,limit=1]
+	ballx = @s.x
+	bally = @s.y
+	ballz = @s.z
+	ballvx = @s.vx
+	ballvy = @s.vy
+	ballvz = @s.vz
+	
+	# Get direction of movement
+	as create @Angle
+		@s.forward = True
+		/tp @s @CurBall
+		@s.x = ballx + ballvx
+		@s.y = bally + ballvy
+		@s.z = ballz + ballvz
+	end
+	
+	# Get perpendicular "roll axis"
+	as create @Angle
+		@s.left = True
+		/tp @s @CurBall
+		at @s
+			/tp @s ~ ~ ~ facing entity @Angle[forward,limit=1]
+			move @s ^1 ^ ^
+		end
+		roll_angle = @s.ry
+		leftx = @s.x - ballx
+		lefty = 0
+		leftz = @s.z - ballz
+	end
+
+	radius = @CurBall.radius
+	mradius = -radius
+	rollarc = 4000 / @CurBall.radius
+	minradsq = radius^2 * 3 / 4
+	
+	/kill @Angle
+
+	# Handle each entity
+	as @Entity if @s.stuck == @CurBall._id
+		@s.current = True
+		@CurEnt = @e[current,limit=1]
+	
+		curdx = @s.dx
+		curdy = @s.dy
+		curdz = @s.dz
+		
+		# Teleport to the same position relative to the ball
+		@s.x = ballx + curdx
+		@s.y = bally + curdy
+		@s.z = ballz + curdz
+		
+		# Get offset projected onto roll axis
+		dot = ((@s.dx * leftx) + (@s.dy * lefty) + (@s.dz * leftz)) / 256
+		px = dot * leftx / 256
+		py = dot * lefty / 256
+		pz = dot * leftz / 256
+		
+		if dot > radius then dot = r
+		if dot < mradius then dot = mradius
+		
+		as create @Angle
+			/tp @s @CurBall
+			# Start at projected location along roll axis
+			@s.x = ballx + px
+			@s.y = bally + py
+			@s.z = ballz + pz
+			
+			# Roll angle about roll axis
+			at @s
+				/tp @s ~ ~ ~ facing entity @CurEnt
+			end
+			
+			obj_angle = @s.ry
+			
+			roll_dir = 1
+			arc_delta = (((obj_angle - roll_angle) + 360) % 360)
+			if arc_delta > 90 and arc_delta < 270
+				roll_dir = -1
+			end
+			
+			# Entity is behind the roll axis, roll upward
+			if roll_dir == -1
+				ang = @s.rx
+
+				flip = False
+				flipangle = -90 + rollarc
+				if ang < flipangle
+					flip = True
+				end
+					
+				if flip
+					@s.rx = -180 + rollarc - ang
+					@s.ry += 180
+				end
+				unless flip
+					@s.rx = ang - rollarc
+				end
+			end
+			
+			# Entity is in front of the roll axis, roll downward
+			if roll_dir == 1
+				ang = @s.rx
+				
+				flip = False
+				flipangle = 90 - rollarc
+				if ang > flipangle
+					flip = True
+				end
+					
+				if flip
+					@s.rx = 180 - rollarc - ang
+					@s.ry += 180
+				end
+				unless flip
+					@s.rx = ang + rollarc
+				end
+			end
+
+			x_angle = @s.rx
+			
+			# Get unit vector of rolled angle
+			move @s ^ ^ ^1
+			
+			dirx = @s.x - (ballx + px)
+			diry = @s.y - (bally + py)
+			dirz = @s.z - (ballz + pz)
+		end
+		/kill @Angle
+
+		# Get distance from entity to roll axis
+		pdx = curdx - px
+		pdy = curdy - py
+		pdz = curdz - pz
+		
+		pdist = sqrt(pdx^2 + pdy^2 + pdz^2)
+		
+		# Add roll axis projected vector with offset from projection
+		@s.dx = px + (dirx * pdist / 256)
+		@s.dy = py + (diry * pdist / 256)
+		@s.dz = pz + (dirz * pdist / 256)
+		
+		distsq = @s.dx^2 + @s.dy^2 + @s.dz^2
+				
+		# Store new entity offset
+		@s.x = ballx + @s.dx
+		@s.y = bally + @s.dy
+		@s.z = ballz + @s.dz
+		
+		@s.current = False
+		
+		if Debug > 0
+			tell @a: leftxyz (Global.leftx) (Global.lefty) (Global.leftz)
+			tell @a: curdxyz (Global.curdx) (Global.curdy) (Global.curdz)
+			tell @a: dot (Global.dot)
+			tell @a: pxyz (Global.px) (Global.py) (Global.pz)
+			tell @a: pdxyz (Global.pdx) (Global.pdy) (Global.pdz)
+			tell @a: dirxyz (Global.dirx) (Global.diry) (Global.dirz)
+			tell @a: pdist (Global.pdist)
+			Debug--
+		end
+	end
+end

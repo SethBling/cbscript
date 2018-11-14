@@ -1,0 +1,56 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+desc: Stasis ability from Breath of the Wild
+$temp: '\''
+
+$marker: "\"Marker\":1b, \"Invisible\":1b, \"NoGravity\":1b, \"Invulnerable\":1b"
+
+define @Entity = @e
+	x = Pos[0] double 100
+	y = Pos[1] double 100
+	z = Pos[2] double 100
+	vx = Motion[0] double 100
+	vy = Motion[1] double 100
+	vz = Motion[2] double 100
+end
+
+define @Marker = @Entity[type=armor_stand,name=Marker]
+	create: {CustomName:"\"Marker\"", $marker}
+end
+
+reset
+	/scoreboard objectives add shift minecraft.custom:minecraft.sneak_time
+end
+
+function get_stasis_target()
+	step++
+	at @s rotated @s
+		@e[type=!armor_stand,distance=.. 3, limit=1,sort=nearest].target = True
+		unless @e[target] unless step >= 200
+			create @Marker
+			@Marker.age++
+			/tp @Marker[age==1,limit=1] @Marker[age==2,limit=1]
+			/kill @Marker[age>=2]
+			move @Marker ^ ^ ^1
+			as @Marker[limit=1]
+				get_stasis_target()
+			end
+		end
+	end
+end
+
+clock main
+	/scoreboard players reset @e target
+	as @a
+		if @s.shift > 0
+			@s.shift = 0
+			at @s do create @Marker
+			@Marker.age++
+			/tp @Marker[limit=1] @s
+			move @Marker ^ ^ ^4
+			step = 0
+			as @Marker[limit=1]
+				get_stasis_target()
+			end
+		end
+	end
+end

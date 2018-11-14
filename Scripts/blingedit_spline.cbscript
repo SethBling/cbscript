@@ -1,0 +1,124 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+desc: BlingEdit plugin for creating smooth surfaces from template blocks.
+scale: 1
+
+$marker: "\"Marker\":1b, \"Invisible\":1b, \"NoGravity\":1b, \"Invulnerable\":1b"
+
+define @Entity = @e
+	x = Pos[0] double
+	y = Pos[1] double
+	z = Pos[2] double
+	<pos> = Pos double
+	vx = Motion[0] double
+	vy = Motion[1] double
+	vz = Motion[2] double
+	<vel> = Motion double
+	ry = Rotation[0] float 1
+	rx = Rotation[1] float 1
+	on_ground = OnGround byte 1
+	no_gravity = NoGravity byte 1
+	absorption = AbsorptionAmount float 1
+end
+
+define @Marker = @Entity[type=area_effect_cloud]
+	create: {Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+define @Player = @Entity[type=player]
+	function run()
+		/function blingedit:plugin_can_run
+		if plugin_can_run
+			/function blingedit:check_loaded
+			if loaded
+				tell @s: Filling spline...
+				percent = 0
+				/bossbar set progress players @s
+				as create @Marker
+					for x = box_xmin to box_xmax
+						for z = box_zmin to box_zmax
+							highest = -1
+							for y = box_ymin to box_ymax
+								@s.<pos> = <x, y, z>
+								at @s unless block ~ ~ ~ air
+									highest = y
+								end
+							end
+							if highest >= 0
+								as create @Marker
+									@s.<pos> = <x, box_ymin, z>
+									@s.height = highest
+									@s.control_point = True
+								end
+							end
+						end
+					end
+					
+					for x = box_xmin to box_xmax
+						percent = (x - box_xmin) * 100 / (box_xmax - box_xmin)
+						/execute store result bossbar progress value run scoreboard players get Global percent
+
+						for z = box_zmin to box_zmax
+							total_weight = 0
+							weighted_y = 0
+							first = True
+							@s.<pos> = <x, box_ymin, z>
+							
+							at @s
+								as @Marker[control_point, sort=nearest, limit=10]
+									dx = @s.x - x
+									dz = @s.z - z
+									dist = dx^2+dz^2
+									
+									weight = 10000 / (10*dist + 1)
+									weighted_y += weight * (@s.height * 10 + 5)
+									total_weight += weight
+									
+									if first
+										first = False
+										nearest_dist = dist
+										@Marker[control_point].closest = False
+										@s.closest = True
+									end
+									if dist < nearest_dist
+										nearest_dist = dist
+										@Marker[control_point].closest = False
+										@s.closest = True
+									end
+								end
+								
+								@s.<pos> = @Marker[control_point, closest, limit=1].<pos>
+								@s.y = @Marker[control_point, closest, limit=1].height
+								at @s
+									/clone ~ ~ ~ ~ ~ ~ 0 1 0
+								end
+								
+								@s.<pos> = <x, (weighted_y / total_weight) / 10, z>
+								at @s
+									/clone 0 1 0 0 1 0 ~ ~ ~
+								end
+							end
+						end
+					end
+					
+					/kill @Marker[control_point]
+					/kill @s
+				end
+
+				tell @s: Spline complete.
+			end
+		end
+		/gamerule sendCommandFeedback false
+	end
+end
+
+clock main
+	as @Player
+		if @s.disp_plugins
+			tell @s: {C[\[Spline\]](/function blingedit_spline:run)
+		end
+	end
+end
+
+reset
+
+end

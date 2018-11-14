@@ -1,0 +1,72 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+desc: Player controls a Monkey Ball.
+scale: 1000
+
+$marker: "Marker:1b, Invisible:1b, NoGravity:1b, Invulnerable:1b, Silent:1b"
+
+define @Entity = @e
+	x = Pos[0] double
+	y = Pos[1] double
+	z = Pos[2] double
+	<pos> = Pos double
+	vx = Motion[0] double
+	vy = Motion[1] double
+	vz = Motion[2] double
+	<vel> = Motion double
+	ry = Rotation[0] float
+	rx = Rotation[1] float
+	on_ground = OnGround byte 1
+	no_gravity = NoGravity byte 1
+	
+	function get_facing_dir()
+		at @s rotated @s at ^ ^ ^1 do @s.<facing_dir> = here - @s.<pos>
+	end
+end
+
+define @Marker = @Entity[type=area_effect_cloud,name=Marker]
+	create: {"CustomName":"\"Marker\"", Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+@mark = @Marker[mark,limit=1]
+
+reset
+	<spawn> = here
+	/kill @Marker
+	as create @Marker
+		@s.mark = True
+	end
+end
+
+clock main
+	/say Sqrt method
+	x = 10000
+	y = 20000
+	z = 30000
+	for i = 1 to 10000
+		s = sqrt(x^2 + y^2 + z^2)
+	end
+	tell @a: (s)
+	/say Done
+	
+	/say Lookat method
+	for i = 1 to 5000
+		as @mark
+			/tp @s ~ ~ ~
+			<pos> = @s.<pos>
+			@s.<pos> += <x, y, z>
+			facing @s at ^ ^ ^1
+				/tp @s ~ ~ ~
+				<ux, uy, uz> = @s.<pos> - <pos>
+				s = x * scale / ux
+				if ux == 0
+					s = y * scale / uy
+					if uy == 0
+						s = z * scale / uz
+					end
+				end				
+			end
+		end
+	end
+	tell @a: (s)
+	/say Done
+end

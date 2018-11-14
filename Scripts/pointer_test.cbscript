@@ -1,0 +1,56 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+
+$marker: "\"Marker\":1b, \"Invisible\":1b, \"NoGravity\":1b, \"Invulnerable\":1b"
+
+define @Entity = @e
+	x = Pos[0] double 100
+	y = Pos[1] double 100
+	z = Pos[2] double 100
+	vx = Motion[0] double 100
+	vy = Motion[1] double 100
+	vz = Motion[2] double 100
+end
+
+@Snowball = @Entity[type=snowball]
+define @Snowmarker = @Entity[type=armor_stand,name=Snowmarker]
+	create: {CustomName:"\"Snowmarker\"", $marker}
+end
+
+@Cow = @Entity[type=cow]
+
+reset
+	/kill @e[is_cow]
+end
+
+clock main
+	@Snowball.current = False
+
+	@Snowball.age++
+	for @Current in @Snowball[age == 1]
+		@s.tracker = create @Snowmarker
+		tell @a: Created tracker with id (@s.tracker)
+		as @s.tracker
+			@s.snowball = @Current
+			/say Marked snowball
+		end
+	end
+	
+	for @Current in @Snowball
+		as @s.tracker
+			/tp @s @Current
+		end
+	end	
+	
+	for @Current in @Snowmarker
+		tracking = False
+		as @s.snowball
+			tracking = True
+		end
+		if not tracking
+			at @s
+				as create @Cow do @s.is_cow = True
+			end
+			/kill @s
+		end
+	end
+end

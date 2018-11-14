@@ -1,0 +1,110 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+desc: Rename a bat spawn egg to Rotate<#> for any # 1-40, then place it to rotate+copy a slice of that size.
+scale: 1000
+
+$marker: "Marker:1b, Invisible:1b, NoGravity:1b, Invulnerable:1b, Silent:1b"
+
+define @Entity = @e
+	x = Pos[0] double
+	y = Pos[1] double
+	z = Pos[2] double
+	<pos> = Pos double
+	vx = Motion[0] double
+	vy = Motion[1] double
+	vz = Motion[2] double
+	<vel> = Motion double
+	ry = Rotation[0] float
+	rx = Rotation[1] float
+	on_ground = OnGround byte 1
+	no_gravity = NoGravity byte 1
+	
+	function get_facing_dir()
+		at @s rotated @s at ^ ^ ^1 do @s.<facing_dir> = here - @s.<pos>
+	end
+end
+
+define @Marker = @Entity[type=area_effect_cloud,name=Marker]
+	create: {"CustomName":"\"Marker\"", Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+define @Center = @Marker[center]
+	function apply()
+		at @s
+			ry = @s.ry
+			as create @Marker
+				@s.base = True
+			end
+			@base = @Marker[base,limit=1]
+			as create @Marker
+				@s.rot = True
+			end
+			@rot = @Marker[rot, limit=1]
+			bottom_y = @s.y
+			
+			for angle = ry to ry + 360*scale by scale
+				/tp @base ~ ~ ~
+				/tp @rot ~ ~ ~
+				@base.ry = ry
+				@base.rx = 0
+				@rot.rx = 0
+				@rot.ry = angle
+				
+				for x = 1 to @s.size
+					for y = 1 to @s.size
+						at @base
+							/clone ~ ~ ~ ~ ~ ~ 0 1 0
+						end
+						at @rot
+							/clone 0 1 0 0 1 0 ~ ~ ~
+						end
+						move @base ^ ^1 ^
+						move @rot ^ ^1 ^
+					end
+					@base.y = bottom_y
+					@rot.y = bottom_y
+					move @base ^ ^ ^1
+					move @rot ^ ^ ^1
+				end
+			end
+			/kill @base
+			/kill @rot
+		end
+	end
+end
+
+@Player = @Entity[type=player]
+
+reset
+	/kill @Center
+	/gamerule maxCommandChainLength 1000000000
+end
+
+clock main
+	for $size in: range(1, 41)
+		/scoreboard players set @e[type=bat,name=Rotate$size] size $size
+	end
+	as @e[type=bat, size > 0] at @s
+		/data merge entity @s {NoAI:1b}
+		as create @Marker
+			/spreadplayers 0 0 1 1 false @s
+			/kill @s
+		end
+		
+		/setblock 0 1 0 stone
+		/execute store success score Global loaded run setblock 0 1 0 sandstone
+		
+		if loaded			
+			size = @s.size
+			/kill @s
+			tell @a: Rotating structure with size (Global.size)
+			as create @Marker
+				@s.center = True
+				@s.ry = @Player[limit=1,sort=nearest].ry
+				@s.size = size
+				@s.apply()
+				/kill @s
+			end
+			tell @a: Done!
+		end
+	end
+end

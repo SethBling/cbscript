@@ -1,0 +1,1807 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+desc: GUI for performing Minecraft world editing operations.
+
+$marker: "\"Marker\":1b, \"Invisible\":1b, \"NoGravity\":1b, \"Invulnerable\":1b"
+
+$Closed: 0
+$Pick1: 1
+$EditSource: 3
+$EditingSource: 4
+$FillWait: 5
+$ReplaceWait1: 6
+$ReplaceWait2: 7
+$EditDest: 8
+$MovingDest: 9
+$ReplaceWaitRandom: 10
+$CloneBrush: 11
+$PluginClick: 12
+
+$Type_Source: 1
+$Type_Dest: 2
+
+define block cursor_continue
+    air
+    water
+    cave_air
+end
+
+define @Entity = @e
+    x = Pos[0] double
+    y = Pos[1] double
+    z = Pos[2] double
+    <pos> = Pos double
+    vx = Motion[0] double
+    vy = Motion[1] double
+    vz = Motion[2] double
+    <vel> = Motion double
+    ry = Rotation[0] float 1
+    rx = Rotation[1] float 1
+    on_ground = OnGround byte 1
+    no_gravity = NoGravity byte 1
+    absorption = AbsorptionAmount float 1
+    fire_timer = Fire short 1
+end
+
+define @Marker = @Entity[type=area_effect_cloud]
+    create: {Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+define @Corner = @Entity[type=magma_cube,tag=Corner]
+    create: {CustomName:"\"Corner\"", Tags:["Corner"], Glowing:1b, NoGravity:1b, NoAI:1b, Invulnerable:1b, Size:1b, Silent:1b, AbsorptionAmount:100f}
+    time = Time byte 1
+end
+
+define @ClickDetector = @Entity[type=slime,tag=ClickDetector]
+    create: {CustomName:"\"ClickDetector\"", Tags:["ClickDetector"], NoGravity:1b, NoAI: 1b, Invisible:1b, Silent:1b, Size:2, AbsorptionAmount: 100f}
+end
+
+define @CloneDisplay = @Entity[type=armor_stand,tag=CloneDisplay]
+    create: {CustomName:"\"CloneDisplay\"", Tags:["CloneDisplay"], Glowing:1b, NoGravity:1b, NoAI: 1b, Silent:1b, AbsorptionAmount: 100f, LeftHanded:0b, Invulnerable:1, ShowArms:1b, Pose:{LeftArm:[-90f,0f,0f],RightArm:[-90f,0f,0f]}}
+	
+	function replace_items()
+		if @s.left_handed
+			/replaceitem entity @s weapon.offhand diamond_sword
+			/replaceitem entity @s weapon.mainhand shield
+		end
+		
+		unless @s.left_handed
+			/replaceitem entity @s weapon.mainhand diamond_sword
+			/replaceitem entity @s weapon.offhand shield
+		end
+	end
+	
+		
+	function clone_flip_horizontal()
+		if flip_x
+            lh = @s.left_handed
+            if lh then @s.left_handed = False
+            unless lh then @s.left_handed = True
+			@s.replace_items()
+		end
+		if flip_z
+            lh = @s.left_handed
+            if lh then @s.left_handed = False
+            unless lh then @s.left_handed = True
+			@s.replace_items()
+            @s.ry += 180
+		end
+	end
+end
+
+define @Player = @Entity[type=player]
+    selected = SelectedItemSlot int 1
+    
+    function tell_actions()
+        tell @s: 
+        tell @s: BlingEdit: {C[\[Options\]](/function blingedit:options) {B[\[Help\]](https://docs.google.com/document/d/13jC-XnCvyyaTaVWAqNc3Gyqu6JEOWAa-xGfhFC8AU50/edit?usp=sharing)
+        tell @s: Move {RBox{w: {C[\[Up\]](/function blingedit:move_up) [\[Down\]](/function blingedit:move_down) [\[Left\]](/function blingedit:move_left) [\[Right\]](/function blingedit:move_right) [\[Forward\]](/function blingedit:move_forward) [\[Backward\]](/function blingedit:move_backward)
+        tell @s: Actions: {G[\[Clone\]](/function blingedit:clone) {y[\[Fill\]](/function blingedit:fill) {Y[\[Replace\]](/function blingedit:replace) {C[\[Random\]](/function blingedit:randomize_menu) {M[\[Plugin\]](/function blingedit:list_plugins)   {R[\[Delete\]](/function blingedit:delete)
+    end
+
+    function options()
+        tell @s: 
+        tell @s: BlingEdit Options:
+        tell @s: Region Particle Outline: {G[\[On\]](/function blingedit:particles_on) {R[\[Off\]](/function blingedit:particles_off)
+        /gamerule sendCommandFeedback false
+    end
+    
+    function particles_on()
+        tell @s: Region Outline Particles {Genabled{-.
+        @s.particles = True
+        /gamerule sendCommandFeedback false
+    end
+    
+    function particles_off()
+        tell @s: Region Outline Particles {Rdisabled{-
+        @s.particles = False
+        /gamerule sendCommandFeedback false
+    end
+    
+    function create_click()
+        as @s.click(@ClickDetector)
+            /tp @s ~ -200 ~
+            /kill @s
+        end
+    
+        at @s ~ ~50 ~
+            @s.click = create @ClickDetector
+            at @s ~ ~1.6 ~ at ^ ^ ^2 at ~ ~-0.6 ~
+                as @s.click(@ClickDetector)
+                    /tp @s ~ ~ ~
+                    @s.absorption = 100
+                    /team join no_collision
+                end
+            end
+        end
+    end
+    
+    function get_cursor_position()
+        if @s.raycast_select
+            @Player.cursor_current = False
+            @s.cursor_current = True
+            @player = @Player[cursor_current,limit=1]
+            at @s
+                as create @Marker
+                    /tp @s @player
+                    move @s ~ ~1.6 ~
+                    
+                    step = 0
+                    if @player.cursor_inside
+                        while step < 250 at @s if block ~ ~ ~ cursor_continue
+                            move @s ^ ^ ^0.2
+                            step++
+                        end
+                    end
+                    unless @player.cursor_inside
+                        while step < 250 at @s if block ^ ^ ^0.2 cursor_continue
+                            move @s ^ ^ ^0.2
+                            step++
+                        end
+                    end
+                    
+                    at @s align xyz at ~0.5 ~ ~0.5
+                        /tp @s ~ ~ ~
+                    end
+                    <cursor> = @s.<pos>
+                    /kill @s
+                end
+            end
+        end
+		
+		if i == 5
+			i = 5
+		end
+        
+        unless @s.raycast_select
+            if @s.cursor_range == 5
+                at @s ~ ~1.6 ~ at ^ ^ ^5 align xyz at ~0.5 ~ ~0.5
+                    <cursor> = here
+                end
+            end
+            if @s.cursor_range == 10
+                at @s ~ ~1.6 ~ at ^ ^ ^10 align xyz at ~0.5 ~ ~0.5
+                    <cursor> = here
+                end
+            end
+            if @s.cursor_range == 15
+                at @s ~ ~1.6 ~ at ^ ^ ^15 align xyz at ~0.5 ~ ~0.5
+                    <cursor> = here
+                end
+            end
+            if @s.cursor_range == 20
+                at @s ~ ~1.6 ~ at ^ ^ ^20 align xyz at ~0.5 ~ ~0.5
+                    <cursor> = here
+                end
+            end
+        end
+    end
+    
+    function cursor_range_5()
+        @s.cursor_range = 5
+        tell @s: Set cursor range to {G5
+        /gamerule sendCommandFeedback false
+    end
+    
+    function cursor_range_10()
+        @s.cursor_range = 10
+        tell @s: Set cursor range to {G10
+        /gamerule sendCommandFeedback false
+    end
+    
+    function cursor_range_15()
+        @s.cursor_range = 15
+        tell @s: Set cursor range to {G15
+        /gamerule sendCommandFeedback false
+    end
+    
+    function cursor_range_20()
+        @s.cursor_range = 20
+        tell @s: Set cursor range to {G20
+        /gamerule sendCommandFeedback false
+    end
+    
+    function cursor_inside()
+        @s.cursor_inside = True
+        tell @s: Set cursor raycast to stop {GInside Blocks
+        /gamerule sendCommandFeedback false
+    end
+    
+    function cursor_before()
+        @s.cursor_inside = False
+        tell @s: Set cursor raycast to stop just {GBefore Blocks
+        /gamerule sendCommandFeedback false
+    end
+    
+    function get_minmax()
+        has_box = -1
+        
+        as @s.pick1(@Corner)
+            <x1, y1, z1> = @s.<pos>
+            has_box++
+        end
+        as @s.pick2(@Corner)
+            <x2, y2, z2> = @s.<pos>
+            has_box++
+        end
+        
+        if x1 < x2
+            xmin = x1
+            xmax = x2
+        end
+        if x1 >= x2
+            xmin = x2
+            xmax = x1
+        end
+        if y1 < y2
+            ymin = y1
+            ymax = y2
+        end
+        if y1 >= y2
+            ymin = y2
+            ymax = y1
+        end
+        if z1 < z2
+            zmin = z1
+            zmax = z2
+        end
+        if z1 >= z2
+            zmin = z2
+            zmax = z1
+        end
+        
+        <min> = <xmin, ymin, zmin>
+        <max> = <xmax, ymax, zmax>
+        <size> = <max> - <min>
+        
+        <box_xmin, box_ymin, box_zmin> = <min> / 1000
+        <box_xmax, box_ymax, box_zmax> = <max> / 1000
+        <box_center_x, box_center_y, box_center_z> = (<min> + <max>) / 2 / scale
+        <box_size_x, box_size_y, box_size_z> = <size> / scale + <1, 1, 1>
+    end
+    
+    function get_dest_minmax()
+        player = @s
+        has_dest_box = False
+                
+        first = True
+        as @Corner if @s.player == player and @s.type == $Type_Dest
+            if first
+                has_dest_box = True
+                <dest_xmin, dest_ymin, dest_zmin> = @s.<pos>
+                first = False
+            end
+            <x, y, z> = @s.<pos>
+            if x < dest_xmin then dest_xmin = x
+            if y < dest_ymin then dest_ymin = y
+            if z < dest_zmin then dest_zmin = z
+        end
+        
+        <dest_min> = <dest_xmin, dest_ymin, dest_zmin>
+        
+        first = True
+        as @Corner if @s.player == player and @s.type == $Type_Dest
+            if first
+                <dest_xmax, dest_ymax, dest_zmax> = @s.<pos>
+                first = False
+            end
+            <x, y, z> = @s.<pos>
+            if x > dest_xmax then dest_xmax = x
+            if y > dest_ymax then dest_ymax = y
+            if z > dest_zmax then dest_zmax = z
+        end
+        
+        <dest_max> = <dest_xmax, dest_ymax, dest_zmax>
+    end
+
+    function clone_air()
+        @s.clone_air = True
+        tell @s: Clone air: {GEnabled
+    
+        /gamerule sendCommandFeedback false
+    end
+    
+    function dont_clone_air()
+        @s.clone_air = False
+        tell @s: Clone air: {RDisabled
+    
+        /gamerule sendCommandFeedback false
+    end
+    
+    function clone_flip_leftright()
+		ry = (@s.ry % 360 + 360 + @s.clone_rotation) % 360
+		
+		if ry < 45
+			flip_x = True
+			flip_z = False
+		end
+		if ry >= 45 and ry < 135
+			flip_x = False
+			flip_z = True
+		end
+		if ry >= 135 and ry < 225
+			flip_x = True
+			flip_z = False
+		end
+		if ry >= 225 and ry < 315
+			flip_x = False
+			flip_z = True
+		end
+		if ry >= 315
+			flip_x = True
+			flip_z = False
+		end
+		
+		if flip_x
+			fx = @s.clone_flip_x
+			if fx then @s.clone_flip_x = False
+			unless fx do @s.clone_flip_x = True
+		end
+		if flip_z
+			fz = @s.clone_flip_z
+			if fz then @s.clone_flip_z = False
+			unless fz do @s.clone_flip_z = True
+		end
+	
+        as @s.to_display(@CloneDisplay)
+			@s.clone_flip_horizontal()
+        end
+        /gamerule sendCommandFeedback false
+    end
+	
+    function clone_flip_frontback()
+		ry = (@s.ry % 360 + 360 + @s.clone_rotation) % 360
+		
+		if ry < 45
+			flip_x = False
+			flip_z = True
+		end
+		if ry >= 45 and ry < 135
+			flip_x = True
+			flip_z = False
+		end
+		if ry >= 135 and ry < 225
+			flip_x = False
+			flip_z = True
+		end
+		if ry >= 225 and ry < 315
+			flip_x = True
+			flip_z = False
+		end
+		if ry >= 315
+			flip_x = False
+			flip_z = True
+		end
+		
+		if flip_x
+			fx = @s.clone_flip_x
+			if fx then @s.clone_flip_x = False
+			unless fx do @s.clone_flip_x = True
+		end
+		if flip_z
+			fz = @s.clone_flip_z
+			if fz then @s.clone_flip_z = False
+			unless fz do @s.clone_flip_z = True
+		end
+		
+        as @s.to_display(@CloneDisplay)
+			@s.clone_flip_horizontal()
+        end
+        /gamerule sendCommandFeedback false
+    end
+
+    
+    function clone_rotate_left()
+		@s.clone_rotation -= 90
+		if @s.clone_rotation < 0
+			@s.clone_rotation += 360
+		end
+        as @s.to_display(@CloneDisplay)
+            @s.ry -= 90
+        end
+		@s.rotate_dest_horizontal()
+		
+        /gamerule sendCommandFeedback false
+    end
+
+    function clone_rotate_right()
+		@s.clone_rotation += 90
+		if @s.clone_rotation >= 360
+			@s.clone_rotation -= 360
+		end
+        as @s.to_display(@CloneDisplay)
+            @s.ry += 90
+        end
+		@s.rotate_dest_horizontal()
+		
+        /gamerule sendCommandFeedback false
+    end
+	
+	function rotate_dest_horizontal()
+		@s.get_dest_minmax()
+		clone_rotation = @s.clone_rotation
+		
+		<cx, cy, cz> = (<dest_min> + <dest_max>) / 2
+		
+		<sx, sy, sz> = <dest_max> - <dest_min>
+		mod = (cx + cz) % scale
+		
+		x_offset = 0
+		z_offset = 0
+		unless mod == 0
+			x_offset = 500
+			if clone_rotation == 90 then x_offset = -500
+			if clone_rotation == 180 then x_offset = -500
+			
+			z_offset = 500
+			if clone_rotation == 180 then z_offset = -500
+			if clone_rotation == 270 then z_offset = -500
+		end
+
+		
+		player = @s
+		as @Corner if @s.player == player and @s.type == $Type_Dest
+			dx = cx - @s.x
+			dz = cz - @s.z
+			
+			@s.x = cx - dz + x_offset
+			@s.z = cz - dx + z_offset
+		end
+	end
+    
+    function plugin_can_run()
+        plugin_can_run = False
+        if @s.state == $EditSource
+            @s.get_minmax()
+            if has_box
+                plugin_can_run = True
+            end
+        end
+    end
+    
+    function list_plugins()
+        @s.prime_plugins = True
+        
+        /gamerule sendCommandFeedback false
+    end
+    
+    function randomize_menu()
+        tell @s: 
+        tell @s: {cRandomization Options:
+        tell @s: {C[\[Store Selected Region as Random Block Pool\]](/function blingedit:store_random)
+        tell @s: {C[\[Fill Selected Region from Random Block Pool\]](/function blingedit:fill_random)
+        tell @s: {C[\[Replace in Selected Region from Random Block Pool\]](/function blingedit:replace_random)
+        
+        /gamerule sendCommandFeedback false
+    end
+    
+    function store_random()
+        unless @s.state == $EditSource
+            tell @s: You can't store a region right now.
+        end
+        if @s.state == $EditSource
+            @s.get_minmax()
+            unless has_box
+                tell @s: You don't currently have a region selected.
+            end
+            if has_box
+                @s.<rand_min> = <min> / scale
+                @s.<rand_max> = <max> / scale
+                @s.has_rand = True
+                
+                <rx1, ry1, rz1> = @s.<rand_min>
+                <rx2, ry2, rz2> = @s.<rand_max>
+                tell @s: Random Block Pool region stored as \((rx1), (ry1), (rz1)\) to \((rx2), (ry2), (rz2)\)
+            end
+        end
+        
+        /gamerule sendCommandFeedback false
+    end
+    
+    function fill_random()
+        unless @s.state == $EditSource
+            tell @s: You can't store a region right now.
+        end
+        if @s.state == $EditSource
+            unless @s.has_rand
+                tell @s: You haven't selected a region for a random block pool yet.
+            end
+            if @s.has_rand
+                check_loaded()
+                
+                if loaded
+                    @s.get_minmax()
+                    if has_box
+                        replaced_blocks = 0
+                    
+                        <rx1, ry1, rz1> = @s.<rand_min>
+                        <rx2, ry2, rz2> = @s.<rand_max>
+                        at @s
+                            for i = 0 to rx2-rx1
+                                as create @Marker
+                                    @s.rand_x = True
+                                    @s.val = i
+                                end
+                            end
+                            
+                            for i = 0 to ry2-ry1
+                                as create @Marker
+                                    @s.rand_y = True
+                                    @s.val = i
+                                end
+                            end
+                            
+                            for i = 0 to rz2-rz1
+                                as create @Marker
+                                    @s.rand_z = True
+                                    @s.val = i
+                                end
+                            end
+                        end
+                        
+                        <rand_min> = @s.<rand_min>
+                        random_replace = @s.random_replace
+                        /bossbar set progress players @s
+                        store_tile_drops()
+                        as create @Marker
+                            for x = xmin to xmax by scale
+                                percent = (x - xmin) * 100 / (xmax - xmin)
+                                /execute store result bossbar progress value run scoreboard players get Global percent
+
+                                for z = zmin to zmax by scale
+                                    for y = ymin to ymax by scale
+                                        @s.<pos> = <x, y, z>
+                                        at @s
+                                            if random_replace
+                                                replace = False
+                                                /execute if blocks ~ ~ ~ ~ ~ ~ 0 2 0 all run scoreboard players set Global replace 1
+                                            end
+                                            unless random_replace
+                                                replace = True
+                                            end
+                                            if replace
+                                                rx = @Marker[rand_x, sort=random, limit=1].val
+                                                ry = @Marker[rand_y, sort=random, limit=1].val
+                                                rz = @Marker[rand_z, sort=random, limit=1].val
+                                                @s.<pos> = (<rand_min> + <rx, ry, rz>) * scale
+                                                at @s
+                                                    /clone ~ ~ ~ ~ ~ ~ 0 1 0
+                                                end
+                                            
+                                                replaced_blocks++
+                                                /clone 0 1 0 0 1 0 ~ ~ ~
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                            /kill @s
+                        end
+                        restore_tile_drops()
+                        
+                        /kill @Marker[rand_x]
+                        /kill @Marker[rand_y]
+                        /kill @Marker[rand_z]
+                    end
+                end
+            end
+        end
+        
+        /gamerule sendCommandFeedback false
+    end
+    
+    function replace_random()
+        @s.state = $ReplaceWaitRandom
+        tell @s: Use {w[/setblock ~ ~ ~ <block>](//setblock ~ ~ ~ minecraft:){- to pick the blocks to replace.
+        tell @s: Or replace {C[\[air\]](/function blingedit:replace_random_air)
+    
+        /gamerule sendCommandFeedback false
+    end
+    
+    function replace_random_air()
+        /setblock 0 2 0 air
+        perform_random_replace()
+    
+        /gamerule sendCommandFeedback false
+    end
+    
+    function perform_random_replace()
+        @s.random_replace = True
+        @s.state = $EditSource
+        
+        @s.fill_random()
+
+        @s.random_replace = False
+        tell @s: Replaced (replaced_blocks) blocks.
+    end
+    
+    function clone()
+        unless @s.state == $EditSource
+            tell @s: You can't clone a box right now.
+        end
+        if @s.state == $EditSource
+            @s.get_minmax()
+
+            unless has_box
+                tell @s: You don't currently have a region selected.
+            end
+            if has_box
+                <dx, dy, dz> = <max> - <min>
+                <center> = (<max> + <min>) / 2
+                <center> -= <center> % scale + <scale/2, 0, scale/2>
+                
+                player = @s
+                @s.get_cursor_position()
+                
+                as @Corner if @s.player == player and @s.type == $Type_Source
+                    <dpos> = @s.<pos> - <center>
+                    bottom_center = False
+                    if @s.center_x and @s.center_z and @s.y == ymin
+                        bottom_center = True
+                    end
+                        
+                    as create @Corner
+                        @s.type = $Type_Dest
+                        @s.<pos> = <cursor> + <dpos>
+                        /team join dest
+                        @s.player = player
+                        if bottom_center
+                            moving = @s
+                            @s.bottom_center = True
+                        end
+                    end
+                end
+                
+                move @Corner ~ ~ ~
+
+                @s.moving = moving
+                @s.state = $MovingDest
+                @s.create_click()
+                
+                @s.from_display = create @CloneDisplay
+                as @s.from_display(@CloneDisplay)
+                    /replaceitem entity @s weapon.mainhand diamond_sword
+                    /replaceitem entity @s weapon.offhand shield
+                    /replaceitem entity @s armor.head player_head{SkullOwner:"SethBling"}
+                    /team join source
+                end
+                @s.to_display = create @CloneDisplay
+                as @s.to_display(@CloneDisplay)
+                    /replaceitem entity @s weapon.mainhand diamond_sword
+                    /replaceitem entity @s weapon.offhand shield
+                    /replaceitem entity @s armor.head player_head{SkullOwner:"SethBling"}
+                    /team join dest
+                end
+				
+				@s.clone_rotation = 0
+				@s.clone_flip_x = False
+				@s.clone_flip_z = False
+                
+                tell @s: 
+                tell @s: Move {BDest{w: {C[\[Up\]](/function blingedit:move_up) [\[Down\]](/function blingedit:move_down) [\[Left\]](/function blingedit:move_left) [\[Right\]](/function blingedit:move_right) [\[Forward\]](/function blingedit:move_forward) [\[Backward\]](/function blingedit:move_backward)
+                tell @s: Clone Options: {g[\[Do Clone Air\]](/function blingedit:clone_air) [\[Don't Clone Air\]](/function blingedit:dont_clone_air)
+                tell @s: Flip: {g[\[Flip Left/Right\]](/function blingedit:clone_flip_leftright) [\[Flip Front/Back\]](/function blingedit:clone_flip_frontback)
+                tell @s: Rotate: {g[\[Rotate Left\]](/function blingedit:clone_rotate_left) [\[Rotate Right\]](/function blingedit:clone_rotate_right)
+                tell @s: Actions: {G[\[Confirm Clone\]](/function blingedit:confirm_clone) [\[Clone&Repeat\]](/function blingedit:clone_and_repeat) [\[Clone Brush\]](/function blingedit:clone_brush) [\[Cancel\]](/function blingedit:cancel)
+            end
+        end
+        
+        /gamerule sendCommandFeedback false
+    end
+    
+    function confirm_clone()
+        unless @s.state == $EditDest
+            tell @s: You can't confirm a clone right now.
+        end
+        if @s.state == $EditDest
+            @s.perform_clone()
+            if loaded				
+                <move_by> = <dest_min> - <min>
+                @s.cancel()
+                as @Corner if @s.player == player and @s.type == $Type_Source
+					if @s.edit_xmin then @s.x = dest_xmin
+					if @s.edit_ymin then @s.y = dest_ymin
+					if @s.edit_zmin then @s.z = dest_zmin
+					if @s.edit_xmax then @s.x = dest_xmax
+					if @s.edit_ymax then @s.y = dest_ymax
+					if @s.edit_zmax then @s.z = dest_zmax
+					if @s.center_x then @s.x = (dest_xmin + dest_xmax) / 2
+					if @s.center_y then @s.y = (dest_ymin + dest_ymax) / 2
+					if @s.center_z then @s.z = (dest_zmin + dest_zmax) / 2
+                end
+                @s.state = $EditSource
+                @s.tell_actions()
+            end
+        end
+    
+        /gamerule sendCommandFeedback false
+    end
+    
+    function clone_and_repeat()
+        unless @s.state == $EditDest
+            tell @s: You can't confirm a clone right now.
+        end
+        if @s.state == $EditDest
+			okay_rotation = True
+			if @s.clone_rotation == 90 then okay_rotation = False
+			if @s.clone_rotation == 270 then okay_rotation = False
+			
+			if okay_rotation
+				@s.perform_clone()
+				if loaded				
+					<move_by> = <dest_min> - <min>
+					as @Corner if @s.player == player
+						@s.<pos> += <move_by>
+					end
+				end
+			end
+			unless okay_rotation
+				tell @s: {GClone and Repeat{- is not implemented for perpendicular selections.
+			end
+        end
+    
+        /gamerule sendCommandFeedback false	
+    end
+    
+    function clone_brush()
+        can_do = False
+        if @s.state == $EditDest then can_do = True
+        if @s.state == $MovingDest then can_do = True
+        
+        unless can_do
+            tell @s: You can't confirm a clone right now.
+        end
+        
+        if can_do
+            @s.state = $CloneBrush
+            @s.create_click()
+            as @Corner if @s.player == player if @s.type == $Type_Dest if @s.bottom_center
+                moving = @s
+            end
+            @s.moving = moving
+            tell @s: Clone Brush activated. Click to paste at destination.
+        end
+        
+        /gamerule sendCommandFeedback false
+    end
+    
+    function perform_clone()
+        as create @Marker
+            /spreadplayers 0 0 1 1 false @s
+            /kill @s
+        end
+        
+        /setblock 0 1 0 stone
+        /execute store success score Global loaded run setblock 0 1 0 sandstone
+        
+        unless loaded
+            tell @s: Chunk 0,0 wasn't loaded. Try again \(or use {C/forceload add 0 0{W\)
+        end
+        if loaded
+            @s.get_minmax()
+            
+            unless has_box
+                tell @s: You don't currently have a region selected.
+            end
+            if has_box
+                @s.get_dest_minmax()
+                
+                <size_x, size_y, size_z> = <size>
+                clone_air = @s.clone_air
+                
+                if dest_xmin <= xmin
+                    start_dx = 0
+                    end_dx = size_x
+                    step_dx = scale
+                end
+                if dest_xmin > xmin
+                    start_dx = size_x
+                    end_dx = 0
+                    step_dx = -scale
+                end
+                if dest_ymin <= ymin
+                    start_dy = 0
+                    end_dy = size_y
+                    step_dy = scale
+                end
+                if dest_ymin > ymin
+                    start_dy = size_y
+                    end_dy = 0
+                    step_dy = -scale
+                end
+                if dest_zmin <= zmin
+                    start_dz = 0
+                    end_dz = size_z
+                    step_dz = scale
+                end
+                if dest_zmin > zmin
+                    start_dz = size_z
+                    end_dz = 0
+                    step_dz = -scale
+                end
+                
+                /bossbar set progress players @s
+                store_tile_drops()
+				
+				rotation = 0
+				rotation = @s.clone_rotation
+				flip_x = @s.clone_flip_x
+				flip_z = @s.clone_flip_z
+				
+				dest_start_y = dest_ymin
+				
+				if rotation == 0
+					dest_start_x = dest_xmin
+					dest_start_z = dest_zmin
+					flipped_x = dest_xmax
+					flipped_z = dest_zmax
+				end
+				
+				if rotation == 90
+					dest_start_x = dest_xmax
+					dest_start_z = dest_zmin
+					flipped_x = dest_xmin
+					flipped_z = dest_zmax
+				end
+				
+				if rotation == 180
+					dest_start_x = dest_xmax
+					dest_start_z = dest_zmax
+					flipped_x = dest_xmin
+					flipped_z = dest_zmin
+				end
+
+				if rotation == 270
+					dest_start_x = dest_xmin
+					dest_start_z = dest_zmax
+					flipped_x = dest_xmax
+					flipped_z = dest_zmin
+				end
+					
+				if flip_x then dest_start_x = flipped_x
+				if flip_z then dest_start_z = flipped_z
+				
+                as create @Marker
+                    for dx = start_dx to end_dx by step_dx
+                        percent = (dx - start_dx) / ((end_dx - start_dx) / 100)
+                        /execute store result bossbar progress value run scoreboard players get Global percent
+                        for dy = start_dy to end_dy by step_dy
+                            for dz = start_dz to end_dz by step_dz
+                                <offset> = <dx, dy, dz>
+                                @s.<pos> = <min> + <offset>
+                                at @s
+									/clone ~ ~ ~ ~ ~ ~ 0 1 0
+                                    skip = False
+                                    if block ~ ~ ~ air unless clone_air
+                                        skip = True
+                                    end
+                                end
+                                
+                                unless skip
+									if rotation == 0 then <dest_dx, dest_dy, dest_dz> = <dx, dy, dz>
+									if rotation == 90 then <dest_dx, dest_dy, dest_dz> = <-dz, dy, dx>
+									if rotation == 180 then <dest_dx, dest_dy, dest_dz> = <-dx, dy, -dz>
+									if rotation == 270 then <dest_dx, dest_dy, dest_dz> = <dz, dy, -dx>
+									if flip_x then dest_dx = dest_dx * -1
+									if flip_z then dest_dz = dest_dz * -1
+										
+                                    @s.<pos> = <dest_start_x, dest_start_y, dest_start_z> + <dest_dx, dest_dy, dest_dz>
+									at @s
+										/clone 0 1 0 0 1 0 ~ ~ ~
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    /kill @s
+                end
+                
+                restore_tile_drops()
+            end
+        end
+    end
+    
+    function cancel()
+        handled = False
+        can_cancel = False
+        if @s.state == $EditDest then can_cancel = True
+        if @s.state == $MovingDest then can_cancel = True
+        if @s.state == $CloneBrush then can_cancel = True
+        if can_cancel
+            player = @s
+            as @Corner if @s.player == player and @s.type == $Type_Dest
+                @s.player = None
+            end
+            @s.state = $EditSource
+            @s.moving = None
+            @s.tell_actions()
+            handled = True
+        end
+        
+        if not handled
+            tell @s: You can't cancel right now.
+        end
+        
+        /gamerule sendCommandFeedback false
+    end
+
+    function delete()
+        @s.get_minmax()
+        
+        if has_box
+            tell @s: Deleting (box_xmin), (box_ymin), (box_zmin) to (box_xmax), (box_ymax), (box_zmax)
+            /bossbar set progress players @s
+            store_tile_drops()
+            as create @Marker
+                for x = xmin to xmax by scale
+                    percent = (x - xmin) * 100 / (xmax - xmin)
+                    /execute store result bossbar progress value run scoreboard players get Global percent
+                    for z = zmin to zmax by scale
+                        for y = ymax to ymin by -scale
+                            @s.<pos> = <x, y, z>
+                            at @s
+                                /setblock ~ ~ ~ air
+                            end
+                        end
+                    end
+                end
+                /kill @s
+            end
+            restore_tile_drops()
+        end
+        
+        unless has_box
+            tell @s: You must select a region first.
+        end
+        
+        /gamerule sendCommandFeedback false
+    end
+
+    function fill()
+        tell @s: Use {w[/setblock ~ ~ ~ <block>](//setblock ~ ~ ~ minecraft:){- to pick the filler block.
+        @s.state = $FillWait
+        /gamerule sendCommandFeedback false
+    end
+    
+    function replace()
+        tell @s: Use {w[/setblock ~ ~ ~ <block>](//setblock ~ ~ ~ minecraft:){- to pick the block to be replaced.
+        tell @s: Or pick {C[\[air\]](/function blingedit:replace1_air){-
+        @s.state = $ReplaceWait1
+        /gamerule sendCommandFeedback false
+    end
+    
+    function replace1_air()
+        /setblock ~ ~ ~ air
+        @s.tell_replace2()
+        /gamerule sendCommandFeedback false
+    end
+    
+    function tell_replace2()
+        check_loaded()
+                
+        if loaded
+            /clone ~ ~ ~ ~ ~ ~ 0 2 0
+            @s.state = $ReplaceWait2
+            /setblock ~ ~ ~ air
+            tell @s: Use {w[/setblock ~ ~ ~ <block>](//setblock ~ ~ ~ minecraft:){- to pick the block they should be replaced with.
+            tell @s: Or pick {C[\[air\]](/function blingedit:replace2_air){-
+        end
+        unless loaded
+            tell @s: Chunk 0,0 wasn't loaded. Try again \(or use {C/forceload add 0 0{W\)
+        end
+    end
+    
+    function replace2_air()
+        /setblock ~ ~ ~ air
+        @s.perform_replace()
+        /gamerule sendCommandFeedback false
+    end
+    
+    function perform_replace()
+        check_loaded()
+        
+        if loaded
+            /clone ~ ~ ~ ~ ~ ~ 0 1 0
+            
+            @s.get_minmax()
+            
+            if has_box
+                tell @s: Replacing (box_xmin), (box_ymin), (box_zmin) to (box_xmax), (box_ymax), (box_zmax)
+                
+                /bossbar set progress players @s
+                store_tile_drops()
+                count = 0
+                as create @Marker
+                    for x = xmin to xmax by scale
+                        percent = (x - xmin) * 100 / (xmax - xmin)
+                        /execute store result bossbar progress value run scoreboard players get Global percent
+                        for z = zmin to zmax by scale
+                            for y = ymin to ymax by scale
+                                @s.<pos> = <x, y, z>
+                                at @s
+                                    replace = False
+                                    /execute if blocks ~ ~ ~ ~ ~ ~ 0 2 0 all run scoreboard players set Global replace 1
+                                    if replace
+                                        count++
+                                        /clone 0 1 0 0 1 0 ~ ~ ~
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    /kill @s
+                end
+                restore_tile_drops()
+                
+                tell @s: Replaced (count) blocks.
+                @s.state = $EditSource
+            end
+            /setblock ~ ~ ~ air
+            
+            unless has_box
+                tell @s: You must select a box first.
+            end
+        end
+    end
+    
+    function move_up()
+        type = None
+        if @s.state == $EditSource
+            type = $Type_Source
+        end
+        if @s.state == $EditDest
+            type = $Type_Dest
+        end
+        player = @s
+        as @Corner if @s.player == player and @s.type == type
+            move @s ~ ~1 ~
+        end
+        /gamerule sendCommandFeedback false
+    end
+    function move_down()
+        type = None
+        if @s.state == $EditSource
+            type = $Type_Source
+        end
+        if @s.state == $EditDest
+            type = $Type_Dest
+        end
+        player = @s
+        as @Corner if @s.player == player and @s.type == type
+            move @s ~ ~-1 ~
+        end
+        /gamerule sendCommandFeedback false
+    end
+
+    function move_forward()
+        type = None
+        if @s.state == $EditSource
+            type = $Type_Source
+        end
+        if @s.state == $EditDest
+            type = $Type_Dest
+        end
+        player = @s
+        ry = (@s.ry % 360 + 360) % 360
+        
+        move_dir()
+            
+        /gamerule sendCommandFeedback false
+    end
+    
+    function move_backward()
+        type = None
+        if @s.state == $EditSource
+            type = $Type_Source
+        end
+        if @s.state == $EditDest
+            type = $Type_Dest
+        end
+        player = @s
+        ry = ((@s.ry + 180) % 360 + 360) % 360
+        
+        move_dir()
+    
+        /gamerule sendCommandFeedback false
+    end
+    
+    function move_left()
+        type = None
+        if @s.state == $EditSource
+            type = $Type_Source
+        end
+        if @s.state == $EditDest
+            type = $Type_Dest
+        end
+        player = @s
+        ry = ((@s.ry - 90) % 360 + 360) % 360
+        
+        move_dir()
+            
+        /gamerule sendCommandFeedback false
+    end
+
+    function move_right()
+        type = None
+        if @s.state == $EditSource
+            type = $Type_Source
+        end
+        if @s.state == $EditDest
+            type = $Type_Dest
+        end
+        player = @s
+        ry = ((@s.ry + 90) % 360 + 360) % 360
+        
+        move_dir()
+
+        /gamerule sendCommandFeedback false
+    end
+    
+    function corner_target(type)
+        player = @s
+        
+        at @s ~ ~1.6 ~
+			<start_pos> = here
+			at ^ ^ ^1 do <look> = (here - <start_pos>)
+            
+			@Corner.looking = False
+			
+            as @Corner[distance=..30] if @s.player == player and @s.type == type
+				@s.highlight = False
+                <delta> = (@s.<pos> + <0, 500, 0> - <start_pos>)
+				tca = (<delta> * <look>) / scale
+				delta2 = <delta> * <delta> / scale
+				tca2 = tca * tca / scale
+				d2 = delta2 - tca2
+				if d2 < 1700 and tca > 0 then @s.looking = True				
+            end
+			
+			as @Corner[sort=nearest,limit=1,looking]
+				@s.highlight = True
+			end
+            
+            as @Corner[distance=..30] if @s.player == player and @s.type == type                    
+                if type == $Type_Source and not @s.highlight
+                    /team join source
+                    @s.highlighted = False
+                end
+                if type == $Type_Dest and not @s.highlight
+                    /team join dest
+                    @s.highlighted = False
+                end
+                if @s.highlight
+                    /team join highlight
+                    @s.highlighted = True
+                end
+            end
+        end
+    end
+end
+
+function move_dir()
+    as @Corner if @s.player == player and @s.type == type
+        if ry < 45
+            move @s ~ ~ ~1
+        end
+        if ry > 45 and ry < 135
+            move @s ~-1 ~ ~
+        end
+        if ry >= 135 and ry < 225
+            move @s ~ ~ ~-1
+        end
+        if ry >= 225 and ry < 315
+            move @s ~1 ~ ~
+        end
+        if ry >= 315
+            move @s ~ ~ ~1
+        end
+    end
+end
+
+reset
+    /team add source
+    /team modify source color red
+    /team modify source collisionRule never
+    
+    /team add no_collision
+    /team modify no_collision collisionRule never
+    
+    /team add moving
+    /team modify moving color yellow
+    /team modify moving collisionRule never
+    
+    /team add highlight
+    /team modify highlight color blue
+    /team modify highlight collisionRule never
+    
+    /team add dest
+    /team modify dest color green
+    /team modify dest collisionRule never
+    
+    /execute store result score Global feedback run gamerule sendCommandFeedback
+    /gamerule maxCommandChainLength 1000000000
+    
+    /scoreboard objectives remove right_click
+    /scoreboard objectives add right_click minecraft.used:minecraft.carrot_on_a_stick
+    
+    /bossbar add progress "Progress"
+    /bossbar set progress max 100
+    
+    /say Loaded BlingEdit v1.0.5 by SethBling
+end
+
+function check_loaded()
+    /setblock 0 1 0 stone
+    /execute store success score Global loaded run setblock 0 1 0 sandstone
+    
+    unless loaded
+        tell @s: Chunk 0,0 wasn't loaded. Try again \(or use {C{U[/forceload add 0 0](//forceload add 0 0){u{W\)
+    end
+end
+
+function draw_particle_box()
+    as create @Marker
+        $particle: "fishing"
+        for x = p_xmin to p_xmax by 200
+            @s.<pos> = <x, p_ymin, p_zmin>
+            at @s
+                /particle $particle ~ ~ ~ 0 0 0 0 1 force
+            end
+            @s.<pos> = <x, p_ymin, p_zmax>
+            at @s
+                /particle $particle ~ ~ ~ 0 0 0 0 1 force
+            end
+            @s.<pos> = <x, p_ymax, p_zmin>
+            at @s
+                /particle $particle ~ ~ ~ 0 0 0 0 1 force
+            end
+            @s.<pos> = <x, p_ymax, p_zmax>
+            at @s
+                /particle $particle ~ ~ ~ 0 0 0 0 1 force
+            end
+        end
+        for z = p_zmin to p_zmax by 200
+            @s.<pos> = <p_xmin, p_ymin, z>
+            at @s
+                /particle $particle ~ ~ ~ 0 0 0 0 1 force
+            end
+            @s.<pos> = <p_xmax, p_ymin, z>
+            at @s
+                /particle $particle ~ ~ ~ 0 0 0 0 1 force
+            end
+            @s.<pos> = <p_xmin, p_ymax, z>
+            at @s
+                /particle $particle ~ ~ ~ 0 0 0 0 1 force
+            end
+            @s.<pos> = <p_xmax, p_ymax, z>
+            at @s
+                /particle $particle ~ ~ ~ 0 0 0 0 1 force
+            end
+        end
+        for y = p_ymin to p_ymax by 200
+            @s.<pos> = <p_xmin, y, p_zmin>
+            at @s
+                /particle $particle ~ ~ ~ 0 0 0 0 1 force
+            end
+            @s.<pos> = <p_xmin, y, p_zmax>
+            at @s
+                /particle $particle ~ ~ ~ 0 0 0 0 1 force
+            end
+            @s.<pos> = <p_xmax, y, p_zmin>
+            at @s
+                /particle $particle ~ ~ ~ 0 0 0 0 1 force
+            end
+            @s.<pos> = <p_xmax, y, p_zmax>
+            at @s
+                /particle $particle ~ ~ ~ 0 0 0 0 1 force
+            end
+        end
+        /kill @s
+    end
+end
+
+function store_tile_drops()
+    /execute store result score Global tile_drops run gamerule doTileDrops
+    /gamerule doTileDrops false
+end
+
+function restore_tile_drops()
+    if tile_drops
+        /gamerule doTileDrops true
+    end
+    unless tile_drops
+        /gamerule doTileDrops false
+    end
+end
+
+clock main
+    tick++
+    
+    if feedback
+        /gamerule sendCommandFeedback true
+    end
+	
+    as @Entity[type=item] at @s
+        /scoreboard players set @s[nbt={Item:{tag:{display:{Name:"{\"text\":\"BlingEdit\"}"}}}}] edit 1
+        if @s.edit
+            found_player = False
+            at @s as @Player[sort=nearest,limit=1,distance=..5]
+                if @s.edit
+                    @s.holding_item = True
+                    /execute unless entity @s[nbt={SelectedItem:{}}] run scoreboard players set @s holding_item 0
+                    unless @s.holding_item	
+                        if @s.carrot_on_stick
+                            /replaceitem entity @s weapon.mainhand carrot_on_a_stick{display:{Name:"{\"text\":\"BlingEdit\"}"},Enchantments:[{lvl:5s,id:"minecraft:sharpness"}]} 1
+                        end
+                        unless @s.carrot_on_stick
+                            /replaceitem entity @s weapon.mainhand diamond_sword{display:{Name:"{\"text\":\"BlingEdit\"}"}} 1
+                        end
+                        found_player = True
+                        
+                        handled = False
+                        if @s.raycast_select
+                            @s.raycast_select = False
+                            handled = True
+                            tell @s: Changed selection to: {YFloating Cursor
+                            tell @s: Options: {y[\[Range 5\]](/function blingedit:cursor_range_5) [\[Range 10\]](/function blingedit:cursor_range_10) [\[Range 15\]](/function blingedit:cursor_range_15) [\[Range 20\]](/function blingedit:cursor_range_20) 
+                        end
+                        if not handled
+                            @s.raycast_select = True
+                            tell @s: Changed selection to: {YRaycast Cursor
+                            tell @s: Options: {y[\[Select Inside Blocks\]](/function blingedit:cursor_inside) [\[Select Before Blocks\]](/function blingedit:cursor_before)
+                        end
+                    end
+                end
+            end
+            /kill @s
+        end
+    end
+    
+    for @player in @Player
+        at @s
+            unless @s.cursor_range >= 0
+                @s.cursor_range = 5
+            end
+            unless @s.cursor_inside >= 0
+                @s.cursor_inside = True
+            end
+            
+            # Make sure there's a value in edit
+            unless @s.edit do @s.edit = False
+            @s.prev_edit = @s.edit
+            @s.edit = False
+            /scoreboard players set @s[nbt={"SelectedItem":{tag:{display:{Name:"{\"text\":\"BlingEdit\"}"}}}}] edit 1
+            @s.carrot_on_stick = False
+            /scoreboard players set @s[nbt={"SelectedItem":{id:"minecraft:carrot_on_a_stick"}}] carrot_on_stick 1
+
+            click = False
+            
+            at @s ~ ~1.6 ~ at ^ ^ ^1.5 at ~ ~-0.6 ~
+                as @s.click(@ClickDetector)
+                    /tp @s ~ ~ ~ ~ ~
+                    if @s.absorption < 99
+                        click = True
+                        /tp @s ~ -200 ~
+                        /kill @s
+                        @player.create_click()
+                    end
+                end
+            end
+
+            if @s.right_click then click = True
+            
+            @s.disp_plugins = False
+            
+            if @s.prime_plugins
+                @s.prime_plugins = False
+                @s.disp_plugins = True
+                tell @s: {cPlugins:
+            end
+            
+            if @s.edit unless @s.prev_edit
+                @s.state = $Pick1
+                at @s ~ ~200 ~
+                    @s.pick1 = create @Corner
+                    as @s.pick1(@Corner)
+                        @s.player = @player
+                        /team join source
+                        @s.type = $Type_Source
+                        @s.edit_xmin = True
+                        @s.edit_ymin = True
+                        @s.edit_zmin = True
+                    end
+                end
+                at @s ~ ~200 ~
+                    @s.click = create @ClickDetector
+                    as @s.click(@ClickDetector)
+                        /team join no_collision
+                    end
+                end
+                as @s.pick1
+
+                end
+            end
+            
+            if @s.prev_edit unless @s.edit
+                @s.pick1 = None
+                @s.pick2 = None
+                @s.click = None
+                @s.moving = None
+                @s.state = $Closed
+                as @Corner
+					if @s.player == @player
+						@s.player = None
+					end
+                end
+            end
+            
+            @s.get_minmax()
+            if has_box and @s.particles
+                @s.grid_display++
+                if @s.grid_display >= 10
+                    @s.grid_display = 0
+                    <p_xmin, p_ymin, p_zmin> = <min> - <450, -175, 450>
+                    <p_xmax, p_ymax, p_zmax> = <max> + <450, 1075, 450>
+                    
+                    draw_particle_box()
+                    
+                    @s.get_dest_minmax()
+                    if has_dest_box
+                        <p_xmin, p_ymin, p_zmin> = <dest_min> - <450, -175, 450>
+                        <p_xmax, p_ymax, p_zmax> = <dest_max> + <450, 1075, 450>
+                        
+                        draw_particle_box()
+                    end
+                end
+            end
+            
+            if @s.state == $Pick1
+                @s.get_cursor_position()
+                corner_exists = False
+                as @s.pick1(@Corner)
+                    corner_exists = True
+                    at <cursor>
+                        /tp @s ~ ~ ~
+                    end
+                end
+                
+                if not corner_exists
+                    tell @s: BlingEdit doesn't work in peaceful mode.
+                    @s.state = $Closed
+                end
+            end
+            
+            @s.get_minmax()
+            if has_box
+                vol = box_size_x * box_size_y * box_size_z
+                actionbar @s: Size: {y{D(box_size_x){-x{y{D(box_size_y){-x{y{D(box_size_z){- Volume: {y{D(vol){-
+            end
+            
+            @s.get_dest_minmax()
+            if has_dest_box
+                at @s ^7 ^6 ^10
+                    as @s.from_display(@CloneDisplay)
+                        /tp @s ~ ~ ~
+                    end
+                end
+                at @s ^5 ^6 ^10
+                    as @s.to_display(@CloneDisplay)
+                        /tp @s ~ ~ ~
+                    end
+                end
+            end
+            unless has_dest_box
+                @s.from_display = None
+                @s.to_display = None
+            end
+            
+            if @s.state == $EditSource
+                @s.corner_target($Type_Source)
+                if click
+                    click = False
+                    as @Corner if @s.player == @player and @s.type == $Type_Source and @s.highlighted
+                        /team join moving
+                        @player.moving = @s
+                        @player.state = $EditingSource
+                        @player.create_click()
+                    end
+                end
+            end
+            
+            if @s.state == $EditingSource
+                @s.get_cursor_position()
+                at <cursor>
+                    as @s.moving(@Corner)
+                        /tp @s ~ ~ ~
+                        <x, y, z> = @s.<pos>
+                        <edit_xmin, edit_ymin, edit_zmin> = <False, False, False>
+                        <edit_xmax, edit_ymax, edit_zmax> = <False, False, False>
+                        if @s.edit_xmin then edit_xmin = True
+                        if @s.edit_ymin then edit_ymin = True
+                        if @s.edit_zmin then edit_zmin = True
+                        if @s.edit_xmax then edit_xmax = True
+                        if @s.edit_ymax then edit_ymax = True
+                        if @s.edit_zmax then edit_zmax = True
+                        if click
+                            /team join source
+                            @player.state = $EditSource
+                            @player.moving = None
+                            if @player.tell_actions
+                                <tx, ty, tz> = <x, y, z> / scale
+                                tell @player: 2nd corner at {R(tx), (ty), (tz)
+                                @player.tell_actions()
+                                @player.tell_actions = False							
+                            end
+                        end
+                    end
+                end
+                as @Corner
+                    if @s.player == @player
+                        if edit_xmin and @s.edit_xmin then @s.x = x
+                        if edit_ymin and @s.edit_ymin then @s.y = y
+                        if edit_zmin and @s.edit_zmin then @s.z = z
+                        if edit_xmax and @s.edit_xmax then @s.x = x
+                        if edit_ymax and @s.edit_ymax then @s.y = y
+                        if edit_zmax and @s.edit_zmax then @s.z = z
+                    end
+                end
+                @s.get_minmax()
+                as @Corner
+                    if @s.player == @player
+                        if @s.center_x then @s.x = (xmin + xmax) / 2
+                        if @s.center_y then @s.y = (ymin + ymax) / 2
+                        if @s.center_z then @s.z = (zmin + zmax) / 2
+                    end
+                end
+            end
+            
+            if @s.state == $EditDest
+                @s.corner_target($Type_Dest)
+                if click
+                    click = False
+                    as @Corner if @s.player == @player and @s.type == $Type_Dest and @s.highlighted
+                        /team join moving
+                        @player.moving = @s
+                        @player.state = $MovingDest
+                        @player.create_click()
+                    end
+                end
+            end
+            
+            move_dest = False
+            if @s.state == $MovingDest then move_dest = True
+            if @s.state == $CloneBrush then move_dest = True
+            
+            if move_dest
+                @s.get_cursor_position()
+                at <cursor>
+                    as @s.moving(@Corner)
+                        <moving_pos> = @s.<pos>
+                    end
+                    <movement> = here - <moving_pos>
+                    <movement> -= <movement> % 1000
+                    as @Corner if @s.player == @player and @s.type == $Type_Dest
+                        @s.<pos> += <movement>
+                    end
+                end
+                if click
+                    if @s.state == $MovingDest
+                        as @s.moving(@Corner)
+                            /team join dest
+                        end
+                        @s.moving = None
+                        @s.state = $EditDest
+                    end
+                    if @s.state == $CloneBrush
+                        @s.perform_clone()
+                    end
+                end
+            end
+            
+            if @s.state == $FillWait
+                at @s
+                    unless block ~ ~ ~ air
+                        check_loaded()
+                        
+                        if loaded
+                            /clone ~ ~ ~ ~ ~ ~ 0 1 0
+                            @s.get_minmax()
+                            
+                            if has_box
+                                tell @s: Filling (box_xmin), (box_ymin), (box_zmin) to (box_xmax), (box_ymax), (box_zmax)
+                                
+                                /bossbar set progress players @s
+                                store_tile_drops()
+                                as create @Marker
+                                    for x = xmin to xmax by scale
+                                        percent = (x - xmin) * 100 / (xmax - xmin)
+                                        /execute store result bossbar progress value run scoreboard players get Global percent
+                                        for z = zmin to zmax by scale
+                                            for y = ymin to ymax by scale
+                                                @s.<pos> = <x, y, z>
+                                                at @s
+                                                    /clone 0 1 0 0 1 0 ~ ~ ~
+                                                end
+                                            end
+                                        end
+                                    end
+                                    /kill @s
+                                end
+                                restore_tile_drops()
+                                
+                                @s.state = $EditSource
+                            end
+                            /setblock ~ ~ ~ air
+                            
+                            unless has_box
+                                tell @s: You must select a box first.
+                            end
+                        end
+                    end
+                end
+            end
+            
+            if @s.state == $ReplaceWait1
+                at @s
+                    unless block ~ ~ ~ air
+                        @s.tell_replace2()					
+                    end
+                end
+            end
+            
+            if @s.state == $ReplaceWait2
+                at @s
+                    unless block ~ ~ ~ air
+                        @s.perform_replace()
+                    end
+                end
+            end
+            
+            if @s.state == $ReplaceWaitRandom
+                at @s
+                    unless block ~ ~ ~ air
+                        /clone ~ ~ ~ ~ ~ ~ 0 2 0
+                        /setblock ~ ~ ~ air
+                        
+                        @s.perform_random_replace()
+                    end
+                end
+            end
+            
+            @s.get_cursor_position()
+            if @s.edit at <cursor>
+                if click
+                    if @s.state == $Pick1
+                        as @s.pick1(@Corner)
+                            <x, y, z> = @s.<pos> / scale
+                            tell @player: 1st corner at {R(x), (y), (z)
+                        end
+                        @s.state = $EditingSource
+                        @s.tell_actions = True
+                        
+                        @s.pick2 = create @Corner
+                        as @s.pick2(@Corner)
+                            @s.player = @player
+                            @s.type = $Type_Source
+                            /team join moving
+                            @s.edit_xmax = True
+                            @s.edit_ymax = True
+                            @s.edit_zmax = True
+                        end
+                        @s.moving = @player.pick2
+                        
+                        for ex = -1 to 1
+                            for ey = -1 to 1
+                                for ez = -1 to 1
+                                    skip = False
+                                    sum = abs(ex + ey + ez)
+                                    
+                                    skip = False
+                                    if ex == -1 and ey == -1 and ez == -1 then skip = True
+                                    if ex == 1 and ey == 1 and ez == 1 then skip = True
+                                    if ex == 0 and ey == 0 and ez == 0 then skip = True
+                                    
+                                    if not skip
+                                        as create @Corner
+                                            @s.player = @player
+                                            @s.type = $Type_Source
+                                            /team join source
+                                            if ex == -1 then @s.edit_xmin = True
+                                            if ex == 0 then @s.center_x = True
+                                            if ex == 1 then @s.edit_xmax = True
+                                            
+                                            if ey == -1 then @s.edit_ymin = True
+                                            if ey == 0 then @s.center_y = True
+                                            if ey == 1 then @s.edit_ymax = True
+
+                                            if ez == -1 then @s.edit_zmin = True
+                                            if ez == 0 then @s.center_z = True
+                                            if ez == 1 then @s.edit_zmax = True
+                                        end
+                                    end
+                                end
+                            end
+                        end
+
+                        move @Corner ~ ~ ~
+                    end
+                end
+            end
+        end
+    end
+    collect_garbage()
+end
+
+function collect_garbage()
+    /bossbar set progress players
+    /execute store result bossbar progress value run scoreboard players set Global percent 0
+    @a.right_click = False
+    
+    as @ClickDetector
+        @s.absorption = 100
+        @s.<vel> = 0
+        /effect give @s invisibility 1000000 0 true
+        /effect give @s water_breathing 1000000 4 true
+        /effect give @s minecraft:fire_resistance 1000000 4 true
+        @s.fire_timer = 0
+        move @s ~ ~ ~
+    end
+
+    as @Corner
+        @s.absorption = 100
+        @s.<vel> = 0
+        /effect give @s invisibility 1000000 0 true
+        move @s ~ ~ ~
+    end
+    
+    as @CloneDisplay
+        @s.absorption = 100
+        @s.fire_timer = 0
+        @s.<vel> = 0
+        move @s ~ ~ ~
+    end
+    
+    @Corner.kill = True
+    @ClickDetector.kill = True
+    @CloneDisplay.kill = True
+    for @player in @Player
+        at @s
+            as @s.click
+                @s.kill = False
+            end
+            as @Corner if @s.player == @player
+                @s.kill = False
+            end
+            as @s.from_display
+                @s.kill = False
+            end
+            as @s.to_display
+                @s.kill = False
+            end
+        end
+    end
+    
+    as @e[kill] at @s
+        move @s ~ -100 ~
+        /kill @s
+    end
+end

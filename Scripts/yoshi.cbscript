@@ -1,0 +1,444 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+desc: Ride Yoshi.
+
+$marker: "\"Marker\":1b, \"Invisible\":1b, \"NoGravity\":1b, \"Invulnerable\":1b, Silent:1b"
+
+define @Entity = @e
+	x = Pos[0] double 1000
+	y = Pos[1] double 1000
+	z = Pos[2] double 1000
+	vx = Motion[0] double 1000
+	vy = Motion[1] double 1000
+	vz = Motion[2] double 1000
+	ry = Rotation[0] float 1
+	rx = Rotation[1] float 1
+	on_ground = OnGround byte 1
+	no_gravity = NoGravity byte 1
+end
+
+$block1: (-0.75, -0.25, 0.5, 'red_wool')
+$block2: (0.75, -0.25, 0.5, 'red_wool')
+$block3: (-0.5, 1, 0, 'lime_wool')
+$block4: (0, 1, 0, 'lime_wool')
+$block5: (0.5, 1, 0, 'lime_wool')
+$block6: (-0.5, 1, 1, 'lime_wool')
+$block7: (0, 1, 1.15, 'white_wool')
+$block8: (0.5, 1, 1, 'lime_wool')
+$block9: (0, 1.5, 0.25, 'red_wool')
+$block10: (0, 2, 1.5, 'lime_wool')
+$block11: (0, 2.6, 1.5, 'lime_wool')
+$block12: (0, 2, 2.2, 'lime_wool')
+
+$blocks: [block1, block2, block3, block4, block5, block6, block7, block8, block9, block10, block11, block12]
+
+$tblock1: (0.4, 2.5, 1.9, 'white_wool')
+$tblock2: (-0.4, 2.5, 1.9, 'white_wool')
+$tblock3: (-0.75, 0.5, 0.5, 'lime_wool')
+$tblock4: (0.75, 0.5, 0.5, 'lime_wool')
+$tblock5: (0, 1.4, -0.7, 'lime_wool')
+$tblock6: (0.4, 2.6, 2.2, 'stone_button')
+$tblock7: (-0.4, 2.6, 2.2, 'stone_button')
+
+$tiny_blocks: [tblock1, tblock2, tblock3, tblock4, tblock5, tblock6, tblock7]
+
+$Red: 14
+$Yellow: 4
+$Blue: 11
+
+define @MiniBlock = @Entity[type=armor_stand,name=MiniBlock]
+	create: {CustomName:"\"MiniBlock\"", $marker}
+end
+
+define @TinyBlock = @Entity[type=armor_stand,name=TinyBlock]
+	create: {CustomName:"\"TinyBlock\"", Pose:{RightArm:[-15f,-45f,0f], ShowArms:1b}, $marker}
+end
+
+define @Yoshi = @Entity[type=horse,name=Yoshi]
+	create: {CustomName:"\"Yoshi\"", SaddleItem:{id:"minecraft:saddle",Count:1b},Tame:1b, Silent:1b, Invulnerable:1b}
+
+	function fly()
+		@s.no_gravity = 1
+		@s.vy = 100
+		unless fly_snd_cooldown > 0 at @s
+			/playsound minecraft:entity.bat.ambient neutral @a ~ ~ ~ 1 0 0		
+			fly_snd_cooldown = 4
+		end
+		fly_snd_cooldown--
+	end
+end
+
+define @Marker = @Entity[type=armor_stand,name=Marker]
+	create: {CustomName:"\"Marker\"", $marker}
+end
+
+define @GroundPound = @Entity[type=armor_stand,name=GroundPound]
+	create: {CustomName:"\"GroundPound\"", $marker}
+end
+
+define @Fireball = @Entity[type=fireball,name=Fireball]
+	create: {CustomName:"{\"text\":\"Fireball\"}",direction:[0d,0d,0d]}
+	dirx = power[0] double 1000
+	diry = power[1] double 1000
+	dirz = power[2] double 1000
+end
+
+define @ClickDetector = @Entity[type=slime,name=ClickDetector]
+	create: {CustomName:"\"ClickDetector\"", NoGravity:1b, NoAI: 1b, Invisible:1b, Silent:1b, Size:1, Attributes:[{Base:100.0d, Name:"generic.maxHealth"}]}
+	hp = AbsorptionAmount float 1
+end
+
+define @Sheep = @Entity[type=sheep]
+	color = Color byte 1
+end
+
+reset
+	/kill @MiniBlock
+	/kill @TinyBlock
+	/tp @Yoshi ~ -200 ~
+	/kill @Yoshi
+	/tp @ClickDetector ~ -200 ~
+	/kill @ClickDetector
+	
+	/team add nopush
+	/team modify nopush collisionRule never
+
+	
+	at @p
+		for $i in: range(len(blocks))
+			$block_id: blocks[i][3]
+			as create @MiniBlock
+				/replaceitem entity @s armor.head minecraft:$block_id
+				@s.idx = $i
+				@s.nonstick = True
+			end
+		end
+		
+		for $i in: range(len(tiny_blocks))
+			$block_id: tiny_blocks[i][3]
+			as create @TinyBlock
+				/replaceitem entity @s weapon.mainhand minecraft:$block_id
+				@s.idx = $i
+				@s.nonstick = True
+			end
+		end
+	
+		as create @Yoshi
+			/effect give @s minecraft:invisibility 1000000 0 true
+			@s.animation = 0
+			@s.nonstick = True
+			prevx = @s.x
+			prevy = @s.y
+			prevz = @s.z
+		end
+		
+		as create @ClickDetector
+			@s.hp = 100
+			/effect give @s minecraft:invisibility 1000000 0 true
+			/team join nopush
+			@s.nonstick = True
+		end
+	end
+end
+
+clock main
+	as @ClickDetector
+		if @s.hp < 100 and tongue_timer == 0
+			if not shell
+				tongue_timer = 12
+				part = 0
+				at @s ~ ~-0.5 ~ rotated @s
+					/playsound minecraft:block.note_block.flute neutral @a ~ ~ ~ 1 0.5 0
+					while part < 15
+						part++
+						as create @TinyBlock
+							@s.tongue_part = part
+							/replaceitem entity @s weapon.mainhand minecraft:red_wool
+							/tp @s ~ ~ ~ ~ ~
+							@s.nonstick = True
+						end
+					end
+				end
+			end
+			if shell
+				if color == $Red
+					at @s ^ ^ ^1
+						dy = -2000
+						while dy < 1000
+							dy += 1000
+							
+							as create @Marker
+								/tp @s @ClickDetector[limit=1]
+								x1 = @s.x
+								z1 = @s.z
+								move @s ^ ^ ^2
+								dx = @s.x - x1
+								dz = @s.z - z1
+								/kill @s
+							end
+							as create @Fireball
+								@s.dirx = dx/20
+								@s.diry = dy/20
+								@s.dirz = dz/20
+								@s.y += dy*2
+							end							
+						end
+						/playsound minecraft:entity.blaze.shoot neutral @a ~ ~ ~ 1 1 0
+					end
+				end
+				unless color == $Red
+					at @s
+						/playsound minecraft:entity.guardian.hurt neutral @a ~ ~ ~ 1 2 0
+						as create @Sheep
+							@s.color = color
+							as create @Marker
+								/tp @Marker @ClickDetector[limit=1]
+								x1 = @s.x
+								z1 = @s.z
+								/tp @s ^ ^ ^1
+								dx = @s.x - x1
+								dz = @s.z - z1
+								/kill @s
+							end
+							@s.dx = dx
+							@s.dz = dz
+							@s.vx = dx
+							@s.vz = dz
+							@s.shell = True
+						end
+					end
+				end
+				
+				shell = False
+			end
+		end
+		@s.hp = 100
+	end
+	
+	as @Sheep[shell]
+		if @s.vx == 0
+			@s.dx = -@s.dx
+			at @s
+				/playsound minecraft:block.coral_block.fall neutral @a ~ ~ ~ 1 0 0
+			end
+		end
+		if @s.vz == 0
+			@s.dz = -@s.dz
+			at @s
+				/playsound minecraft:block.coral_block.fall neutral @a ~ ~ ~ 1 0 0
+			end
+		end
+		@s.vx = @s.dx
+		@s.vz = @s.dz
+		/data merge entity @s {OnGround:0b}
+	end
+
+	if tongue_timer > 0
+		tongue_timer--
+	end
+	if tongue_timer >= 6
+		tongue_delta = 80 * (12 - tongue_timer)
+	end
+	if tongue_timer == 6
+		at @Yoshi
+			/playsound minecraft:block.note_block.flute neutral @a ~ ~ ~ 1 1.5 0
+		end
+	end
+	if tongue_timer < 6
+		tongue_delta = 80 * tongue_timer
+	end
+	if tongue_timer == 0
+		/kill @TinyBlock[tongue_part > 0]
+		if @e[stuck]
+			is_shell = False
+			if @Sheep[stuck]
+				is_shell = True
+				color = @Sheep[stuck,limit=1].color
+			end
+			
+			if is_shell then shell = True
+			if not is_shell then shell = False
+
+			at @e[stuck] if not shell
+				/playsound minecraft:entity.witch.drink neutral @a ~ ~ ~ 1 1 1
+			end
+
+			/tp @e[stuck] ~ -200 ~			
+			/kill @e[stuck]
+		end
+	end
+		
+	as @Yoshi at @s rotated @s
+		anim_frame = (@Yoshi.animation / 3) % 4
+		curx = @s.x
+		cury = @s.y
+		curz = @s.z
+
+		as create @Marker
+			@s.nonstick = True
+			/tp @s ~ ~ ~ ~ 0
+			@s.x += (curx - prevx) * 3
+			dy = (cury - prevy) * 3
+			if dy < -1000
+				dy = -1000
+			end
+			@s.y += dy
+			@s.z += (curz - prevz) * 3
+			
+			@Yoshi.animation += 2
+			
+			if curx == prevx and curz == prevz
+				@Yoshi.animation = 0
+			end
+		
+			at @s rotated @s
+				for $i in: range(len(blocks))
+					$x: blocks[i][0] * 0.6
+					$y: blocks[i][1] * 0.6 - 1.4
+					$z: blocks[i][2] * 0.6
+					at ^$x ^$y ^$z
+						as @MiniBlock if @s.idx == $i
+							/tp @s ~ ~ ~ ~ ~
+							if: i == 0
+								if anim_frame == 1 then move @s ^ ^ ^0.25
+								if anim_frame == 3 then move @s ^ ^ ^-0.25
+							end
+							if: i == 1
+								if anim_frame == 1 then move @s ^ ^ ^-0.25
+								if anim_frame == 3 then move @s ^ ^ ^0.25
+							end
+						end
+					end
+				end
+				
+				for $i in: range(len(tiny_blocks))
+					$x: tiny_blocks[i][0] * 0.6 + 0.0625
+					$y: tiny_blocks[i][1] * 0.6 - 0.5
+					$z: tiny_blocks[i][2] * 0.6 - 0.375
+					at ^$x ^$y ^$z
+						as @TinyBlock if @s.idx == $i
+							/tp @s ~ ~ ~ ~ ~
+						end
+					end
+				end
+				
+				move @s ^ ^0.65 ^1
+				
+				x1 = @s.x
+				y1 = @s.y
+				z1 = @s.z
+				
+				move @s ^ ^ ^1
+				
+				dx = @s.x - x1
+				dz = @s.z - z1
+				
+				move @s ^ ^ ^-1
+				move @s ^ ^-0.65 ^-1
+				
+				part = 0
+				while part < 15
+					part++
+					for @CurrentBlock in @TinyBlock
+						if @s.tongue_part == part
+							as create @Marker
+								@s.nonstick = True
+								@s.x = x1 + (dx * part * tongue_delta / 1000)
+								@s.y = y1
+								@s.z = z1 + (dz * part * tongue_delta / 1000) - 400
+								/tp @CurrentBlock @s
+								if part == 15
+									unless @e[stuck] at @s
+										@e.nonstick += 0
+										@a.nonstick = 1
+										@e[limit=1, not nonstick, distance=..2, sort=nearest].stuck = True
+										as @e[stuck]
+											@s.nonstick = True
+											@s.shell = False
+										end
+									end
+									/tp @e[stuck] @s
+								end
+								/kill @s
+							end
+						end
+					end
+				end
+				
+				at ^ ^1.2 ^1.15
+					/tp @ClickDetector ~ ~ ~ ~ ~
+				end
+			end
+			/kill @s
+		end
+		
+		@s.no_gravity = 0
+		if shell and color == $Blue and @s.rx < 0 and not @s.on_ground
+			@s.fly()
+		end
+		
+		prevx = @s.x
+		prevy = @s.y
+		prevz = @s.z
+		
+		if shell and color == $Yellow and @s.on_ground and air_time >= 10
+			at @s
+				as create @GroundPound
+					@s.radius = 0
+				end
+				/playsound minecraft:entity.zombie.infect neutral @a ~ ~ ~ 1 1 0
+			end
+		end
+		
+		if @s.on_ground
+			air_time = 0
+		end
+		if not @s.on_ground
+			air_time++
+		end
+	end
+	
+	as @GroundPound
+		@s.radius++
+		angle = 0
+		while angle < 360
+			angle += 30
+			@s.ry = angle
+			step = 0
+			while step < @s.radius
+				step++
+				move @s ^ ^ ^1
+			end
+			at @s
+				/particle minecraft:explosion ~ ~ ~ 0 0 0 0 1 force @a
+				as @e unless @s.nonstick do @s.nonstick = False
+				/effect give @e[not nonstick,distance=..2] minecraft:instant_damage 1 0 true
+			end
+			step = 0
+			while step < @s.radius
+				step++
+				move @s ^ ^ ^-1
+			end
+		end
+		
+		if @s.radius >= 8
+			/kill @s
+		end
+	end
+	
+	as @MiniBlock
+		/data merge entity @s {Fire:32767s}	
+	end
+	as @TinyBlock
+		/data merge entity @s {Fire:32767s}	
+	end
+	
+	as @Fireball
+		@s.age++
+		/kill @s[age >= 100]
+	end
+	
+	moving = False
+	unless @Yoshi[limit=1].vx == 0 do moving = True
+	unless @Yoshi[limit=1].vz == 0 do moving = True
+	if moving then @Yoshi.animation--
+end

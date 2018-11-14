@@ -1,0 +1,31 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+desc: Create rotating magnets.
+
+$marker: "\"Marker\":1b, \"Invisible\":1b, \"NoGravity\":1b, \"Invulnerable\":1b, Silent:1b"
+
+define @Entity = @e
+	x = Pos[0] double 1000
+	y = Pos[1] double 1000
+	z = Pos[2] double 1000
+	vx = Motion[0] double 1000
+	vy = Motion[1] double 1000
+	vz = Motion[2] double 1000
+	ry = Rotation[0] float 1
+	rx = Rotation[1] float 1
+	on_ground = OnGround byte 1
+	no_gravity = NoGravity byte 1
+end
+
+@Magnet = @Entity[type=armor_stand, name=Magnet]
+
+reset
+	/give @s minecraft:armor_stand{EntityTag:{ShowArms:1b,Pose:{LeftArm:[0f,0f,-90f],RightArm:[0f,0f,90f]},HandItems:[{id:"minecraft:red_wool",Count:1b},{id:"minecraft:black_wool",Count:1b}],CustomName:"{\"text\":\"Magnet\"}"}} 1
+end
+
+clock main
+	for @m1 in @Magnet
+		for @m2 in @Magnet
+			
+		end
+	end
+end

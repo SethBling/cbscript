@@ -1,0 +1,91 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+desc: Player controls a Monkey Ball.
+scale: 1000
+
+$marker: "Marker:1b, Invisible:1b, NoGravity:1b, Invulnerable:1b, Silent:1b"
+
+define @Entity = @e
+	x = Pos[0] double
+	y = Pos[1] double
+	z = Pos[2] double
+	<pos> = Pos double
+	vx = Motion[0] double
+	vy = Motion[1] double
+	vz = Motion[2] double
+	<vel> = Motion double
+	ry = Rotation[0] float
+	rx = Rotation[1] float
+	on_ground = OnGround byte 1
+	no_gravity = NoGravity byte 1
+	
+	function get_facing_dir()
+		at @s rotated @s at ^ ^ ^1 do @s.<facing_dir> = here - @s.<pos>
+	end
+end
+
+define @Marker = @Entity[type=area_effect_cloud,name=Marker]
+	create: {"CustomName":"\"Marker\"", Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+@Player = @Entity[type=player,limit=1]
+
+define @Ball = @Entity[type=slime,name=Ball,limit=1]
+	create: {CustomName:"\"Ball\"", Silent:1b, Size:1, Invulnerable:1}
+	size = Size int 1
+	hp = AbsorptionAmount float 1
+end 
+
+reset
+	/tp @Ball ~ -200 ~
+	/kill @Ball
+
+	as @p rotated @s at @s ^0 ^2 ^5
+		as create @Ball
+			@s.hp = 100
+		end
+	end
+end
+
+clock main
+	<movement> = @Player.<prev> - @Player.<pos>
+	
+	dot = <movement> * @Player.<facing_dir> / 1000
+	
+	rolling_dot = rolling_dot * 4 / 5 + dot / 5
+	angle = 45000 + rolling_dot * 50
+	
+	as @Player at @s rotated @s
+		as create @Marker
+			/tp @s @Player
+			@s.rx = angle
+			rotated @s
+				/tp @Player ~ ~ ~ ~ ~
+			end
+		end
+	end
+
+	<lookat> = @Ball.<pos>
+	@Player.get_facing_dir()
+	at <lookat> - (30 * @Player.<facing_dir>)
+		/tp @Player ~ ~ ~
+		@Player.<prev> = here
+	end
+	
+	at @Player
+		as create @Marker
+			/tp @s @Player
+			at @s rotated @s
+				/tp @s ~ ~ ~ ~ ~-45
+			end
+			rotated @s at @s ^ ^-1 ^
+				<grav> = here - @s.<pos>
+			end
+			/kill @s
+		end
+	end
+	
+	as @Ball
+		@s.on_ground = False
+		@s.<vel> += <grav> / 5
+	end
+end

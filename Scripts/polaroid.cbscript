@@ -1,0 +1,131 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\Polaroid
+desc: Creating a map takes a picture of the scene you're looking at.
+
+$marker: "\"Marker\":1b, \"NoGravity\":1b, \"Invulnerable\":1b"
+
+define @Entity = @e
+	x = Pos[0] double 1000
+	y = Pos[1] double 1000
+	z = Pos[2] double 1000
+	ry = Rotation[0] float 1
+	rx = Rotation[1] float 1
+end
+
+define @Player = @Entity[type=player]
+	map_id = SelectedItem.tag.map int 1
+end
+
+define @Ray = @Entity[type=armor_stand,name=Ray,limit=1]
+	create: {"CustomName":"\"Ray\"", $marker}
+end
+
+define @Basis = @Entity[type=armor_stand,name=Basis,limit=1]
+	create: {"CustomName":"\"Basis\"", $marker}
+end
+
+define @Pixel = @Entity[type=armor_stand,name=Pixel,limit=1]
+	create: {"CustomName":"\"Pixel\"", $marker}
+end
+
+reset
+	unless block 0 5 0 barrier
+		for $cx in: range(-4, 4)
+			for $cz in: range(-4, 4)
+				$xmin: cx*16
+				$xmax: cx*16+15
+				$zmin: cz*16
+				$zmax: cz*16+15
+				/fill $xmin 0 $zmin $xmax 100 $zmax minecraft:barrier
+			end
+		end
+		/kill @e[type=item,x=-64,y=0,z=-64,dx=128,dy=101,dz=128]
+		/setworldspawn 0 101 0
+		/gamerule maxCommandChainLength 100000000
+		/gamerule randomTickSpeed 0
+	end
+	speed = 1000
+	/kill @Basis
+	/kill @Ray
+	/kill @Pixel
+end
+
+clock main
+	@a.take_picture = False
+	/execute as @a[nbt={"SelectedItem":{"id":"minecraft:filled_map"}}] run scoreboard players set @s take_picture 1
+	as @Player
+		if @s.map_id == 0 then @s.take_picture = False
+		
+		if @s.take_picture
+			at @s ~ ~1.6 ~ do create @Basis
+			
+			at @s ~ ~1.6 ~ do create @Pixel
+			@Pixel.ry = @s.ry
+			@Pixel.rx = @s.rx
+			move @Pixel ^4 ^4 ^5
+			
+			at @Basis do create @Ray
+			/tp @Ray @Basis	
+			
+			row = -64
+			col = -64
+			step = 0
+			
+			@s.map_id = 0
+		end
+	end
+
+	loop_step = 0
+	while @Basis and loop_step < speed
+		loop_step++
+		move @Ray ^ ^ ^1
+		step++
+		
+		collided = True
+		at @Ray
+			if block ~ ~ ~ air then collided = False
+			if block ~ ~ ~ grass then collided = False
+			if block ~ ~ ~ rose_bush then collided = False
+		end
+		
+		if collided then step = 200
+
+		if step >= 100
+			at @Ray
+				/clone ~ ~ ~ ~ ~ ~ 0 3 0 replace
+			end
+			
+			@Ray.x = col*1000
+			@Ray.z = row*1000
+			at @Ray ~ 1 ~
+				/fill 0 3 0 0 3 0 minecraft:water replace minecraft:water
+				/fill 0 3 0 0 3 0 minecraft:barrier replace minecraft:air
+				/clone 0 3 0 0 3 0 ~ ~ ~ replace move
+			end
+			/setblock 0 3 0 minecraft:barrier
+		
+			col++
+			move @Pixel ^-0.0625 ^ ^
+			if col >= 64
+				col = -64
+				row++
+				move @Pixel ^8 ^-.0625 ^
+				if row >= 64
+					/kill @Pixel
+					/kill @Ray
+					/kill @Basis
+
+					/setblock 0 111 0 minecraft:barrier
+					/tp @a 0 112 0
+				end
+			end
+
+			as @Basis at @s
+				/tp @s ~ ~ ~ facing entity @Pixel
+			end
+			/tp @Ray @Basis
+			step = 0
+		end
+	end
+	
+	move @Ray ~ ~ ~
+end

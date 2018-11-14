@@ -1,0 +1,22 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+
+array test[6]
+
+reset
+	test[3] = 10
+	i = 3
+	val = test[i]
+	tell @a: (val)
+	i = 2
+	test[i] = i
+	val = test[2]
+	tell @a: (val)
+	i=4
+	test[i] = i + 4
+	val = test[i]
+	tell @a: (val)
+end
+
+clock main
+
+end

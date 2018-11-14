@@ -1,0 +1,219 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+desc: Fire an arrow to shrink a region of blocks.
+
+$marker: "\"Marker\":1b, \"Invisible\":1b, \"NoGravity\":1b, \"Invulnerable\":1b"
+$blocks: ["minecraft:poppy","minecraft:lapis_ore","minecraft:slime_block","minecraft:purple_shulker_box","minecraft:mossy_cobblestone_wall","minecraft:blue_stained_glass_pane","minecraft:podzol","minecraft:redstone_ore","minecraft:tube_coral_fan","minecraft:wet_sponge","minecraft:dark_oak_fence","minecraft:packed_ice","minecraft:light_gray_carpet","minecraft:stripped_spruce_log","minecraft:red_terracotta","minecraft:stone_button","minecraft:white_bed","minecraft:structure_void","minecraft:lilac","minecraft:dead_fire_coral_fan","minecraft:pink_terracotta","minecraft:blue_banner","minecraft:orange_concrete_powder","minecraft:white_stained_glass_pane","minecraft:gold_ore","minecraft:acacia_trapdoor","minecraft:jungle_planks","minecraft:skeleton_skull","minecraft:oak_pressure_plate","minecraft:yellow_glazed_terracotta","minecraft:magma_block","minecraft:chipped_anvil","minecraft:yellow_terracotta","minecraft:acacia_button","minecraft:purple_bed","minecraft:purple_banner","minecraft:dead_horn_coral_fan","minecraft:mushroom_stem","minecraft:light_gray_wool","minecraft:brown_stained_glass_pane","minecraft:grass_block","minecraft:iron_trapdoor","minecraft:jungle_slab","minecraft:horn_coral_fan","minecraft:jungle_log","minecraft:red_mushroom","minecraft:orange_terracotta","minecraft:smooth_sandstone","minecraft:magenta_shulker_box","minecraft:jungle_wood","minecraft:dead_bubble_coral","minecraft:ender_chest","minecraft:light_blue_glazed_terracotta","minecraft:blue_terracotta","minecraft:repeater","minecraft:sandstone_slab","minecraft:dandelion","minecraft:seagrass","minecraft:pink_stained_glass_pane","minecraft:red_glazed_terracotta","minecraft:red_bed","minecraft:orange_stained_glass_pane","minecraft:jukebox","minecraft:cactus","minecraft:infested_cobblestone","minecraft:oak_wood","minecraft:soul_sand","minecraft:white_wool","minecraft:white_tulip","minecraft:magenta_carpet","minecraft:dark_oak_door","minecraft:wheat","minecraft:black_bed","minecraft:pink_concrete","minecraft:nether_brick_stairs","minecraft:acacia_leaves","minecraft:smooth_quartz","minecraft:light_gray_stained_glass_pane","minecraft:dead_tube_coral_block","minecraft:light_blue_concrete","minecraft:white_stained_glass","minecraft:dark_prismarine_stairs","minecraft:cyan_shulker_box","minecraft:prismarine_bricks","minecraft:stripped_oak_log","minecraft:red_mushroom_block","minecraft:red_stained_glass","minecraft:stone","minecraft:gray_glazed_terracotta","minecraft:jungle_button","minecraft:light_blue_bed","minecraft:stone_pressure_plate","minecraft:structure_block","minecraft:orange_carpet","minecraft:fire_coral_fan","minecraft:chorus_flower","minecraft:nether_brick_slab","minecraft:brown_concrete_powder","minecraft:granite","minecraft:light_gray_stained_glass","minecraft:spruce_wood","minecraft:dark_oak_slab","minecraft:gravel","minecraft:chain_command_block","minecraft:bubble_coral_block","minecraft:tripwire_hook","minecraft:cobweb","minecraft:acacia_sapling","minecraft:gray_terracotta","minecraft:petrified_oak_slab","minecraft:birch_leaves","minecraft:blue_stained_glass","minecraft:crafting_table","minecraft:stripped_birch_log","minecraft:orange_shulker_box","minecraft:jungle_stairs","minecraft:purple_wool","minecraft:purpur_block","minecraft:jungle_pressure_plate","minecraft:infested_stone","minecraft:bookshelf","minecraft:purple_concrete_powder","minecraft:cobblestone_stairs","minecraft:enchanting_table","minecraft:white_concrete","minecraft:purpur_stairs","minecraft:bricks","minecraft:purple_carpet","minecraft:obsidian","minecraft:brick_slab","minecraft:stone_brick_slab","minecraft:white_shulker_box","minecraft:purple_glazed_terracotta","minecraft:observer","minecraft:blue_shulker_box","minecraft:birch_stairs","minecraft:redstone_lamp","minecraft:carved_pumpkin","minecraft:acacia_slab","minecraft:brain_coral_block","minecraft:dead_fire_coral","minecraft:lime_carpet","minecraft:quartz_pillar","minecraft:acacia_log","minecraft:glass_pane","minecraft:black_stained_glass_pane","minecraft:dark_oak_trapdoor","minecraft:birch_trapdoor","minecraft:diamond_block","minecraft:coal_ore","minecraft:rose_bush","minecraft:dark_prismarine_slab","minecraft:yellow_stained_glass_pane","minecraft:blue_orchid","minecraft:gray_bed","minecraft:purple_concrete","minecraft:sign","minecraft:dark_oak_planks","minecraft:green_concrete","minecraft:magenta_bed","minecraft:quartz_slab","minecraft:prismarine","minecraft:brown_banner","minecraft:dark_prismarine","minecraft:nether_wart_block","minecraft:zombie_head","minecraft:snow_block","minecraft:black_shulker_box","minecraft:sandstone_stairs","minecraft:pink_wool","minecraft:emerald_block","minecraft:stripped_acacia_log","minecraft:green_banner","minecraft:green_stained_glass_pane","minecraft:conduit","minecraft:light_gray_terracotta","minecraft:clay","minecraft:tnt","minecraft:creeper_head","minecraft:stripped_birch_wood","minecraft:red_sand","minecraft:peony","minecraft:purple_stained_glass","minecraft:birch_door","minecraft:bone_block","minecraft:damaged_anvil","minecraft:green_glazed_terracotta","minecraft:ice","minecraft:magenta_stained_glass","minecraft:gray_wool","minecraft:cracked_stone_bricks","minecraft:infested_cracked_stone_bricks","minecraft:magenta_concrete_powder","minecraft:blue_ice","minecraft:dead_brain_coral_block","minecraft:yellow_bed","minecraft:redstone_block","minecraft:piston","minecraft:light_weighted_pressure_plate","minecraft:heavy_weighted_pressure_plate","minecraft:yellow_concrete","minecraft:prismarine_brick_slab","minecraft:oak_leaves","minecraft:cyan_banner","minecraft:oak_trapdoor","minecraft:brown_terracotta","minecraft:coarse_dirt","minecraft:end_portal_frame","minecraft:dead_fire_coral_block","minecraft:blue_concrete_powder","minecraft:emerald_ore","minecraft:brown_mushroom","minecraft:gray_concrete_powder","minecraft:lever","minecraft:end_stone_bricks","minecraft:pink_stained_glass","minecraft:white_terracotta","minecraft:jungle_trapdoor","minecraft:note_block","minecraft:orange_stained_glass","minecraft:andesite","minecraft:white_glazed_terracotta","minecraft:light_gray_shulker_box","minecraft:yellow_banner","minecraft:allium","minecraft:repeating_command_block","minecraft:oak_stairs","minecraft:stone_bricks","minecraft:dead_bubble_coral_fan","minecraft:end_stone","minecraft:dead_bush","minecraft:oak_log","minecraft:white_banner","minecraft:orange_glazed_terracotta","minecraft:jack_o_lantern","minecraft:wither_skeleton_skull","minecraft:dead_brain_coral_fan","minecraft:furnace","minecraft:lime_shulker_box","minecraft:red_concrete","minecraft:red_carpet","minecraft:acacia_stairs","minecraft:chiseled_red_sandstone","minecraft:brown_carpet","minecraft:horn_coral_block","minecraft:beacon","minecraft:redstone_torch","minecraft:spruce_door","minecraft:fern","minecraft:green_shulker_box","minecraft:magenta_concrete","minecraft:glowstone","minecraft:red_wool","minecraft:cyan_stained_glass_pane","minecraft:lime_glazed_terracotta","minecraft:pink_carpet","minecraft:dropper","minecraft:green_wool","minecraft:lime_banner","minecraft:dark_oak_pressure_plate","minecraft:bubble_coral_fan","minecraft:chorus_plant","minecraft:hopper","minecraft:pumpkin","minecraft:diorite","minecraft:hay_block","minecraft:magenta_stained_glass_pane","minecraft:dark_oak_button","minecraft:light_gray_concrete","minecraft:brick_stairs","minecraft:yellow_concrete_powder","minecraft:black_stained_glass","minecraft:lapis_block","minecraft:snow","minecraft:spruce_leaves","minecraft:gray_shulker_box","minecraft:cyan_carpet","minecraft:birch_planks","minecraft:fire_coral_block","minecraft:brown_wool","minecraft:blue_wool","minecraft:dragon_head","minecraft:mycelium","minecraft:light_blue_stained_glass","minecraft:orange_tulip","minecraft:stripped_dark_oak_log","minecraft:anvil","minecraft:red_nether_bricks","minecraft:torch","minecraft:sticky_piston","minecraft:daylight_detector","minecraft:dragon_egg","minecraft:cyan_glazed_terracotta","minecraft:lily_pad","minecraft:smooth_stone","minecraft:bedrock","minecraft:nether_wart","minecraft:cyan_stained_glass","minecraft:red_concrete_powder","minecraft:fire_coral","minecraft:dead_bubble_coral_block","minecraft:acacia_door","minecraft:light_gray_banner","minecraft:spruce_pressure_plate","minecraft:gray_concrete","minecraft:lime_concrete","minecraft:stripped_dark_oak_wood","minecraft:quartz_stairs","minecraft:light_gray_bed","minecraft:purpur_slab","minecraft:dispenser","minecraft:stripped_oak_wood","minecraft:iron_ore","minecraft:spruce_fence_gate","minecraft:mossy_cobblestone","minecraft:chiseled_stone_bricks","minecraft:magenta_wool","minecraft:sponge","minecraft:black_carpet","minecraft:brown_stained_glass","minecraft:cyan_concrete_powder","minecraft:stone_brick_stairs","minecraft:green_bed","minecraft:brain_coral_fan","minecraft:brown_bed","minecraft:light_blue_banner","minecraft:brown_concrete","minecraft:grass_path","minecraft:acacia_fence","minecraft:spawner","minecraft:birch_slab","minecraft:chest","minecraft:cake","minecraft:green_carpet","minecraft:birch_sapling","minecraft:dried_kelp_block","minecraft:black_concrete_powder","minecraft:dead_brain_coral","minecraft:player_head","minecraft:sunflower","minecraft:green_stained_glass","minecraft:chiseled_sandstone","minecraft:gray_stained_glass","minecraft:light_blue_terracotta","minecraft:birch_fence","minecraft:lime_wool","minecraft:shulker_box","minecraft:lime_terracotta","minecraft:stripped_spruce_wood","minecraft:polished_diorite","minecraft:glass","minecraft:light_blue_carpet","minecraft:lime_stained_glass_pane","minecraft:diamond_ore","minecraft:tall_grass","minecraft:magenta_glazed_terracotta","minecraft:birch_fence_gate","minecraft:cyan_bed","minecraft:farmland","minecraft:stone_slab","minecraft:end_rod","minecraft:orange_bed","minecraft:yellow_stained_glass","minecraft:red_banner","minecraft:azure_bluet","minecraft:cut_sandstone","minecraft:purple_stained_glass_pane","minecraft:dark_oak_sapling","minecraft:orange_concrete","minecraft:trapped_chest","minecraft:yellow_wool","minecraft:dark_oak_log","minecraft:brown_glazed_terracotta","minecraft:flower_pot","minecraft:jungle_fence","minecraft:light_blue_stained_glass_pane","minecraft:purple_terracotta","minecraft:jungle_fence_gate","minecraft:vine","minecraft:black_concrete","minecraft:cobblestone_slab","minecraft:blue_bed","minecraft:oak_button","minecraft:birch_pressure_plate","minecraft:green_terracotta","minecraft:cut_red_sandstone","minecraft:dark_oak_stairs","minecraft:black_banner","minecraft:sea_lantern","minecraft:jungle_sapling","minecraft:prismarine_slab","minecraft:lime_stained_glass","minecraft:white_concrete_powder","minecraft:infested_stone_bricks","minecraft:sand","minecraft:oak_door","minecraft:prismarine_brick_stairs","minecraft:tube_coral","minecraft:lime_concrete_powder","minecraft:kelp","minecraft:brain_coral","minecraft:spruce_trapdoor","minecraft:oak_fence_gate","minecraft:dark_oak_leaves","minecraft:spruce_log","minecraft:quartz_block","minecraft:magenta_banner","minecraft:terracotta","minecraft:activator_rail","minecraft:blue_glazed_terracotta","minecraft:orange_wool","minecraft:brown_mushroom_block","minecraft:gray_stained_glass_pane","minecraft:turtle_egg","minecraft:gold_block","minecraft:oak_sapling","minecraft:red_sandstone","minecraft:detector_rail","minecraft:acacia_planks","minecraft:yellow_shulker_box","minecraft:dark_oak_fence_gate","minecraft:nether_brick_fence","minecraft:oak_planks","minecraft:command_block","minecraft:acacia_fence_gate","minecraft:smooth_red_sandstone","minecraft:sandstone","minecraft:light_gray_concrete_powder","minecraft:acacia_pressure_plate","minecraft:ladder","minecraft:iron_bars","minecraft:rail","minecraft:red_sandstone_slab","minecraft:nether_quartz_ore","minecraft:birch_log","minecraft:barrier","minecraft:spruce_planks","minecraft:light_gray_glazed_terracotta","minecraft:black_terracotta","minecraft:pink_bed","minecraft:oak_slab","minecraft:pink_banner","minecraft:stripped_acacia_wood","minecraft:sugar_cane","minecraft:blue_carpet","minecraft:nether_bricks","minecraft:pink_tulip","minecraft:infested_chiseled_stone_bricks","minecraft:black_wool","minecraft:prismarine_stairs","minecraft:cauldron","minecraft:magenta_terracotta","minecraft:green_concrete_powder","minecraft:jungle_door","minecraft:mossy_stone_bricks","minecraft:red_stained_glass_pane","minecraft:horn_coral","minecraft:tube_coral_block","minecraft:brewing_stand","minecraft:gray_banner","minecraft:pink_glazed_terracotta","minecraft:sea_pickle","minecraft:iron_door","minecraft:red_sandstone_stairs","minecraft:red_shulker_box","minecraft:spruce_sapling","minecraft:light_blue_shulker_box","minecraft:light_blue_concrete_powder","minecraft:birch_button","minecraft:oxeye_daisy","minecraft:infested_mossy_stone_bricks","minecraft:spruce_slab","minecraft:netherrack","minecraft:stripped_jungle_wood","minecraft:chiseled_quartz_block","minecraft:cyan_wool","minecraft:cyan_concrete","minecraft:cobblestone","minecraft:large_fern","minecraft:polished_andesite","minecraft:powered_rail","minecraft:melon","minecraft:jungle_leaves","minecraft:cyan_terracotta","minecraft:dark_oak_wood","minecraft:purpur_pillar","minecraft:spruce_button","minecraft:blue_concrete","minecraft:oak_fence","minecraft:spruce_stairs","minecraft:grass","minecraft:coal_block","minecraft:black_glazed_terracotta","minecraft:pink_concrete_powder","minecraft:brown_shulker_box","minecraft:pink_shulker_box","minecraft:yellow_carpet","minecraft:gray_carpet","minecraft:bubble_coral","minecraft:cobblestone_wall","minecraft:dead_tube_coral","minecraft:iron_block","minecraft:red_tulip","minecraft:stripped_jungle_log","minecraft:white_carpet","minecraft:dirt","minecraft:orange_banner","minecraft:light_blue_wool","minecraft:lime_bed","minecraft:acacia_wood","minecraft:birch_wood","minecraft:dead_tube_coral_fan","minecraft:dead_horn_coral","minecraft:dead_horn_coral_block","minecraft:polished_granite","minecraft:comparator","minecraft:spruce_fence"]
+
+define @Entity = @e
+	x = Pos[0] double 256
+	y = Pos[1] double 256
+	z = Pos[2] double 256
+	vx = Motion[0] double 256
+	vy = Motion[1] double 256
+	vz = Motion[2] double 256
+end
+
+define @Source = @Entity[type=armor_stand,name=Source]
+	create: {CustomName:"\"Source\"", $marker}
+end
+
+define @Dest = @Entity[type=armor_stand,name=Dest]
+	create: {CustomName:"\"Dest\"", $marker}
+end
+
+define @Scanner = @Entity[type=armor_stand,name=Scanner]
+	create: {CustomName:"\"Scanner\"", $marker}
+end
+
+define @Mini = @Entity[type=armor_stand,name=Mini]
+	create: {CustomName:"\"Mini\"", Pose:{RightArm:[-15f,-45f,0f], ShowArms:1b}, $marker}
+end
+
+
+@Arrow = @Entity[type=arrow]
+
+reset
+	@a.shooting = False
+	/kill @Source
+	/kill @Dest
+	/kill @Scanner
+	/kill @Mini
+	/gamerule maxCommandChainLength 1000000
+end
+
+clock main
+	as @Arrow at @s
+		@p.shooting = True
+		/kill @s
+	end
+	
+	at @a[shooting]
+		create @Source
+		/tp @Source @p
+		
+		create @Dest
+		/tp @Dest @p
+		
+		move @Dest ~ ~1.6 ~
+		
+		step = 0
+		while step < 200
+			step++
+			move @Dest ^ ^ ^1
+			at @Dest
+				unless block ~ ~ ~ air do step = 300
+				/particle minecraft:end_rod ^ ^ ^5 0.25 0.25 0.25 0 5 force @a
+			end
+		end
+		
+		if step < 300
+			/kill @Source
+			/kill @Dest
+		end
+		
+		if @Dest
+			/playsound 
+		end
+		
+		at @Dest ~-8 ~-8 ~-8 do create @Scanner
+		destx = @Dest[limit=1].x
+		desty = @Dest[limit=1].y
+		destz = @Dest[limit=1].z
+		
+		as @Scanner
+			/execute at @s align xyz run tp @s ~ ~ ~
+			x = 0
+			y = 0
+			z = 0
+			while x < 17
+				while y < 17
+					while z < 17
+						distsq = (destx-@s.x)^2 + (desty-@s.y)^2 + (destz-@s.z)^2
+						at @s if distsq < 4194304 unless block ~ ~ ~ air
+							as create @Mini ~0.5625 ~-0.375 ~0.125
+								@s.miniature = False
+								@s.finalized = False
+								@s.calc = False
+							end
+						end
+						move @s ~ ~ ~1
+						z++
+					end
+					z = 0
+					move @s ~ ~1 ~-17
+					y++
+				end
+				y = 0
+				move @s ~1 ~-17 ~
+				x++
+			end
+		end
+
+		sumx = 0
+		sumy = 0
+		sumz = 0
+		count = 0
+		as @Mini[not calc]
+			sumx += @s.x
+			sumy += @s.y
+			sumz += @s.z
+			count++
+		end
+		
+		@Mini[not calc].avex = sumx / count
+		@Mini[not calc].avey = sumy / count
+		@Mini[not calc].avez = sumz / count
+		
+		@Mini.calc = True
+		
+		@a.shooting = False
+		/kill @Scanner
+		/kill @Source
+		/kill @Dest
+		pitch = 0
+	end
+	
+	if @Mini[not miniature]
+		i=0
+		convert = count / 80 + 1
+		while i < convert
+			i++
+			as @Mini[not miniature, sort=random, limit=1]	
+				at @s ~-0.5625 ~0.375 ~-0.125
+					for $bl in: blocks
+						/execute if block ~ ~ ~ $bl run replaceitem entity @s weapon.mainhand $bl
+					end
+					/execute if block ~ ~ ~ minecraft:water run replaceitem entity @s weapon.mainhand minecraft:light_blue_stained_glass
+					/execute if block ~ ~ ~ minecraft:lava run replaceitem entity @s weapon.mainhand minecraft:orange_stained_glass
+
+					/setblock ~ ~ ~ minecraft:air
+					/particle minecraft:end_rod ~ ~ ~ 0.5 0.5 0.5 0 2 force @a
+				end
+
+				@s.miniature = True
+			end
+		end
+	end
+	
+	unless @Mini[not miniature]
+		i = 0
+		while i < convert
+			as @Mini[not finalized, sort=random, limit=1]
+				at @s
+					/particle minecraft:end_rod ~ ~ ~ 0.5 0.5 0.5 0 2 force @a
+				end
+				dx = @s.x - @s.avex
+				dy = @s.y - @s.avey
+				dz = @s.z - @s.avez
+				
+				dx = dx * 6 / 16
+				dz = dz * 6 / 16
+				dy = dy * 6 / 16
+				
+				@s.x = @s.avex + dx
+				@s.y = @s.avey + dy
+				@s.z = @s.avez + dz
+
+				move @s ~ ~ ~		
+				
+				@s.finalized = True
+			end
+			i++
+		end
+	end
+	
+	if @Mini[not miniature]
+		pitch++
+		for $p in: range(90)
+			$gp: p / 60.0 + 0.5
+			if pitch == $p
+				as @a at @s
+					/playsound minecraft:entity.item.pickup ambient @s ~ ~ ~ 1 $gp
+				end
+			end
+		end
+		if pitch >= 90
+			pitch = 90
+			as @a at @s
+				/playsound minecraft:entity.item.pickup ambient @s ~ ~ ~ 1 2
+			end
+		end
+	end
+	
+	unless @Mini[not miniature] if @Mini[not finalized]
+		pitch--
+		for $p in: range(90)
+			$gp: p / 60.0 + 0.5
+			if pitch == $p
+				as @a at @s
+					/playsound minecraft:entity.enderman.teleport ambient @s ~ ~ ~ 1 $gp
+				end
+			end
+		end
+		if pitch < 0
+			as @a at @s
+				/playsound minecraft:entity.enderman.teleport ambient @s ~ ~ ~ 1 0
+			end
+		end
+	end
+end

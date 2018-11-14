@@ -1,0 +1,25 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+
+function ray_trace()
+	step++
+	if step >= 30
+		/particle minecraft:explosion
+	end
+	unless block ~ ~ ~ air
+		/particle minecraft:explosion
+	end
+	if step < 30 and block ~ ~ ~ air at ^ ^ ^1
+		ray_trace()
+	end
+end
+
+reset
+
+end
+
+clock main
+	as @a at @s ~ ~1.6 ~ rotated @s
+		step = 0
+		ray_trace()
+	end
+end

@@ -1,0 +1,320 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+desc: Enderman makes a clock tick.
+scale: 1000
+
+$marker: "Marker:1b, Invisible:1b, NoGravity:1b, Invulnerable:1b, Silent:1b"
+
+define @Entity = @e
+	x = Pos[0] double
+	y = Pos[1] double
+	z = Pos[2] double
+	<pos> = Pos double
+	vx = Motion[0] double
+	vy = Motion[1] double
+	vz = Motion[2] double
+	<vel> = Motion double
+	ry = Rotation[0] float
+	rx = Rotation[1] float
+	on_ground = OnGround byte 1
+	no_gravity = NoGravity byte 1
+	
+	function get_facing_dir()
+		at @s rotated @s at ^ ^ ^1 do <facing_dir> = here - @s.<pos>
+	end
+end
+
+define @Enderman = @Entity[type=enderman,name=Clockerman,limit=1]
+	create: {"CustomName":"\"Clockerman\""}
+end
+
+define @Marker = @Entity[type=area_effect_cloud,name=Marker]
+	create: {"CustomName":"\"Marker\"", Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+@Player = @Entity[type=player, limit=1]
+
+reset
+	/kill @Marker
+	/kill @Enderman
+	/fill -10 56 179 29 66 190 air
+	/fill -10 55 179 29 55 190 red_sandstone
+	
+	at @p
+		for x = 19 to 27
+			for y = 56 to 58
+				for z = 187 to 189
+					as create @Marker
+						<@s.x, @s.y, @s.z> = <x, y, z> * scale + <500, 0, 500>
+						@s.pile = True
+					end
+				end
+			end
+		end
+	end
+	
+	at 20 56 185 do create @Enderman
+	as @Marker[pile] at @s
+		/setblock ~ ~ ~ diamond_block
+	end
+	
+	for digit = 1 to 4
+		for vseg = 1 to 3
+			for piece = 1 to 5
+				as create @Marker
+					@s.segment = True
+					@s.horizontal = True
+					@s.digit = digit
+					@s.vseg = vseg
+					@s.piece = piece
+					
+					@s.x = scale * (-16 + digit * 7 + piece) + (scale / 2)
+					if digit >= 3
+						@s.x += 3 * scale
+					end
+					@s.y = scale * (52 + vseg * 4)
+					@s.z = 180 * scale + (scale / 2)
+				end
+			end		
+		end
+		
+		for hseg = 1 to 2
+			for vseg = 1 to 2
+				for piece = 1 to 5
+					as create @Marker
+						@s.segment = True
+						@s.vertical = True
+						@s.digit = digit
+						@s.hseg = hseg
+						@s.vseg = vseg
+						@s.piece = piece
+						
+						@s.x = scale * (-19 + digit * 7 + hseg * 4) + (scale / 2)
+						if digit >= 3
+							@s.x += 3000
+						end
+						@s.y = scale * (51 + vseg * 4 + piece)
+						@s.z = 180500
+					end
+				end
+			end
+		end
+	end	
+	
+	/setblock 6 59 180 diamond_block
+	/setblock 6 61 180 diamond_block
+	
+	hour = 9
+	minute = 59
+	second = 55
+	tick = 0
+end
+
+clock main
+	@Enderman.vx = 0
+	@Enderman.vz = 0
+	
+	tick++
+	if tick >= 20
+		tick = 0
+		second++
+		if second >= 60
+			second = 0
+			minute++
+			if minute >= 60
+				minute = 0
+				hour++
+				if hour >= 13
+					hour = 1
+				end
+			end
+		end
+	end
+	
+	for digit = 1 to 4
+		if digit == 1 then val = hour / 10
+		if digit == 2 then val = hour % 10
+		if digit == 3 then val = minute / 10
+		if digit == 4 then val = minute % 10
+		
+		as @Marker[segment] if @s.digit == digit
+			@s.on = False
+			if val == 0
+				@s[horizontal, vseg == 1].on = True
+				@s[horizontal, vseg == 3].on = True
+				@s[vertical].on = True
+			end
+			if val == 1
+				@s[vertical, hseg == 2].on = True
+			end
+			if val == 2
+				@s[horizontal].on = True
+				@s[vertical, vseg == 1, hseg == 1].on = True
+				@s[vertical, vseg == 2, hseg == 2].on = True
+			end
+			if val == 3
+				@s[horizontal].on = True
+				@s[vertical, hseg == 2].on = True
+			end
+			if val == 4
+				@s[horizontal, vseg == 2].on = True
+				@s[vertical, vseg == 2].on = True
+				@s[vertical, vseg == 1, hseg == 2].on = True
+			end
+			if val == 5
+				@s[horizontal].on = True
+				@s[vertical,vseg == 1, hseg == 2].on = True
+				@s[vertical,vseg == 2, hseg == 1].on = True
+			end
+			if val == 6
+				@s[horizontal].on = True
+				@s[vertical, vseg == 1].on = True
+				@s[vertical, vseg == 2, hseg == 1].on = True
+			end
+			if val == 7
+				@s[horizontal, vseg == 3].on = True
+				@s[vertical, hseg == 2].on = True
+			end
+			if val == 8
+				@s.on = True
+			end
+			if val == 9
+				@s[horizontal].on = True
+				@s[vertical, hseg == 2].on = True
+				@s[vertical, vseg == 2, hseg == 1].on = True
+			end
+		end
+	end
+	
+	as @Marker[segment, not on] at @s ~ ~-20 ~
+		/setblock ~ ~ ~ iron_block
+	end
+	
+	as @Marker[segment, on] at @s ~ ~-20 ~
+		/setblock ~ ~ ~ diamond_block
+	end
+	
+	as @Marker[segment, not on] at @s if block ~ ~-20 ~ diamond_block
+		@s.on = True
+	end
+
+	#as @Marker[segment, not on] at @s
+	#	/setblock ~ ~ ~ air		
+	#end
+	#as @Marker[segment, on] at @s
+	#	/setblock ~ ~ ~ diamond_block		
+	#end
+	
+	cooldown++
+	if cooldown >= 20
+		cooldown = 0
+		
+		as @Marker at @s
+			@s.has_block = False
+			unless block ~ ~ ~ air
+				@s.has_block = True
+			end
+			
+			@s.available = False
+			if block ~ ~1 ~ air
+				@s.available = True
+			end
+			
+			@s.supported = False
+			unless block ~ ~-1 ~ air
+				@s.supported = True
+			end
+		end
+		
+		found = False
+		i = 0
+		while not found and i < 100
+			i++
+			@Marker.current = False
+			
+			type = rand(2)
+			if type == 0
+				@Marker[segment, on, not has_block, limit=1, sort=random].current = True
+			end
+			if type == 1
+				@Marker[segment, not on, has_block, limit=1, sort=random].current = True
+			end
+			as @Marker[segment, current]
+				check_x = @s.x + rand(-1,2) * scale
+				check_y = @s.y + rand(-3,2) * scale
+				check_z = @s.z
+				if y == 56000
+					check_z += rand(-1,2) * scale
+				end
+				<dest> = <check_x, check_y, check_z>
+				
+				at <dest> unless block ~ ~-1 ~ air if block ~ ~ ~ air and block ~ ~1 ~ air and block ~ ~2 ~ air
+					found = True
+				end
+			end			
+		end
+	end
+	if found
+		if cooldown == 0 and type == 1
+			as @Enderman
+				@s.<pos> = <dest>
+				at @s
+					/tp @s ~ ~ ~ facing entity @Marker[current,limit=1]
+					/playsound minecraft:entity.enderman.teleport block @a
+				end
+
+			end
+		end
+	
+		if cooldown == 5
+			if type == 0
+				@Marker[pile].current_pile = False
+				@Marker[pile, has_block, available, limit=1, sort=random].current_pile = True
+				as @Marker[current_pile] at @s
+					/tp @Enderman ~ ~1 ~
+					/data merge entity @Enderman {carriedBlockState:{Name:"minecraft:diamond_block"}}
+					/setblock ~ ~ ~ air
+				end
+			end
+			if type == 1
+				as @Marker[current] at @s
+					/setblock ~ ~ ~ air
+					/data merge entity @Enderman {carriedBlockState:{Name:"minecraft:diamond_block"}}
+				end
+			end
+		end
+		
+		if cooldown == 10
+			if type == 0
+				as @Enderman
+					@s.<pos> = <dest>
+					at @s
+						/tp @s ~ ~ ~ facing entity @Marker[current,limit=1]
+						/playsound minecraft:entity.enderman.teleport block @a
+					end
+
+				end
+			end
+			if type == 1
+			
+			end
+		end
+		
+		if cooldown == 15
+			if type == 0
+				as @Marker[current] at @s
+					/setblock ~ ~ ~ diamond_block
+					/data merge entity @Enderman {carriedBlockState:{Name:"minecraft:air"}}
+				end
+			end
+			if type == 1
+				@Marker[pile].current_pile = False
+				@Marker[pile, not has_block, supported, limit=1, sort=random].current_pile = True
+				as @Marker[current_pile] at @s
+					/tp @Enderman ~ ~1 ~
+					/data merge entity @Enderman {carriedBlockState:{Name:"minecraft:air"}}
+					/setblock ~ ~ ~ diamond_block
+				end
+			end
+		end
+	end
+end

@@ -1,0 +1,70 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+desc: Rename a bat spawn egg to Rotate<#> for any # 1-40, then place it to rotate+copy a slice of that size.
+scale: 1000
+
+$marker: "Marker:1b, Invisible:1b, NoGravity:1b, Invulnerable:1b, Silent:1b"
+
+define @Entity = @e
+	x = Pos[0] double
+	y = Pos[1] double
+	z = Pos[2] double
+	<pos> = Pos double
+	vx = Motion[0] double
+	vy = Motion[1] double
+	vz = Motion[2] double
+	<vel> = Motion double
+	ry = Rotation[0] float
+	rx = Rotation[1] float
+	on_ground = OnGround byte 1
+	no_gravity = NoGravity byte 1
+	
+	function get_facing_dir()
+		at @s rotated @s at ^ ^ ^1 do @s.<facing_dir> = here - @s.<pos>
+	end
+end
+
+define @Marker = @Entity[type=area_effect_cloud,name=Marker]
+	create: {"CustomName":"\"Marker\"", Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+define @Torch = @Entity[type=item]
+	create: {Item:{id:"minecraft:torch", Count:1b}}
+end
+
+@Player = @Entity[type=player]
+
+reset
+	at @Marker[torch]
+		/setblock ~ ~ ~ torch
+	end
+	/kill @Marker[torch]
+end
+
+clock main
+	for @player in @Player
+		as create @Marker
+			for i = 1 to 1000
+				/tp @s @player
+				@s.<pos> += <rand(-10, 11), rand(-10, 11), rand(-10, 11)> * 1000
+				at @s if block ~ ~ ~ torch
+					/setblock ~ ~ ~ air
+					as create @Torch
+						@s.player = @player
+					end
+					as create @Marker
+						@s.torch = True
+					end
+				end
+			end
+
+			/kill @s
+		end
+	end
+	
+	for @torch in @Torch
+		as @s.player(@Player)
+			<player_pos> = @s.<pos>
+		end
+		@s.<vel> = (<player_pos> - @s.<pos>) / 5
+	end
+end

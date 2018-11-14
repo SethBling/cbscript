@@ -1,0 +1,47 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+desc: Improves flight
+
+define @Entity = @e
+	x = Pos[0] double
+	y = Pos[1] double
+	z = Pos[2] double
+	<pos> = Pos double
+	vx = Motion[0] double
+	vy = Motion[1] double
+	vz = Motion[2] double
+	<vel> = Motion double
+	ry = Rotation[0] float 1
+	rx = Rotation[1] float 1
+	on_ground = OnGround byte 1
+	no_gravity = NoGravity byte 1
+	absorption = AbsorptionAmount float 1
+end
+
+@Player = @Entity[type=player]
+
+define @Marker = @Entity[type=area_effect_cloud]
+	create: {Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+reset
+
+end
+
+clock main
+	for @player in @Player
+		as @s.prev_pos(@Marker)
+			<vx, vy, vz> = (@s.<pos> - @player.<pos>)
+			speedsq = vx^2 + vy^2 + vz^2
+			
+			at @s if speedsq < 90000
+				/tp @player ~ ~ ~
+			end
+			
+			/kill @s
+		end
+		
+		at @s
+			@s.prev_pos = create @Marker
+		end
+	end
+end

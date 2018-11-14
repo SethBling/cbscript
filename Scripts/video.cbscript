@@ -1,0 +1,970 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\VideoRecorder
+desc: Creating a map takes a picture of the scene you're looking at.
+
+$marker: "Marker:1b, NoGravity:1b, Invulnerable:1b, Invisible:1b"
+
+define @Entity = @e
+	x = Pos[0] double 1000
+	y = Pos[1] double 1000
+	z = Pos[2] double 1000
+	ry = Rotation[0] float 1
+	rx = Rotation[1] float 1
+end
+
+define @Marker = @Entity[type=area_effect_cloud,name=Marker]
+	create: {"CustomName":"\"Marker\"", Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+	
+	function move_to_coordinates()
+		rem = frame
+		y = rem / 128
+		rem %= 128
+		
+		z = rem - 64
+		
+		y *= 64000
+		z *= 1000
+		
+		@s.x = -64000
+		@s.y = y
+		@s.z = z
+	end
+end
+
+define block self
+	stone
+	granite
+	polished_granite
+	diorite
+	polished_diorite
+	andesite
+	polished_andesite
+	dirt
+	coarse_dirt
+	cobblestone
+	oak_planks
+	spruce_planks
+	birch_planks
+	jungle_planks
+	acacia_planks
+	dark_oak_planks
+	bedrock
+	gold_ore
+	iron_ore
+	coal_ore
+	oak_log
+	spruce_log
+	birch_log
+	jungle_log
+	acacia_log
+	dark_oak_log
+	stripped_spruce_log
+	stripped_birch_log
+	stripped_jungle_log
+	stripped_acacia_log
+	stripped_dark_oak_log
+	stripped_oak_log
+	oak_wood
+	spruce_wood
+	birch_wood
+	jungle_wood
+	acacia_wood
+	dark_oak_wood
+	stripped_oak_wood
+	stripped_spruce_wood
+	stripped_birch_wood
+	stripped_jungle_wood
+	stripped_acacia_wood
+	stripped_dark_oak_wood
+	sponge
+	wet_sponge
+	lapis_ore
+	lapis_block
+	dispenser
+	sandstone
+	chiseled_sandstone
+	cut_sandstone
+	note_block
+	sticky_piston
+	cobweb
+	piston
+	piston_head
+	white_wool
+	orange_wool
+	magenta_wool
+	light_blue_wool
+	yellow_wool
+	lime_wool
+	pink_wool
+	gray_wool
+	light_gray_wool
+	cyan_wool
+	purple_wool
+	blue_wool
+	brown_wool
+	green_wool
+	red_wool
+	black_wool
+	gold_block
+	iron_block
+	bricks
+	tnt
+	bookshelf
+	mossy_cobblestone
+	obsidian
+	spawner
+	oak_stairs
+	chest
+	diamond_ore
+	diamond_block
+	crafting_table
+	farmland
+	furnace
+	cobblestone_stairs
+	redstone_ore
+	ice
+	snow_block
+	clay
+	jukebox
+	pumpkin
+	netherrack
+	soul_sand
+	glowstone
+	carved_pumpkin
+	jack_o_lantern
+	white_stained_glass
+	orange_stained_glass
+	magenta_stained_glass
+	light_blue_stained_glass
+	yellow_stained_glass
+	lime_stained_glass
+	pink_stained_glass
+	gray_stained_glass
+	light_gray_stained_glass
+	cyan_stained_glass
+	purple_stained_glass
+	blue_stained_glass
+	brown_stained_glass
+	green_stained_glass
+	red_stained_glass
+	black_stained_glass
+	infested_stone
+	infested_cobblestone
+	infested_stone_bricks
+	infested_mossy_stone_bricks
+	infested_cracked_stone_bricks
+	infested_chiseled_stone_bricks
+	stone_bricks
+	mossy_stone_bricks
+	cracked_stone_bricks
+	chiseled_stone_bricks
+	brown_mushroom_block
+	red_mushroom_block
+	mushroom_stem
+	iron_bars
+	melon
+	brick_stairs
+	stone_brick_stairs
+	mycelium
+	nether_bricks
+	nether_brick_fence
+	nether_brick_stairs
+	enchanting_table
+	cauldron
+	end_portal_frame
+	end_stone
+	dragon_egg
+	redstone_lamp
+	sandstone_stairs
+	emerald_ore
+	ender_chest
+	emerald_block
+	spruce_stairs
+	birch_stairs
+	jungle_stairs
+	command_block
+	beacon
+	cobblestone_wall
+	mossy_cobblestone_wall
+	anvil
+	chipped_anvil
+	damaged_anvil
+	trapped_chest
+	daylight_detector
+	redstone_block
+	nether_quartz_ore
+	hopper
+	quartz_block
+	chiseled_quartz_block
+	quartz_pillar
+	quartz_stairs
+	activator_rail
+	dropper
+	white_terracotta
+	orange_terracotta
+	magenta_terracotta
+	light_blue_terracotta
+	yellow_terracotta
+	lime_terracotta
+	pink_terracotta
+	gray_terracotta
+	light_gray_terracotta
+	cyan_terracotta
+	purple_terracotta
+	blue_terracotta
+	brown_terracotta
+	green_terracotta
+	red_terracotta
+	black_terracotta
+	white_stained_glass_pane
+	orange_stained_glass_pane
+	magenta_stained_glass_pane
+	light_blue_stained_glass_pane
+	yellow_stained_glass_pane
+	lime_stained_glass_pane
+	pink_stained_glass_pane
+	gray_stained_glass_pane
+	light_gray_stained_glass_pane
+	cyan_stained_glass_pane
+	purple_stained_glass_pane
+	blue_stained_glass_pane
+	brown_stained_glass_pane
+	green_stained_glass_pane
+	red_stained_glass_pane
+	black_stained_glass_pane
+	acacia_stairs
+	dark_oak_stairs
+	slime_block
+	prismarine
+	prismarine_bricks
+	dark_prismarine
+	prismarine_stairs
+	prismarine_brick_stairs
+	dark_prismarine_stairs
+	prismarine_slab
+	prismarine_brick_slab
+	dark_prismarine_slab
+	sea_lantern
+	hay_block
+	terracotta
+	coal_block
+	packed_ice
+	white_banner
+	orange_banner
+	magenta_banner
+	light_blue_banner
+	yellow_banner
+	lime_banner
+	pink_banner
+	gray_banner
+	light_gray_banner
+	cyan_banner
+	purple_banner
+	blue_banner
+	brown_banner
+	green_banner
+	red_banner
+	black_banner
+	white_wall_banner
+	orange_wall_banner
+	magenta_wall_banner
+	light_blue_wall_banner
+	yellow_wall_banner
+	lime_wall_banner
+	pink_wall_banner
+	gray_wall_banner
+	light_gray_wall_banner
+	cyan_wall_banner
+	purple_wall_banner
+	blue_wall_banner
+	brown_wall_banner
+	green_wall_banner
+	red_wall_banner
+	black_wall_banner
+	red_sandstone
+	chiseled_red_sandstone
+	cut_red_sandstone
+	red_sandstone_stairs
+	oak_slab
+	spruce_slab
+	birch_slab
+	jungle_slab
+	acacia_slab
+	dark_oak_slab
+	stone_slab
+	sandstone_slab
+	petrified_oak_slab
+	cobblestone_slab
+	brick_slab
+	stone_brick_slab
+	nether_brick_slab
+	quartz_slab
+	red_sandstone_slab
+	purpur_slab
+	smooth_stone
+	smooth_sandstone
+	smooth_quartz
+	smooth_red_sandstone
+	purpur_block
+	purpur_pillar
+	purpur_stairs
+	end_stone_bricks
+	grass_path
+	end_gateway
+	repeating_command_block
+	chain_command_block
+	frosted_ice
+	magma_block
+	nether_wart_block
+	red_nether_bricks
+	bone_block
+	structure_void
+	observer
+	shulker_box
+	white_shulker_box
+	orange_shulker_box
+	magenta_shulker_box
+	light_blue_shulker_box
+	yellow_shulker_box
+	lime_shulker_box
+	pink_shulker_box
+	gray_shulker_box
+	light_gray_shulker_box
+	cyan_shulker_box
+	purple_shulker_box
+	blue_shulker_box
+	brown_shulker_box
+	green_shulker_box
+	red_shulker_box
+	black_shulker_box
+	white_glazed_terracotta
+	orange_glazed_terracotta
+	magenta_glazed_terracotta
+	light_blue_glazed_terracotta
+	yellow_glazed_terracotta
+	lime_glazed_terracotta
+	pink_glazed_terracotta
+	gray_glazed_terracotta
+	light_gray_glazed_terracotta
+	cyan_glazed_terracotta
+	purple_glazed_terracotta
+	blue_glazed_terracotta
+	brown_glazed_terracotta
+	green_glazed_terracotta
+	red_glazed_terracotta
+	black_glazed_terracotta
+	white_concrete
+	orange_concrete
+	magenta_concrete
+	light_blue_concrete
+	yellow_concrete
+	lime_concrete
+	pink_concrete
+	gray_concrete
+	light_gray_concrete
+	cyan_concrete
+	purple_concrete
+	blue_concrete
+	brown_concrete
+	green_concrete
+	red_concrete
+	black_concrete
+	white_concrete_powder
+	orange_concrete_powder
+	magenta_concrete_powder
+	light_blue_concrete_powder
+	yellow_concrete_powder
+	lime_concrete_powder
+	pink_concrete_powder
+	gray_concrete_powder
+	light_gray_concrete_powder
+	cyan_concrete_powder
+	purple_concrete_powder
+	blue_concrete_powder
+	brown_concrete_powder
+	green_concrete_powder
+	red_concrete_powder
+	black_concrete_powder
+	dried_kelp_block
+	dead_tube_coral_block
+	dead_brain_coral_block
+	dead_bubble_coral_block
+	dead_fire_coral_block
+	dead_horn_coral_block
+	tube_coral_block
+	brain_coral_block
+	bubble_coral_block
+	fire_coral_block
+	horn_coral_block
+	dead_tube_coral
+	dead_brain_coral
+	dead_bubble_coral
+	dead_fire_coral
+	dead_horn_coral
+	tube_coral
+	brain_coral
+	bubble_coral
+	fire_coral
+	horn_coral
+	blue_ice
+	conduit
+	structure_block
+end
+
+define block none
+	air
+	oak_sapling
+	spruce_sapling
+	birch_sapling
+	jungle_sapling
+	acacia_sapling
+	dark_oak_sapling
+	glass
+	white_bed
+	orange_bed
+	magenta_bed
+	light_blue_bed
+	yellow_bed
+	lime_bed
+	pink_bed
+	gray_bed
+	light_gray_bed
+	cyan_bed
+	purple_bed
+	blue_bed
+	brown_bed
+	green_bed
+	red_bed
+	black_bed
+	powered_rail
+	detector_rail
+	moving_piston
+	dandelion
+	poppy
+	blue_orchid
+	allium
+	azure_bluet
+	red_tulip
+	orange_tulip
+	white_tulip
+	pink_tulip
+	oxeye_daisy
+	brown_mushroom
+	red_mushroom
+	torch
+	wall_torch
+	redstone_wire
+	rail
+	lever
+	redstone_torch
+	redstone_wall_torch
+	stone_button
+	repeater
+	glass_pane
+	attached_pumpkin_stem
+	attached_melon_stem
+	pumpkin_stem
+	melon_stem
+	nether_wart
+	brewing_stand
+	cocoa
+	tripwire_hook
+	tripwire
+	flower_pot
+	potted_oak_sapling
+	potted_spruce_sapling
+	potted_birch_sapling
+	potted_jungle_sapling
+	potted_acacia_sapling
+	potted_dark_oak_sapling
+	potted_fern
+	potted_dandelion
+	potted_poppy
+	potted_blue_orchid
+	potted_allium
+	potted_azure_bluet
+	potted_red_tulip
+	potted_orange_tulip
+	potted_white_tulip
+	potted_pink_tulip
+	potted_oxeye_daisy
+	potted_red_mushroom
+	potted_brown_mushroom
+	potted_dead_bush
+	potted_cactus
+	carrots
+	potatoes
+	oak_button
+	spruce_button
+	birch_button
+	jungle_button
+	acacia_button
+	dark_oak_button
+	skeleton_wall_skull
+	skeleton_skull
+	wither_skeleton_wall_skull
+	wither_skeleton_skull
+	zombie_wall_head
+	zombie_head
+	player_wall_head
+	player_head
+	creeper_wall_head
+	creeper_head
+	dragon_wall_head
+	dragon_head
+	comparator
+	barrier
+	end_rod
+	chorus_plant
+	chorus_flower
+	beetroots
+	turtle_egg
+	dead_tube_coral_wall_fan
+	dead_brain_coral_wall_fan
+	dead_bubble_coral_wall_fan
+	dead_fire_coral_wall_fan
+	dead_horn_coral_wall_fan
+	tube_coral_wall_fan
+	brain_coral_wall_fan
+	bubble_coral_wall_fan
+	fire_coral_wall_fan
+	horn_coral_wall_fan
+	dead_tube_coral_fan
+	dead_brain_coral_fan
+	dead_bubble_coral_fan
+	dead_fire_coral_fan
+	dead_horn_coral_fan
+	tube_coral_fan
+	brain_coral_fan
+	bubble_coral_fan
+	fire_coral_fan
+	horn_coral_fan
+	sea_pickle
+	void_air
+	cave_air
+	bubble_column
+end
+
+define block lime_concrete
+	grass_block
+	grass
+	fern
+	seagrass
+	tall_seagrass
+	cactus
+	sugar_cane
+	vine
+	lily_pad
+	lime_carpet
+	sunflower
+	lilac
+	rose_bush
+	peony
+	tall_grass
+	large_fern
+	kelp
+	kelp_plant
+end
+
+define block pink_concrete
+	pink_carpet
+end
+
+define block gray_concrete
+	gray_carpet
+end
+
+define block brown_concrete
+	podzol
+	dead_bush
+	brown_carpet
+end
+
+define block green_concrete
+	green_carpet
+	oak_leaves
+	spruce_leaves
+	birch_leaves
+	jungle_leaves
+	acacia_leaves
+	dark_oak_leaves
+end
+
+define block red_concrete
+	red_sand
+	red_carpet
+end
+
+define block orange_concrete
+	fire
+	lava
+	orange_carpet
+end
+
+define block yellow_concrete
+	wheat
+	yellow_carpet
+end
+
+define block purple_concrete
+	nether_portal
+	purple_carpet
+end
+
+define block white_concrete
+	white_carpet
+	cake
+end
+
+define block black_concrete
+	end_portal
+	black_carpet
+end
+
+define block magenta_concrete
+	magenta_carpet
+end
+
+define block light_blue_concrete
+	light_blue_carpet
+end
+
+define block blue_concrete
+	water
+	blue_carpet
+end
+
+define block sandstone
+	sand
+end
+
+define block light_gray_concrete
+	gravel
+	light_gray_carpet
+end
+
+define block cyan_concrete
+	cyan_carpet
+end
+
+define block oak_planks
+	sign
+	oak_door
+	ladder
+	wall_sign
+	oak_pressure_plate
+	oak_fence
+	oak_trapdoor
+	oak_fence_gate
+end
+
+define block spruce_planks
+	spruce_pressure_plate
+	spruce_trapdoor
+	spruce_fence_gate
+	spruce_fence
+	spruce_door
+end
+
+define block birch_planks
+	birch_pressure_plate
+	birch_trapdoor
+	birch_fence_gate
+	birch_fence
+	birch_door
+end
+
+define block jungle_planks
+	jungle_pressure_plate
+	jungle_trapdoor
+	jungle_fence_gate
+	jungle_fence
+	jungle_door
+end
+
+define block acacia_planks
+	acacia_pressure_plate
+	acacia_trapdoor
+	acacia_fence_gate
+	acacia_fence
+	acacia_door
+end
+
+define block dark_oak_planks
+	dark_oak_pressure_plate
+	dark_oak_trapdoor
+	dark_oak_fence_gate
+	dark_oak_fence
+	dark_oak_door
+end
+
+define block stone
+	stone_pressure_plate
+end
+
+define block iron_block
+	iron_door
+end
+
+define block snow_block
+	snow
+end
+
+define block gold_block
+	light_weighted_pressure_plate
+end
+
+define block iron_block
+	heavy_weighted_pressure_plate
+	iron_trapdoor
+end
+
+reset
+	/kill @Marker
+	@a.recording = False
+	@a.rendering = False
+	@a.playing = False
+
+	tell @a: Options: {B\[[setup](/function video:setup)\] {Y\[[record](/function video:record)\] {G\[[play](/function video:play)\]
+end
+
+function setup()
+	tell @s: Running setup. This may take several minutes...
+	/setworldspawn 0 201 0
+	/tp @s 0 201 3
+	
+	for $cx in: range(-3, 10)
+		for $cz in: range(-10, 10)
+			$xmin: cx*8
+			$xmax: cx*8+7
+			$zmin: cz*8
+			$zmax: cz*8+7
+			/fill $xmin 0 $zmin $xmax 199 $zmax minecraft:barrier
+			/fill $xmin 200 $zmin $xmax 200 $zmax minecraft:iron_block
+		end
+	end
+	/fill 0 201 -2 47 248 -2 light_blue_concrete
+	/fill 0 201 -1 47 248 -1 barrier
+	/setblock 24 224 30 iron_block
+	/tp @e[x=-80,y=0,z=80,dx=160,dy=200,dz=160] 0 -200 0
+	/gamerule maxCommandChainLength 100000000
+	/gamerule randomTickSpeed 0
+end
+
+function record()
+	@s.recording = True
+	@s.frame = 0
+	@s.frame_step = 0
+	tell @s: {R\[[stop recording](/function video:stop_recording)\]
+	/kill @Marker
+end
+
+function stop_recording()
+	@s.recording = False
+	tell @s: {R\[[render](/function video:render)\]
+	@s.end_frame = @s.frame
+end
+
+function render()
+	tell @s: {GRendering...
+	@s.rendering = True
+	@s.frame = 0
+	/tp @s 24 24 30 180 0
+end
+
+clock recording
+	for @player in @a[recording]
+		@s.frame_step++
+		if @s.frame_step == 2
+			@s.frame_step = 0
+			@s.frame++
+			at @s
+				as create @Marker
+					/tp @s @player
+					move @s ~ ~1.6 ~
+					@s.owner = @player
+					@s.frame = @player.frame
+				end
+			end
+			
+			as @Marker if @s.owner == @player._id
+				@s.age++
+			end
+		end
+	end
+end
+
+function ray_trace()
+	step++
+	if step < 100
+		unless block ~ ~ ~ none
+			/clone ~ ~ ~ ~ ~ ~ 0 1 0
+		end
+			
+		if block ~ ~ ~ none 
+			at ^ ^ ^1
+				ray_trace()
+			end
+		end
+	end
+end
+
+function get_converted_block()
+	if block 0 1 0 self
+		/clone 0 1 0 0 1 0 0 3 0
+	end
+	if block 0 1 0 lime_concrete
+		/setblock 0 3 0 lime_concrete
+	end
+	if block 0 1 0 pink_concrete
+		/setblock 0 3 0 pink_concrete
+	end
+	if block 0 1 0 gray_concrete
+		/setblock 0 3 0 gray_concrete
+	end
+	if block 0 1 0 brown_concrete
+		/setblock 0 3 0 brown_concrete
+	end
+	if block 0 1 0 green_concrete
+		/setblock 0 3 0 green_concrete
+	end
+	if block 0 1 0 red_concrete
+		/setblock 0 3 0 red_concrete
+	end
+	if block 0 1 0 orange_concrete
+		/setblock 0 3 0 orange_concrete
+	end
+	if block 0 1 0 yellow_concrete
+		/setblock 0 3 0 yellow_concrete
+	end
+	if block 0 1 0 purple_concrete
+		/setblock 0 3 0 purple_concrete
+	end
+	if block 0 1 0 white_concrete
+		/setblock 0 3 0 white_concrete
+	end
+	if block 0 1 0 black_concrete
+		/setblock 0 3 0 black_concrete
+	end
+	if block 0 1 0 magenta_concrete
+		/setblock 0 3 0 magenta_concrete
+	end
+	if block 0 1 0 light_blue_concrete
+		/setblock 0 3 0 light_blue_concrete
+	end
+	if block 0 1 0 blue_concrete
+		/setblock 0 3 0 blue_concrete
+	end
+	if block 0 1 0 sandstone
+		/setblock 0 3 0 sandstone
+	end
+	if block 0 1 0 light_gray_concrete
+		/setblock 0 3 0 light_gray_concrete
+	end
+	if block 0 1 0 cyan_concrete
+		/setblock 0 3 0 cyan_concrete
+	end
+	if block 0 1 0 oak_planks
+		/setblock 0 3 0 oak_planks
+	end
+	if block 0 1 0 spruce_planks
+		/setblock 0 3 0 spruce_planks
+	end
+	if block 0 1 0 birch_planks
+		/setblock 0 3 0 birch_planks
+	end
+	if block 0 1 0 jungle_planks
+		/setblock 0 3 0 jungle_planks
+	end
+	if block 0 1 0 acacia_planks
+		/setblock 0 3 0 acacia_planks
+	end
+	if block 0 1 0 dark_oak_planks
+		/setblock 0 3 0 dark_oak_planks
+	end
+	if block 0 1 0 stone
+		/setblock 0 3 0 stone
+	end
+	if block 0 1 0 iron_block
+		/setblock 0 3 0 iron_block
+	end
+	if block 0 1 0 snow_block
+		/setblock 0 3 0 snow_block
+	end
+	if block 0 1 0 gold_block
+		/setblock 0 3 0 gold_block
+	end
+	if block 0 1 0 iron_block
+		/setblock 0 3 0 iron_block
+	end
+end
+
+clock rendering
+	for @player in @a[rendering]
+		@s.frame++
+		frame = @s.frame
+		as @Marker if @s.owner == @player._id and @s.frame == frame
+			at @s rotated @s
+				for $row in: range(48)
+					for $col in: range(48)
+						$left: col - 22.5
+						$up: row - 22.5
+						step = 0
+						/setblock 0 1 0 barrier
+						/setblock 0 3 0 barrier
+						facing ^$left ^$up ^30
+							ray_trace()
+						end
+						get_converted_block()
+						/clone 0 3 0 0 3 0 $col $row 2
+					end
+				end
+			end
+			
+			/kill @s
+		end
+		
+		as create @Marker
+			@s.move_to_coordinates()
+			at @s
+				/clone 0 0 2 47 47 2 ~ ~ ~
+			end
+			/kill @s
+		end
+		
+		if @s.frame == @s.end_frame
+			@s.rendering = False
+			tell @s: {GDone rendering! \[[play](/function video:play)\]
+		end
+	end
+end
+
+function play()
+	@s.playing = True
+	@s.frame = 0
+	@s.frame_step = 0
+	/tp @s 24 225 30 180 0
+end
+
+clock playing
+	for @player in @a[playing]
+		@s.frame_step++
+		if @s.frame_step == 2
+			@s.frame_step = 0
+			@s.frame++
+			frame = @s.frame
+			
+			as create @Marker
+				@s.move_to_coordinates()
+				at @s
+					/clone ~ ~ ~ ~47 ~47 ~ 0 201 0
+				end
+				/kill @s
+			end
+			
+			if @s.frame == @s.end_frame
+				@s.playing = False
+				tell @s: {GDone playing!
+			end
+		end
+	end
+end

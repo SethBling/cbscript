@@ -1,0 +1,228 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+desc: Use shift to teleport in the direction you're moving.
+
+$marker: "\"Marker\":1b, \"Invisible\":1b, \"NoGravity\":1b, \"Invulnerable\":1b"
+
+define @Entity = @e
+	x = Pos[0] double 100
+	y = Pos[1] double 100
+	z = Pos[2] double 100
+	vx = Motion[0] double 100
+	vy = Motion[1] double 100
+	vz = Motion[2] double 100
+end
+
+define block horizontally_non_colliding
+	air
+	oak_sapling
+	spruce_sapling
+	birch_sapling
+	jungle_sapling
+	acacia_sapling
+	dark_oak_sapling
+	water
+	powered_rail
+	detector_rail
+	grass
+	fern
+	dead_bush
+	seagrass
+	tall_seagrass
+	dandelion
+	poppy
+	blue_orchid
+	allium
+	azure_bluet
+	red_tulip
+	orange_tulip
+	white_tulip
+	pink_tulip
+	oxeye_daisy
+	brown_mushroom
+	red_mushroom
+	torch
+	wall_torch
+	fire
+	redstone_wire
+	wheat
+	sign
+	rail
+	wall_sign
+	lever
+	stone_pressure_plate
+	oak_pressure_plate
+	spruce_pressure_plate
+	birch_pressure_plate
+	jungle_pressure_plate
+	acacia_pressure_plate
+	dark_oak_pressure_plate
+	redstone_torch
+	redstone_wall_torch
+	stone_button
+	snow
+	sugar_cane
+	nether_portal
+	repeater
+	attached_pumpkin_stem
+	attached_melon_stem
+	pumpkin_stem
+	melon_stem
+	vine
+	lily_pad
+	nether_wart
+	brewing_stand
+	end_portal
+	tripwire_hook
+	tripwire
+	carrots
+	potatoes
+	oak_button
+	spruce_button
+	birch_button
+	jungle_button
+	acacia_button
+	dark_oak_button
+	light_weighted_pressure_plate
+	heavy_weighted_pressure_plate
+	comparator
+	white_carpet
+	orange_carpet
+	magenta_carpet
+	light_blue_carpet
+	yellow_carpet
+	lime_carpet
+	pink_carpet
+	gray_carpet
+	light_gray_carpet
+	cyan_carpet
+	purple_carpet
+	blue_carpet
+	brown_carpet
+	green_carpet
+	red_carpet
+	black_carpet
+	sunflower
+	lilac
+	rose_bush
+	peony
+	tall_grass
+	large_fern
+	white_banner
+	orange_banner
+	magenta_banner
+	light_blue_banner
+	yellow_banner
+	lime_banner
+	pink_banner
+	gray_banner
+	light_gray_banner
+	cyan_banner
+	purple_banner
+	blue_banner
+	brown_banner
+	green_banner
+	red_banner
+	black_banner
+	white_wall_banner
+	orange_wall_banner
+	magenta_wall_banner
+	light_blue_wall_banner
+	yellow_wall_banner
+	lime_wall_banner
+	pink_wall_banner
+	gray_wall_banner
+	light_gray_wall_banner
+	cyan_wall_banner
+	purple_wall_banner
+	blue_wall_banner
+	brown_wall_banner
+	green_wall_banner
+	red_wall_banner
+	black_wall_banner
+	kelp
+	kelp_plant
+	void_air
+	cave_air
+	bubble_column
+end
+
+@Boat=@Entity[type=boat]
+@Player=@Entity[type=player,limit=1,sort=nearest]
+@Bullet = @Entity[type=cow]
+define @Tracker = @Entity[type=armor_stand, name=Tracker]
+	create: {"CustomName":"\"Tracker\"", $marker}
+end
+
+reset
+	/scoreboard objectives add shift minecraft.custom:minecraft.sneak_time
+	test = 1
+end
+
+clock teleport
+	@Player.cooldown += 0
+	
+	at @Player do create @Tracker
+	
+	@Tracker.age++
+	/kill @Tracker[age >= 3]
+	
+	if @Player.cooldown > 0 then @Player.cooldown--
+	
+	if @Player.shift > 0 and @Player.cooldown == 0
+		@Current = @Tracker[age==2,limit=1]
+		@Prev = @Tracker[age==1,limit=1]
+		dx = @Current.x - @Prev.x
+		dz = @Current.z - @Prev.z
+		
+		do_teleport = True
+		if dx == 0 and dz == 0
+			do_teleport = False
+		end
+		
+		if do_teleport
+			at @Current
+				/tp @Current ~ ~ ~ facing entity @Prev
+				rotated @Current
+					/tp @Current ~ ~ ~ ~ 0
+				end
+			end
+			at @Player
+				/teleport @Current ~ ~ ~
+			end
+			
+			@Player.cooldown = 5
+			
+			continue = True		
+			ticks = 0
+
+			while ticks < 40
+				continue = False
+				at @Current if block ~ ~ ~ horizontally_non_colliding then continue = True
+				
+				if continue
+					at @Current
+						/tp @Current ^ ^ ^0.25
+					end
+				end
+				
+				if not continue
+					at @Current
+						/tp @Current ^ ^ ^-1
+					end
+					ticks = 40
+				end
+				
+				ticks = ticks + 1
+			end
+		
+			at @Current
+				/teleport @Player ~ ~ ~
+				/playsound minecraft:entity.enderman.teleport player @Player
+			end
+		end
+		
+		/kill @Tracker
+	end
+	
+	if @Player.shift > 0 then @Player.shift = 0
+end

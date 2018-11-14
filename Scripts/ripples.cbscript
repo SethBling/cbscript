@@ -1,0 +1,102 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+desc: Robot arm.
+
+$marker: "Marker:1b, Invisible:1b, NoGravity:1b, Invulnerable:1b, Silent:1b"
+
+define @Entity = @e
+	x = Pos[0] double 1000
+	y = Pos[1] double 1000
+	z = Pos[2] double 1000
+	vx = Motion[0] double 1000
+	vy = Motion[1] double 1000
+	vz = Motion[2] double 1000
+	ry = Rotation[0] float 1000
+	rx = Rotation[1] float 1000
+	on_ground = OnGround byte 1
+	no_gravity = NoGravity byte 1
+end
+
+@Player = @Entity[type=player]
+
+define @Marker = @Entity[type=area_effect_cloud,name=Marker]
+	create: {"CustomName":"\"Marker\"", Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+define @MiniBlock = @Entity[type=armor_stand,name=MiniBlock]
+	create: {CustomName:"\"MiniBlock\"", Pose:{Head:[0.0001f,0f,0f]}, $marker}
+	
+	pose_rot_x = Pose.Head[0] float 1000
+	pose_rot_y = Pose.Head[1] float 1000
+	
+	function update()
+		as create @Marker
+			base_x = @s.x
+			base_y = @s.y
+			base_z = @s.z
+			/kill @s
+		end
+		@s.x = base_x + @s.dx
+		@s.y = base_y + @s.dy - 1700
+		@s.z = base_z + @s.dz
+		
+		/data merge entity @s {Pose:{Head:[0.0001f,0.0001f,0.0001f]}}
+		@s.pose_rot_x = @s.rot_x
+		@s.pose_rot_y = @s.rot_y
+		
+		my_rx = @s.rot_x
+		my_ry = @s.rot_y
+		
+		as create @Marker
+			x1 = @s.x
+			y1 = @s.y
+			z1 = @s.z
+			move @s ^ ^-0.287 ^
+			@s.rx = my_rx
+			@s.ry = my_ry
+			move @s ^ ^0.287 ^
+			
+			dx = @s.x - x1
+			dy = @s.y - y1
+			dz = @s.z - z1
+			
+			/kill @s
+		end
+		
+		@s.x -= dx
+		@s.y -= dy
+		@s.z -= dz
+		
+		/data merge entity @s {Fire:32767s}	
+		
+		at @s rotated @s
+			/tp @s ~ ~ ~ 0 0
+		end
+	end	
+end
+
+reset
+	/kill @MiniBlock
+
+	at @p
+		for row = 1 to 10
+			for col = 1 to 10
+				as create @MiniBlock
+					@s.row = row
+					@s.col = col
+					/replaceitem entity @s armor.head minecraft:diamond_block
+				end
+			end
+		end
+	end
+end
+
+clock main
+	as @MiniBlock
+		@s.x = 80500 + @s.row * 600
+		@s.z = 146500 + @s.col * 600
+		@s.y = 65000
+		at @s
+			@s.update()
+		end
+	end
+end

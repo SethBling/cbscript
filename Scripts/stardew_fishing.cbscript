@@ -1,0 +1,182 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+desc: The fishing minigame from Stardew Valley
+
+$marker: "\"Marker\":1b, \"Invisible\":1b, \"NoGravity\":1b, \"Invulnerable\":1b"
+
+define @Entity = @e
+	x = Pos[0] double 100
+	y = Pos[1] double 100
+	z = Pos[2] double 100
+	vx = Motion[0] double 100
+	vy = Motion[1] double 100
+	vz = Motion[2] double 100
+end
+
+@Player = @Entity[type=player,sort=nearest,limit=1]
+@Items = @Entity[type=item]
+
+define @Bar = @Entity[type=armor_stand,name=Bar]
+	create: {CustomName:"\"Bar\"", ArmorItems:[{},{},{},{id:"minecraft:cyan_stained_glass",Count:1b}], $marker}
+end
+
+define @Reel = @Entity[type=armor_stand,name=Reel]
+	create: {CustomName:"\"Reel\"", ArmorItems:[{},{},{},{id:"minecraft:lime_stained_glass",Count:1b}], $marker}
+end
+
+
+define @Fish = @Entity[type=armor_stand,name=Fish,limit=1]
+	create: {CustomName:"\"Fish\"", ArmorItems:[{},{},{},{id:"minecraft:tropical_fish",Count:1b}], $marker}
+end
+
+reset
+	/kill @Fish
+	/kill @Bar
+	/kill @Reel
+	playing = False
+	/scoreboard objectives add caught minecraft.custom:minecraft.fish_caught
+	/scoreboard objectives add shift minecraft.custom:minecraft.sneak_time
+end
+
+clock main
+	as @a at @s rotated @s
+		if @s.caught and not playing
+			/kill @Items
+			playing = True
+			end_game = False
+			win = False
+			
+			/kill @Fish
+			/kill @Bar
+			create @Fish
+			height = 0
+			vel = 0
+			acc = 0
+			
+			reelheight = 0
+			reelvel = 0
+
+			/tp @Fish @s
+			as @Fish at @s rotated @s
+				/tp @s ~ ~1 ~ ~ 0
+			end
+			as @Fish at @s rotated @s
+				/tp @s ^ ^ ^7
+			end
+			
+			bottom = @Fish.y
+			at @Fish
+				for $i in: range(10)
+					$dy: i*0.6
+					create @Bar ~ ~$dy ~
+				end
+				for $i in: range(3)
+					$dy: i*0.6
+					create @Reel ~ ~$dy ~
+					@Reel.offset -= 60
+				end
+				@Reel.offset += 180
+			end
+		
+			@s.caught = 0
+			
+			progress = 0
+			
+			/bossbar add stardew_fishing:progress "Reel"
+			/bossbar set stardew_fishing:progress value 0
+			/bossbar set stardew_fishing:progress max 100
+			/bossbar set stardew_fishing:progress players @s
+		end
+	end
+	
+	if playing
+		acc += rand(-1, 2)
+		vel += acc
+		height += vel
+		
+		if height > 480
+			height = 480
+		end
+		if height < 0
+			height = 0
+		end
+		if vel > 10
+			vel = 10
+			acc = -1
+		end
+		if vel < -10
+			vel = -10
+			acc = 1
+		end
+		
+		if @p.shift > 0
+			@p.shift = 0
+			reelvel += 4
+		end
+		reelvel -= 2
+		reelheight += reelvel
+		if reelheight < 0
+			reelheight = 0
+			reelvel = -3 * reelvel / 4
+		end
+		if reelheight > 420
+			reelheight = 420
+			reelvel = -3 * reelvel / 4
+		end
+			
+		as @Reel
+			@s.y = bottom + reelheight + @s.offset
+		end
+		
+		reelmax = reelheight + 80
+		reelmin = reelheight - 80
+		scoring = False
+		if height >= reelmin and height <= reelmax
+			scoring = True
+		end
+		if scoring then progress++
+		if not scoring then progress--
+		
+		@Fish.y = bottom + height	
+		/execute store result bossbar stardew_fishing:progress value run scoreboard players get Global progress
+		
+		end_game = False
+		if progress < 0 then end_game = True
+		if progress >= 100
+			end_game = True
+			win = True
+		end
+
+		if end_game
+			if win
+				@Items.age++
+				at @Fish
+					/tp @Fish ~ ~ ~ facing entity @p
+					for $angle in: range(0, 360, 10)
+						$angle_max: angle + 9
+						if @Fish[y_rotation=$angle..$angle_max]
+							$vx: 0.25 * -math.sin((angle+5) * 3.1415 / 180)
+							$vz: 0.25 * math.cos((angle+5) * 3.1415 / 180)
+							/summon minecraft:item ~ ~1 ~ {Item:{id:"minecraft:tropical_fish",Count:1b},Motion:[$vxd,0.8d,$vzd]}
+						end
+					end
+				end
+				@Items.age++
+				@FishItem = @Items[age==1,limit=1]
+				dx = @Player.x - @FishItem.x
+				dz = @Player.z - @FishItem.z
+				dist = sqrt(dx^2+dz^2)
+				@FishItem.vx = dx * 25 / dist
+				@FishItem.vz = dz * 25 / dist
+			end
+
+			at @Bar
+				/particle minecraft:explosion ~ ~ ~
+			end
+			/kill @Fish
+			/kill @Bar
+			/kill @Reel
+			/bossbar remove stardew_fishing:progress	
+			playing = False
+		end
+	end
+end

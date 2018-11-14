@@ -1,0 +1,68 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+desc: Rename a bat spawn egg to Rotate<#> for any # 1-40, then place it to rotate+copy a slice of that size.
+scale: 1000
+
+$marker: "Marker:1b, Invisible:1b, NoGravity:1b, Invulnerable:1b, Silent:1b"
+
+define @Entity = @e
+	x = Pos[0] double
+	y = Pos[1] double
+	z = Pos[2] double
+	<pos> = Pos double
+	vx = Motion[0] double
+	vy = Motion[1] double
+	vz = Motion[2] double
+	<vel> = Motion double
+	ry = Rotation[0] float
+	rx = Rotation[1] float
+	on_ground = OnGround byte 1
+	no_gravity = NoGravity byte 1
+	
+	function get_facing_dir()
+		at @s rotated @s at ^ ^ ^1 do @s.<facing_dir> = here - @s.<pos>
+	end
+end
+
+define @Marker = @Entity[type=area_effect_cloud,name=Marker]
+	create: {"CustomName":"\"Marker\"", Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+@Player = @Entity[type=player]
+
+reset
+	as @Player at @s
+		for $i in: range(27)
+			/execute store result score Global slot run data get block ~ ~ ~ Items[$i].Slot 1
+			/execute store result score Global count run data get block ~ ~ ~ Items[$i].Count 1
+			if count >= 1
+				tell @a: Slot (slot) has (count) items
+				as create @Marker
+					@s.y += count*1000
+					@s.index = $i
+					@s.count = count
+					@s.slot = slot
+					@s.item_stack = True
+				end
+			end
+		end
+		slot = 0
+		while @Marker[item_stack]
+			@Marker[item_stack,limit=1,sort=nearest].current = True
+			as @Marker[item_stack, current]
+				for $i in: range(27)
+					if @s.index == $i
+						tell @a: moving index $i with count (@s.count) from slot (@s.slot) to (slot)
+						/execute store result block ~ ~ ~ Items[$i].Slot byte 1 run scoreboard players get Global slot
+					end
+				end
+				/kill @s
+			end
+			slot++
+		end
+		
+		/kill @Marker[item_stack]
+	end
+end
+
+clock main
+end

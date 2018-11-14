@@ -1,0 +1,267 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\Map_Video
+desc: Robot arm.
+
+$marker: "Marker:1b, Invisible:1b, NoGravity:1b, Invulnerable:1b, Silent:1b"
+
+define @Entity = @e
+	x = Pos[0] double 1000
+	y = Pos[1] double 1000
+	z = Pos[2] double 1000
+	vx = Motion[0] double 1000
+	vy = Motion[1] double 1000
+	vz = Motion[2] double 1000
+	ry = Rotation[0] float 1000
+	rx = Rotation[1] float 1000
+	on_ground = OnGround byte 1
+	no_gravity = NoGravity byte 1
+end
+
+define @Frame = @Entity[type=item_frame]
+	map = Item.tag.map int 1
+	silent = Silent byte 1
+end	
+
+reset
+	/kill @Marker
+	@a.recording = False
+	@a.rendering = False
+	@a.playing = False
+
+	tell @a: Options: {B\[[setup](/function video:setup)\] {Y\[[record](/function video:record)\] {G\[[play](/function video:play)\]
+end
+
+function setup()
+	tell @s: Running setup. This may take several minutes...
+	/setworldspawn 0 201 0
+	/tp @s 0 201 3
+	
+	for $cx in: range(-3, 10)
+		for $cz in: range(-10, 10)
+			$xmin: cx*8
+			$xmax: cx*8+7
+			$zmin: cz*8
+			$zmax: cz*8+7
+			/fill $xmin 0 $zmin $xmax 127 $zmax minecraft:barrier
+		end
+	end
+	/tp @e[x=-80,y=0,z=80,dx=160,dy=127,dz=160] 0 -200 0
+	/gamerule maxCommandChainLength 100000000
+	/gamerule randomTickSpeed 0
+end
+
+function record()
+	@s.recording = True
+	@s.frame = 0
+	@s.frame_step = 0
+	tell @s: {R\[[stop recording](/function video:stop_recording)\]
+	/kill @Marker
+end
+
+function stop_recording()
+	@s.recording = False
+	tell @s: {R\[[render](/function video:render)\]
+	@s.end_frame = @s.frame
+end
+
+clock recording
+	for @player in @a[recording]
+		@s.frame_step++
+		if @s.frame_step == 2
+			@s.frame_step = 0
+			@s.frame++
+			at @s
+				as create @Marker
+					/tp @s @player
+					move @s ~ ~1.6 ~
+					@s.owner = @player
+					@s.frame = @player.frame
+				end
+			end
+			
+			as @Marker if @s.owner == @player._id
+				@s.age++
+			end
+		end
+	end
+end
+
+function render()
+	tell @s: {GRendering...
+	@s.rendering = True
+	@s.frame = 0
+	/tp @s 24 24 30 180 0
+end
+
+function ray_trace()
+	step++
+	if step < 100
+		unless block ~ ~ ~ none
+			/clone ~ ~ ~ ~ ~ ~ 0 1 0
+		end
+			
+		if block ~ ~ ~ none 
+			at ^ ^ ^1
+				ray_trace()
+			end
+		end
+	end
+end
+
+function get_converted_block()
+	if block 0 1 0 self
+		/clone 0 1 0 0 1 0 0 3 0
+	end
+	if block 0 1 0 lime_concrete
+		/setblock 0 3 0 lime_concrete
+	end
+	if block 0 1 0 pink_concrete
+		/setblock 0 3 0 pink_concrete
+	end
+	if block 0 1 0 gray_concrete
+		/setblock 0 3 0 gray_concrete
+	end
+	if block 0 1 0 brown_concrete
+		/setblock 0 3 0 brown_concrete
+	end
+	if block 0 1 0 green_concrete
+		/setblock 0 3 0 green_concrete
+	end
+	if block 0 1 0 red_concrete
+		/setblock 0 3 0 red_concrete
+	end
+	if block 0 1 0 orange_concrete
+		/setblock 0 3 0 orange_concrete
+	end
+	if block 0 1 0 yellow_concrete
+		/setblock 0 3 0 yellow_concrete
+	end
+	if block 0 1 0 purple_concrete
+		/setblock 0 3 0 purple_concrete
+	end
+	if block 0 1 0 white_concrete
+		/setblock 0 3 0 white_concrete
+	end
+	if block 0 1 0 black_concrete
+		/setblock 0 3 0 black_concrete
+	end
+	if block 0 1 0 magenta_concrete
+		/setblock 0 3 0 magenta_concrete
+	end
+	if block 0 1 0 light_blue_concrete
+		/setblock 0 3 0 light_blue_concrete
+	end
+	if block 0 1 0 blue_concrete
+		/setblock 0 3 0 blue_concrete
+	end
+	if block 0 1 0 sandstone
+		/setblock 0 3 0 sandstone
+	end
+	if block 0 1 0 light_gray_concrete
+		/setblock 0 3 0 light_gray_concrete
+	end
+	if block 0 1 0 cyan_concrete
+		/setblock 0 3 0 cyan_concrete
+	end
+	if block 0 1 0 oak_planks
+		/setblock 0 3 0 oak_planks
+	end
+	if block 0 1 0 spruce_planks
+		/setblock 0 3 0 spruce_planks
+	end
+	if block 0 1 0 birch_planks
+		/setblock 0 3 0 birch_planks
+	end
+	if block 0 1 0 jungle_planks
+		/setblock 0 3 0 jungle_planks
+	end
+	if block 0 1 0 acacia_planks
+		/setblock 0 3 0 acacia_planks
+	end
+	if block 0 1 0 dark_oak_planks
+		/setblock 0 3 0 dark_oak_planks
+	end
+	if block 0 1 0 stone
+		/setblock 0 3 0 stone
+	end
+	if block 0 1 0 iron_block
+		/setblock 0 3 0 iron_block
+	end
+	if block 0 1 0 snow_block
+		/setblock 0 3 0 snow_block
+	end
+	if block 0 1 0 gold_block
+		/setblock 0 3 0 gold_block
+	end
+	if block 0 1 0 iron_block
+		/setblock 0 3 0 iron_block
+	end
+end
+
+clock rendering
+	for @player in @a[rendering]
+		@s.frame++
+		frame = @s.frame
+		as @Marker if @s.owner == @player._id and @s.frame == frame
+			at @s rotated @s
+				at ^1 ^ ^
+					<left> = here - @s.<pos>
+				end
+				at ^ ^1 ^
+					<up> = here - @s.<pos>
+				end
+				at ^ ^ ^1
+					<fwd> = here - @s.<pos>
+				end
+
+				as create @Marker
+					@s.pixel = True
+				end
+				@Pixel = @Marker[pixel, limit=1]
+
+				<start> = <fwd> * 20
+				for row = 0 to 128
+					for col = 0 to 128
+						@Pixel.<pos> = <start> - <left> * col / 20 + <up> * col / 20
+						facing @Pixel
+							while step < 100 if block ~ ~ ~ air at ^ ^ ^1
+								step++
+								unless block ~ ~ ~ air
+									/clone ~ ~ ~ ~ ~ ~ 0 3 0
+								end
+							end
+						end
+					end
+				end
+
+				
+				/kill @Pixel
+			end
+			
+			/kill @s
+		end
+
+		if @s.frame == @s.end_frame
+			@s.rendering = False
+			tell @s: {GDone rendering! \[[play](/function video:play)\]
+		end
+	end
+end
+
+function play()
+	@s.playing = True
+	@s.frame = 0
+	@s.frame_step = 0
+	/tp @s 24 225 30 180 0
+end
+
+clock playing
+	for @player in @a[playing]
+		@s.frame++
+		frame = @s.frame
+		
+		if @s.frame == @s.end_frame
+			@s.playing = False
+			tell @s: {GDone playing!
+		end
+	end
+end

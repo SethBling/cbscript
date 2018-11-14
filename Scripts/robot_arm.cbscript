@@ -1,0 +1,300 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+desc: Robot arm.
+scale: 1000
+
+$marker: "Marker:1b, Invisible:1b, NoGravity:1b, Invulnerable:1b, Silent:1b"
+
+$NumPieces: 9
+$NumSegments: 4
+
+define @Entity = @e
+	x = Pos[0] double
+	y = Pos[1] double
+	z = Pos[2] double
+	<pos> = Pos double
+	vx = Motion[0] double
+	vy = Motion[1] double
+	vz = Motion[2] double
+	ry = Rotation[0] float
+	rx = Rotation[1] float
+	on_ground = OnGround byte 1
+	no_gravity = NoGravity byte 1
+end
+
+@Player = @Entity[type=player]
+
+define @Marker = @Entity[type=area_effect_cloud,name=Marker]
+	create: {"CustomName":"\"Marker\"", Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+define @MiniBlock = @Entity[type=armor_stand,name=MiniBlock]
+	create: {CustomName:"\"MiniBlock\"", Pose:{Head:[0.0001f,0f,0f]}, $marker}
+	
+	pose_rot_x = Pose.Head[0] float
+	pose_rot_y = Pose.Head[1] float
+	
+	function update()
+		@s.<pos> = here - <0, 1700, 0>
+		
+		/data merge entity @s {Pose:{Head:[0.0001f,0.0001f,0.0001f]}}
+		@s.pose_rot_x = @s.rot_x
+		@s.pose_rot_y = @s.rot_y
+		
+		my_rx = @s.rot_x
+		my_ry = @s.rot_y
+		
+		as create @Marker
+			<base> = @s.<pos>
+
+			move @s ^ ^-0.287 ^
+			@s.rx = my_rx
+			@s.ry = my_ry
+			move @s ^ ^0.287 ^
+			
+			<delta> = <base> - @s.<pos>
+			
+			/kill @s
+		end
+		
+		@s.<pos> += <delta>
+		
+		/data merge entity @s {Fire:32767s}	
+		
+		at @s rotated @s
+			/tp @s ~ ~ ~ 0 0
+		end
+	end	
+end
+
+reset
+	/kill @MiniBlock
+	/kill @Marker
+	
+	at @p
+		seg = 0
+		while seg < $NumSegments
+			seg++
+			piece = 0
+			while piece < $NumPieces
+				piece++
+				as create @MiniBlock
+					/replaceitem entity @s armor.head minecraft:diamond_block
+
+					@s.seg = seg
+					@s.piece = piece
+					
+					@s.nonstick = True
+				end
+			end
+			
+			as create @Marker
+				@s.seg = seg
+				@s.drx = -25000
+				@s.dry = 20000
+				
+				@s.nonstick = True
+			end
+		end
+		
+		as create @MiniBlock
+			/replaceitem entity @s armor.head white_banner
+			@s.claw_left = True
+			@s.nonstick = True
+		end
+		as create @MiniBlock
+			/replaceitem entity @s armor.head white_banner
+			@s.claw_right = True
+			@s.nonstick = True
+		end
+	end
+end
+
+function apply_rotation()
+	<arm_pos> = <110500, 65500, 134500>
+	seg = 0
+	crx = 0
+	cry = 0
+	while seg < $NumSegments
+		seg++
+		as @Marker if @s.seg == seg
+			if @s.drx > 180000
+				@s.drx -= 360000
+			end
+			if @s.drx < -180000
+				@s.drx += 360000
+			end
+			
+			crx += @s.drx
+			cry += @s.dry
+			
+			if seg == 4 and crx < 30000
+				crx = 30000
+			end
+			
+			if seg == 4 and crx  > 170000
+				crx = 170000
+			end
+			
+			if seg == 1 and crx > 50000
+				crx = 50000
+			end
+			
+			if seg == 1 and crx < -170000
+				crx = -170000
+			end
+			
+			if crx > 180000
+				crx -= 360000
+			end
+			if crx < -180000
+				crx += 360000
+			end
+			
+			local_ry = cry
+			local_rx = crx
+
+			if crx > 90000
+				local_rx = -crx + 180000
+				local_ry += 180000
+			end
+			if crx < -90000
+				local_rx = -crx - 180000
+				local_ry += 180000
+			end
+			@s.rx = local_rx
+			@s.ry = local_ry
+			@s.<pos> = <arm_pos>
+			piece = 0
+			while piece < $NumPieces
+				piece++
+
+				if live at @s as @MiniBlock if @s.seg == seg and @s.piece == piece
+					@s.rot_x = local_rx
+					@s.rot_y = local_ry
+					@s.update()
+				end
+				
+				move @s ^ ^ ^0.6
+			end
+			<arm_pos> = @s.<pos>
+		end
+	end
+	
+	<dx, dy, dz> = <arm_pos> - <target>
+	
+	tdist = sqrt(dx^2+dy^2+dz^2)
+end
+
+clock main
+	at 110.5 65.5 134.5
+		@Entity[target, distance=19..].target = False
+		unless @Entity[target]
+			@Player[distance=..18].nonstick = True
+			as @Entity[distance=..18] unless @s.nonstick do @s.nonstick = False
+			as @Entity[distance=..18,limit=1,sort=random,not nonstick]
+				@s.target = True
+				@s.hooked = False
+				@s.drop = False
+			end
+		end
+	end
+
+	as @Entity[target]
+		if @s.hooked
+			<target> = <101500, 63500, 129500>
+		end
+		
+		unless @s.hooked
+			<target> = @s.<pos>
+		end
+	end
+	
+	live = False
+	
+	apply_rotation()
+	basedist = tdist
+	
+	@Marker[seg==1].drx += 50
+	apply_rotation()
+	dist1x = tdist - basedist
+	@Marker[seg==1].drx -= 50
+
+	@Marker[seg==1].dry += 50
+	apply_rotation()
+	dist1y = tdist - basedist
+	@Marker[seg==1].dry -= 50
+
+	@Marker[seg==2].drx += 50
+	apply_rotation()
+	dist2x = tdist - basedist
+	@Marker[seg==2].drx -= 50
+
+	@Marker[seg==2].dry += 50
+	apply_rotation()
+	dist2y = tdist - basedist
+	@Marker[seg==2].dry -= 50
+
+	@Marker[seg==3].drx += 50
+	apply_rotation()
+	dist3x = tdist - basedist
+	@Marker[seg==3].drx -= 50
+
+	@Marker[seg==3].dry += 50
+	apply_rotation()
+	dist3y = tdist - basedist
+	@Marker[seg==3].dry -= 50
+
+	@Marker[seg==4].drx += 50
+	apply_rotation()
+	dist4x = tdist - basedist
+	@Marker[seg==4].drx -= 50
+
+	@Marker[seg==4].dry += 50
+	apply_rotation()
+	dist4y = tdist - basedist
+	@Marker[seg==4].dry -= 50
+
+	
+	mag = sqrt(dist1x^2 + dist1y^2 + dist2x^2 + dist2y^2 + dist3x^2 + dist3y^2 + dist4x^2 + dist4y^2)
+
+	if basedist > 500
+		@Marker[seg==1].drx -= dist1x * 2000 / mag
+		@Marker[seg==1].dry -= dist1y * 2000 / mag
+		@Marker[seg==2].drx -= dist2x * 2000 / mag
+		@Marker[seg==2].dry -= dist2y * 2000 / mag
+		@Marker[seg==3].drx -= dist3x * 2000 / mag
+		@Marker[seg==3].dry -= dist3y * 2000 / mag
+		@Marker[seg==4].drx -= dist4x * 2000 / mag
+		@Marker[seg==4].dry -= dist4y * 2000 / mag
+		
+		live = True
+	
+		apply_rotation()
+	end
+	
+	if @Entity[target, hooked, not drop]
+		@MiniBlock[claw_left].rot_x = 165000
+		@MiniBlock[claw_right].rot_x = 165000
+		@MiniBlock[claw_right].rot_y = 180000
+	end
+	unless @Entity[target, hooked, not drop]
+		@MiniBlock[claw_left].rot_x = 135000
+		@MiniBlock[claw_right].rot_x = 135000
+		@MiniBlock[claw_right].rot_y = 180000
+	end
+		
+	at <arm_pos>
+		@MiniBlock[claw_left].update()
+		@MiniBlock[claw_right].update()
+	end
+	
+	if tdist > 18000 then @Entity[target,not hooked].target = False
+	if tdist < 750 then @Entity[target, hooked].drop = True
+	if tdist < 750 then @Entity[target].hooked = True
+	@Entity[target, hooked, not drop, limit=1].<pos> = <arm_pos> - <0, 2000, 0>
+	/data merge entity @Entity[target, hooked, not drop, limit=1] {NoGravity:1b}
+	/data merge entity @Entity[target, hooked, drop, limit=1] {NoGravity:0b}
+
+	move @MiniBlock ~ ~ ~
+end
+

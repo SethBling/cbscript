@@ -1,0 +1,73 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+desc: BlingEdit plugin for filling in blocks below existing blocks.
+scale: 1
+
+$marker: "\"Marker\":1b, \"Invisible\":1b, \"NoGravity\":1b, \"Invulnerable\":1b"
+
+define @Entity = @e
+	x = Pos[0] double
+	y = Pos[1] double
+	z = Pos[2] double
+	<pos> = Pos double
+	vx = Motion[0] double
+	vy = Motion[1] double
+	vz = Motion[2] double
+	<vel> = Motion double
+	ry = Rotation[0] float 1
+	rx = Rotation[1] float 1
+	on_ground = OnGround byte 1
+	no_gravity = NoGravity byte 1
+	absorption = AbsorptionAmount float 1
+end
+
+define @Marker = @Entity[type=area_effect_cloud]
+	create: {Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+define @Player = @Entity[type=player]
+	function run()
+		/function blingedit:plugin_can_run
+		if plugin_can_run
+			/function blingedit:check_loaded
+			if loaded
+				tell @s: Performing drop fill...
+				/bossbar set progress players @s
+				
+				as create @Marker
+					for x = box_xmin to box_xmax
+						percent = (x - box_xmin) * 100 / (box_xmax - box_xmin)
+						/execute store result bossbar progress value run scoreboard players get Global percent
+						
+						for z = box_zmin to box_zmax
+							/setblock 0 1 0 air
+							for y = box_ymax to box_ymin by -1
+								@s.<pos> = <x, y, z>
+								at @s
+									/clone ~ ~ ~ ~ ~ ~ 0 1 0 masked
+									/clone 0 1 0 0 1 0 ~ ~ ~ masked
+								end
+							end
+						end
+					end
+					
+					/kill @s
+				end
+				tell @s: Drop fill complete.
+			end
+		end
+		
+		/gamerule sendCommandFeedback false
+	end
+end
+
+clock main
+	as @Player
+		if @s.disp_plugins
+			tell @s: {C[\[DropFill\]](/function blingedit_dropfill:run)
+		end
+	end
+end
+
+reset
+
+end
