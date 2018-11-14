@@ -365,14 +365,17 @@ function global_reset()
 	VBLANK = True
 	INPT45Control = False
 	Scan = -68
+	
+	# Initialize Palettes from Color 0 Lum 0
 	COLUPF = 0
-	/fill 0 254 -2 3 254 -2 black_wool
+	/clone 0 0 -8 3 0 -8 0 254 -2
 	COLUBK = 0
-	/fill 0 254 -3 3 254 -3 black_wool
+	/clone 0 0 -8 3 0 -8 0 254 -3
 	COLUP0 = 0
-	/fill 0 252 -1 0 252 -1 black_wool
+	/clone 0 0 -8 3 0 -8 0 252 -1
 	COLUP1 = 0
-	/fill 0 253 -1 0 253 -1 black_wool
+	/clone 0 0 -8 3 0 -8 0 253 -1
+	
 	ReflectPF = 0
 	Clock = 0
 	ClockRate = 3
