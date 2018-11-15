@@ -2060,7 +2060,7 @@ function write_addr(addr, val)
 			end
 			
 			INPT45Control = (Byte / 0x40) % 2
-			LatchedButton = False
+			LatchedButton = Button
 		end
 		case $PF0
 			unless Byte == PF0
