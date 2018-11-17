@@ -633,6 +633,12 @@ end
 
 # Read an arbitrary address in the memory space.
 function read_addr(addr)
+	if addr == BreakOnRead
+		tell @a: Read from break point (Addr). {G[\[Continue\]](/scoreboard players set Global Halt 0) {R[\[Remove Breakpoint\]](/scoreboard players set Global BreakOnRead -1)
+		display_instruction()
+		Halt = True
+	end
+
 	raw_addr = addr
 	# 6507 only has 13 address pins
 	addr %= 0x2000
@@ -964,77 +970,82 @@ function read_operands()
 	end
 	
 	if Debug
-		# Create Entities to display hex digits
-		hex_number(PC, 0, 4)
-		hex_number(Instruction, 8, 2)
-		hex_number(A, 10, 2)
-		hex_number(X, 12, 2)
-		hex_number(Y, 14, 2)
-		hex_number(Stack, 16, 2)
-		
-		# Get the mnemonic for the current instruction
-		mnemonic()
-		
-		switch OpLength
-			case 1
-				tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic)
-			end
-			case 2
-				hex_number(Op1, 4, 2)
-				Handled = False
-				if Constant
-					tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) #$(@digit4)(@digit5)
-					Handled = True
-				end
-				if XIndexPre and not Indirect
-					tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit4)(@digit5),X
-					Handled = True
-				end
-				if XIndexPre and Indirect
-					tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) \($(@digit4)(@digit5),X\)
-					Handled = True
-				end
-				if YIndexPre
-					tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit4)(@digit5),Y
-					Handled = True
-				end
-				if YIndexPost
-					tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) \($(@digit4)(@digit5)\),Y
-					Handled = True
-				end
-				if not Handled
-					tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit4)(@digit5)
-				end
-			end
-			case 3
-				hex_number(Op1, 4, 2)
-				hex_number(Op2, 6, 2)
-				
-				Handled = False
-				if XIndexPre
-					tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit6)(@digit7)(@digit4)(@digit5),X
-					Handled = True
-				end
-				if YIndexPre
-					tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit6)(@digit7)(@digit4)(@digit5),Y
-					Handled = True
-				end				
-				if not Handled
-					tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit6)(@digit7)(@digit4)(@digit5)
-				end
-			end
-		end
-		tell @a: \   Instruction $(@digit8)(@digit9) A=$(@digit10)(@digit11) X=$(@digit12)(@digit13) Y=$(@digit14)(@digit15) S=$(@digit16)(@digit17)
-		clear_digits()
+		display_instruction()
 	end
 	
 	if PC == BreakOnExecute
 		tell @a: Executed break point at (Addr). {G[\[Continue\]](/scoreboard players set Global Halt 0) {R[\[Remove Breakpoint\]](/scoreboard players set Global BreakOnExecute -1)
+		display_instruction()
 		Halt = True
 	end
 	
 	PC += OpLength
 	if PC >= 0x10000 then PC -= 0x10000
+end
+
+function display_instruction()
+	# Create Entities to display hex digits
+	hex_number(PC, 0, 4)
+	hex_number(Instruction, 8, 2)
+	hex_number(A, 10, 2)
+	hex_number(X, 12, 2)
+	hex_number(Y, 14, 2)
+	hex_number(Stack, 16, 2)
+	
+	# Get the mnemonic for the current instruction
+	mnemonic()
+	
+	switch OpLength
+		case 1
+			tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic)
+		end
+		case 2
+			hex_number(Op1, 4, 2)
+			Handled = False
+			if Constant
+				tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) #$(@digit4)(@digit5)
+				Handled = True
+			end
+			if XIndexPre and not Indirect
+				tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit4)(@digit5),X
+				Handled = True
+			end
+			if XIndexPre and Indirect
+				tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) \($(@digit4)(@digit5),X\)
+				Handled = True
+			end
+			if YIndexPre
+				tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit4)(@digit5),Y
+				Handled = True
+			end
+			if YIndexPost
+				tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) \($(@digit4)(@digit5)\),Y
+				Handled = True
+			end
+			if not Handled
+				tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit4)(@digit5)
+			end
+		end
+		case 3
+			hex_number(Op1, 4, 2)
+			hex_number(Op2, 6, 2)
+			
+			Handled = False
+			if XIndexPre
+				tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit6)(@digit7)(@digit4)(@digit5),X
+				Handled = True
+			end
+			if YIndexPre
+				tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit6)(@digit7)(@digit4)(@digit5),Y
+				Handled = True
+			end				
+			if not Handled
+				tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit6)(@digit7)(@digit4)(@digit5)
+			end
+		end
+	end
+	tell @a: \   Instruction $(@digit8)(@digit9) A=$(@digit10)(@digit11) X=$(@digit12)(@digit13) Y=$(@digit14)(@digit15) S=$(@digit16)(@digit17)
+	clear_digits()
 end
 
 # Run branch operations
@@ -1974,6 +1985,7 @@ function write_addr(addr, val)
 	
 	if addr == BreakOnWrite
 		tell @a: Wrote (val) to break point (Addr). {G[\[Continue\]](/scoreboard players set Global Halt 0) {R[\[Remove Breakpoint\]](/scoreboard players set Global BreakOnWrite -1)
+		display_instruction()
 		Halt = True
 	end
 	
