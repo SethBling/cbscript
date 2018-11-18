@@ -10,6 +10,7 @@ import time
 import os
 import traceback
 import math
+import collections
 
 def combine_selectors(selector, qualifiers):
 	if selector[-1] <> ']':
@@ -702,7 +703,11 @@ class cbscript(object):
 					except:
 						print('Could not evaluate "{0}" at line {1}'.format(python, line))
 						return False
-						
+					
+					if not isinstance(vals, collections.Iterable):
+						print('Python "{}" is not iterable at line {}'.format(python, line))
+						return False
+
 					for val in vals:
 						try:
 							ival = int(val)

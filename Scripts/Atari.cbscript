@@ -651,6 +651,8 @@ function read_addr(addr)
 		update_clock()
 	end
 	
+	$read_mirrors : lambda a: [a % 0x10 + i for i in range(0x00, 0x80, 0x10)]
+	
 	switch addr
 		case $addr in: MemoryAddresses
 			/scoreboard players operation Global ReturnValue = Global Memory$addr
@@ -669,7 +671,7 @@ function read_addr(addr)
 		case 0x1000 to 0x1FFF
 			return read_rom(addr)
 		end
-		case $INPT4
+		case $i in: read_mirrors(INPT4)
 			if INPT45Control
 				if LatchedButton
 					return 0x7F
@@ -687,7 +689,7 @@ function read_addr(addr)
 				end
 			end
 		end
-		case $INPT5
+		case $i in: read_mirrors(INPT5)
 			return 0xFF
 		end
 		case $SWCHA
@@ -702,28 +704,28 @@ function read_addr(addr)
 		case $SWCHB
 			return Difficulty1 * 0x80 + Difficulty0 * 0x40 + ColorMode * 0x08 + SelectSwitch * 0x02 + ResetSwitch * 0x01
 		end
-		case $CXM0P
+		case $i in: read_mirrors(CXM0P)
 			return CXM0P1 * 0x80 + CXM0P0 * 0x40
 		end
-		case $CXM1P
+		case $i in: read_mirrors(CXM1P)
 			return CXM1P0 * 0x80 + CXM1P1 * 0x40
 		end
-		case $CXP0FB
+		case $i in: read_mirrors(CXP0FB)
 			return CXP0PF * 0x80 + CXP0BL * 0x40
 		end
-		case $CXP1FB
+		case $i in: read_mirrors(CXP1FB)
 			return CXP1PF * 0x80 + CXP1BL * 0x40
 		end
-		case $CXM0FB
+		case $i in: read_mirrors(CXM0FB)
 			return CXM0PF * 0x80 + CXM0BL * 0x40
 		end
-		case $CXM1FB
+		case $i in: read_mirrors(CXM1FB)
 			return CXM1PF * 0x80 + CXM1BL * 0x40
 		end
-		case $CXBLPF
+		case $i in: read_mirrors(CXBLPF)
 			return CXBLPF * 0x80
 		end
-		case $CXPPMM
+		case $i in: read_mirrors(CXPPMM)
 			return CXP0P1 * 0x80 + CXM0M1 * 0x40
 		end
 	end
@@ -1989,31 +1991,32 @@ function write_addr(addr, val)
 		Halt = True
 	end
 	
+	$write_mirrors: lambda a: [a % 0x40 + i for i in range(0, 0x80, 0x40)]
 	switch addr
 		case $addr in: MemoryAddresses
 			/scoreboard players operation Global Memory$addr = Global val
 		end
-		case $HMP0
+		case $i in: write_mirrors(HMP0)
 			PV[0] = Byte / 0x10
 			if PV[0] >= 0x08 then PV[0] -= 0x10
 		end
-		case $HMP1
+		case $i in: write_mirrors(HMP1)
 			PV[1] = Byte / 0x10
 			if PV[1] >= 0x08 then PV[1] -= 0x10
 		end
-		case $HMM0
+		case $i in: write_mirrors(HMM0)
 			MV[0] = Byte / 0x10
 			if MV[0] >= 0x08 then MV[0] -= 0x10
 		end
-		case $HMM1
+		case $i in: write_mirrors(HMM1)
 			MV[1] = Byte / 0x10
 			if MV[1] >= 0x08 then MV[1] -= 0x10
 		end
-		case $HMBL
+		case $i in: write_mirrors(HMBL)
 			BLV = Byte / 0x10
 			if BLV >= 0x08 then BLV -= 0x10
 		end
-		case $HMOVE
+		case $i in: write_mirrors(HMOVE)
 			PX[0] -= PV[0]
 			PX[1] -= PV[1]
 			MX[0] -= MV[0]
@@ -2021,14 +2024,14 @@ function write_addr(addr, val)
 			BLX -= BLV
 			BallEnd = BLX + BallSize
 		end
-		case $HMCLR
+		case $i in: write_mirrors(HMCLR)
 			PV[0] = 0
 			PV[1] = 0
 			MV[0] = 0
 			MV[1] = 0
 			BLV = 0
 		end
-		case $COLUBK
+		case $i in: write_mirrors(COLUBK)
 			unless Byte == COLUBK
 				COLUBK = Byte
 				
@@ -2045,7 +2048,7 @@ function write_addr(addr, val)
 				end
 			end
 		end
-		case $COLUPF
+		case $i in: write_mirrors(COLUPF)
 			unless Byte == COLUPF
 				COLUPF = Byte
 				
@@ -2062,7 +2065,7 @@ function write_addr(addr, val)
 				end
 			end
 		end
-		case $COLUP0
+		case $i in: write_mirrors(COLUP0)
 			unless Byte == COLUP0				
 				COLUP0 = Byte
 				
@@ -2079,7 +2082,7 @@ function write_addr(addr, val)
 				end
 			end
 		end
-		case $COLUP1
+		case $i in: write_mirrors(COLUP1)
 			unless Byte == COLUP1				
 				COLUP1 = Byte
 				
@@ -2096,7 +2099,7 @@ function write_addr(addr, val)
 				end
 			end
 		end
-		case $VBLANK
+		case $i in: write_mirrors(VBLANK)
 			was_vblank = VBLANK
 			VBLANK = (Byte / 2) % 2
 			if not VBLANK and was_vblank
@@ -2106,7 +2109,7 @@ function write_addr(addr, val)
 			INPT45Control = (Byte / 0x40) % 2
 			LatchedButton = Button
 		end
-		case $PF0
+		case $i in: write_mirrors(PF0)
 			unless Byte == PF0
 				PF0 = Byte
 				
@@ -2117,7 +2120,7 @@ function write_addr(addr, val)
 				end
 			end
 		end
-		case $PF1
+		case $i in: write_mirrors(PF1)
 			unless Byte == PF1
 				PF1 = Byte
 				
@@ -2130,7 +2133,7 @@ function write_addr(addr, val)
 				end
 			end
 		end
-		case $PF2
+		case $i in: write_mirrors(PF2)
 			unless Byte == PF2
 				PF2 = Byte
 				
@@ -2142,7 +2145,7 @@ function write_addr(addr, val)
 				end
 			end
 		end
-		case $GRP0
+		case $i in: write_mirrors(GRP0)
 			if VDELP0
 				GRP0A = Byte
 			end
@@ -2155,7 +2158,7 @@ function write_addr(addr, val)
 				$UpdateGRPBits(0)
 			end
 		end
-		case $GRP1
+		case $i in: write_mirrors(GRP1)
 			if VDELP1
 				GRP1A = Byte
 			end
@@ -2174,31 +2177,31 @@ function write_addr(addr, val)
 				$UpdateGRPBits(1)
 			end
 		end
-		case $NUSIZ0
+		case $i in: write_mirrors(NUSIZ0)
 			unless Byte == NUSIZ[0]
 				NUSIZ[0] = Byte
 				$UpdateNumSize(0)
 			end
 		end
-		case $NUSIZ1
+		case $i in: write_mirrors(NUSIZ1)
 			unless Byte == NUSIZ[1]
 				NUSIZ[1] = Byte
 				$UpdateNumSize(1)
 			end
 		end
-		case $REFP0
+		case $i in: write_mirrors(REFP0)
 			ReflectP[0] = (Byte / 8) % 2
 		end
-		case $REFP1
+		case $i in: write_mirrors(REFP1)
 			ReflectP[1] = (Byte / 8) % 2
 		end
-		case $VDELP0
+		case $i in: write_mirrors(VDELP0)
 			VDELP0 = Byte % 2
 		end
-		case $VDELBL
+		case $i in: write_mirrors(VDELBL)
 			VDELBL = Byte % 2
 		end
-		case $VDELP1
+		case $i in: write_mirrors(VDELP1)
 			VDELP1 = Byte % 2 
 		end
 		case $TIM1T to $TIM1024T
@@ -2213,7 +2216,7 @@ function write_addr(addr, val)
 			if Addr == $TIM64T then ClockRate = 192
 			if Addr == $TIM1024T then ClockRate = 3072
 		end
-		case $CTRLPF
+		case $i in: write_mirrors(CTRLPF)
 			ReflectPF = Byte % 2
 			
 			switch (Byte / 0x10) % 0x04
@@ -2224,18 +2227,18 @@ function write_addr(addr, val)
 			end
 			BallEnd = BLX + BallSize
 		end
-		case $ENAM0
+		case $i in: write_mirrors(ENAM0)
 			ENAM[0] = (Byte / 2) % 2
 			
 			# Make sure missile-object collisions aren't triggered while disabled
 			MissilePixel[0] = False
 		end
-		case $ENAM1
+		case $i in: write_mirrors(ENAM1)
 			ENAM[1] = (Byte / 2) % 2
 			# Make sure missile-object collisions aren't triggered while disabled
 			MissilePixel[1] = False	
 		end
-		case $ENABL
+		case $i in: write_mirrors(ENABL)
 			if VDELBL
 				ENABLA = (Byte / 2) % 2
 			end
@@ -2245,34 +2248,34 @@ function write_addr(addr, val)
 				BallPixel = False
 			end
 		end
-		case $RESP0
+		case $i in: write_mirrors(RESP0)
 			PX[0] = Scan + 5
 			if PX[0] < 0 then PX[0] = 3
 		end	
-		case $RESP1
+		case $i in: write_mirrors(RESP1)
 			PX[1] = Scan + 5
 			if PX[1] < 0 then PX[1] = 3
 		end
-		case $RESM0
+		case $i in: write_mirrors(RESM0)
 			MX[0] = Scan + 5
 			if MX[0] < 0 then MX[0] = 3
 		end
-		case $RESM1
+		case $i in: write_mirrors(RESM1)
 			MX[1] = Scan + 5
 			if MX[1] < 0 then MX[1] = 3
 		end
-		case $RESBL
+		case $i in: write_mirrors(RESBL)
 			BLX = Scan + 5
 			if BLX < 0 then BLX = 3
 			BallEnd = BLX + BallSize
 		end
-		case $RESMP0
+		case $i in: write_mirrors(RESMP0)
 			MX[0] = PX[0]
 		end
-		case $RESMP1
+		case $i in: write_mirrors(RESMP1)
 			MX[1] = PX[1]
 		end
-		case $CXCLR
+		case $i in: write_mirrors(CXCLR)
 			CXM0P0 = False
 			CXM0P1 = False
 			CXM1P0 = False
