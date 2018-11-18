@@ -1936,7 +1936,7 @@ function write_to_memory()
 			hex_number(Instruction, 0, 2)
 			hex_number(PC, 2, 4)
 			mnemonic()
-			tell @a: Instruction @mnemonic \($(@digit0)(@digit1)\) at $(@digit2)(@digit3)(@digit4)(@digit5) tried to write without a valid address
+			tell @a: Instruction (@mnemonic) \($(@digit0)(@digit1)\) at $(@digit2)(@digit3)(@digit4)(@digit5) tried to write without a valid address
 			clear_digits()
 			Halt = True
 		end
