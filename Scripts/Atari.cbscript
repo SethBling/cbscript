@@ -1236,10 +1236,13 @@ function run_instruction()
 				ha = A / 0x10
 				lb = Byte % 0x10
 				hb = Byte / 0x10
+				
 				la += lb + Carry
 				Carry = la / 10
 				la %= 10
-				ha = hb + Carry
+				
+				ha += hb
+				ha += Carry
 				Carry = ha / 10
 				ha %= 10
 				A = ha * 0x10 + la
@@ -1485,6 +1488,7 @@ function run_instruction()
 					Carry = 0
 					la += 10
 				end
+				
 				ha -= hb + 1 - Carry
 				Carry = 1
 				if ha < 0
