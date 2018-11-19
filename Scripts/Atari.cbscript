@@ -759,8 +759,6 @@ clock main
 		if RunProcessor > 0
 			read_instruction()
 			get_base_cycles()
-			get_addressing_mode()
-			read_operands()
 			run_branch_instruction()
 			run_instruction()
 			get_pixel_count()
@@ -952,8 +950,9 @@ function get_addressing_mode()
 	end
 end
 
-# Read the instruction's operands, if applicable
-function read_operands()
+# Read the instruction's operands, if applicable, and update the Program Counter.
+# This is required for every instruction because it updates the program counter.
+function get_pc_data()
 	if OpLength >= 2
 		# Read Operand 1
 		Addr++
@@ -1055,27 +1054,43 @@ function run_branch_instruction()
 	if AddrMode == 0x10
 		switch Function
 			case $BCC
+				get_pc_data()
+			
 				if not Carry 	then branch()
 			end
 			case $BCS
+				get_pc_data()
+			
 				if Carry 		then branch()
 			end
 			case $BEQ
+				get_pc_data()
+			
 				if Zero 		then branch()
 			end
 			case $BNE
+				get_pc_data()
+			
 				if not Zero 	then branch()
 			end
 			case $BMI
+				get_pc_data()
+			
 				if Negative 	then branch()
 			end
 			case $BPL
+				get_pc_data()
+			
 				if not Negative then branch()
 			end
 			case $BVS
+				get_pc_data()
+			
 				if Overflow 	then branch()
 			end
 			case $BVC
+				get_pc_data()
+			
 				if not Overflow then branch()
 			end
 		end
@@ -1107,6 +1122,9 @@ function branch()
 end
 
 function operate_memory_bus()
+	get_addressing_mode()
+	get_pc_data()
+
 	if not Constant and not Accumulator
 		move_to_direct_addr()
 		read_direct()
@@ -1342,15 +1360,23 @@ function run_instruction()
 			PC = NMI		
 		end
 		case $CLC
+			get_pc_data()
+			
 			Carry = False
 		end
 		case $CLD
+			get_pc_data()
+		
 			Decimal = False
 		end
 		case $CLI
+			get_pc_data()
+		
 			Interrupt = False
 		end
 		case $CLV
+			get_pc_data()
+		
 			Overflow = False
 		end
 		case $CMP
@@ -1377,12 +1403,16 @@ function run_instruction()
 			TestZN = Byte
 		end
 		case $DEX
+			get_pc_data()
+		
 			X--
 			if X < 0 then X += 0x100
 
 			TestZN = X
 		end
 		case $DEY
+			get_pc_data()
+		
 			Y--
 			if Y < 0 then Y += 0x100
 
@@ -1412,11 +1442,15 @@ function run_instruction()
 			TestZN = Byte
 		end
 		case $INX
+			get_pc_data()
+		
 			X++
 			if X >= 0x100 then X -= 0x100
 			TestZN = X
 		end
 		case $INY
+			get_pc_data()
+		
 			Y++
 			if Y >= 0x100 then Y -= 0x100
 			TestZN = Y
@@ -1424,11 +1458,18 @@ function run_instruction()
 		case $JMP			
 			if Instruction == 0x6C
 				operate_memory_bus()
+				
 				PC = Byte2 * 0x100 + Byte
 			end
-			if Instruction == 0x4C  then PC = Op12
+			if Instruction == 0x4C
+				get_pc_data()
+				
+				PC = Op12
+			end
 		end
 		case $JSR
+			operate_memory_bus()
+		
 			PC--
 			Byte = PC / 0x100
 			Byte2 = PC % 0x100
@@ -1459,6 +1500,9 @@ function run_instruction()
 			Byte /= 2
 
 			TestZN = Byte
+		end
+		case $NOP
+			get_pc_data()
 		end
 		case $ORA
 			operate_memory_bus()
@@ -1578,12 +1622,18 @@ function run_instruction()
 			TestZN = A
 		end
 		case $SEC
+			get_pc_data()
+		
 			Carry = True
 		end
 		case $SED
+			get_pc_data()
+		
 			Decimal = True
 		end
 		case $SEI
+			get_pc_data()
+		
 			Interrupt = True
 		end
 		case $STA
@@ -1602,26 +1652,38 @@ function run_instruction()
 			Byte = Y
 		end
 		case $TAX
+			get_pc_data()
+		
 			X = A
 			TestZN = X
 		end
 		case $TAY
+			get_pc_data()
+		
 			Y = A
 			TestZN = Y
 		end
 		case $TSX
+			get_pc_data()
+		
 			X = Stack
 			TestZN = X
 		end
 		case $TXA
+			get_pc_data()
+		
 			A = X
 			TestZN = A
 		end
 		case $TXS
+			get_pc_data()
+		
 			Stack = X
 			TestZN = Stack
 		end
 		case $TYA
+			get_pc_data()
+		
 			A = Y
 			TestZN = A
 		end
