@@ -762,9 +762,6 @@ clock main
 			get_addressing_mode()
 			read_operands()
 			run_branch()
-			move_to_direct_addr()
-			read_direct()
-			move_to_indirect_addr()
 			run_instruction()
 			get_pixel_count()
 
@@ -1109,6 +1106,12 @@ function run_branch()
 	end
 end
 
+function operate_memory_bus()
+	move_to_direct_addr()
+	read_direct()
+	move_to_indirect_addr()
+end	
+
 # Move the memory pointer to the direct-addressed memory
 function move_to_direct_addr()
 	Addr = -1
@@ -1231,6 +1234,8 @@ function run_instruction()
 	
 	switch Function
 		case $ADC
+			operate_memory_bus()
+			
 			if Decimal
 				la = A % 0x10
 				ha = A / 0x10
@@ -1271,6 +1276,8 @@ function run_instruction()
 			TestZN = A
 		end
 		case $AND
+			operate_memory_bus()
+			
 			Byte2 = 0
 			for $exp in: [128, 64, 32, 16, 8, 4, 2, 1]
 				if A >= $exp and Byte >= $exp then Byte2 += $exp
@@ -1283,6 +1290,8 @@ function run_instruction()
 			TestZN = A
 		end
 		case $ASL
+			operate_memory_bus()
+			
 			Byte *= 2
 			Carry = False
 			if Byte >= 0x100
@@ -1293,6 +1302,8 @@ function run_instruction()
 			TestZN = Byte
 		end
 		case $BIT
+			operate_memory_bus()
+			
 			Byte2 = A
 			Zero = True
 			Negative = False
@@ -1318,6 +1329,8 @@ function run_instruction()
 			end
 		end
 		case $BRK
+			operate_memory_bus()
+			
 			P += 16 # Set the break flag for the processor status
 			
 			Byte = PC / 0x100
@@ -1339,15 +1352,23 @@ function run_instruction()
 			Overflow = False
 		end
 		case $CMP
+			operate_memory_bus()
+			
 			Compare = A
 		end
 		case $CPX
+			operate_memory_bus()
+			
 			Compare = X
 		end
 		case $CPY
+			operate_memory_bus()
+			
 			Compare = Y
 		end
 		case $DEC
+			operate_memory_bus()
+			
 			Byte--
 			if Byte < 0 then Byte += 0x100
 
@@ -1366,6 +1387,8 @@ function run_instruction()
 			TestZN = Y
 		end
 		case $EOR
+			operate_memory_bus()
+			
 			Byte2 = 0
 			for $exp in: [128, 64, 32, 16, 8, 4, 2, 1]
 				if A >= $exp and Byte < $exp then Byte2 += $exp
@@ -1379,6 +1402,8 @@ function run_instruction()
 			TestZN = A
 		end
 		case $INC
+			operate_memory_bus()
+			
 			Byte++
 			if Byte >= 0x100 then Byte -= 0x100
 
@@ -1394,8 +1419,11 @@ function run_instruction()
 			if Y >= 0x100 then Y -= 0x100
 			TestZN = Y
 		end
-		case $JMP
-			if Instruction == 0x6C then PC = Byte2 * 0x100 + Byte
+		case $JMP			
+			if Instruction == 0x6C
+				operate_memory_bus()
+				PC = Byte2 * 0x100 + Byte
+			end
 			if Instruction == 0x4C  then PC = Op12
 		end
 		case $JSR
@@ -1405,24 +1433,34 @@ function run_instruction()
 			PC = Op12
 		end
 		case $LDA
+			operate_memory_bus()
+			
 			A = Byte
 			TestZN = A
 		end
 		case $LDX
+			operate_memory_bus()
+			
 			X = Byte
 			TestZN = X
 		end
 		case $LDY
+			operate_memory_bus()
+			
 			Y = Byte
 			TestZN = Y
 		end
 		case $LSR
+			operate_memory_bus()
+			
 			Carry = Byte % 2
 			Byte /= 2
 
 			TestZN = Byte
 		end
 		case $ORA
+			operate_memory_bus()
+			
 			Byte2 = 0
 			for $exp in: [128, 64, 32, 16, 8, 4, 2, 1]
 				if A >= $exp then Byte2 += $exp
@@ -1436,20 +1474,30 @@ function run_instruction()
 			TestZN = A
 		end
 		case $PHA
+			operate_memory_bus()
+			
 			Byte = A
 		end
 		case $PHP
+			operate_memory_bus()
+			
 			Byte = P
 		end
 		case $PLA
+			operate_memory_bus()
+			
 			A = Byte
 			TestZN = A
 		end
 		case $PLP
+			operate_memory_bus()
+			
 			P = Byte
 			DecodeP = True
 		end
 		case $ROL
+			operate_memory_bus()
+			
 			LowBit = Carry
 			Byte *= 2
 			Carry = False
@@ -1460,6 +1508,8 @@ function run_instruction()
 			TestZN = Byte
 		end
 		case $ROR
+			operate_memory_bus()
+			
 			LowBit = Byte % 2
 			Byte /= 2
 			if Carry then Byte += 0x80
@@ -1468,14 +1518,20 @@ function run_instruction()
 			TestZN = Byte
 		end
 		case $RTI
+			operate_memory_bus()
+			
 			PC = Byte3 * 0x100 + Byte2
 			P = Byte
 			DecodeP = True
 		end
 		case $RTS
+			operate_memory_bus()
+			
 			PC = Byte2 * 0x100 + Byte + 1
 		end
 		case $SBC
+			operate_memory_bus()
+			
 			if Decimal
 				la = A % 0x10
 				ha = A / 0x10
@@ -1529,12 +1585,18 @@ function run_instruction()
 			Interrupt = True
 		end
 		case $STA
+			operate_memory_bus()
+			
 			Byte = A
 		end
 		case $STX
+			operate_memory_bus()
+			
 			Byte = X
 		end
 		case $STY
+			operate_memory_bus()
+			
 			Byte = Y
 		end
 		case $TAX
