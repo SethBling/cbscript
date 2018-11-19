@@ -761,7 +761,7 @@ clock main
 			get_base_cycles()
 			get_addressing_mode()
 			read_operands()
-			run_branch()
+			run_branch_instruction()
 			run_instruction()
 			get_pixel_count()
 
@@ -1048,62 +1048,62 @@ function display_instruction()
 end
 
 # Run branch operations
-function run_branch()
+function run_branch_instruction()
 	Branch = False	# Branch by the operand
 
 	# Branch instructions all end in 0x10
 	if AddrMode == 0x10
 		switch Function
 			case $BCC
-				if not Carry 	then Branch = True
+				if not Carry 	then branch()
 			end
 			case $BCS
-				if Carry 		then Branch = True
+				if Carry 		then branch()
 			end
 			case $BEQ
-				if Zero 		then Branch = True
+				if Zero 		then branch()
 			end
 			case $BNE
-				if not Zero 	then Branch = True
+				if not Zero 	then branch()
 			end
 			case $BMI
-				if Negative 	then Branch = True
+				if Negative 	then branch()
 			end
 			case $BPL
-				if not Negative then Branch = True
+				if not Negative then branch()
 			end
 			case $BVS
-				if Overflow 	then Branch = True
+				if Overflow 	then branch()
 			end
 			case $BVC
-				if not Overflow then Branch = True
+				if not Overflow then branch()
 			end
 		end
-	end
-
-	if Branch
-		# 1 cycle penalty for branching
-		Cycles++
-		
-		BranchAmount = Op1
-		if BranchAmount >= 0x80 then BranchAmount -= 0x100
-		
-		OldPage = PC / 0x100
-		
-		PC += BranchAmount
-		
-		NewPage = PC / 0x100
-		
-		# Additional 1 cycle penalty for crossing a page boundary
-		unless OldPage == NewPage do Cycles++
-		
-		if PC >= 0x10000 then PC -= 0x10000
-		if PC < 0 then PC += 0x10000
 	end
 	
 	if Debug and DisplayCycles
 		tell @a: \   (Cycles) cycles
 	end
+end
+
+function branch()
+	# 1 cycle penalty for branching
+	Cycles++
+	
+	BranchAmount = Op1
+	if BranchAmount >= 0x80 then BranchAmount -= 0x100
+	
+	OldPage = PC / 0x100
+	
+	PC += BranchAmount
+	
+	NewPage = PC / 0x100
+	
+	# Additional 1 cycle penalty for crossing a page boundary
+	unless OldPage == NewPage do Cycles++
+	
+	if PC >= 0x10000 then PC -= 0x10000
+	if PC < 0 then PC += 0x10000
 end
 
 function operate_memory_bus()
