@@ -1107,9 +1107,14 @@ function run_branch()
 end
 
 function operate_memory_bus()
-	move_to_direct_addr()
-	read_direct()
-	move_to_indirect_addr()
+	if not Constant and not Accumulator
+		move_to_direct_addr()
+		read_direct()
+		move_to_indirect_addr()
+	end
+
+	if Accumulator then Byte = A
+	if Constant then Byte = Op1	
 end	
 
 # Move the memory pointer to the direct-addressed memory
@@ -1170,9 +1175,6 @@ function read_direct()
 		end
 	end
 
-	if Accumulator then Byte = A
-	if Constant then Byte = Op1
-	
 	Addr = SavedAddr
 	
 	if Debug and Addr >= 0
