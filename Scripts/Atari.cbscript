@@ -1679,7 +1679,6 @@ function run_instruction()
 			get_pc_data()
 		
 			Stack = X
-			TestZN = Stack
 		end
 		case $TYA
 			get_pc_data()
