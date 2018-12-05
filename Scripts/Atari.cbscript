@@ -315,7 +315,7 @@ function global_reset()
 		end
 	end
 	
-	# Fill in the pallete from 0, -8, 0 to 3, -1, 15
+	# Fill in the pallete from 0, 0, -8 to 3, 15, -1
 	for $color_data in: atari_colors
 		$color: color_data[0]
 		$minlum: color_data[1]
@@ -818,6 +818,8 @@ function read_instruction()
 		end
 	end
 	
+	Push = 0
+	Pull = 0
 	Write = False	# Write Byte to instructed memory address
 	switch Function
 		case $write in: [STA, STX, STY, INC, DEC, ASL, LSR, ROL, ROR]
@@ -847,8 +849,6 @@ function get_addressing_mode()
 	YIndexPost = False
 	Constant = False
 	Accumulator = False
-	Push = 0
-	Pull = 0
 	
 	# Get Non-Standard Addressing Modes
 	switch Instruction
