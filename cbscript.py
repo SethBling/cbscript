@@ -20,9 +20,19 @@ def combine_selectors(selector, qualifiers):
 
 def isNumber(s):
 	try:
-		float(s)
+		val = float(s)
+		
+		if math.isinf(val):
+			return False
+			
+		if math.isnan(val):
+			return False
+		
 		return True
 	except ValueError:
+		return False
+		
+	except TypeError:
 		return False
 		
 def factor(n):
