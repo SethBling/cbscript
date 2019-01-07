@@ -6,8 +6,6 @@ from environment import environment
 from mcfunction import mcfunction
 from selector_definition import selector_definition
 import tellraw
-import time
-import os
 import traceback
 import math
 import collections
@@ -50,19 +48,16 @@ def factor(n):
 
 		
 class cbscript(object):
-	def __init__(self, filename):
+	def __init__(self, source_file):
 		self.macros = {}
 		self.template_functions = {}
-		self.filename = filename
-		self.namespace = os.path.basename(self.filename).split('.')[0].lower()
-		self.modified = self.get_last_modified()
+		self.source_file = source_file
+		self.namespace = self.source_file.get_base_name().split('.')[0].lower()
+		self.modified = self.source_file.get_last_modified()
 		self.try_to_compile()
 	
-	def get_last_modified(self):
-		return time.ctime(os.path.getmtime(self.filename))
-		
 	def check_for_update(self):
-		last_modified = self.get_last_modified()
+		last_modified = self.source_file.get_last_modified()
 		
 		if last_modified > self.modified:
 			self.modified = last_modified
@@ -101,13 +96,8 @@ class cbscript(object):
 			traceback.print_exc()
 		
 	def compile_all(self):
-		text = ""
-		while len(text) == 0:
-			with open(self.filename, 'r') as content_file:
-				text = content_file.read()
-			
-			time.sleep(0.1)
-		
+		text = self.source_file.get_text()
+	
 		result = scriptparse.parse(text + "\n")
 		
 		if result == None:

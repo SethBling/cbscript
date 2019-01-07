@@ -5,12 +5,14 @@
 import cbscript
 import sys
 import time
+import source_file
 
 if len(sys.argv) <> 2:
 	print "You must include a script filename."
 	exit()
 
-script = cbscript.cbscript(sys.argv[1])
+source = source_file.source_file(sys.argv[1])
+script = cbscript.cbscript(source)
 
 
 def run():
