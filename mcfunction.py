@@ -6,6 +6,7 @@ class mcfunction(object):
 		self.environment = environment
 		self.params = params
 		self.callable = callable
+		self.environment_stack = []
 		
 		for param in params:
 			self.register_local(param)
@@ -191,3 +192,104 @@ class mcfunction(object):
 			return True
 		else:
 			return False
+			
+	def register_objective(self, objective):
+		self.environment.register_objective(objective)
+		
+	def register_array(self, name, from_val, to_val):
+		self.environment.register_array(name, from_val, to_val)
+		
+	def apply_replacements(self, text):
+		self.environment.apply_replacements(text)
+		
+	def register_block_tag(self, name, blocks):
+		self.environment.register_block_tag(name, blocks)
+		
+	def get_scale(self):
+		return self.environment.scale
+		
+	def set_scale(self, scale):
+		self.environment.scale = scale
+		
+	scale = property(get_scale, set_scale)
+	
+	@property
+	def arrays(self):
+		return self.environment.arrays
+		
+	@property
+	def block_tags(self):
+		return self.environment.block_tags
+
+	@property
+	def namespace(self):
+		return self.environment.namespace
+		
+	@property
+	def macros(self):
+		return self.environment.macros
+		
+	@property
+	def template_functions(self):
+		return self.environment.template_functions
+		
+	@property
+	def functions(self):
+		return self.environment.functions
+		
+	@property
+	def selectors(self):
+		return self.environment.selectors
+	
+	def get_scratch(self):
+		return self.environment.get_scratch()
+		
+	def free_scratch(self, id):
+		self.environment.free_scratch(id)
+		
+	def apply_environment(self, text):
+		return self.environment.apply(text)
+		
+	def add_constant(self, val):
+		return self.environment.add_constant(val)
+		
+	def allocate_rand(self, val):
+		self.environment.allocate_rand(val)
+		
+	def get_friendly_name(self):
+		return self.environment.get_friendly_name()
+		
+	def get_random_objective(self):
+		return self.environment.get_random_objective()
+		
+	def register_function(self, name, func):
+		self.environment.register_function(name, func)
+		
+	def get_unique_id(self):
+		return self.environment.get_unique_id()
+		
+	def update_self_selector(self, selector):
+		self.environment.update_self_selector(selector)
+		
+	def get_python_env(self):
+		return self.environment.get_python_env()
+		
+	def clone_environment(self):
+		return self.environment.clone()
+		
+	# Combines a selector with an existing selector definition in the environment
+	def get_combined_selector(self, selector):
+		return selector_definition(selector, self.environment)
+		
+	def set_dollarid(self, id, val):
+		self.environment.set_dollarid(id, val)
+		
+	def set_atid(self, id, fullselector):
+		self.environment.set_atid(id, fullselector)
+		
+	def push_environment(self, new_env):
+		self.environment_stack.append(self.environment)
+		self.environment = new_env
+		
+	def pop_environment(self):
+		self.environment = self.environment_stack.pop()

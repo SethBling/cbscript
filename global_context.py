@@ -1,9 +1,23 @@
 from mcfunction import mcfunction
 
+def get_friendly_name(namespace):
+	name = "CB" + namespace[:14]
+	name = name.replace(' ', '_')
+	name = name.replace('.', '_')
+	name = name.replace(',', '_')
+	name = name.replace(':', '_')
+	name = name.replace('{', '_')
+	name = name.replace('}', '_')
+	name = name.replace('=', '_')
+	
+	return name
+
 class global_context(object):
-	def __init__(self, friendly_name):
+	def __init__(self, namespace):
 		self.clocks = []
 		self.functions = {}
+		self.macros = {}
+		self.template_functions = {}
 		self.reset = None
 		self.objectives = {}
 		self.constants = []
@@ -12,9 +26,10 @@ class global_context(object):
 		self.temp = 0
 		self.rand = 0
 		self.unique = 0
-		self.friendly_name = friendly_name
+		self.friendly_name = get_friendly_name(namespace)
 		self.block_tags = {}
 		self.scratch_prefixes = {}
+		self.namespace = namespace
 
 	def register_block_tag(self, name, blocks):
 		self.block_tags[name] = blocks
@@ -105,3 +120,6 @@ class global_context(object):
 		else:
 			self.scratch_prefixes[name] = True
 			return name
+
+	def get_random_objective(self):
+		return "RV" + self.friendly_name[2:]

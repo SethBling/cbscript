@@ -167,3 +167,71 @@ class environment(object):
 			
 		if id in self.selectors:
 			self.self_selector = self.selectors[id]
+			
+	def register_objective(self, objective):
+		self.global_context.register_objective(objective)
+		
+	def register_array(self, name, from_val, to_val):
+		self.global_context.register_array(name, from_val, to_val)
+		
+	def register_block_tag(self, name, blocks):
+		self.global_context.register_block_tag(name, blocks)
+		
+	def get_scale(self):
+		return self.global_context.scale
+		
+	def set_scale(self, scale):
+		self.global_context.scale = scale
+		
+	scale = property(get_scale, set_scale)
+	
+	@property
+	def arrays(self):
+		return self.global_context.arrays
+	
+	@property
+	def block_tags(self):
+		return self.global_context.block_tags
+	
+	@property
+	def namespace(self):
+		return self.global_context.namespace
+	
+	@property
+	def macros(self):
+		return self.global_context.macros
+		
+	@property
+	def template_functions(self):
+		return self.global_context.template_functions
+
+	@property
+	def functions(self):
+		return self.global_context.functions
+		
+	def get_scratch(self):
+		return self.scratch.get_scratch()
+	
+	def free_scratch(self, id):
+		self.scratch.free_scratch(id)
+		
+	def add_constant(self, val):
+		return self.global_context.add_constant(val)
+		
+	def allocate_rand(self, val):
+		self.global_context.allocate_rand(val)
+	
+	def get_friendly_name(self):
+		return self.global_context.get_friendly_name()
+		
+	def get_random_objective(self):
+		return self.global_context.get_random_objective()
+		
+	def register_function(self, name, func):
+		self.global_context.register_function(name, func)
+	
+	def get_unique_id(self):
+		return self.global_context.get_unique_id()
+		
+	def register_clock(self, name):
+		self.global_context.register_clock(name)

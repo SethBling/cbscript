@@ -13,6 +13,7 @@ if len(sys.argv) <> 2:
 
 source = source_file.source_file(sys.argv[1])
 script = cbscript.cbscript(source)
+script.try_to_compile()
 
 
 def run():
