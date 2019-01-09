@@ -61,16 +61,17 @@ def compile(func, line):
 		id, python = content
 		
 		try:
-			func.environment.set_dollarid(id, eval(python, globals(), func.environment.get_python_env()))
-		except:
+			func.set_dollarid(id, eval(python, globals(), func.get_python_env()))
+		except Exception as e:
 			print('Could not evaluate "{0}" at line {1}'.format(python, get_line(line)))
+			print(e)
 			return False
 		
 	elif type == 'For':
 		identifier, setpython, sub = content
 		
 		try:
-			set = eval(setpython, globals(), func.environment.get_python_env())
+			set = eval(setpython, globals(), func.get_python_env())
 		except:
 			print('Could not evaluate "{0}" in "for" block at line {1}'.format(setpython, get_line(line)))
 			return False
@@ -82,19 +83,19 @@ def compile(func, line):
 			return False
 
 		for v in set:
-			func.environment.set_dollarid(identifier, v)
+			func.set_dollarid(identifier, v)
 			if not compile_block(func, sub):
 				return False
 		
 	elif type == 'SelectorAssignment':
 		id, fullselector = content
 		
-		func.environment.set_atid(id, fullselector)
+		func.set_atid(id, fullselector)
 		
 	elif type == 'SelectorDefinition':
 		id, fullselector, items = content
 		
-		selector = func.environment.set_atid(id, fullselector)
+		selector = func.set_atid(id, fullselector)
 		
 		for type, val in items:
 			if type == 'Tag':
@@ -110,7 +111,7 @@ def compile(func, line):
 					scale = func.scale
 				selector.vector_paths[vector_id] = (path, data_type, scale)
 			elif type == 'Method':
-				sub_env = func.environment.clone()
+				sub_env = func.clone_environment()
 				sub_env.update_self_selector('@'+id)
 				if not compile_section(val, sub_env):
 					return False
@@ -125,8 +126,8 @@ def compile(func, line):
 	elif type == 'ArrayDefinition':
 		name, from_val, to_val = content
 		
-		from_val = int(func.environment.apply_replacements(from_val))
-		to_val = int(func.environment.apply_replacements(to_val))
+		from_val = int(func.apply_replacements(from_val))
+		to_val = int(func.apply_replacements(to_val))
 
 		vals = list(range(from_val, to_val))
 		
@@ -141,14 +142,14 @@ def compile(func, line):
 		
 		line = get_line(line)
 
-		get_func = mcfunction(func.environment.clone())
+		get_func = mcfunction(func.clone_environment())
 		get_func_name = 'array_{}_get'.format(name.lower())
 		func.register_function(get_func_name, get_func)
 		cases = [(i, i, [('Command', '/scoreboard players operation Global {} = Global {}{}'.format(valvar, name, i))], line, None) for i in vals]
 		if not switch_cases(get_func, indexvar, cases, 'arrayget', 'arraygetidx'):
 			return False
 		
-		set_func = mcfunction(func.environment.clone())
+		set_func = mcfunction(func.clone_environment())
 		set_func_name = 'array_{}_set'.format(name.lower())
 		func.register_function(set_func_name, set_func)
 		cases = [(i, i, [('Command', '/scoreboard players operation Global {}{} = Global {}'.format(name, i, valvar))], line, None) for i in vals]
@@ -160,7 +161,7 @@ def compile(func, line):
 	elif type == 'Create':
 		atid, relcoords = content
 		
-		if not run_create(func, atid, relcoords):
+		if not func.run_create(atid, relcoords):
 			print('Error creating entity at line {0}'.format(get_line(line)))
 			return False
 		
@@ -183,7 +184,7 @@ def compile(func, line):
 			if id != array_var:
 				func.add_command('scoreboard players operation Global {} = Global {}'.format(array_var, id))
 				
-			func.environment.scratch.free_scratch(id)
+			func.free_scratch(id)
 		
 		elif idxtype == 'Expr':
 			val_var = '{}Val'.format(name)
@@ -208,8 +209,8 @@ def compile(func, line):
 				
 			func.add_command('function {}:array_{}_set'.format(func.namespace, name.lower()))
 			
-			func.environment.scratch.free_scratch(id1)
-			func.environment.scratch.free_scratch(id2)
+			func.free_scratch(id1)
+			func.free_scratch(id2)
 	
 	elif type == 'ScoreboardAssignment':
 		var, op, expr = content
@@ -221,11 +222,11 @@ def compile(func, line):
 		
 		(raw_selector, objective) = get_variable(func, var, initialize = modify)
 		
-		selector = func.environment.apply(raw_selector)
+		selector = func.apply_environment(raw_selector)
 		
 		if op in ['+=', '-=', '='] and expr[0] == 'NUM' or expr[0] == 'SCALE':
 			if expr[0] == 'NUM':
-				operand = func.environment.apply(expr[1])
+				operand = func.apply_environment(expr[1])
 			else:
 				operand = func.scale
 			
@@ -249,7 +250,7 @@ def compile(func, line):
 			
 		elif expr[0] == 'NUM' or expr[0] == 'SCALE':
 			if expr[0] == 'NUM':
-				operand = func.environment.apply(expr[1])
+				operand = func.apply_environment(expr[1])
 			elif expr[0] == 'SCALE':
 				operand = func.scale
 			
@@ -288,7 +289,7 @@ def compile(func, line):
 			
 			func.add_command('scoreboard players add @e _age 1')
 							
-			if not run_create(func, atid, relcoords):
+			if not func.run_create(atid, relcoords):
 				print('Error creating entity at line {0}'.format(get_line(line)))
 				return False
 				
@@ -314,7 +315,7 @@ def compile(func, line):
 			if selector != 'Global' or result != objective or op != '=':
 				func.add_command('scoreboard players operation {0} {1} {2} Global {3}'.format(selector, objective, op, result))
 				
-			func.environment.scratch.free_scratch(result)
+			func.free_scratch(result)
 
 		set_variable(func, var)
 		
@@ -327,21 +328,21 @@ def compile(func, line):
 	elif type == 'Execute' or type == 'While':
 		exec_items, sub = content
 		
-		if not perform_execute(func, type, get_line(line), exec_items, sub):
+		if not func.perform_execute(type, get_line(line), exec_items, sub):
 			return False
 			
 	elif type == 'ForSelector':
 		id, selector, sub = content
 		
-		scratch_id = func.environment.scratch.get_scratch()
+		scratch_id = func.get_scratch()
 		
-		exec_func = mcfunction(func.environment.clone())
+		exec_func = mcfunction(func.clone_environment())
 		
-		combined_selector = selector_definition(selector, func.environment)
+		combined_selector = func.get_combined_selector(selector)
 		combined_selector.scores_min[scratch_id] = 1
 		combined_selector.set_part('limit', '1')
-		exec_func.environment.selectors[id] = combined_selector
-		exec_func.environment.update_self_selector(selector)
+		exec_func.selectors[id] = combined_selector
+		exec_func.update_self_selector(selector)
 		
 		func.add_command('scoreboard players set {0} {1} 0'.format(selector, scratch_id))
 		exec_func.add_command('scoreboard players set @s {0} 1'.format(scratch_id))
@@ -349,7 +350,7 @@ def compile(func, line):
 			return False
 		exec_func.add_command('scoreboard players set @s {0} 0'.format(scratch_id))
 		
-		func.environment.scratch.free_scratch(scratch_id)
+		func.free_scratch(scratch_id)
 		
 		unique = func.get_unique_id()
 		exec_name = 'for{0:03}_ln{1}'.format(unique, get_line(line))
@@ -361,7 +362,7 @@ def compile(func, line):
 		ifpython, sub, else_sub = content
 		
 		try:
-			condition = eval(ifpython, globals(), func.environment.get_python_env())
+			condition = eval(ifpython, globals(), func.get_python_env())
 		except:
 			print('Could not evaluate "{0}" in "if" block at line {1}'.format(ifpython, get_line(line)))
 			return False
@@ -379,13 +380,13 @@ def compile(func, line):
 		if from_var != var:
 			func.add_command('scoreboard players operation Global {0} = Global {1}'.format(var, from_var))
 
-		to_scratch = func.environment.scratch.get_scratch()
+		to_scratch = func.get_scratch()
 		to_var = calc_math(func, to, to_scratch)
 		if to_var != to_scratch:
 			func.add_command('scoreboard players operation Global {0} = Global {1}'.format(to_scratch, to_var))
 			
 		if by != None:
-			by_scratch = func.environment.scratch.get_scratch()
+			by_scratch = func.get_scratch()
 			by_var = calc_math(func, by, by_scratch)
 			if by_var != by_scratch:
 				func.add_command('scoreboard players operation Global {0} = Global {1}'.format(by_scratch, by_var))
@@ -393,7 +394,7 @@ def compile(func, line):
 		unique = func.get_unique_id()
 		loop_func_name = 'for{0:03}_ln{1}'.format(unique, get_line(line))
 		
-		new_env = func.environment.clone()
+		new_env = func.clone_environment()
 		loop_func = mcfunction(new_env)
 		func.register_function(loop_func_name, loop_func)	
 		
@@ -414,9 +415,9 @@ def compile(func, line):
 			loop_func.add_command(continue_negative_command)
 			loop_func.add_command(continue_positive_command)				
 			
-		func.environment.scratch.free_scratch(to_scratch)
+		func.free_scratch(to_scratch)
 		if by != None:
-			func.environment.scratch.free_scratch(by_scratch)
+			func.free_scratch(by_scratch)
 
 	elif type == 'Switch':
 		expr, cases_raw = content
@@ -432,13 +433,13 @@ def compile(func, line):
 			line = get_line(case)
 			if type == 'range':
 				vmin, vmax, sub = content
-				vmin = int(func.environment.apply_replacements(vmin))
-				vmax = int(func.environment.apply_replacements(vmax))
+				vmin = int(func.apply_replacements(vmin))
+				vmax = int(func.apply_replacements(vmax))
 				cases.append((vmin, vmax, sub, line, None))
 			elif type == 'python':
 				dollarid, python, sub = content
 				try:
-					vals = eval(python, globals(), func.environment.get_python_env())
+					vals = eval(python, globals(), func.get_python_env())
 				except:
 					print('Could not evaluate "{0}" at line {1}'.format(python, line))
 					return False
@@ -478,7 +479,7 @@ def compile(func, line):
 		if not switch_cases(func, result, cases):
 			return False
 				
-		func.environment.scratch.free_scratch(result)
+		func.free_scratch(result)
 			
 	elif type == 'Call':
 		dest, params = content
@@ -512,7 +513,7 @@ def compile(func, line):
 			print('Tried to call Macro "{0}" with {1} arguments at line {3}, but it requires {2}'.format(macro, len(args), len(params), get_line(line)))
 			return False
 			
-		new_env = func.environment.clone()
+		new_env = func.clone_environment()
 			
 		for p in range(len(params)):
 			if isNumber(args[p]):
@@ -525,11 +526,10 @@ def compile(func, line):
 			else:
 				print('Unknown macro parameter "{0}"'.format(args[p]))
 				
-		old_env = func.environment
-		func.environment = new_env
+		func.push_environment(new_env)
 		if not compile_block(func, sub):
 			return False
-		func.environment = old_env
+		func.pop_environment()
 		
 	elif type == 'TemplateFunctionCall':
 		function, template_args, args = content
@@ -551,7 +551,7 @@ def compile(func, line):
 		# Get textual function name
 		func_name = function
 		for template_arg in template_args:
-			template_arg_val = func.environment.apply_replacements(template_arg)
+			template_arg_val = func.apply_replacements(template_arg)
 			func_name = func_name + '_{}'.format(template_arg_val)
 		
 		# Calculate function arguments
@@ -561,11 +561,11 @@ def compile(func, line):
 				print('Unable to compute argument "{}" for template function "{}" at line {}'.format(params[i], function, get_line(line)))
 				return False
 			func.add_command('scoreboard players operation Global Param{} = Global {}'.format(i, id))
-			func.environment.scratch.free_scratch(id)
+			func.free_scratch(id)
 		
 		# Compile the function if it doens't exist yet
 		if func_name not in func.functions:
-			new_env = func.environment.clone()
+			new_env = func.clone_environment()
 			
 			# Bind template paramters in the function's environment
 			for p in range(len(template_args)):
@@ -614,7 +614,7 @@ def switch_cases(func, var, cases, switch_func_name = 'switch', case_func_name =
 	if len(cases) == 1:
 		vmin, vmax, sub, line, dollarid = cases[0]
 		if dollarid != None:
-			func.environment.set_dollarid(dollarid, vmin)
+			func.set_dollarid(dollarid, vmin)
 		if not compile_block(func, sub):
 			return False
 	else:
@@ -629,13 +629,13 @@ def switch_cases(func, var, cases, switch_func_name = 'switch', case_func_name =
 			line = cases[imin][3]
 			
 			sub_cases = cases[imin:imax]
-			sub_env = func.environment.clone()
+			sub_env = func.clone_environment()
 			case_func = mcfunction(sub_env)
 			
 			if len(sub_cases) == 1:
 				vmin, vmax, sub, line, dollarid = sub_cases[0]
 				if dollarid != None:
-					case_func.environment.set_dollarid(dollarid, vmin)
+					case_func.set_dollarid(dollarid, vmin)
 				if not compile_block(case_func, sub):
 					return False
 					
@@ -665,216 +665,6 @@ def switch_cases(func, var, cases, switch_func_name = 'switch', case_func_name =
 					return False
 			
 	return True
-
-def perform_execute(func, type, line_num, exec_items, sub):
-	exec_func = mcfunction(func.environment.clone())
-	
-	cmd = get_execute_command(exec_items, func, exec_func)
-	if cmd == None:
-		print('Unable to compile {0} block at line {1}'.format(type.lower(), line_num))
-		return False
-	
-	if not compile_block(exec_func, sub):
-		return False
-
-	single = exec_func.single_command()
-	if single == None or type == 'While':
-		unique = func.get_unique_id()
-		func_name = '{0}{1:03}_ln{2}'.format(type.lower(), unique, line_num)
-		func.register_function(func_name, exec_func)
-		func.add_command('{0}run function {1}:{2}'.format(cmd, func.namespace, func_name))
-		
-		if type == 'While':
-			dummy_func = mcfunction(exec_func.environment.clone())
-			sub_cmd = get_execute_command(exec_items, exec_func, dummy_func)
-			if sub_cmd == None:
-				print('Unable to compile {0} block at line {1}'.format(type.lower(), line_num))
-				return False
-
-			exec_func.add_command('{0}run function {1}:{2}'.format(cmd, func.namespace, func_name))
-	else:
-		if single.startswith('/'):
-			single = single[1:]
-			
-		if single.startswith('execute '):
-			func.add_command(cmd + single[len('execute '):])
-		else:
-			func.add_command(cmd + 'run ' + single)
-			
-	return True
-
-def get_execute_command(exec_items, func, exec_func):	
-	cmd = 'execute '
-	as_count = 0
-	for type, _ in exec_items:
-		if type[:2] == 'As':
-			as_count += 1
-			
-			if as_count >= 2:
-				print('Execute chain may only contain a single "as" clause in block at line {0}'.format(get_line(line)))
-				return None
-	
-	at_vector_count = 0
-	
-	for type, val in exec_items:
-		if type == 'If':
-			cmd += get_if_chain(func, val)
-		if type == 'Unless':
-			cmd += get_if_chain(func, val, 'unless')
-		elif type == 'As':
-			cmd += 'as {0} '.format(val)
-			exec_func.environment.update_self_selector(val)
-		elif type == 'AsId':
-			var, attype = val
-			
-			selector, id = get_variable(func, var, initialize = True)
-			
-			func.register_objective('_id')
-			func.register_objective(id)
-			
-			func.add_command('scoreboard players operation Global _id = {0} {1}'.format(selector, id))
-								
-			cmd += 'as @e if score @s _id = Global _id '.format(selector, id)
-			
-			if attype != None:
-				exec_func.environment.update_self_selector('@' + attype)
-			else:
-				exec_func.environment.update_self_selector('@s')
-		elif type == 'AsCreate':
-			if len(exec_items) > 1:
-				print('"as create" must be its own block at line {0}'.format(get_line(line)))
-				return None
-				
-			atid, relcoords = val
-			
-			func.register_objective('_age')
-			func.add_command('scoreboard players add @e _age 1')
-			
-			if not run_create(func, atid, relcoords):
-				print('Error creating entity for "as" block at line {0}'.format(get_line(line)))
-				return None
-				
-			func.add_command('scoreboard players add @e _age 1')
-			cmd += 'as @e[_age==1] '
-			
-			exec_func.environment.update_self_selector('@'+atid)
-		elif type == 'Rotated':
-			cmd += 'rotated as {0} '.format(val)
-		elif type == 'FacingCoords':
-			cmd += 'facing {0} '.format(' '.join(val))
-		elif type == 'FacingEntity':
-			cmd += 'facing entity {0} feet '.format(val)
-		elif type == 'Align':
-			cmd += 'align {0} '.format(val)
-		elif type == 'At':
-			selector, relcoords = val
-			if selector != None:
-				cmd += 'at {0} '.format(selector)
-			if relcoords != None:
-				cmd += 'positioned {0} '.format(' '.join(relcoords))
-		elif type == 'AtVector':
-			at_vector_count += 1
-			if at_vector_count >= 2:
-				print('Tried to execute at multiple vector locations.')
-				return None
-				
-			scale, expr = val
-			if scale == None:
-				scale = func.scale
-
-			vec_vals = calc_vector_math(func, expr)
-			func.add_command('scoreboard players add @e _age 1')
-			func.add_command('summon area_effect_cloud')
-			func.add_command('scoreboard players add @e _age 1')
-			for i in range(3):
-				func.add_command('execute store result entity @e[_age==1,limit=1] Pos[{0}] double {1} run scoreboard players get Global {2}'.format(i, 1/float(scale), vec_vals[i]))
-			cmd += 'at @e[_age == 1] '
-			exec_func.add_command('/kill @e[_age == 1]')
-		elif type == 'In':
-			dimension = val
-			cmd += 'in {} '.format(dimension)
-			
-	return cmd
-	
-def get_if_chain(func, conditions, iftype='if'):
-	test = ''
-	for type, val in conditions:
-		if type == 'selector':
-			test += '{0} entity {1} '.format(iftype, val)
-		elif type == 'score':
-			var, op, (rtype, rval) = val
-			
-			lselector, lvar = get_variable(func, var, initialize = True)
-			
-			func.register_objective(lvar)
-			func.get_path(lselector, lvar)
-			
-			if rtype == 'num':
-				rval = func.environment.apply_replacements(rval)
-				if op == '>':						
-					test += '{3} score {0} {1} matches {2}.. '.format(lselector, lvar, str(int(rval)+1), iftype)
-				if op == '>=':						
-					test += '{3} score {0} {1} matches {2}.. '.format(lselector, lvar, rval, iftype)
-				if op == '<':						
-					test += '{3} score {0} {1} matches ..{2} '.format(lselector, lvar, str(int(rval)-1), iftype)
-				if op == '<=':						
-					test += '{3} score {0} {1} matches ..{2} '.format(lselector, lvar, rval, iftype)
-				if op == '=':						
-					test += '{3} score {0} {1} matches {2}..{2} '.format(lselector, lvar, rval, iftype)
-			elif rtype == 'score':
-				rselector, rvar = get_variable(func, rval, initialize = True)
-				
-				func.register_objective(rvar)
-				func.get_path(rselector, rvar)
-				test += '{0} score {1} {2} {3} {4} {5} '.format(iftype, lselector, lvar, op, rselector, rvar)
-				
-		elif type == 'pointer':
-			var, rselector = val
-			
-			lselector, id = get_variable(func, var, initialize = True)
-			
-			func.register_objective(id)
-			test += '{0} score {1} {2} = {3} _id '.format(iftype, lselector, id, rselector)
-			
-		elif type == 'vector_equality':
-			if iftype == 'unless':
-				print('Vector equality may not  be used with "unless"')
-				return None
-			
-			(type1, var1), (type2, var2) = val
-			
-			for i in range(3):
-				if type1 == 'VAR_ID':
-					sel1 = 'Global'
-					sco1 = '_{}_{}'.format(var1, i)
-				elif type1 == 'SEL_VAR_ID':
-					sel1, selvar1 = var1
-					sco1 = '_{}_{}'.format(selvar1, i)
-				elif type1 == 'VAR_COMPONENTS':
-					sel1, sco1 = var1[i]
-					
-				if type2 == 'VAR_ID':
-					sel2 = 'Global'
-					sco2 = '_{}_{}'.format(var2, i)
-				elif type2 == 'SEL_VAR_ID':
-					sel2, selvar2 = var2
-					sco2 = '_{}_{}'.format(selvar2, i)
-				elif type2 == 'VAR_COMPONENTS':
-					sel2, sco2 = var1[i]
-				test += 'if score {} {} = {} {} '.format(sel1, sco1, sel2, sco2)
-				
-		elif type == 'block':
-			relcoords, block = val
-			if block in func.block_tags:
-				block = '#{0}:{1}'.format(func.namespace, block)
-			else:
-				block = 'minecraft:{0}'.format(block)
-			test += '{0} block {1} {2} '.format(iftype, ' '.join(relcoords), block)
-		else:
-			print('Unknown "if" type: {0}'.format(type))
-			return None
-	
-	return test
 
 def perform_vector_assignment(func, type, line_num, var, op, expr):
 	var_type, var_content = var
@@ -931,7 +721,7 @@ def perform_vector_assignment(func, type, line_num, var, op, expr):
 		sel, id = var_content
 
 		if op != '=':
-			temp_vars = func.environment.scratch.get_scratch_vector()
+			temp_vars = func.get_scratch_vector()
 			if func.get_vector_path(sel, id, temp_vars):
 				for i in range(3):
 					func.add_command('scoreboard players operation Global {0} {1} Global {2}'.format(temp_vars[i], op, component_val_vars[i]))
@@ -939,7 +729,7 @@ def perform_vector_assignment(func, type, line_num, var, op, expr):
 				component_val_vars = temp_vars
 			else:
 				for var in temp_vars:
-					func.environment.scratch.free_scratch(var)
+					func.free_scratch(var)
 			
 		if not func.set_vector_path(sel, id, component_val_vars):
 			for i in range(3):
@@ -964,7 +754,7 @@ def perform_vector_assignment(func, type, line_num, var, op, expr):
 		return False
 
 	for i in range(3):
-		func.environment.scratch.free_scratch(component_val_vars[i])
+		func.free_scratch(component_val_vars[i])
 		
 	return True
 
@@ -1011,8 +801,8 @@ def get_modifiable_id(func, id, assignto):
 		if id != assignto:
 			func.add_operation('Global', assignto, '=', id)
 			id = assignto
-	elif not func.environment.scratch.is_scratch(id):
-		newId = func.environment.scratch.get_scratch()
+	elif not func.is_scratch(id):
+		newId = func.get_scratch()
 		func.add_operation('Global', newId, '=', id)
 		id = newId
 		
@@ -1025,7 +815,7 @@ def get_arrayconst_var(func, name, idxval):
 		
 	from_val, to_val = func.arrays[name]
 	
-	index = int(func.environment.apply_replacements(idxval))
+	index = int(func.apply_replacements(idxval))
 	
 	if index < from_val or index >= to_val:
 		if from_val == 0:
@@ -1034,27 +824,6 @@ def get_arrayconst_var(func, name, idxval):
 			print('Tried to index {} outside of array {}[{} to {}]'.format(index, name, from_val, to_val))
 
 	return '{}{}'.format(name, index)
-
-					
-def run_create(func, atid, relcoords):
-	if atid not in func.environment.selectors:
-		print('Unable to create unknown entity: @{0}'.format(atid))
-		return False
-	
-	selector = func.environment.selectors[atid]
-	
-	entity_type = selector.get_type()
-	
-	if entity_type == None:
-		print('Unable to create @{0}, no entity type is defined.'.format(atid))
-		return False
-		
-	if selector.tag == None:
-		func.add_command('summon {0} {1}'.format(entity_type, ' '.join(relcoords)))
-	else:
-		func.add_command('summon {0} {1} {2}'.format(entity_type, ' '.join(relcoords), selector.tag))
-		
-	return True
 	
 def get_variable(func, variable, initialize):
 	type, content = variable
@@ -1094,7 +863,7 @@ def get_variable(func, variable, initialize):
 		if initialize:
 			func.add_command('function {}:array_{}_get'.format(func.namespace, name.lower()))
 		
-		func.environment.scratch.free_scratch(id)
+		func.free_scratch(id)
 		
 		return 'Global', '{}Val'.format(name)
 	
@@ -1160,7 +929,7 @@ def calc_vector_math(func, expr, assignto=None):
 			if assignto != None:
 				return_components.append(assignto[i])
 			else:
-				return_components.append(func.environment.scratch.get_scratch())
+				return_components.append(func.get_scratch())
 		
 		if not func.get_vector_path(sel, id, return_components):
 			for i in range(3):
@@ -1180,12 +949,12 @@ def calc_vector_math(func, expr, assignto=None):
 			return None
 			
 		for i in range(3):
-			if func.environment.scratch.is_scratch(left_component_vars[i]):
+			if func.is_scratch(left_component_vars[i]):
 				return_components.append(left_component_vars[i])
 			elif assignto != None and left_component_vars[i] == assignto[i]:
 				return_components.append(left_component_vars[i])
 			else:
-				newId = func.environment.scratch.get_scratch()
+				newId = func.get_scratch()
 				func.add_command('scoreboard players operation Global {0} = Global {1}'.format(newId, left_component_vars[i]))
 				return_components.append(newId)
 		
@@ -1196,7 +965,7 @@ def calc_vector_math(func, expr, assignto=None):
 				
 			for i in range(3):
 				func.add_command('scoreboard players operation Global {0} {1}= Global {2}'.format(return_components[i], op, right_component_vars[i]))
-				func.environment.scratch.free_scratch(right_component_vars[i])
+				func.free_scratch(right_component_vars[i])
 		
 		if type == 'VECTOR_BINOP_SCALAR':
 			right_var = calc_math(func, rhs)
@@ -1206,7 +975,7 @@ def calc_vector_math(func, expr, assignto=None):
 			for i in range(3):
 				func.add_command('scoreboard players operation Global {0} {1}= Global {2}'.format(return_components[i], op, right_var))
 				
-			func.environment.scratch.free_scratch(right_var)
+			func.free_scratch(right_var)
 		
 		return return_components	
 	
@@ -1225,7 +994,7 @@ def calc_vector_math(func, expr, assignto=None):
 			if assignto != None:
 				return_components.append(assignto[i])
 			else:
-				return_components.append(func.environment.scratch.get_scratch())
+				return_components.append(func.get_scratch())
 		
 			func.add_command('execute store result score Global {0} run data get entity @e[_age==1,limit=1] Pos[{1}] {2}'.format(return_components[i], i, scale))
 		
@@ -1244,7 +1013,7 @@ def calc_math(func, expr, assignto = None):
 		if assignto != None:
 			newId = assignto
 		elif expr[1] != 'Global':
-			newId = func.environment.scratch.get_scratch()
+			newId = func.get_scratch()
 		else:
 			newId = expr[2]
 		
@@ -1273,7 +1042,7 @@ def calc_math(func, expr, assignto = None):
 				
 			if right[0] == 'NUM' or right[0] == 'SCALE':
 				if right[0] == 'NUM':
-					val = func.environment.apply_replacements(right[1])
+					val = func.apply_replacements(right[1])
 					operand2 = int(val)
 						
 				elif right[0] == 'SCALE':
@@ -1308,8 +1077,8 @@ def calc_math(func, expr, assignto = None):
 					return None
 				
 				func.add_operation('Global', id1, type+'=', id2)
-				if func.environment.scratch.is_scratch(id2):
-					func.environment.scratch.free_scratch(id2)
+				if func.is_scratch(id2):
+					func.free_scratch(id2)
 			
 			return id1
 			
@@ -1329,7 +1098,7 @@ def calc_math(func, expr, assignto = None):
 			if power == 1:
 				return target
 			
-			newId = func.environment.scratch.get_scratch()
+			newId = func.get_scratch()
 			func.add_operation('Global', newId, '=', target)
 			
 			for i in xrange(power-1):
@@ -1347,8 +1116,8 @@ def calc_math(func, expr, assignto = None):
 		prods = []
 		for i in range(3):
 			prod = lhs[i]
-			if not func.environment.scratch.is_scratch(prod):
-				prod = func.environment.scratch.get_scratch()
+			if not func.is_scratch(prod):
+				prod = func.get_scratch()
 				func.add_command('scoreboard players operation Global {0} = Global {1}'.format(prod, lhs[i]))
 			func.add_command('scoreboard players operation Global {0} *= Global {1}'.format(prod, rhs[i]))
 			
@@ -1360,7 +1129,7 @@ def calc_math(func, expr, assignto = None):
 		for i in range(3):
 			for vec in [lhs, rhs, prod]:
 				if vec[i] != prods[0]:
-					func.environment.scratch.free_scratch(vec[i])
+					func.free_scratch(vec[i])
 		
 		return prods[0]
 		
@@ -1368,7 +1137,7 @@ def calc_math(func, expr, assignto = None):
 		if assignto != None:
 			id = assignto
 		else:
-			id = func.environment.scratch.get_scratch()
+			id = func.get_scratch()
 			
 		if etype == 'NUM':
 			val = expr[1]
@@ -1401,7 +1170,7 @@ def calc_math(func, expr, assignto = None):
 			
 		func.add_command('function {}:array_{}_get'.format(func.namespace, array.lower()))
 		
-		func.environment.scratch.free_scratch(id)
+		func.free_scratch(id)
 		
 		return '{}Val'.format(array)
 		
@@ -1445,7 +1214,7 @@ def calc_math(func, expr, assignto = None):
 				return None
 				
 			for iteration in xrange(15):
-				newId = func.environment.scratch.get_scratch()
+				newId = func.get_scratch()
 				func.add_command('scoreboard players operation Global {0} = Global {1}'.format(newId, id))
 				guess = calc_math(func, scriptparse.parse("({0}/{1}+{1})/2".format(newId, guess))[1])
 				if guess == None:
@@ -1475,7 +1244,7 @@ def calc_math(func, expr, assignto = None):
 			if len(args) == 1:
 				min = 0
 				if args[0][0] == 'NUM':
-					max = func.environment.apply(args[0][1])
+					max = func.apply_environment(args[0][1])
 					if not isNumber(max):
 						print "Argument '{0}' to rand is not an integer.".format(args[0][1])
 						return None
@@ -1485,7 +1254,7 @@ def calc_math(func, expr, assignto = None):
 					return None
 			elif len(args) == 2:
 				if args[0][0] == 'NUM':
-					min = func.environment.apply(args[0][1])
+					min = func.apply_environment(args[0][1])
 					if not isNumber(min):
 						print "Argument '{0}' to rand is not an integer.".format(args[0][1])
 						return None
@@ -1494,7 +1263,7 @@ def calc_math(func, expr, assignto = None):
 					print "Function 'rand' accepts only integer arguments."
 					return None
 				if args[1][0] == 'NUM':
-					max = func.environment.apply(args[1][1])
+					max = func.apply_environment(args[1][1])
 					if not isNumber(max):
 						print "Argument '{0}' to rand is not an integer.".format(args[1][1])
 						return None
@@ -1547,7 +1316,7 @@ def calc_math(func, expr, assignto = None):
 				print 'Unable to compile argument for {0} function'.format(efunc)
 				return None
 				
-			moddedId2 = func.environment.scratch.get_temp_var()
+			moddedId2 = func.get_temp_var()
 			if efunc == 'sin':
 				modret = calc_math(func, scriptparse.parse("(({0}%360)+360)%360".format(id))[1], assignto=moddedId2)
 			else:
@@ -1560,7 +1329,7 @@ def calc_math(func, expr, assignto = None):
 				
 			id = get_modifiable_id(func, id, assignto)
 			
-			modId = func.environment.scratch.get_temp_var()
+			modId = func.get_temp_var()
 			func.add_operation('Global', modId, '=', moddedId2)
 			c180 = func.add_constant(180)
 			func.add_command("/scoreboard players operation Global {0} %= {1} Constant".format(modId, c180))
@@ -1574,8 +1343,8 @@ def calc_math(func, expr, assignto = None):
 			func.add_constant(-1)
 			func.add_command("/execute if score Global {0} matches 180.. run scoreboard players operation Global {1} *= minus Constant".format(moddedId2, retId))
 			
-			func.environment.scratch.free_temp_var(modId)
-			func.environment.scratch.free_temp_var(moddedId2)
+			func.free_temp_var(modId)
+			func.free_temp_var(moddedId2)
 			
 			return retId
 		

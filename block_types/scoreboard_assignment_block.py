@@ -1,4 +1,4 @@
-from cbscript import calc_math, get_variable, set_variable, run_create
+from cbscript import calc_math, get_variable, set_variable, isNumber
 
 class scoreboard_assignment_block(object):
 	def __init__(self, line, var, op, expr):
@@ -81,7 +81,7 @@ class scoreboard_assignment_block(object):
 			
 			func.add_command('scoreboard players add @e _age 1')
 							
-			if not run_create(func, atid, relcoords):
+			if not func.run_create(atid, relcoords):
 				raise Exception('Error creating entity at line {0}'.format(self.line))
 				
 			func.add_command('scoreboard players add @e _age 1')

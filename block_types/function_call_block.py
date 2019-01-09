@@ -1,3 +1,5 @@
+from cbscript import evaluate_params
+
 class function_call_block(object):
 	def __init__(self, line, dest, params):
 		self.line = line

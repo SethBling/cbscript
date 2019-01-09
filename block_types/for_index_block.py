@@ -1,5 +1,4 @@
 from cbscript import calc_math, compile_block
-from mcfunction import mcfunction
 
 class for_index_block(object):
 	def __init__(self, line, var, fr, to, by, sub):
@@ -32,9 +31,8 @@ class for_index_block(object):
 				
 		unique = func.get_unique_id()
 		loop_func_name = 'for{0:03}_ln{1}'.format(unique, self.line)
-		
-		new_env = func.clone_environment()
-		loop_func = mcfunction(new_env)
+
+		loop_func = func.create_child_function()
 		func.register_function(loop_func_name, loop_func)	
 		
 		if not compile_block(loop_func, sub):

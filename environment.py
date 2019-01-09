@@ -212,8 +212,20 @@ class environment(object):
 	def get_scratch(self):
 		return self.scratch.get_scratch()
 	
+	def get_scratch_vector(self):
+		return self.scratch.get_scratch_vector()
+		
+	def is_scratch(self, var):
+		return self.scratch.is_scratch(var)
+	
 	def free_scratch(self, id):
 		self.scratch.free_scratch(id)
+		
+	def get_temp_var(self):
+		return self.scratch.get_temp_var()
+		
+	def free_temp_var(self):
+		self.scratch.free_temp_var()
 		
 	def add_constant(self, val):
 		return self.global_context.add_constant(val)

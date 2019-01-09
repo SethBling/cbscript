@@ -1,3 +1,5 @@
+from cbscript import compile_block
+
 class for_selector_block(object):
 	def __init__(self, line, id, selector, sub):
 		self.line = line
@@ -8,7 +10,7 @@ class for_selector_block(object):
 	def compile(self, func):
 		scratch_id = func.get_scratch()
 		
-		exec_func = mcfunction(func.clone_environment())
+		exec_func = func.create_child_function()
 		
 		combined_selector = func.get_combined_selector(self.selector)
 		combined_selector.scores_min[scratch_id] = 1
@@ -19,7 +21,7 @@ class for_selector_block(object):
 		func.add_command('scoreboard players set {0} {1} 0'.format(self.selector, scratch_id))
 		exec_func.add_command('scoreboard players set @s {0} 1'.format(scratch_id))
 		
-		if not compile_block(exec_func, sub):
+		if not compile_block(exec_func, self.sub):
 			raise Exception('Unable to compile "for" block at line {}'.format(self.line))
 			
 		exec_func.add_command('scoreboard players set @s {0} 0'.format(scratch_id))

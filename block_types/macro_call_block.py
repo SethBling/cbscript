@@ -1,3 +1,5 @@
+from cbscript import compile_block
+
 class macro_call_block(object):
 	def __init__(self, line, macro, args):
 		self.line = line
@@ -6,9 +8,9 @@ class macro_call_block(object):
 		
 	def compile(self, func):
 		if self.macro not in func.macros:
-			raise ValueError('Line {1}: macro "{0}" does not exist'.format(macro, get_line(line)))
+			raise ValueError('Line {1}: macro "{0}" does not exist'.format(self.macro, get_line(line)))
 			
-		params, sub = func.macros[macro]
+		params, sub = func.macros[self.macro]
 			
 		if len(self.args) != len(params):
 			print('Tried to call Macro "{0}" with {1} arguments at line {3}, but it requires {2}'.format(macro, len(args), len(params), get_line(line)))

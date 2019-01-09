@@ -1,4 +1,5 @@
 import math
+from cbscript import compile_block
 
 class python_if_block(object):
 	def __init__(self, line, code, sub, else_sub):

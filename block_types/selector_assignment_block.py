@@ -5,4 +5,4 @@ class selector_assignment_block(object):
 		self.fullselector = fullselector
 		
 	def compile(self, func):
-		func.set_atid(id, fullselector)
+		func.set_atid(self.id, self.fullselector)

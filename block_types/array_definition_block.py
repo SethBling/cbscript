@@ -23,14 +23,14 @@ class array_definition_block(object):
 		indexvar = '{}Idx'.format(name)
 		func.register_objective(indexvar)
 		
-		get_func = mcfunction(func.clone_environment())
+		get_func = func.create_child_function()
 		get_func_name = 'array_{}_get'.format(name.lower())
 		func.register_function(get_func_name, get_func)
 		cases = [(i, i, [('Command', '/scoreboard players operation Global {} = Global {}{}'.format(valvar, name, i))], self.line, None) for i in vals]
 		if not switch_cases(get_func, indexvar, cases, 'arrayget', 'arraygetidx'):
 			raise Exception('Error creating getter for array at line {}'.format(self.line))
 		
-		set_func = mcfunction(func.clone_environment())
+		set_func = func.create_child_function()
 		set_func_name = 'array_{}_set'.format(name.lower())
 		func.register_function(set_func_name, set_func)
 		cases = [(i, i, [('Command', '/scoreboard players operation Global {}{} = Global {}'.format(name, i, valvar))], self.line, None) for i in vals]

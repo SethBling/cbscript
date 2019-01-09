@@ -1,6 +1,13 @@
+from mock_environment import mock_environment
+from mock_selector_definition import mock_selector_definition
+
 class mock_mcfunction(object):
 	def __init__(self):
 		self.add_command_log = []
+		self.dollarid = {}
+		self.atid = {}
+		self.macros = {}
+		self.template_functions = {}
 		
 	def add_operation(self, selector, id1, operation, id2):
 		None
@@ -48,7 +55,7 @@ class mock_mcfunction(object):
 		None
 
 	def apply_replacements(self, text):
-		None
+		return text
 		
 	def register_block_tag(self, name, blocks):
 		None
@@ -72,14 +79,6 @@ class mock_mcfunction(object):
 	@property
 	def namespace(self):
 		return 'test'
-		
-	@property
-	def macros(self):
-		return {}
-		
-	@property
-	def template_functions(self):
-		return {}
 		
 	@property
 	def functions(self):
@@ -123,19 +122,30 @@ class mock_mcfunction(object):
 		return {}
 		
 	def clone_environment(self):
-		return None
+		return mock_environment()
 		
 	def get_combined_selector(self, selector):
-		return selector
+		return mock_selector_definition()
 		
 	def set_dollarid(self, id, val):
-		None
+		self.dollarid[id] = val
 		
 	def set_atid(self, id, fullselector):
-		None
+		self.atid[id] = fullselector
+		
+		return mock_selector_definition()
 		
 	def push_environment(self, new_env):
 		None
 		
 	def pop_environment(self):
 		None		
+		
+	def run_create(self, atid, relcoords):
+		return True
+		
+	def perform_execute(self, type, line_num, exec_items, sub):
+		return True
+		
+	def create_child_function(self):
+		return mock_mcfunction()

@@ -1,4 +1,5 @@
-from cbscript import calc_math
+from cbscript import calc_math, compile_block
+from mcfunction import mcfunction
 
 class template_function_call_block(object):
 	def __init__(self, line, function, template_args, args):

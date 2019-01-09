@@ -1,4 +1,5 @@
 from cbscript import calc_math, switch_cases, get_line
+import collections
 
 class switch_block(object):
 	def __init__(self, line, expr, cases_raw):
@@ -7,6 +8,9 @@ class switch_block(object):
 		self.cases_raw = cases_raw
 		
 	def compile(self, func):
+		if len(self.cases_raw) == 0:
+			return
+	
 		result = calc_math(func, self.expr)
 		if result == None:
 			raise Exception('Unable to compute switch expression at line {}'.format(self.line))
