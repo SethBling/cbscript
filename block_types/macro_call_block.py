@@ -1,10 +1,9 @@
-from cbscript import compile_block
+from mcfunction import isNumber
 
 class macro_call_block(object):
 	def __init__(self, line, macro, args):
 		self.line = line
-		self.macro = macro
-		self.args = args
+		self.macro, self.args = macro, args
 		
 	def compile(self, func):
 		if self.macro not in func.macros:
@@ -30,6 +29,6 @@ class macro_call_block(object):
 				print('Unknown macro parameter "{}" in macro call at line {}'.format(self.args[p], self.line))
 				
 		func.push_environment(new_env)
-		if not compile_block(func, sub):
+		if not func.compile_blocks(sub):
 			raise Exception('Unable to compile macro call at line {}'.format(self.line))
 		func.pop_environment()

@@ -1,11 +1,10 @@
-from cbscript import calc_math, compile_block
-from mcfunction import mcfunction
+from mcfunction import calc_math, mcfunction, isNumber
 
 class template_function_call_block(object):
 	def __init__(self, line, function, template_args, args):
 		self.line = line
 		self.function = function
-		self.template_args = args
+		self.template_args = template_args
 		self.args = args
 		
 	def compile(self, func):
@@ -17,7 +16,7 @@ class template_function_call_block(object):
 		template_params, params, sub = func.template_functions[function]
 		
 		if len(template_args) != len(template_params):
-			raise ValueError('Tried to call template function "{}" with {} template arguments at line {}'.format(function, len(template_args), self.line))
+			raise ValueError('Tried to call template function "{}" with {} template arguments ({} expected) at line {}'.format(function, len(template_args), len(template_params), self.line))
 			
 		if len(args) != len(params):
 			raise ValueError('Tried to call template function "{}" with {} function arguments at line {}'.format(function, len(args), self.line))
@@ -55,7 +54,7 @@ class template_function_call_block(object):
 			
 			# Compile the new function
 			new_func = mcfunction(new_env, True, params)
-			if not compile_block(new_func, sub):
+			if not new_func.compile_blocks(sub):
 				return False
 			
 			# Register the new function

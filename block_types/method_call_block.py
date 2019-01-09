@@ -1,11 +1,9 @@
-from cbscript import evaluate_params
+from mcfunction import evaluate_params
 
 class method_call_block(object):
 	def __init__(self, line, selector, dest, params):
 		self.line = line
-		self.selector = selector
-		self.dest = dest
-		self.params = params
+		self.selector, self.dest, self.params = selector, dest, params
 		
 	def compile(self, func):
 		if not evaluate_params(func, self.params):

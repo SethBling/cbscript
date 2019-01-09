@@ -1,4 +1,3 @@
-from cbscript import compile_block
 import math
 
 class python_for_block(object):
@@ -21,4 +20,4 @@ class python_for_block(object):
 
 		for v in set:
 			func.set_dollarid(self.id, v)
-			compile_block(func, self.sub)
+			func.compile_blocks(self.sub)

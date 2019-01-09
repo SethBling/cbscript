@@ -1,4 +1,4 @@
-from cbscript import perform_vector_assignment
+from mcfunction import perform_vector_assignment
 
 class vector_assignment_scalar_block(object):
 	def __init__(self, line, var, op, expr):

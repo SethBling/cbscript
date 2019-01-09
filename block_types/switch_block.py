@@ -1,4 +1,4 @@
-from cbscript import calc_math, switch_cases, get_line
+from mcfunction import calc_math, switch_cases, get_line
 import collections
 
 class switch_block(object):

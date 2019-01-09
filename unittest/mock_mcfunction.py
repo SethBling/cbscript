@@ -8,6 +8,11 @@ class mock_mcfunction(object):
 		self.atid = {}
 		self.macros = {}
 		self.template_functions = {}
+		self.arrays = {}
+		self.block_tags = {}
+		self.namespace = 'test_namespace'
+		self.functions = {}
+		self.selectors = {}
 		
 	def add_operation(self, selector, id1, operation, id2):
 		None
@@ -67,26 +72,6 @@ class mock_mcfunction(object):
 		None
 		
 	scale = property(get_scale, set_scale)
-	
-	@property
-	def arrays(self):
-		return {}
-		
-	@property
-	def block_tags(self):
-		return {}
-
-	@property
-	def namespace(self):
-		return 'test'
-		
-	@property
-	def functions(self):
-		return {}
-		
-	@property
-	def selectors(self):
-		return {}
 	
 	def get_scratch(self):
 		return 'test_scratch'
@@ -149,3 +134,6 @@ class mock_mcfunction(object):
 		
 	def create_child_function(self):
 		return mock_mcfunction()
+		
+	def compile_blocks(self, lines):
+		return True

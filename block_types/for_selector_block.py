@@ -1,5 +1,3 @@
-from cbscript import compile_block
-
 class for_selector_block(object):
 	def __init__(self, line, id, selector, sub):
 		self.line = line
@@ -21,7 +19,7 @@ class for_selector_block(object):
 		func.add_command('scoreboard players set {0} {1} 0'.format(self.selector, scratch_id))
 		exec_func.add_command('scoreboard players set @s {0} 1'.format(scratch_id))
 		
-		if not compile_block(exec_func, self.sub):
+		if not exec_func.compile_blocks(self.sub):
 			raise Exception('Unable to compile "for" block at line {}'.format(self.line))
 			
 		exec_func.add_command('scoreboard players set @s {0} 0'.format(scratch_id))

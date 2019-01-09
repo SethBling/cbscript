@@ -1,4 +1,4 @@
-from cbscript import calc_math, compile_block
+from mcfunction import calc_math
 
 class for_index_block(object):
 	def __init__(self, line, var, fr, to, by, sub):
@@ -35,7 +35,7 @@ class for_index_block(object):
 		loop_func = func.create_child_function()
 		func.register_function(loop_func_name, loop_func)	
 		
-		if not compile_block(loop_func, sub):
+		if not loop_func.compile_blocks(sub):
 			raise Exception('Unable to compile for block at line {}'.format(self.line))
 		
 		if by == None:

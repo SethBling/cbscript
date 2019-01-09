@@ -1,4 +1,4 @@
-from cbscript import compile_section
+from mcfunction import compile_section
 
 class selector_definition_block(object):
 	def __init__(self, line, id, fullselector, items):
@@ -8,7 +8,7 @@ class selector_definition_block(object):
 		self.items = items
 		
 	def compile(self, func):
-		selector = func.set_atid(id, self.fullselector)
+		selector = func.set_atid(self.id, self.fullselector)
 		
 		for type, val in self.items:
 			if type == 'Tag':

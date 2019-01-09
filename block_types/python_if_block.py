@@ -1,5 +1,4 @@
 import math
-from cbscript import compile_block
 
 class python_if_block(object):
 	def __init__(self, line, code, sub, else_sub):
@@ -15,8 +14,8 @@ class python_if_block(object):
 			raise Exception('Could not evaluate "{0}" in "if" block at line {1}'.format(self.code, self.line))
 	
 		if condition:
-			if not compile_block(func, self.sub):
+			if not func.compile_blocks(self.sub):
 				raise Exception('Unable to compile true block for python if block at line {}'.format(self.line))
 		else:
-			if not compile_block(func, self.else_sub):
+			if not func.compile_blocks(self.else_sub):
 				raise Exception('Unable to compile false block for python if block at line {}'.format(self.line))

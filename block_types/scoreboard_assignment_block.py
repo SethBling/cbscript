@@ -1,11 +1,9 @@
-from cbscript import calc_math, get_variable, set_variable, isNumber
+from mcfunction import calc_math, get_variable, set_variable, isNumber
 
 class scoreboard_assignment_block(object):
-	def __init__(self, line, var, op, expr):
+	def __init__(self, line, assignment):
+		self.var, self.op, self.expr = assignment
 		self.line = line
-		self.var = var
-		self.op = op
-		self.expr = expr
 		
 	def compile(self, func):
 		var, op, expr = self.var, self.op, self.expr

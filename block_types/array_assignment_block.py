@@ -1,4 +1,4 @@
-from cbscript import get_arrayconst_var, calc_math
+from mcfunction import get_arrayconst_var, calc_math
 
 class array_assignment_block(object):
 	def __init__(self, line, name, idxtype, idxval, expr):
@@ -10,8 +10,7 @@ class array_assignment_block(object):
 		
 	def compile(self, func):
 		if self.name not in func.arrays:
-			print('Tried to assign to undefined array "{}"'.format(self.name))
-			return False
+			raise NameError('Tried to assign to undefined array "{}"'.format(self.name))
 		
 		if self.idxtype == 'Const':
 			array_var = get_arrayconst_var(func, self.name, self.idxval)

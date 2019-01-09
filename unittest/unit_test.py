@@ -1,4 +1,3 @@
-import cbscript
 import unittest
 import mock_source_file
 from mock_mcfunction import mock_mcfunction
@@ -33,22 +32,23 @@ from block_types.while_block import while_block
 
 class test_cbscript(unittest.TestCase):
 	def test_is_number(self):
-		self.assertTrue(cbscript.isNumber(1))
-		self.assertTrue(cbscript.isNumber(0))
-		self.assertTrue(cbscript.isNumber(1.0))
-		self.assertFalse(cbscript.isNumber(float('inf')))
-		self.assertFalse(cbscript.isNumber(float('nan')))
-		self.assertFalse(cbscript.isNumber(None))
-		self.assertFalse(cbscript.isNumber('test'))
+		self.assertTrue(mcfunction.isNumber(1))
+		self.assertTrue(mcfunction.isNumber(0))
+		self.assertTrue(mcfunction.isNumber(1.0))
+		self.assertFalse(mcfunction.isNumber(float('inf')))
+		self.assertFalse(mcfunction.isNumber(float('nan')))
+		self.assertFalse(mcfunction.isNumber(None))
+		self.assertFalse(mcfunction.isNumber('test'))
 		
 	def test_factor(self):
-		self.assertEqual(list(cbscript.factor(20)), [2, 2, 5])
-		self.assertEqual(list(cbscript.factor(2)), [2])
-		self.assertEqual(list(cbscript.factor(1)), [])
+		self.assertEqual(list(mcfunction.factor(20)), [2, 2, 5])
+		self.assertEqual(list(mcfunction.factor(2)), [2])
+		self.assertEqual(list(mcfunction.factor(1)), [])
 		
 	def test_compile_runs_without_error(self):
 		func = mock_mcfunction()
 	
+		func.arrays['test'] = (0, 5)
 		block = array_assignment_block(0, 'test', 'Const', 1, ('NUM', 1))
 		block.compile(func)
 		
@@ -67,19 +67,19 @@ class test_cbscript(unittest.TestCase):
 		block = create_block(0, '@test', ['0', '0', '0'])
 		block.compile(func)
 		
-		block = execute_block(0, [], [('Command', 'test_command')])
+		block = execute_block(0, [], [command_block(0, 'test_command')])
 		block.compile(func)
 		
-		block = for_index_block(0, 'test', ('NUM', 0), ('NUM', 5), ('NUM', 2), [('Command', 'test_command')])
+		block = for_index_block(0, 'test', ('NUM', 0), ('NUM', 5), ('NUM', 2), [command_block(0, 'test_command')])
 		block.compile(func)
 		
-		block = for_selector_block(0, '@test', '@a', [('Command', 'test_command')])
+		block = for_selector_block(0, '@test', '@a', [command_block(0, 'test_command')])
 		block.compile(func)
 		
 		block = function_call_block(0, 'test_function', [])
 		block.compile(func)
 		
-		func.macros['test_macro'] = ([], [('Command', 'test_command')])
+		func.macros['test_macro'] = ([], [command_block(0, 'test_command')])
 		block = macro_call_block(0, 'test_macro', [])
 		block.compile(func)
 		
@@ -92,16 +92,16 @@ class test_cbscript(unittest.TestCase):
 		block = python_assignment_block(0, 'test_id', '1+1')
 		block.compile(func)
 		
-		block = python_for_block(0, 'test_id', 'range(3)', [('Command', 'test_command')])
+		block = python_for_block(0, 'test_id', 'range(3)', [command_block(0, 'test_command')])
 		block.compile(func)
 		
-		block = python_if_block(0, 'True', [('Command', 'true_command')], [('Command', 'false_command')])
+		block = python_if_block(0, 'True', [command_block(0, 'true_command')], [command_block(0, 'false_command')])
 		block.compile(func)
-		block = python_if_block(0, 'False', [('Command', 'true_command')], [('Command', 'false_command')])
+		block = python_if_block(0, 'False', [command_block(0, 'true_command')], [command_block(0, 'false_command')])
 		block.compile(func)
 		
 		var = ('Var', ('@s', 'test'))
-		block = scoreboard_assignment_block(0, var, '+=', ('NUM', 1))
+		block = scoreboard_assignment_block(0, (var, '+=', ('NUM', 1)))
 		block.compile(func)
 		
 		block = selector_assignment_block(0, 'test', '@a')
@@ -115,15 +115,15 @@ class test_cbscript(unittest.TestCase):
 		
 		block = switch_block(0, ('NUM', 1), [])
 		block.compile(func)
-		case1 = ('python', ('test_id', 'range(3, 6)', [('Command', 'test_python')]))
-		case2 = ('range', ('1', '2', [('Command', 'test_range_1_2')]))
+		case1 = ('python', ('test_id', 'range(3, 6)', [command_block(0, 'test_python')]))
+		case2 = ('range', ('1', '2', [command_block(0, 'test_range_1_2')]))
 		block = switch_block(0, ('NUM', 1), [case1, case2])
 		block.compile(func)
 		
 		block = tell_block(0, '@a', '{rhi')
 		block.compile(func)
 		
-		func.template_functions['test_template_function'] = ([], [], [('Command', 'test_command')])
+		func.template_functions['test_template_function'] = ([], [], [command_block(0, 'test_command')])
 		block = template_function_call_block(0, 'test_template_function', [], [])
 		block.compile(func)
 		
@@ -138,67 +138,71 @@ class test_cbscript(unittest.TestCase):
 		block = vector_assignment_scalar_block(0, var, '+=', ('NUM', 1))
 		block.compile(func)
 		
-		block = while_block(0, [], [('Command', 'test_command')])
+		block = while_block(0, [], [command_block(0, 'test_command')])
 		block.compile(func)
 		
 	def test_compile_comment(self):
 		func = mock_mcfunction()
-
-		cbscript.compile(func, ('Comment', '#test'))
+		block = comment_block(0, '#test')
+		block.compile(func)
 		self.assertTrue('#test' in func.add_command_log)
 			
 	def test_compile_command(self):
 		func = mock_mcfunction()
-
-		cbscript.compile(func, ('Command', 'say hi'))
+		block = command_block(0, 'say hi')
+		block.compile(func)
 		self.assertTrue('say hi' in func.add_command_log)
 		
 	def test_compile_move(self):
 		func = mock_mcfunction()
-
-		cbscript.compile(func, ('Move', ('@s', ('1', '1', '1'))))
+		block = move_block(0, '@s', ('1', '1', '1'))
+		block.compile(func)
 		self.assertTrue('execute at @s run tp @s 1 1 1' in func.add_command_log)
 
-		cbscript.compile(func, ('Move', ('@a', ('^0', '^0', '^1'))))
+		block = move_block(0, '@a', ('^0', '^0', '^1'))
+		block.compile(func)
 		self.assertTrue('execute as @a at @s run tp @s ^0 ^0 ^1' in func.add_command_log)
 		
 	def test_compile_python_assignment(self):
 		func = mock_mcfunction()
 		
-		ret = cbscript.compile(func, ('PythonAssignment', ('test', '1+1')))
-		self.assertTrue(ret)
+		block = python_assignment_block(0, 'test', '1+1')
+		block.compile(func)
 		self.assertTrue('test' in func.dollarid)
 		self.assertEqual(func.dollarid['test'], 2)
 		
-		ret = cbscript.compile(func, ('PythonAssignment', ('test2', '1/0')))
-		self.assertFalse(ret)
+		block = python_assignment_block(0, 'test2', '1/0')
+		with self.assertRaises(Exception) as context:
+			block.compile(func)
 		self.assertEqual(len(func.dollarid), 1)
 
-		ret = cbscript.compile(func, ('PythonAssignment', ('test3', 'math.sqrt(9)')))
-		self.assertTrue(ret)
+		block = python_assignment_block(0, 'test3', 'math.sqrt(9)')
+		block.compile(func)
 		self.assertTrue('test3' in func.dollarid)
 		self.assertEqual(func.dollarid['test3'], 3)
 		
 	def test_compile_python_for(self):
 		func = mock_mcfunction()
 		
-		ret = cbscript.compile(func, ('For', ('i', 'range(3)', [('Command', '/say $i')])))
-		self.assertTrue(ret)
-		self.assertEqual(len(func.add_command_log), 3)
+		block = python_for_block(0, 'i', 'range(3)', [command_block(0, '/say $i')])
+		block.compile(func)
 		
-		ret = cbscript.compile(func, ('For', ('i', '[]', [])))
-		self.assertTrue(ret)
+		block = python_for_block(0, 'i', '[]', [])
+		block.compile(func)
 		
-		ret = cbscript.compile(func, ('For', ('i', '1', [])))
-		self.assertFalse(ret)
+		block = python_for_block(0, 'i', '1', [])
+		with self.assertRaises(Exception) as context:
+			block.compile(func)
 	
-		ret = cbscript.compile(func, ('For', ('i', 'range(1/0)', [])))
-		self.assertFalse(ret)
+		block = python_for_block(0, 'i', 'range(1/0)', [])
+		with self.assertRaises(Exception) as context:
+			block.compile(func)
 	
 	def test_compile_selector_assignment(self):
 		func = mock_mcfunction()
 		
-		cbscript.compile(func, ('SelectorAssignment', ('test', '@s[x=1]')))
+		block = selector_assignment_block(0, 'test', '@s[x=1]')
+		block.compile(func)
 		
 		self.assertEqual(func.atid['test'], '@s[x=1]')
 		
