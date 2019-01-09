@@ -1,6 +1,6 @@
 from cbscript import calc_math
 
-class template_function_call_block(block_type):
+class template_function_call_block(object):
 	def __init__(self, line, function, template_args, args):
 		self.line = line
 		self.function = function

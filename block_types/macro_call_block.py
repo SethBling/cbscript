@@ -1,4 +1,4 @@
-class macro_call_block(block_type):
+class macro_call_block(object):
 	def __init__(self, line, macro, args):
 		self.line = line
 		self.macro = macro

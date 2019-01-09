@@ -1,4 +1,4 @@
-class function_call_block(block_type):
+class function_call_block(object):
 	def __init__(self, line, dest, params):
 		self.line = line
 		self.dest = dest

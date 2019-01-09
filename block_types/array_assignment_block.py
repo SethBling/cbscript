@@ -1,6 +1,6 @@
 from cbscript import get_arrayconst_var, calc_math
 
-class array_assignment_block(block_type):
+class array_assignment_block(object):
 	def __init__(self, line, name, idxtype, idxval, expr):
 		self.line = line
 		self.name = name

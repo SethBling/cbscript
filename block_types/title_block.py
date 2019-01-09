@@ -1,4 +1,4 @@
-class title_block(block_type):
+class title_block(object):
 	def __init__(self, line, subtype, selector, times, unformatted):
 		self.line = line
 		self.subtype = subtype

@@ -1,7 +1,7 @@
 from cbscript import calc_math, compile_block
 from mcfunction import mcfunction
 
-class for_index_block(block_type):
+class for_index_block(object):
 	def __init__(self, line, var, fr, to, by, sub):
 		self.line = line
 		self.var = var

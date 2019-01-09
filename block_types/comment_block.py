@@ -1,4 +1,4 @@
-class comment_block(block_type):
+class comment_block(object):
 	def __init__(self, line, text):
 		self.line = line
 		self.text = text

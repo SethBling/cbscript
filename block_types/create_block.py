@@ -1,6 +1,6 @@
 from cbscript import run_create
 
-class create_block(block_type):
+class create_block(object):
 	def __init__(self, line, atid, text):
 		self.line = line
 		self.atid = atid

@@ -1,4 +1,4 @@
-class for_selector_block(block_type):
+class for_selector_block(object):
 	def __init__(self, line, id, selector, sub):
 		self.line = line
 		self.id = id

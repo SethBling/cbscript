@@ -1,6 +1,6 @@
 from cbscript import perform_vector_assignment
 
-class vector_assignment_block(block_type):
+class vector_assignment_block(object):
 	def __init__(self, line, var, op, expr):
 		self.line = line
 		self.var = var

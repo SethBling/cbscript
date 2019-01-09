@@ -1,6 +1,6 @@
 from cbscript import calc_math, switch_cases, get_line
 
-class switch_block(block_type):
+class switch_block(object):
 	def __init__(self, line, expr, cases_raw):
 		self.line = line
 		self.expr = expr

@@ -1,6 +1,6 @@
 from cbscript import perform_execute
 
-class while_block(block_type):
+class while_block(object):
 	def __init__(self, line, exec_items, sub):
 		self.line = line
 		self.exec_items = exec_items

@@ -1592,7 +1592,7 @@ def calc_math(func, expr, assignto = None):
 	print "Unable to interpret math block."
 	
 	return None
-	
+
 class cbscript(object):
 	def __init__(self, source_file):
 		self.source_file = source_file
@@ -1681,13 +1681,6 @@ class cbscript(object):
 		self.add_random_generation()
 		self.add_trigger_objectives()
 		self.add_registered_objectives()
-	
-	def get_selector_name(self, s):
-		if '[' in s:
-			s = s.split('[')[0]
-		if s[0] == '@':
-			s = s[1:]
-		return s.lower()
 		
 	def add_scratch_objectives(self):
 		f = self.global_context.get_reset_function()

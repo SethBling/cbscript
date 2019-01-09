@@ -1,6 +1,6 @@
 from cbscript import compile_section
 
-class selector_definition_block(block_type):
+class selector_definition_block(object):
 	def __init__(self, line, id, fullselector, items):
 		self.line = line
 		self.id = id

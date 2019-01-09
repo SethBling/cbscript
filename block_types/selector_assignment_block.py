@@ -1,4 +1,4 @@
-class selector_assignment_block(block_type):
+class selector_assignment_block(object):
 	def __init__(self, line, id, fullselector):
 		self.line = line
 		self.id = id

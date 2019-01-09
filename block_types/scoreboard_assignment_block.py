@@ -1,6 +1,6 @@
 from cbscript import calc_math, get_variable, set_variable, run_create
 
-class scoreboard_assignment_block(block_type):
+class scoreboard_assignment_block(object):
 	def __init__(self, line, var, op, expr):
 		self.line = line
 		self.var = var

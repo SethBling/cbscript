@@ -1,6 +1,6 @@
 from cbscript import switch_cases
 
-class array_definition_block(block_type):
+class array_definition_block(object):
 	def __init__(self, line, name, from_val, to_val):
 		self.line = line
 		self.name = name

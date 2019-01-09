@@ -1,4 +1,4 @@
-class method_call_block(block_type):
+class method_call_block(object):
 	def __init__(self, line, selector, dest, params):
 		self.line = line
 		self.selector = selector

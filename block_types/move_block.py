@@ -1,4 +1,4 @@
-class move_block(block_type):
+class move_block(object):
 	def __init__(self, line, selector, coords):
 		self.line = line
 		self.selector = selector

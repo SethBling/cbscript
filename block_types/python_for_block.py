@@ -1,6 +1,7 @@
 from cbscript import compile_block
+import math
 
-class python_for_block(block_type):
+class python_for_block(object):
 	def __init__(self, line, id, code, sub):
 		self.line = line
 		self.id = id
