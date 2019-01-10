@@ -345,7 +345,7 @@ def calc_math(func, expr, assignto = None):
 			newId = expr[2]
 		
 		if expr[1] != 'Global' or newId != expr[2]:
-			func.add_command("/scoreboard players operation Global {0} = {1} {2}".format(newId, expr[1], expr[2]))
+			func.add_command("scoreboard players operation Global {0} = {1} {2}".format(newId, expr[1], expr[2]))
 		
 		return newId
 		
@@ -471,7 +471,7 @@ def calc_math(func, expr, assignto = None):
 		elif etype == 'SCALE':
 			val = func.scale
 			
-		func.add_command("/scoreboard players set Global {0} {1}".format(id, val))
+		func.add_command("scoreboard players set Global {0} {1}".format(id, val))
 		
 		return id
 		
@@ -512,7 +512,7 @@ def calc_math(func, expr, assignto = None):
 			id = get_modifiable_id(func, id, assignto)
 
 			func.add_constant(-1)
-			func.add_command("/scoreboard players operation Global {0} *= minus Constant".format(id))
+			func.add_command("scoreboard players operation Global {0} *= minus Constant".format(id))
 			
 			return id
 		
@@ -628,9 +628,9 @@ def calc_math(func, expr, assignto = None):
 				func.add_command("scoreboard players operation Global {0} += {1} {2}".format(id, rand_stand, func.get_random_objective()))
 			
 			if min > 0:
-				func.add_command("/scoreboard players add Global {0} {1}".format(id, min))
+				func.add_command("scoreboard players add Global {0} {1}".format(id, min))
 			if min < 0:
-				func.add_command("/scoreboard players remove Global {0} {1}".format(id, -min))
+				func.add_command("scoreboard players remove Global {0} {1}".format(id, -min))
 				
 			return id
 
@@ -660,7 +660,7 @@ def calc_math(func, expr, assignto = None):
 			modId = func.get_temp_var()
 			func.add_operation('Global', modId, '=', moddedId2)
 			c180 = func.add_constant(180)
-			func.add_command("/scoreboard players operation Global {0} %= {1} Constant".format(modId, c180))
+			func.add_command("scoreboard players operation Global {0} %= {1} Constant".format(modId, c180))
 			
 			parsed = scriptparse.parse("4000*{0}*(180-{0})/(40500-{0}*(180-{0}))".format(modId))
 			retId = calc_math(func, parsed[1], assignto=assignto)
@@ -874,7 +874,7 @@ class mcfunction(object):
 	def add_operation(self, selector, id1, operation, id2):
 		selector = self.environment.apply(selector)
 		
-		self.add_command("/scoreboard players operation {0} {1} {2} {0} {3}".format(selector, id1, operation, id2))
+		self.add_command("scoreboard players operation {0} {1} {2} {0} {3}".format(selector, id1, operation, id2))
 			
 		if self.environment.scratch.is_scratch(id2):
 			self.environment.scratch.free_scratch(id2)
@@ -922,7 +922,7 @@ class mcfunction(object):
 				self.register_local(v)
 	
 			for p in range(len(self.params)):
-				self.insert_command('/scoreboard players operation Global {0} = Global Param{1}'.format(self.params[p], p), 0)
+				self.insert_command('scoreboard players operation Global {0} = Global Param{1}'.format(self.params[p], p), 0)
 				self.environment.global_context.register_objective("Param{0}".format(p))
 			
 		self.commands = comments + self.commands

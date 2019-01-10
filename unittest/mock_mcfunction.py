@@ -13,6 +13,7 @@ class mock_mcfunction(object):
 		self.namespace = 'test_namespace'
 		self.functions = {}
 		self.selectors = {}
+		self.child_functions = []
 		
 	def add_operation(self, selector, id1, operation, id2):
 		None
@@ -133,7 +134,9 @@ class mock_mcfunction(object):
 		return True
 		
 	def create_child_function(self):
-		return mock_mcfunction()
+		child = mock_mcfunction()
+		self.child_functions.append(child)
+		return child
 		
 	def compile_blocks(self, lines):
 		return True

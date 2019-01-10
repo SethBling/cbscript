@@ -206,5 +206,20 @@ class test_cbscript(unittest.TestCase):
 		
 		self.assertEqual(func.atid['test'], '@s[x=1]')
 		
+	def test_compile_array_assignment(self):
+		func = mock_mcfunction()
+		func.arrays['test_array'] = (0, 5)
+		
+		block = array_assignment_block(0, 'test_array', 'Const', 1, ('NUM', 2))
+		block.compile(func)
+		self.assertTrue('scoreboard players set Global test_array1 2' in func.add_command_log)
+		
+		func.arrays['test_array2'] = (0, 10)
+		block = array_assignment_block(0, 'test_array2', 'Expr', ('NUM', 2), ('NUM', 3))
+		block.compile(func)
+		self.assertTrue('scoreboard players set Global test_array2Val 3' in func.add_command_log)
+		self.assertTrue('scoreboard players set Global test_array2Idx 2' in func.add_command_log)
+		self.assertTrue('function test_namespace:array_test_array2_set' in func.add_command_log)
+		
 if __name__ == '__main__':
     unittest.main()

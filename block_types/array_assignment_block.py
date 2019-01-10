@@ -27,14 +27,14 @@ class array_assignment_block(object):
 		
 		elif self.idxtype == 'Expr':
 			val_var = '{}Val'.format(self.name)
-			id1 = calc_math(func, expr, assignto=val_var)
+			id1 = calc_math(func, self.expr, assignto=val_var)
 			
 			if id1 == None:
 				raise Exception('Unable to compute value for array assignment at line {}'.format(self.line))
 			
 			idx_var = '{}Idx'.format(self.name)
 			
-			id2 = calc_math(func, idxval, assignto=idx_var)
+			id2 = calc_math(func, self.idxval, assignto=idx_var)
 			if id2 == None:
 				raise Exception('Unable to calculate array index at line {}'.format(self.line))
 				
