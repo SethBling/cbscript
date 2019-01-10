@@ -1,6 +1,6 @@
-from mcfunction import perform_vector_assignment
+from vector_assignment_base import vector_assignment_base
 
-class vector_assignment_scalar_block(object):
+class vector_assignment_scalar_block(vector_assignment_base):
 	def __init__(self, line, var, op, expr):
 		self.line = line
 		self.var = var
@@ -8,5 +8,4 @@ class vector_assignment_scalar_block(object):
 		self.expr = expr
 		
 	def compile(self, func):
-		if not perform_vector_assignment(func, 'VectorAssignmentScalar', self.line, self.var, self.op, self.expr):
-			raise Exception('Unable to perform vector assignment by scalar at line {}'.format(self.line))
+		self.perform_vector_assignment(func, 'VectorAssignmentScalar')
