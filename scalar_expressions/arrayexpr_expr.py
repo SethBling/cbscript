@@ -1,6 +1,6 @@
 from scalar_expression_base import scalar_expression_base
 
-class (scalar_expression_base):
+class arrayexpr_expr(scalar_expression_base):
 	def __init__(self, name, idx_expr):
 		self.name = name
 		self.idx_expr = idx_expr
@@ -11,7 +11,7 @@ class (scalar_expression_base):
 			return None
 			
 		index_var = '{}Idx'.format(self.name)
-		id = calc_math(func, self.idx_expr, assignto=index_var)
+		id = self.idx_expr.compile(func, assignto=index_var)
 		if id == None:
 			return None
 		

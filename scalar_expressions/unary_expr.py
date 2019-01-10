@@ -1,12 +1,14 @@
 from scalar_expression_base import scalar_expression_base
+from mcfunction import get_modifiable_id
 
-class (scalar_expression_base):
+class unary_expr(scalar_expression_base):
 	def __init__(self, type, expr):
-		
+		self.type = type
+		self.expr = expr
 	
 	def compile(self, func, assignto):
 		if self.type == "-":
-			id = calc_math(func, self.expr, assignto)
+			id = self.expr.compile(func, assignto)
 			
 			if id == None:
 				return None

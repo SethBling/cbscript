@@ -5,7 +5,7 @@ class selvar_expr(scalar_expression_base):
 		self.sel = sel
 		self.var = var
 		
-	def compile(func, assignto):
+	def compile(self, func, assignto):
 		func.register_objective(self.var)
 		
 		func.get_path(self.sel, self.var)

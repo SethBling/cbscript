@@ -9,7 +9,7 @@ class binop_expr(scalar_expression_base):
 		
 	def compile(self, func, assignto):
 		if len(self.op) == 1 and self.op in "+-*/%":
-			if self.op in "+*" and self.lhs.const_value(func) != None and self.rhs.const_value(func) == None
+			if self.op in "+*" and self.lhs.const_value(func) != None and self.rhs.const_value(func) == None:
 				# Commutative operation which is more efficient with the constant operand on the rhs
 				left = self.rhs
 				right = self.lhs
@@ -17,7 +17,7 @@ class binop_expr(scalar_expression_base):
 				left = self.lhs
 				right = self.rhs
 		
-			id1 = calc_math(func, left, assignto=assignto)
+			id1 = left.compile(func, assignto)
 			if id1 == None:
 				print "Unable to compile LHS of binop {0}".format(self.op)
 				return None
@@ -42,7 +42,7 @@ class binop_expr(scalar_expression_base):
 					id2 = func.add_constant(operand2)
 					func.add_command('scoreboard players operation Global {0} {1}= {2} Constant'.format(id1, self.op, id2))
 			else:
-				id2 = calc_math(func, right, assignto=id1)
+				id2 = right.compile(func, id1)
 				if id2 == None:
 					print "Unable to compile RHS of binop {0}".format(self.op)
 					return None
@@ -53,13 +53,13 @@ class binop_expr(scalar_expression_base):
 			return id1
 			
 		if self.op == "^":
-			target = calc_math(func, self.lhs, assignto=assignto)
+			target = self.lhs.compile(func, assignto)
 			
 			if target == None:
 				print 'Unable to compile exponent for ^'
 				return None
 			
-			right_const = rhs.const_value()
+			right_const = self.rhs.const_value(func)
 			if right_const == None:
 				print('Exponentiation must have constant operand.')
 				return None

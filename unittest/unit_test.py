@@ -29,6 +29,21 @@ from block_types.title_block import title_block
 from block_types.vector_assignment_block import vector_assignment_block
 from block_types.vector_assignment_scalar_block import vector_assignment_scalar_block
 from block_types.while_block import while_block
+from scalar_expressions.arrayconst_expr import arrayconst_expr
+from scalar_expressions.arrayexpr_expr import arrayexpr_expr
+from scalar_expressions.binop_expr import binop_expr
+from scalar_expressions.dot_expr import dot_expr
+from scalar_expressions.func_expr import func_expr
+from scalar_expressions.num_expr import num_expr
+from scalar_expressions.scale_expr import scale_expr
+from scalar_expressions.selvar_expr import selvar_expr
+from scalar_expressions.unary_expr import unary_expr
+from vector_expressions.sel_vector_var_expr import sel_vector_var_expr
+from vector_expressions.vector_binop_scalar_expr import vector_binop_scalar_expr
+from vector_expressions.vector_binop_vector_expr import vector_binop_vector_expr
+from vector_expressions.vector_expr import vector_expr
+from vector_expressions.vector_here_expr import vector_here_expr
+from vector_expressions.vector_var_expr import vector_var_expr
 
 class test_cbscript(unittest.TestCase):
 	def test_is_number(self):
@@ -145,23 +160,23 @@ class test_cbscript(unittest.TestCase):
 		func = mock_mcfunction()
 		block = comment_block(0, '#test')
 		block.compile(func)
-		self.assertTrue('#test' in func.add_command_log)
+		self.assertTrue('#test' in func.commands)
 			
 	def test_compile_command(self):
 		func = mock_mcfunction()
 		block = command_block(0, 'say hi')
 		block.compile(func)
-		self.assertTrue('say hi' in func.add_command_log)
+		self.assertTrue('say hi' in func.commands)
 		
 	def test_compile_move(self):
 		func = mock_mcfunction()
 		block = move_block(0, '@s', ('1', '1', '1'))
 		block.compile(func)
-		self.assertTrue('execute at @s run tp @s 1 1 1' in func.add_command_log)
+		self.assertTrue('execute at @s run tp @s 1 1 1' in func.commands)
 
 		block = move_block(0, '@a', ('^0', '^0', '^1'))
 		block.compile(func)
-		self.assertTrue('execute as @a at @s run tp @s ^0 ^0 ^1' in func.add_command_log)
+		self.assertTrue('execute as @a at @s run tp @s ^0 ^0 ^1' in func.commands)
 		
 	def test_compile_python_assignment(self):
 		func = mock_mcfunction()
@@ -212,14 +227,14 @@ class test_cbscript(unittest.TestCase):
 		
 		block = array_assignment_block(0, 'test_array', 'Const', 1, ('NUM', 2))
 		block.compile(func)
-		self.assertTrue('scoreboard players set Global test_array1 2' in func.add_command_log)
+		self.assertTrue('scoreboard players set Global test_array1 2' in func.commands)
 		
 		func.arrays['test_array2'] = (0, 10)
 		block = array_assignment_block(0, 'test_array2', 'Expr', ('NUM', 2), ('NUM', 3))
 		block.compile(func)
-		self.assertTrue('scoreboard players set Global test_array2Val 3' in func.add_command_log)
-		self.assertTrue('scoreboard players set Global test_array2Idx 2' in func.add_command_log)
-		self.assertTrue('function test_namespace:array_test_array2_set' in func.add_command_log)
+		self.assertTrue('scoreboard players set Global test_array2Val 3' in func.commands)
+		self.assertTrue('scoreboard players set Global test_array2Idx 2' in func.commands)
+		self.assertTrue('function test_namespace:array_test_array2_set' in func.commands)
 		
 	def test_compile_array_definition(self):
 		func = mock_mcfunction()
@@ -259,6 +274,115 @@ class test_cbscript(unittest.TestCase):
 		block.compile(func)
 		
 		self.assertEqual(len(func.child_functions), 1)
+		
+	def test_compile_arrayconst(self):
+		func = mock_mcfunction()
+		func.arrays['test_array'] = (0, 5)
+		
+		expr = arrayconst_expr('test_array', '1')
+		id = expr.compile(func, None)
+		
+		self.assertEqual(id, 'test_array1')
+		
+	def test_compile_arrayexpr_expr(self):
+		func = mock_mcfunction()
+		func.arrays['test_array'] = (0, 5)
+		
+		expr = arrayexpr_expr('test_array', num_expr(3))
+		id = expr.compile(func, None)
+		
+		self.assertEqual(id, 'test_arrayVal')
+		
+	def test_compile_binop_expr(self):
+		func = mock_mcfunction()
+		
+		expr = binop_expr(num_expr(3), '+', num_expr(4))
+		id = expr.compile(func, 'test_id')
+		
+		self.assertEqual(id, 'test_id')
+		self.assertTrue('scoreboard players set Global test_id 3' in func.commands)
+		self.assertTrue('scoreboard players add Global test_id 4' in func.commands)
+		
+		expr = binop_expr(num_expr(3), '+', selvar_expr('Global', 'test_var'))
+		id = expr.compile(func, 'test_id2')
+		
+		self.assertEqual(id, 'test_id2')
+		self.assertTrue('scoreboard players operation Global test_id2 = Global test_var' in func.commands)
+		self.assertTrue('scoreboard players add Global test_id2 3' in func.commands)
+		
+		expr = binop_expr(num_expr(5), '^', num_expr(2))
+		id = expr.compile(func, 'test_id3')
+		
+		self.assertEqual(id, 'test_scratch')
+		self.assertTrue(('Global', 'test_scratch', '=', 'test_id3') in func.operations)
+		self.assertTrue(('Global', 'test_scratch', '*=', 'test_id3') in func.operations)
+		
+		expr = binop_expr(num_expr(5), '^', selvar_expr('Global', 'test_var'))
+		id = expr.compile(func, 'test_id4')
+		self.assertEqual(id, None)
+		
+	def test_dot_expr(self):
+		func = mock_mcfunction()
+		
+		expr = dot_expr(vector_var_expr('vec1'), vector_var_expr('vec2'))
+		id = expr.compile(func, 'test_id5')
+		
+		self.assertEqual(id, 'test_scratch')
+		self.assertEqual(len(func.commands), 8)
+		
+	def test_func_expr(self):
+		func = mock_mcfunction()
+		
+		expr = func_expr(function_call_block(0, 'sin', [num_expr(1)]))
+		#id = expr.compile(func, 'test_id')
+		
+		#self.assertEqual(id, 'test_id')
+		
+		expr = func_expr(function_call_block(0, 'test_function', []))
+		id = expr.compile(func, 'test_id')
+		
+		self.assertEqual(id, 'ReturnValue')
+		self.assertTrue('function test_namespace:test_function' in func.commands)
+		
+	def test_num_expr(self):
+		func = mock_mcfunction()
+		
+		expr = num_expr(5)
+		self.assertEqual(expr.const_value(func), 5)
+		id = expr.compile(func, 'test_id')
+		
+		self.assertEqual(id, 'test_id')
+		self.assertTrue('scoreboard players set Global test_id 5' in func.commands)
+		
+	def test_scale_expr(self):
+		func = mock_mcfunction()
+		
+		expr = scale_expr()
+		self.assertEqual(expr.const_value(func), 1000)
+		id = expr.compile(func, 'test_id')
+		
+		self.assertEqual(id, 'test_id')
+		self.assertTrue('scoreboard players set Global test_id 1000' in func.commands)
+		
+	def test_selvar_expr(self):
+		func = mock_mcfunction()
+		
+		expr = selvar_expr('@a', 'test_var')
+		id = expr.compile(func, 'test_id')
+		
+		self.assertEqual(id, 'test_id')
+		self.assertTrue('scoreboard players operation Global test_id = @a test_var' in func.commands)
+		
+	def test_unary_expr(self):
+		func = mock_mcfunction()
+		
+		expr = unary_expr('-', num_expr(5))
+		id = expr.compile(func, 'test_id')
+		
+		self.assertEqual(id, 'test_id')
+		self.assertTrue('scoreboard players set Global test_id 5' in func.commands)
+		self.assertTrue('scoreboard players operation Global test_id *= minus Constant' in func.commands)
+
 		
 if __name__ == '__main__':
     unittest.main()

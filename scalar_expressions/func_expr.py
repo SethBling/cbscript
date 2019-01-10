@@ -1,6 +1,7 @@
 from scalar_expression_base import scalar_expression_base
+from num_expr import num_expr
 
-class (scalar_expression_base):
+class func_expr(scalar_expression_base):
 	def __init__(self, function_call):
 		self.function_call = function_call
 	
@@ -13,12 +14,12 @@ class (scalar_expression_base):
 				print "sqrt takes exactly 1 argument, received: {0}".format(args)
 				return None
 			
-			id = calc_math(func, args[0])
+			id = args[0].compile(func, None)
 			if id == None:
 				print 'Unable to compile argument for sqrt'
 				return None
 			
-			guess = calc_math(func, scriptparse.parse("20")[1])
+			guess = num_expr(20).compile(func, None)
 			
 			if guess == None:
 				print 'Unable to compile initial guess for sqrt algorithm'
@@ -122,7 +123,7 @@ class (scalar_expression_base):
 				print "{0} takes exactly 1 argument, received: {1}".format(efunc, args)
 				return None
 			
-			id = calc_math(func, args[0])
+			id = args[0].compile(func, None)
 			if id == None:
 				print 'Unable to compile argument for {0} function'.format(efunc)
 				return None

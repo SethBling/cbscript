@@ -1,14 +1,13 @@
 from scalar_expression_base import scalar_expression_base
-from mcfunction import calc_vector_math
 
-class (scalar_expression_base):
+class dot_expr(scalar_expression_base):
 	def __init__(self, lhs, rhs):
 		self.lhs = lhs
 		self.rhs = rhs
 	
 	def compile(self, func, assignto):
-		lhs = calc_vector_math(func, self.lhs)
-		rhs = calc_vector_math(func, self.rhs)
+		lhs = self.lhs.compile(func, None)
+		rhs = self.rhs.compile(func, None)
 		
 		prods = []
 		for i in range(3):

@@ -3,7 +3,7 @@ from mock_selector_definition import mock_selector_definition
 
 class mock_mcfunction(object):
 	def __init__(self):
-		self.add_command_log = []
+		self.commands = []
 		self.dollarid = {}
 		self.atid = {}
 		self.macros = {}
@@ -16,12 +16,13 @@ class mock_mcfunction(object):
 		self.child_functions = []
 		self.created = []
 		self.compiled_blocks = []
+		self.operations = []
 		
 	def add_operation(self, selector, id1, operation, id2):
-		None
+		self.operations.append((selector, id1, operation, id2))
 		
 	def add_command(self, command):
-		self.add_command_log.append(command)
+		self.commands.append(command)
 	
 	def insert_command(self, command, index):
 		None
@@ -144,3 +145,9 @@ class mock_mcfunction(object):
 	def compile_blocks(self, lines):
 		self.compiled_blocks.append(lines)
 		return True
+		
+	def is_scratch(self, var):
+		return False
+		
+	def get_temp_var(self):
+		return 'test_temp_var'
