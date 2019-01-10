@@ -1,4 +1,4 @@
-from mcfunction import calc_vector_math, calc_math, get_variable, set_variable
+from mcfunction import get_variable, set_variable
 
 class vector_assignment_base(object):
 	def perform_vector_assignment(self, func, type):
@@ -39,15 +39,8 @@ class vector_assignment_base(object):
 		else:
 			assignto = None
 		
-		if type == 'VectorAssignment':
-			component_val_vars = calc_vector_math(func, expr, assignto)
-			if component_val_vars == None:
-				raise Exception('Unable to compute vector assignment at line {0}'.format(self.line))
-				
-		elif type == 'VectorAssignmentScalar':
-			val_var = calc_math(func, expr)			
-			component_val_vars = [val_var for i in range(3)]
-
+		component_val_vars = self.compute_assignment(func, expr, assignto)
+		
 		if var_type == 'VAR_ID':
 			for i in range(3):
 				var_name = '_{0}_{1}'.format(var_content, i)
