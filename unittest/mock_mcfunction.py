@@ -14,6 +14,8 @@ class mock_mcfunction(object):
 		self.functions = {}
 		self.selectors = {}
 		self.child_functions = []
+		self.created = []
+		self.compiled_blocks = []
 		
 	def add_operation(self, selector, id1, operation, id2):
 		None
@@ -58,13 +60,13 @@ class mock_mcfunction(object):
 		None
 		
 	def register_array(self, name, from_val, to_val):
-		None
+		self.arrays[name] = (from_val, to_val)
 
 	def apply_replacements(self, text):
 		return text
 		
 	def register_block_tag(self, name, blocks):
-		None
+		self.block_tags[name] = blocks
 		
 	def get_scale(self):
 		return 1000
@@ -96,7 +98,7 @@ class mock_mcfunction(object):
 		return 'test_random_objective'
 		
 	def register_function(self, name, func):
-		None
+		self.functions[name] = func
 		
 	def get_unique_id(self):
 		return 1
@@ -128,6 +130,7 @@ class mock_mcfunction(object):
 		None		
 		
 	def run_create(self, atid, relcoords):
+		self.created.append((atid, relcoords))
 		return True
 		
 	def perform_execute(self, type, line_num, exec_items, sub):
@@ -139,4 +142,5 @@ class mock_mcfunction(object):
 		return child
 		
 	def compile_blocks(self, lines):
+		self.compiled_blocks.append(lines)
 		return True

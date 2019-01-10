@@ -221,5 +221,44 @@ class test_cbscript(unittest.TestCase):
 		self.assertTrue('scoreboard players set Global test_array2Idx 2' in func.add_command_log)
 		self.assertTrue('function test_namespace:array_test_array2_set' in func.add_command_log)
 		
+	def test_compile_array_definition(self):
+		func = mock_mcfunction()
+		
+		block = array_definition_block(0, 'test_array', 0, 5)
+		block.compile(func)
+		
+		self.assertTrue('test_array' in func.arrays)
+		self.assertEqual(func.arrays['test_array'], (0, 5))
+		
+		self.assertEqual(len(func.child_functions), 2)
+		self.assertTrue('array_test_array_set' in func.functions)
+		self.assertTrue('array_test_array_get' in func.functions)
+		
+	def test_compile_block_tag(self):
+		func = mock_mcfunction()
+		
+		block = block_tag_block(0, 'test_block_tag', ['test_block'])
+		block.compile(func)
+		
+		self.assertTrue('test_block_tag' in func.block_tags)
+		self.assertTrue(func.block_tags['test_block_tag'] == ['test_block'])
+		
+	def test_compile_create(self):
+		func = mock_mcfunction()
+		
+		block = create_block(0, '@test', ['0', '0', '0'])
+		block.compile(func)
+		
+		self.assertEqual(len(func.created), 1)
+		
+	def test_compile_execute(self):
+		func = mock_mcfunction()
+		func.get_execute_command = lambda (x, y): 'execute_command'
+		
+		block = execute_block(0, [], 'sub')
+		block.compile(func)
+		
+		self.assertEqual(len(func.child_functions), 1)
+		
 if __name__ == '__main__':
     unittest.main()

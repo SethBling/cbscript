@@ -388,24 +388,14 @@ def calc_math(func, expr, assignto = None):
 				else:
 					id2 = func.add_constant(operand2)
 					func.add_command('scoreboard players operation Global {0} {1}= {2} Constant'.format(id1, type, id2))
-			elif right[0] == 'SELVAR':
-				func.register_objective(right[2])
-		
-				func.get_path(right[1], right[2])
-					
-				func.add_command('scoreboard players operation Global {} {}= {} {}'.format(id1, type, right[1], right[2]))
-				
-				return id1
-				
 			else:
-				id2 = calc_math(func, right)
+				id2 = calc_math(func, right, assignto=id1)
 				if id2 == None:
 					print "Unable to compile RHS of binop {0}".format(type)
 					return None
 				
 				func.add_operation('Global', id1, type+'=', id2)
-				if func.is_scratch(id2):
-					func.free_scratch(id2)
+				func.free_scratch(id2)
 			
 			return id1
 			
