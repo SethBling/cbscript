@@ -1,29 +1,31 @@
 from mcfunction import get_execute_command
 
 class execute_base(object):
-	def perform_execute(self, func, type):
+	# Override to force the creation of a sub function, even for a single command
+	def force_sub_function(self):
+		return False
+		
+	# By default, no continuation is added to the end of the sub function
+	def add_continuation_command(self, func_name, exec_func):
+		None
+
+	def perform_execute(self, func):
 		exec_func = func.create_child_function()
 		
 		cmd = get_execute_command(self.exec_items, func, exec_func)
 		if cmd == None:
-			raise Exception('Unable to compile {0} block at line {1}'.format(type.lower(), self.line))
+			raise Exception('Unable to compile {0} block at line {1}'.format(self.display_name(), self.line))
 		
 		exec_func.compile_blocks(self.sub)
 
 		single = exec_func.single_command()
-		if single == None or type == 'While':
+		if single == None or self.force_sub_function():
 			unique = func.get_unique_id()
-			func_name = '{0}{1:03}_ln{2}'.format(type.lower(), unique, self.line)
+			func_name = '{0}{1:03}_ln{2}'.format(self.display_name(), unique, self.line)
 			func.register_function(func_name, exec_func)
 			func.add_command('{0}run function {1}:{2}'.format(cmd, func.namespace, func_name))
 			
-			if type == 'While':
-				dummy_func = func.create_child_function()
-				sub_cmd = get_execute_command(self.exec_items, exec_func, dummy_func)
-				if sub_cmd == None:
-					raise Exception('Unable to compile {0} block at line {1}'.format(type.lower(), self.line))
-
-				exec_func.add_command('{0}run function {1}:{2}'.format(cmd, func.namespace, func_name))
+			self.add_continuation_command(func_name, exec_func)			
 		else:
 			if single.startswith('/'):
 				single = single[1:]

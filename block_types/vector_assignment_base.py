@@ -1,7 +1,7 @@
 from mcfunction import get_variable, set_variable
 
 class vector_assignment_base(object):
-	def perform_vector_assignment(self, func, type):
+	def perform_vector_assignment(self, func):
 		var, op, expr = self.var, self.op, self.expr
 	
 		var_type, var_content = var

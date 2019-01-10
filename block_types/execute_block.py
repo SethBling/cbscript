@@ -7,4 +7,7 @@ class execute_block(execute_base):
 		self.sub = sub
 		
 	def compile(self, func):
-		self.perform_execute(func, 'Execute')
+		self.perform_execute(func)
+		
+	def display_name(self):
+		return 'execute'

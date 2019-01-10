@@ -9,7 +9,7 @@ class vector_assignment_block(vector_assignment_base):
 		self.expr = expr
 		
 	def compile(self, func):
-		self.perform_vector_assignment(func, 'VectorAssignment')
+		self.perform_vector_assignment(func)
 		
 	def compute_assignment(self, func, expr, assignto):
 		component_val_vars = calc_vector_math(func, expr, assignto)

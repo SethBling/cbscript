@@ -9,7 +9,7 @@ class vector_assignment_scalar_block(vector_assignment_base):
 		self.expr = expr
 		
 	def compile(self, func):
-		self.perform_vector_assignment(func, 'VectorAssignmentScalar')
+		self.perform_vector_assignment(func)
 		
 	def compute_assignment(self, func, expr, assignto):
 		val_var = calc_math(func, expr)			
