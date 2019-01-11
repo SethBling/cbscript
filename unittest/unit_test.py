@@ -32,10 +32,12 @@ from block_types.while_block import while_block
 from scalar_expressions.arrayconst_expr import arrayconst_expr
 from scalar_expressions.arrayexpr_expr import arrayexpr_expr
 from scalar_expressions.binop_expr import binop_expr
+from scalar_expressions.create_expr import create_expr
 from scalar_expressions.dot_expr import dot_expr
 from scalar_expressions.func_expr import func_expr
 from scalar_expressions.num_expr import num_expr
 from scalar_expressions.scale_expr import scale_expr
+from scalar_expressions.selector_expr import selector_expr
 from scalar_expressions.selvar_expr import selvar_expr
 from scalar_expressions.unary_expr import unary_expr
 from vector_expressions.sel_vector_var_expr import sel_vector_var_expr
@@ -64,7 +66,7 @@ class test_cbscript(unittest.TestCase):
 		func = mock_mcfunction()
 	
 		func.arrays['test'] = (0, 5)
-		block = array_assignment_block(0, 'test', 'Const', 1, ('NUM', 1))
+		block = array_assignment_block(0, 'test', 'Const', 1, num_expr(1))
 		block.compile(func)
 		
 		block = array_definition_block(0, 'test', '0', '5')
@@ -85,7 +87,7 @@ class test_cbscript(unittest.TestCase):
 		block = execute_block(0, [], [command_block(0, 'test_command')])
 		block.compile(func)
 		
-		block = for_index_block(0, 'test', ('NUM', 0), ('NUM', 5), ('NUM', 2), [command_block(0, 'test_command')])
+		block = for_index_block(0, 'test', num_expr(0), num_expr(5), num_expr(2), [command_block(0, 'test_command')])
 		block.compile(func)
 		
 		block = for_selector_block(0, '@test', '@a', [command_block(0, 'test_command')])
@@ -116,7 +118,7 @@ class test_cbscript(unittest.TestCase):
 		block.compile(func)
 		
 		var = ('Var', ('@s', 'test'))
-		block = scoreboard_assignment_block(0, (var, '+=', ('NUM', 1)))
+		block = scoreboard_assignment_block(0, (var, '+=', num_expr(1)))
 		block.compile(func)
 		
 		block = selector_assignment_block(0, 'test', '@a')
@@ -132,7 +134,7 @@ class test_cbscript(unittest.TestCase):
 		block.compile(func)
 		case1 = ('python', ('test_id', 'range(3, 6)', [command_block(0, 'test_python')]))
 		case2 = ('range', ('1', '2', [command_block(0, 'test_range_1_2')]))
-		block = switch_block(0, ('NUM', 1), [case1, case2])
+		block = switch_block(0, num_expr(1), [case1, case2])
 		block.compile(func)
 		
 		block = tell_block(0, '@a', '{rhi')
@@ -146,11 +148,11 @@ class test_cbscript(unittest.TestCase):
 		block.compile(func)
 		
 		var = ('VAR_ID', 'test')
-		block = vector_assignment_block(0, var, '+=', ('VECTOR_HERE', 1000))
+		block = vector_assignment_block(0, var, '+=', vector_here_expr(1000))
 		block.compile(func)
 		
 		var = ('VAR_ID', 'test')
-		block = vector_assignment_scalar_block(0, var, '+=', ('NUM', 1))
+		block = vector_assignment_scalar_block(0, var, '+=', num_expr(1))
 		block.compile(func)
 		
 		block = while_block(0, [], [command_block(0, 'test_command')])
@@ -225,12 +227,12 @@ class test_cbscript(unittest.TestCase):
 		func = mock_mcfunction()
 		func.arrays['test_array'] = (0, 5)
 		
-		block = array_assignment_block(0, 'test_array', 'Const', 1, ('NUM', 2))
+		block = array_assignment_block(0, 'test_array', 'Const', 1, num_expr(2))
 		block.compile(func)
 		self.assertTrue('scoreboard players set Global test_array1 2' in func.commands)
 		
 		func.arrays['test_array2'] = (0, 10)
-		block = array_assignment_block(0, 'test_array2', 'Expr', ('NUM', 2), ('NUM', 3))
+		block = array_assignment_block(0, 'test_array2', 'Expr', num_expr(2), num_expr(3))
 		block.compile(func)
 		self.assertTrue('scoreboard players set Global test_array2Val 3' in func.commands)
 		self.assertTrue('scoreboard players set Global test_array2Idx 2' in func.commands)
@@ -321,6 +323,14 @@ class test_cbscript(unittest.TestCase):
 		id = expr.compile(func, 'test_id4')
 		self.assertEqual(id, None)
 		
+	def test_create_expr(self):
+		func = mock_mcfunction()
+		
+		expr = create_expr(create_block(0, '@test', ['0', '0', '0']))
+		id = expr.compile(func, 'test_id')
+		
+		self.assertEqual(id, 'test_id')
+		
 	def test_dot_expr(self):
 		func = mock_mcfunction()
 		
@@ -363,7 +373,16 @@ class test_cbscript(unittest.TestCase):
 		
 		self.assertEqual(id, 'test_id')
 		self.assertTrue('scoreboard players set Global test_id 1000' in func.commands)
+	
+	def test_selector_expr(self):
+		func = mock_mcfunction()
+		func.check_single_entity = lambda (x): True
 		
+		expr = selector_expr('@p')
+		id = expr.compile(func, 'test_id')
+		
+		self.assertEqual(id, 'test_id')
+	
 	def test_selvar_expr(self):
 		func = mock_mcfunction()
 		

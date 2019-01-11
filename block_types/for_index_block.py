@@ -1,5 +1,3 @@
-from mcfunction import calc_math
-
 class for_index_block(object):
 	def __init__(self, line, var, fr, to, by, sub):
 		self.line = line
@@ -14,18 +12,18 @@ class for_index_block(object):
 		
 		func.register_objective(var)
 		
-		from_var = calc_math(func, fr, var)
+		from_var = fr.compile(func, var)
 		if from_var != var:
 			func.add_command('scoreboard players operation Global {0} = Global {1}'.format(var, from_var))
 
 		to_scratch = func.get_scratch()
-		to_var = calc_math(func, to, to_scratch)
+		to_var = to.compile(func, to_scratch)
 		if to_var != to_scratch:
 			func.add_command('scoreboard players operation Global {0} = Global {1}'.format(to_scratch, to_var))
 			
 		if by != None:
 			by_scratch = func.get_scratch()
-			by_var = calc_math(func, by, by_scratch)
+			by_var = by.compile(func, by_scratch)
 			if by_var != by_scratch:
 				func.add_command('scoreboard players operation Global {0} = Global {1}'.format(by_scratch, by_var))
 				

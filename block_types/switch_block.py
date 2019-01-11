@@ -1,4 +1,4 @@
-from mcfunction import calc_math, switch_cases, get_line
+from mcfunction import switch_cases, get_line
 import collections
 
 class switch_block(object):
@@ -11,7 +11,7 @@ class switch_block(object):
 		if len(self.cases_raw) == 0:
 			return
 	
-		result = calc_math(func, self.expr)
+		result = self.expr.compile(func, None)
 		if result == None:
 			raise Exception('Unable to compute switch expression at line {}'.format(self.line))
 

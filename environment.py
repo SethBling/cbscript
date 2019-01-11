@@ -47,7 +47,7 @@ class environment(object):
 		
 	def apply_replacements(self, text):
 		for identifier in reversed(sorted(self.dollarid.keys())):
-			text = text.replace('$' + identifier, str(self.dollarid[identifier]))	
+			text = str(text).replace('$' + identifier, str(self.dollarid[identifier]))	
 				
 		return text
 	
@@ -131,7 +131,7 @@ class environment(object):
 	def split_selectors(self, line):
 		fragments = []
 		
-		remaining = line
+		remaining = str(line)
 		while '@' in remaining:
 			parts = remaining.split('@', 1)
 			if len(parts[0]) > 0:

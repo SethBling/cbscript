@@ -158,7 +158,7 @@ class selector_definition(object):
 		self.parts.append((name, value))
 		
 	def single_entity(self):
-		if self.base_name == 's':
+		if self.base_name == 's' or self.base_name == 'p':
 			return True
 		
 		for part in self.parts:

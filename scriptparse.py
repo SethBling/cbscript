@@ -26,6 +26,23 @@ from block_types.title_block import title_block
 from block_types.vector_assignment_block import vector_assignment_block
 from block_types.vector_assignment_scalar_block import vector_assignment_scalar_block
 from block_types.while_block import while_block
+from scalar_expressions.arrayconst_expr import arrayconst_expr
+from scalar_expressions.arrayexpr_expr import arrayexpr_expr
+from scalar_expressions.binop_expr import binop_expr
+from scalar_expressions.create_expr import create_expr
+from scalar_expressions.dot_expr import dot_expr
+from scalar_expressions.func_expr import func_expr
+from scalar_expressions.num_expr import num_expr
+from scalar_expressions.scale_expr import scale_expr
+from scalar_expressions.selector_expr import selector_expr
+from scalar_expressions.selvar_expr import selvar_expr
+from scalar_expressions.unary_expr import unary_expr
+from vector_expressions.sel_vector_var_expr import sel_vector_var_expr
+from vector_expressions.vector_binop_scalar_expr import vector_binop_scalar_expr
+from vector_expressions.vector_binop_vector_expr import vector_binop_vector_expr
+from vector_expressions.vector_expr import vector_expr
+from vector_expressions.vector_here_expr import vector_here_expr
+from vector_expressions.vector_var_expr import vector_var_expr
 from mcfunction import line_numbers
 
 tokens = scriptlex.tokens
@@ -900,19 +917,19 @@ def p_assignment_unary_default(p):
 	'''assignment : variable PLUSPLUS
 				  | variable MINUSMINUS'''
 	op = p[2][0]+'='
-	operand = ('NUM', '1')
+	operand = num_expr(1)
 	p[0] = (p[1], op, operand)
 	line_numbers.append((p[0], p.lineno(1)))
 
 def p_assignment_selector_global(p):
 	'''assignment : variable EQUALS fullselector'''
-	p[0] = (p[1], p[2], ('Selector', p[3]))
+	p[0] = (p[1], p[2], selector_expr(p[3]))
 	line_numbers.append((p[0], p.lineno(1)))
 
 	
 def p_assignment_create(p):
 	'''assignment : variable EQUALS create_block'''
-	p[0] = (p[1], p[2], p[3])
+	p[0] = (p[1], p[2], create_expr(p[3]))
 	line_numbers.append((p[0], p.lineno(1)))
 	
 #### Vector assignment
@@ -962,47 +979,47 @@ def p_expr_binary(p):
 			| expr POWER HEX
 			| expr POWER BINARY'''
 
-	p[0] = ('BINOP',p[2],p[1],p[3])
+	p[0] = binop_expr(p[1], p[2], p[3])
 	line_numbers.append((p[0], p.lineno(1)))
 	
 def p_expr_dot(p):
 	'''expr : vector_expr TIMES vector_expr'''
-	p[0] = ('DOT', p[1], p[3])
+	p[0] = dot_expr(p[1], p[3])
 	line_numbers.append((p[0], p.lineno(1)))
 
 def p_expr_number(p):
 	'''expr : virtualinteger'''
-	p[0] = ('NUM',p[1])
+	p[0] = num_expr(p[1])
 	line_numbers.append((p[0], p.lineno(1)))
 	
 def p_expr_scale(p):
 	'''expr : scale'''
-	p[0] = ('SCALE', None)
+	p[0] = scale_expr()
 	line_numbers.append((p[0], p.lineno(1)))
 
 def p_expr_variable(p):
 	'''expr : ID'''
-	p[0] = ('SELVAR', 'Global', p[1])
+	p[0] = selvar_expr('Global', p[1])
 	line_numbers.append((p[0], p.lineno(1)))
 	
 def p_expr_array_const(p):
 	'''expr : ID LBRACK virtualinteger RBRACK'''
-	p[0] = ('ARRAYCONST', p[1], p[3])
+	p[0] = arrayconst_expr(p[1], p[3])
 	line_numbers.append((p[0], p.lineno(1)))
 	
 def p_expr_array_expr(p):
 	'''expr : ID LBRACK expr RBRACK'''
-	p[0] = ('ARRAYEXPR', p[1], p[3])
+	p[0] = arrayexpr_expr(p[1], p[3])
 	line_numbers.append((p[0], p.lineno(1)))
 	
 def p_expr_selector_variable(p):
 	'''expr : fullselector DOT ID'''
-	p[0] = ('SELVAR', p[1], p[3])
+	p[0] = selvar_expr(p[1], p[3])
 	line_numbers.append((p[0], p.lineno(1)))
 
 def p_expr_function(p):
 	'''expr : function_call'''
-	p[0] = ('FUNC', p[1])
+	p[0] = func_expr(p[1])
 	line_numbers.append((p[0], p.lineno(1)))
 	
 def p_expr_group(p):
@@ -1012,10 +1029,12 @@ def p_expr_group(p):
 
 def p_expr_unary(p):
 	'''expr : MINUS expr %prec UMINUS'''
-	if p[2][0] == 'NUM':
-		p[0] = ('NUM', str(-int(p[2][1])))
-	else:	
-		p[0] = ('UNARY','-',p[2])
+	cv = p[2].const_value()
+	if cv == None:
+		p[0] = unary_expr('-', p[2])
+	else:
+		p[0] = num_expr(str(-int(cv)))
+	
 	line_numbers.append((p[0], p.lineno(1)))
 	
 ### Vector expressions
@@ -1026,23 +1045,23 @@ def p_vector_expr_paren(p):
 
 def p_vector_expr_vector_triplet(p):
 	'''vector_expr : LT expr COMMA expr COMMA expr GT'''
-	p[0] = ('VECTOR', (p[2], p[4], p[6]))
+	p[0] = vector_expr((p[2], p[4], p[6]))
 	line_numbers.append((p[0], p.lineno(1)))
 	
 def p_vector_expr_vector_unit(p):
 	'''vector_expr : LT ID GT'''
-	p[0] = ('VECTOR_VAR', p[2])
+	p[0] = vector_var_expr(p[2])
 	line_numbers.append((p[0], p.lineno(1)))
 	
 def p_vector_expr_selector_vector(p):
 	'''vector_expr : fullselector DOT LT ID GT'''
-	p[0] = ('SEL_VECTOR_VAR', (p[1], p[4]))
+	p[0] = sel_vector_var_expr(p[1], p[4])
 	line_numbers.append((p[0], p.lineno(1)))
 	
 def p_vector_expr_binop_vector(p):
 	'''vector_expr : vector_expr PLUS vector_expr
 				   | vector_expr MINUS vector_expr'''
-	p[0] = ('VECTOR_BINOP_VECTOR', (p[1], p[2], p[3]))
+	p[0] = vector_binop_vector_expr(p[1], p[2], p[3])
 	line_numbers.append((p[0], p.lineno(1)))
 	
 def p_vector_expr_binop_scalar(p):
@@ -1051,28 +1070,28 @@ def p_vector_expr_binop_scalar(p):
 				   | vector_expr TIMES expr
 				   | vector_expr DIVIDE expr
 				   | vector_expr MOD expr'''
-	p[0] = ('VECTOR_BINOP_SCALAR', (p[1], p[2], p[3]))
+	p[0] = vector_binop_scalar_expr(p[1], p[2], p[3])
 	line_numbers.append((p[0], p.lineno(1)))
 	
 def p_vector_expr_binop_reversed(p):
 	'''vector_expr : expr PLUS vector_expr
 				   | expr TIMES vector_expr'''
-	p[0] = ('VECTOR_BINOP_SCALAR', (p[3], p[2], p[1]))
+	p[0] = vector_binop_scalar_expr(p[3], p[2], p[1])
 	line_numbers.append((p[0], p.lineno(1)))
 	
 def p_vector_expr_negative(p):
 	'''vector_expr : MINUS vector_expr'''
-	p[0] = ('VECTOR_BINOP_SCALAR', (p[2], '*', ('NUM', '-1')))
+	p[0] = vector_binop_scalar_expr(p[2], '*', num_expr(-1))
 	line_numbers.append((p[0], p.lineno(1)))
 	
 def p_vector_expr_here(p):
 	'''vector_expr : here'''
-	p[0] = ('VECTOR_HERE', None)
+	p[0] = vector_here_expr(None)
 	line_numbers.append((p[0], p.lineno(1)))
 
 def p_vector_expr_here_scale(p):
 	'''vector_expr : here LPAREN virtualnumber RPAREN'''
-	p[0] = ('VECTOR_HERE', p[3])
+	p[0] = vector_here_expr(p[3])
 	line_numbers.append((p[0], p.lineno(1)))
 	
 #### Function call

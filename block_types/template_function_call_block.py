@@ -1,4 +1,4 @@
-from mcfunction import calc_math, mcfunction, isNumber
+from mcfunction import mcfunction, isNumber
 
 class template_function_call_block(object):
 	def __init__(self, line, function, template_args, args):
@@ -29,11 +29,14 @@ class template_function_call_block(object):
 		
 		# Calculate function arguments
 		for i in range(len(args)):
-			id = calc_math(args[i])
+			assignto = 'Param{}'.format(i)
+			id = args[i].compile(func, assignto)
 			if id == None:
 				raise Exception('Unable to compute argument "{}" for template function "{}" at line {}'.format(params[i], function, self.line))
 
-			func.add_command('scoreboard players operation Global Param{} = Global {}'.format(i, id))
+			if id != assignto:
+				func.add_command('scoreboard players operation Global {} = Global {}'.format(i, id))
+				
 			func.free_scratch(id)
 		
 		# Compile the function if it doens't exist yet
