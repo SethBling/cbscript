@@ -2,7 +2,7 @@ from vector_binop_base import vector_binop_base
 
 class vector_binop_vector_expr(vector_binop_base):
 	def calc_op(self, func, return_components):
-		right_component_vars = calc_vector_math(func, self.rhs)
+		right_component_vars = self.rhs.compile(func, None)
 		
 		if right_component_vars == None:
 			return None

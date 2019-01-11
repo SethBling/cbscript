@@ -52,7 +52,7 @@ class mock_mcfunction(object):
 		None
 
 	def get_vector_path(self, selector, var, assignto):
-		return True
+		return False
 			
 	def set_vector_path(self, selector, var, values):
 		return True

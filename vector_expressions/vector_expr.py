@@ -5,7 +5,7 @@ class vector_expr(object):
 	def compile(self, func, assignto):
 		vars = []
 		for i in range(3):
-			var = calc_math(func, self.exprs[i], None if assignto == None else assignto[i])
+			var = self.exprs[i].compile(func, None if assignto == None else assignto[i])
 				
 			if var == None:
 				return None

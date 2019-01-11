@@ -382,7 +382,61 @@ class test_cbscript(unittest.TestCase):
 		self.assertEqual(id, 'test_id')
 		self.assertTrue('scoreboard players set Global test_id 5' in func.commands)
 		self.assertTrue('scoreboard players operation Global test_id *= minus Constant' in func.commands)
+		
+	def test_sel_vector_var_expr(self):
+		func = mock_mcfunction()
+		
+		expr = sel_vector_var_expr('@test', 'test_var')
+		ids = expr.compile(func, ['x', 'y', 'z'])
+		
+		self.assertEqual(ids, ['x', 'y', 'z'])
+		for left, right in [('x', 0), ('y', 1), ('z', 2)]:
+			self.assertTrue('scoreboard players operation Global {} = @test _test_var_{}'.format(left, right) in func.commands)
+			
+	def test_vector_binop_scalar_expr(self):
+		func = mock_mcfunction()
+		
+		expr = vector_binop_scalar_expr(vector_var_expr('test_vector'), '*', num_expr(2))
+		ids = expr.compile(func, ['x', 'y', 'z'])
+		
+		self.assertEqual(ids, ['x', 'y', 'z'])
+		self.assertEqual(func.commands, ['scoreboard players operation Global x = Global _test_vector_0', 'scoreboard players operation Global y = Global _test_vector_1', 'scoreboard players operation Global z = Global _test_vector_2', 'scoreboard players set Global test_scratch 2', 'scoreboard players operation Global x *= Global test_scratch', 'scoreboard players operation Global y *= Global test_scratch', 'scoreboard players operation Global z *= Global test_scratch'])
+		
+	def test_vector_binop_vector_expr(self):
+		func = mock_mcfunction()
+		
+		expr = vector_binop_vector_expr(vector_var_expr('test_vector1'), '+', vector_var_expr('test_vector2'))
+		ids = expr.compile(func, ['x', 'y', 'z'])
+		
+		self.assertEqual(ids, ['x', 'y', 'z'])
+		self.assertEqual(func.commands, ['scoreboard players operation Global x = Global _test_vector1_0', 'scoreboard players operation Global y = Global _test_vector1_1', 'scoreboard players operation Global z = Global _test_vector1_2', 'scoreboard players operation Global x += Global _test_vector2_0', 'scoreboard players operation Global y += Global _test_vector2_1', 'scoreboard players operation Global z += Global _test_vector2_2'])
 
+	def test_vector_expr(self):
+		func = mock_mcfunction()
+		
+		expr = vector_expr([num_expr(1), num_expr(2), num_expr(3)])
+		ids = expr.compile(func, ['x', 'y', 'z'])
+		
+		self.assertEqual(ids, ['x', 'y', 'z'])
+		for left, right in [('x', 1), ('y', 2), ('z', 3)]:
+			self.assertTrue('scoreboard players set Global {} {}'.format(left, right) in func.commands)
+			
+	def test_vector_here_expr(self):
+		func = mock_mcfunction()
+		
+		expr = vector_here_expr(100)
+		ids = expr.compile(func, ['x', 'y', 'z'])
+		
+		self.assertEqual(ids, ['x', 'y', 'z'])
+		self.assertEqual(func.commands, ['scoreboard players add @e _age 1', 'summon area_effect_cloud', 'scoreboard players add @e _age 1', 'execute store result score Global x run data get entity @e[_age==1,limit=1] Pos[0] 100', 'execute store result score Global y run data get entity @e[_age==1,limit=1] Pos[1] 100', 'execute store result score Global z run data get entity @e[_age==1,limit=1] Pos[2] 100', '/kill @e[_age==1]'])
+		
+	def test_vector_var_expr(self):
+		func = mock_mcfunction()
+		
+		expr = vector_var_expr('test_vector')
+		ids = expr.compile(func, ['x', 'y', 'z'])
+		
+		self.assertEqual(ids, ['_test_vector_0', '_test_vector_1', '_test_vector_2'])
 		
 if __name__ == '__main__':
     unittest.main()
