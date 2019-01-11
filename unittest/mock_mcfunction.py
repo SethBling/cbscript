@@ -151,3 +151,6 @@ class mock_mcfunction(object):
 		
 	def get_temp_var(self):
 		return 'test_temp_var'
+		
+	def free_temp_var(self, var):
+		None

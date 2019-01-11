@@ -344,9 +344,19 @@ class test_cbscript(unittest.TestCase):
 		func = mock_mcfunction()
 		
 		expr = func_expr(function_call_block(0, 'sin', [num_expr(1)]))
-		#id = expr.compile(func, 'test_id')
+		id = expr.compile(func, 'test_id')
 		
-		#self.assertEqual(id, 'test_id')
+		self.assertEqual(id, 'test_id')
+		
+		expr = func_expr(function_call_block(0, 'cos', [num_expr(1)]))
+		id = expr.compile(func, 'test_id')
+		
+		self.assertEqual(id, 'test_id')
+		
+		expr = func_expr(function_call_block(0, 'sqrt', [num_expr(1)]))
+		id = expr.compile(func, 'test_id')
+		
+		self.assertEqual(id, 'test_scratch')
 		
 		expr = func_expr(function_call_block(0, 'test_function', []))
 		id = expr.compile(func, 'test_id')
@@ -358,7 +368,7 @@ class test_cbscript(unittest.TestCase):
 		func = mock_mcfunction()
 		
 		expr = num_expr(5)
-		self.assertEqual(expr.const_value(func), 5)
+		self.assertEqual(int(expr.const_value(func)), 5)
 		id = expr.compile(func, 'test_id')
 		
 		self.assertEqual(id, 'test_id')
