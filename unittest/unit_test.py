@@ -448,6 +448,33 @@ class test_cbscript(unittest.TestCase):
 		
 		# TODO: verify the method was created
 		
+	def test_compile_switch(self):
+		func = mock_mcfunction()
+		
+		case1 = ('range',(1, 3, []))
+		case2 = ('python', ('test_id', 'range(4, 6)', []))
+		block = switch_block(0, num_expr(2), [case1, case2])
+		block.compile(func)
+		
+		self.assertEqual(len(func.child_functions), 3)
+		self.assertEqual(func.commands, [
+			'scoreboard players set Global test_scratch1 2',
+			'execute if score Global test_scratch1 matches 1..3 run function test_namespace:case1-3_001_lnUnknown',
+			'execute if score Global test_scratch1 matches 4..4 run function test_namespace:case4_001_lnUnknown',
+			'execute if score Global test_scratch1 matches 5..5 run function test_namespace:case5_001_lnUnknown'
+		])
+		self.assertTrue('case1-3_001_lnUnknown' in func.functions)
+		self.assertTrue('case4_001_lnUnknown' in func.functions)
+		self.assertTrue('case5_001_lnUnknown' in func.functions)
+		
+	def test_compile_tell(self):
+		func = mock_mcfunction()
+		
+		block = tell_block(0, '@a', '{rhi')
+		block.compile(func)
+		
+		self.assertEqual(func.commands, ['/tellraw @a ["",{"text":"hi","color":"dark_red"}]'])
+		
 	def test_arrayconst_expr(self):
 		func = mock_mcfunction()
 		func.arrays['test_array'] = (0, 5)

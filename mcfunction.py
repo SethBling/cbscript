@@ -45,8 +45,7 @@ def switch_cases(func, var, cases, switch_func_name = 'switch', case_func_name =
 			line = cases[imin][3]
 			
 			sub_cases = cases[imin:imax]
-			sub_env = func.clone_environment()
-			case_func = mcfunction(sub_env)
+			case_func = func.create_child_function()
 			
 			if len(sub_cases) == 1:
 				vmin, vmax, sub, line, dollarid = sub_cases[0]
