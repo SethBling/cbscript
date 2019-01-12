@@ -57,8 +57,11 @@ class template_function_call_block(object):
 			
 			# Compile the new function
 			new_func = mcfunction(new_env, True, params)
-			if not new_func.compile_blocks(sub):
-				return False
+			try:
+				new_func.compile_blocks(sub)
+			except Exception as e:
+				print(e.message)
+				raise Exception('Unable to compile template function contents at line {}'.format(self.line))
 			
 			# Register the new function
 			func.register_function(func_name, new_func)

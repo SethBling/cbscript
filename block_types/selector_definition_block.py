@@ -25,7 +25,7 @@ class selector_definition_block(object):
 				selector.vector_paths[vector_id] = (path, data_type, scale)
 			elif type == 'Method':
 				sub_env = func.clone_environment()
-				sub_env.update_self_selector('@'+id)
+				sub_env.update_self_selector('@'+self.id)
 				compile_section(val, sub_env)
 			else:
 				raise ValueError('Unknown selector item type "{0}" in selector definition at line {1}'.format(type, get_line(line)))

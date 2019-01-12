@@ -14,8 +14,14 @@ class python_if_block(object):
 			raise Exception('Could not evaluate "{0}" in "if" block at line {1}'.format(self.code, self.line))
 	
 		if condition:
-			if not func.compile_blocks(self.sub):
+			try:
+				func.compile_blocks(self.sub)
+			except Exception as e:
+				print(e.message)
 				raise Exception('Unable to compile true block for python if block at line {}'.format(self.line))
-		else:
-			if not func.compile_blocks(self.else_sub):
+		elif self.else_sub != None:
+			try:
+				func.compile_blocks(self.else_sub)
+			except Excetion as e:
+				print(e.message)
 				raise Exception('Unable to compile false block for python if block at line {}'.format(self.line))

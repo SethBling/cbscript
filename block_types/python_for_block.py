@@ -20,4 +20,8 @@ class python_for_block(object):
 
 		for v in set:
 			func.set_dollarid(self.id, v)
-			func.compile_blocks(self.sub)
+			try:
+				func.compile_blocks(self.sub)
+			except Exception as e:
+				print(e.message)
+				raise Exception('Unable to compile python for block contents at line {}'.format(self.line))

@@ -13,14 +13,17 @@ class for_selector_block(object):
 		combined_selector = func.get_combined_selector(self.selector)
 		combined_selector.scores_min[scratch_id] = 1
 		combined_selector.set_part('limit', '1')
-		exec_func.selectors[id] = combined_selector
+		exec_func.selectors[self.id] = combined_selector
 		exec_func.update_self_selector(self.selector)
 		
 		func.add_command('scoreboard players set {0} {1} 0'.format(self.selector, scratch_id))
 		exec_func.add_command('scoreboard players set @s {0} 1'.format(scratch_id))
 		
-		if not exec_func.compile_blocks(self.sub):
-			raise Exception('Unable to compile "for" block at line {}'.format(self.line))
+		try:
+			exec_func.compile_blocks(self.sub)
+		except Exception as e:
+			print(e.message)
+			raise Exception('Unable to compile for block contents at line {}'.format(self.line))
 			
 		exec_func.add_command('scoreboard players set @s {0} 0'.format(scratch_id))
 		

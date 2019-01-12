@@ -1,11 +1,14 @@
 from scalar_expression_base import scalar_expression_base
 from num_expr import num_expr
+from mcfunction import get_modifiable_id
 
 class func_expr(scalar_expression_base):
 	def __init__(self, function_call):
 		self.function_call = function_call
 	
 	def compile(self, func, assignto):
+		import scriptparse
+		
 		efunc = self.function_call.dest
 		args = self.function_call.args
 		
@@ -28,7 +31,8 @@ class func_expr(scalar_expression_base):
 			for iteration in xrange(15):
 				newId = func.get_scratch()
 				func.add_command('scoreboard players operation Global {0} = Global {1}'.format(newId, id))
-				guess = calc_math(func, scriptparse.parse("({0}/{1}+{1})/2".format(newId, guess))[1])
+				expr = scriptparse.parse("({0}/{1}+{1})/2".format(newId, guess))[1]
+				guess = expr.compile(func, None)
 				if guess == None:
 					print 'Unable to compile guess iteration for sqrt algorithm'
 					return None
@@ -40,7 +44,7 @@ class func_expr(scalar_expression_base):
 				print "abs takes exactly 1 argument, received: {0}".format(args)
 				return None
 
-			id = calc_math(func, args[0], assignto=assignto)
+			id = args[0].compile(func, assignto)
 			if id == None:
 				print 'Unable to compile argument for abs function'
 				return None
@@ -130,9 +134,11 @@ class func_expr(scalar_expression_base):
 				
 			moddedId2 = func.get_temp_var()
 			if efunc == 'sin':
-				modret = calc_math(func, scriptparse.parse("(({0}%360)+360)%360".format(id))[1], assignto=moddedId2)
+				expr = scriptparse.parse("(({0}%360)+360)%360".format(id))[1]
 			else:
-				modret = calc_math(func, scriptparse.parse("(({0}%360)+450)%360".format(id))[1], assignto=moddedId2)
+				expr = scriptparse.parse("(({0}%360)+450)%360".format(id))[1]
+			
+			modret = expr.compile(func, moddedId2)
 			if modret == None:
 				print 'Unable to compile modulus math for {0} function'.format(efunc)
 				return None
@@ -146,8 +152,8 @@ class func_expr(scalar_expression_base):
 			c180 = func.add_constant(180)
 			func.add_command("scoreboard players operation Global {0} %= {1} Constant".format(modId, c180))
 			
-			parsed = scriptparse.parse("4000*{0}*(180-{0})/(40500-{0}*(180-{0}))".format(modId))
-			retId = calc_math(func, parsed[1], assignto=assignto)
+			expr = scriptparse.parse("4000*{0}*(180-{0})/(40500-{0}*(180-{0}))".format(modId))[1]
+			retId = expr.compile(func, assignto)
 			if retId == None:
 				print 'Unable to compile estimator for {0} function'.format(efunc)
 				return None

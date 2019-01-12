@@ -16,7 +16,11 @@ class execute_base(object):
 		if cmd == None:
 			raise Exception('Unable to compile {0} block at line {1}'.format(self.display_name(), self.line))
 		
-		exec_func.compile_blocks(self.sub)
+		try:
+			exec_func.compile_blocks(self.sub)
+		except Exception as e:
+			print(e.message)
+			raise Exception('Unable to compile {} block contents at line {}'.format(self.display_name(), self.line))
 
 		single = exec_func.single_command()
 		if single == None or self.force_sub_function():

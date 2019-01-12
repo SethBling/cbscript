@@ -17,6 +17,11 @@ class mock_mcfunction(object):
 		self.created = []
 		self.compiled_blocks = []
 		self.operations = []
+		self.scratch = 0
+		self.cloned_environments = []
+		self.environment_pushes = 0
+		self.environment_pops = 0
+		self.constants = {}
 		
 	def add_operation(self, selector, id1, operation, id2):
 		self.operations.append((selector, id1, operation, id2))
@@ -78,7 +83,8 @@ class mock_mcfunction(object):
 	scale = property(get_scale, set_scale)
 	
 	def get_scratch(self):
-		return 'test_scratch'
+		self.scratch += 1
+		return 'test_scratch{}'.format(self.scratch)
 		
 	def free_scratch(self, id):
 		None
@@ -87,6 +93,7 @@ class mock_mcfunction(object):
 		return text
 		
 	def add_constant(self, val):
+		self.constants[val] = True
 		return 'test_constant'
 		
 	def allocate_rand(self, val):
@@ -111,7 +118,9 @@ class mock_mcfunction(object):
 		return {}
 		
 	def clone_environment(self):
-		return mock_environment()
+		env = mock_environment()
+		self.cloned_environments.append(env)
+		return env
 		
 	def get_combined_selector(self, selector):
 		return mock_selector_definition()
@@ -120,15 +129,16 @@ class mock_mcfunction(object):
 		self.dollarid[id] = val
 		
 	def set_atid(self, id, fullselector):
-		self.atid[id] = fullselector
+		self.selectors[id] = mock_selector_definition()
+		self.selectors[id].selector = fullselector
 		
-		return mock_selector_definition()
+		return self.selectors[id]
 		
 	def push_environment(self, new_env):
-		None
+		self.environment_pushes += 1
 		
 	def pop_environment(self):
-		None		
+		self.environment_pops += 1
 		
 	def run_create(self, atid, relcoords):
 		self.created.append((atid, relcoords))

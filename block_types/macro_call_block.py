@@ -12,8 +12,7 @@ class macro_call_block(object):
 		params, sub = func.macros[self.macro]
 			
 		if len(self.args) != len(params):
-			print('Tried to call Macro "{0}" with {1} arguments at line {3}, but it requires {2}'.format(macro, len(args), len(params), get_line(line)))
-			return False
+			raise SyntaxError('Tried to call Macro "{0}" with {1} arguments at line {3}, but it requires {2}'.format(macro, len(args), len(params), get_line(line)))
 			
 		new_env = func.clone_environment()
 			
@@ -29,6 +28,11 @@ class macro_call_block(object):
 				print('Unknown macro parameter "{}" in macro call at line {}'.format(self.args[p], self.line))
 				
 		func.push_environment(new_env)
-		if not func.compile_blocks(sub):
-			raise Exception('Unable to compile macro call at line {}'.format(self.line))
+		
+		try:
+			func.compile_blocks(sub)
+		except exception as e:
+			print(e.message)
+			raise Exception('Unable to compile macro call contents at line {}'.format(self.line))
+			
 		func.pop_environment()

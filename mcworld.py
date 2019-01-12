@@ -41,7 +41,7 @@ class mcworld(object):
 				blocks = block_tags[tag]
 				
 				tag_filename = os.path.join(block_tag_dir, '{0}.json'.format(tag))
-				self.zip.writestr(tag_filename, json.dump({'values':['minecraft:{0}'.format(block) for block in blocks]}, indent=4))
+				self.zip.writestr(tag_filename, json.dumps({'values':['minecraft:{0}'.format(block) for block in blocks]}, indent=4))
 		
 	def write_mcmeta(self, desc):
 		mcmeta_file = 'pack.mcmeta'

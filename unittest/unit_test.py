@@ -158,8 +158,31 @@ class test_cbscript(unittest.TestCase):
 		block = while_block(0, [], [command_block(0, 'test_command')])
 		block.compile(func)
 		
+	def test_compile_vector_assignment_scalar(self):
+		func = mock_mcfunction()
+		
+		block = vector_assignment_scalar_block(0, ('VAR_ID', 'test_vector'), '*=', num_expr(2))
+		block.compile(func)
+		
+		self.assertEqual(len(func.commands), 4)
+		self.assertEqual(func.commands[0], 'scoreboard players set Global test_scratch1 2')
+		for i in range(3):
+			self.assertEqual(func.commands[i+1], 'scoreboard players operation Global _test_vector_{} *= Global test_scratch1'.format(i))
+	
+	def test_compile_vector_assignment(self):
+		func = mock_mcfunction()
+		
+		block = vector_assignment_block(0, ('VAR_ID', 'test_vector'), '+=', vector_expr([num_expr(2), num_expr(3), num_expr(4)]))
+		block.compile(func)
+		
+		self.assertEqual(len(func.commands), 6)
+		for i in range(3):
+			self.assertEqual(func.commands[i], 'scoreboard players set Global test_scratch{} {}'.format(i+1, i+2))
+			self.assertEqual(func.commands[i+3], 'scoreboard players operation Global _test_vector_{} += Global test_scratch{}'.format(i, i+1))
+	
 	def test_compile_comment(self):
 		func = mock_mcfunction()
+		
 		block = comment_block(0, '#test')
 		block.compile(func)
 		self.assertTrue('#test' in func.commands)
@@ -221,7 +244,7 @@ class test_cbscript(unittest.TestCase):
 		block = selector_assignment_block(0, 'test', '@s[x=1]')
 		block.compile(func)
 		
-		self.assertEqual(func.atid['test'], '@s[x=1]')
+		self.assertEqual(func.selectors['test'].selector, '@s[x=1]')
 		
 	def test_compile_array_assignment(self):
 		func = mock_mcfunction()
@@ -254,11 +277,11 @@ class test_cbscript(unittest.TestCase):
 	def test_compile_block_tag(self):
 		func = mock_mcfunction()
 		
-		block = block_tag_block(0, 'test_block_tag', ['test_block'])
+		block = block_tag_block(0, 'test_block_tag', ['test_block', 'test_block2'])
 		block.compile(func)
 		
 		self.assertTrue('test_block_tag' in func.block_tags)
-		self.assertTrue(func.block_tags['test_block_tag'] == ['test_block'])
+		self.assertTrue(func.block_tags['test_block_tag'] == ['test_block', 'test_block2'])
 		
 	def test_compile_create(self):
 		func = mock_mcfunction()
@@ -277,7 +300,155 @@ class test_cbscript(unittest.TestCase):
 		
 		self.assertEqual(len(func.child_functions), 1)
 		
-	def test_compile_arrayconst(self):
+	def test_compile_for_selector(self):
+		func = mock_mcfunction()
+		
+		block = for_selector_block(0, 'test', '@a', command_block(1, 'test_command'))
+		block.compile(func)
+		
+		self.assertEqual(len(func.child_functions), 1)
+		self.assertTrue('test' in func.child_functions[0].selectors)
+		
+	def test_compile_for_index(self):
+		func = mock_mcfunction()
+		
+		block = for_index_block(0, 'test_idx', num_expr(1), num_expr(5), num_expr(2), [])
+		block.compile(func)
+		
+		self.assertEqual(func.commands, [
+			'scoreboard players set Global test_idx 1',
+			'scoreboard players set Global test_scratch1 5',
+			'scoreboard players set Global test_scratch2 2',
+			'execute if score Global test_scratch2 matches ..-1 if score Global test_idx >= Global test_scratch1 run function test_namespace:for001_ln0',
+			'execute if score Global test_scratch2 matches 1.. if score Global test_idx <= Global test_scratch1 run function test_namespace:for001_ln0'
+		])
+		
+		self.assertEqual(len(func.child_functions), 1)
+		self.assertEqual(func.child_functions[0].commands, [
+			'scoreboard players operation Global test_idx += Global test_scratch2',
+			'execute if score Global test_scratch2 matches ..-1 if score Global test_idx >= Global test_scratch1 run function test_namespace:for001_ln0',
+			'execute if score Global test_scratch2 matches 1.. if score Global test_idx <= Global test_scratch1 run function test_namespace:for001_ln0'
+		])
+		
+	def test_compile_function_call(self):
+		func = mock_mcfunction()
+		
+		block = function_call_block(0, 'test_function', [num_expr(1)])
+		block.compile(func)
+		
+		self.assertEqual(func.commands, [
+			'scoreboard players set Global test_scratch1 1',
+			'function test_namespace:test_function'
+		])
+		self.assertEqual(func.operations, [('Global', 'Param0', '=', 'test_scratch1')])
+		
+	def test_compile_macro_call(self):
+		func = mock_mcfunction()
+		macro = (['test_param'],[])
+		func.macros['test_macro'] = macro
+		
+		block = macro_call_block(0, 'test_macro', ['10'])
+		block.compile(func)
+		
+		self.assertEqual(len(func.child_functions), 0)
+		self.assertEqual(len(func.cloned_environments), 1)
+		self.assertTrue('test_param' in func.cloned_environments[0].dollarid)
+		self.assertEqual(func.cloned_environments[0].dollarid['test_param'], 10)
+		
+		self.assertEqual(func.environment_pushes, 1)
+		self.assertEqual(func.environment_pops, 1)
+		
+	def test_compile_method_call(self):
+		func = mock_mcfunction()
+		
+		block = method_call_block(0, '@test_selector', 'test_method', [num_expr(1)])
+		block.compile(func)
+		
+		self.assertEqual(func.commands, [
+			'scoreboard players set Global test_scratch1 1',
+			'execute as @test_selector run function test_namespace:test_method'
+		])
+		self.assertEqual(func.operations, [('Global', 'Param0', '=', 'test_scratch1')])
+		
+	def test_compile_python_if(self):
+		func = mock_mcfunction()
+		
+		block = python_if_block(0, 'True', [1], [2])
+		block.compile(func)
+		
+		self.assertTrue([1] in func.compiled_blocks)
+		
+		func = mock_mcfunction()
+		
+		block = python_if_block(0, 'False', [1], [2])
+		block.compile(func)
+		
+		self.assertTrue([2] in func.compiled_blocks)
+		
+		func = mock_mcfunction()
+		
+		block = python_if_block(0, 'True', [1], None)
+		block.compile(func)
+		
+		self.assertTrue([1] in func.compiled_blocks)
+		
+		func = mock_mcfunction()
+		
+		block = python_if_block(0, 'False', [1], None)
+		block.compile(func)
+		
+		self.assertEqual(len(func.compiled_blocks), 0)
+		
+	def test_compile_scoreboard_assignment(self):
+		func = mock_mcfunction()
+		
+		var = ('Var', ('Global', 'test_var'))
+		block = scoreboard_assignment_block(0, (var, '+=', num_expr(1)))
+		block.compile(func)
+		
+		self.assertEqual(func.commands, ['/scoreboard players add Global test_var 1'])
+		
+		func = mock_mcfunction()
+		
+		block = scoreboard_assignment_block(0, (var, '=', num_expr(1)))
+		block.compile(func)
+		
+		self.assertEqual(func.commands, ['/scoreboard players set Global test_var 1'])
+		
+		func = mock_mcfunction()
+		
+		block = scoreboard_assignment_block(0, (var, '*=', num_expr(1)))
+		block.compile(func)
+		
+		self.assertEqual(func.commands, ['/scoreboard players operation Global test_var *= test_constant Constant'])
+		self.assertTrue(1 in func.constants)
+		
+	def test_compile_selector_definition(self):
+		func = mock_mcfunction()
+		
+		items = [
+			('Tag', '{}'),
+			('Path', ('test_path', 'path.to.data', 'float', 100)),
+			('VectorPath', ('test_vector_path', 'path.to.vector', 'int', 200)),
+			('Method', ('function', 'test_method', [], [], [])),
+		]
+		block = selector_definition_block(0, 'test_selector', '@a', items)
+		block.compile(func)
+		
+		self.assertTrue('test_selector' in func.selectors)
+
+		selector = func.selectors['test_selector']
+		self.assertEqual(selector.selector, '@a')
+
+		self.assertTrue('test_path' in selector.paths)
+		self.assertEqual(selector.paths['test_path'], ('path.to.data', 'float', 100))
+
+		self.assertTrue('test_vector_path' in selector.vector_paths)
+		self.assertEqual(selector.vector_paths['test_vector_path'], ('path.to.vector', 'int', 200))
+		
+		# TODO: verify the method was created
+		
+	def test_arrayconst_expr(self):
 		func = mock_mcfunction()
 		func.arrays['test_array'] = (0, 5)
 		
@@ -286,7 +457,7 @@ class test_cbscript(unittest.TestCase):
 		
 		self.assertEqual(id, 'test_array1')
 		
-	def test_compile_arrayexpr_expr(self):
+	def test_arrayexpr_expr(self):
 		func = mock_mcfunction()
 		func.arrays['test_array'] = (0, 5)
 		
@@ -295,7 +466,7 @@ class test_cbscript(unittest.TestCase):
 		
 		self.assertEqual(id, 'test_arrayVal')
 		
-	def test_compile_binop_expr(self):
+	def test_binop_expr(self):
 		func = mock_mcfunction()
 		
 		expr = binop_expr(num_expr(3), '+', num_expr(4))
@@ -315,9 +486,9 @@ class test_cbscript(unittest.TestCase):
 		expr = binop_expr(num_expr(5), '^', num_expr(2))
 		id = expr.compile(func, 'test_id3')
 		
-		self.assertEqual(id, 'test_scratch')
-		self.assertTrue(('Global', 'test_scratch', '=', 'test_id3') in func.operations)
-		self.assertTrue(('Global', 'test_scratch', '*=', 'test_id3') in func.operations)
+		self.assertEqual(id, 'test_scratch1')
+		self.assertTrue(('Global', 'test_scratch1', '=', 'test_id3') in func.operations)
+		self.assertTrue(('Global', 'test_scratch1', '*=', 'test_id3') in func.operations)
 		
 		expr = binop_expr(num_expr(5), '^', selvar_expr('Global', 'test_var'))
 		id = expr.compile(func, 'test_id4')
@@ -330,6 +501,13 @@ class test_cbscript(unittest.TestCase):
 		id = expr.compile(func, 'test_id')
 		
 		self.assertEqual(id, 'test_id')
+		self.assertEqual(func.commands, [
+			'scoreboard players add @e _age 1',
+			'scoreboard players add @e _age 1',
+			'scoreboard players add Global _unique 1',
+			'scoreboard players operation @@test[_age==1] _id = Global _unique',
+			'scoreboard players operation Global test_id = Global _unique'])
+		self.assertEqual(func.created, [('@test', ['0', '0', '0'])])
 		
 	def test_dot_expr(self):
 		func = mock_mcfunction()
@@ -337,7 +515,7 @@ class test_cbscript(unittest.TestCase):
 		expr = dot_expr(vector_var_expr('vec1'), vector_var_expr('vec2'))
 		id = expr.compile(func, 'test_id5')
 		
-		self.assertEqual(id, 'test_scratch')
+		self.assertEqual(id, 'test_scratch1')
 		self.assertEqual(len(func.commands), 8)
 		
 	def test_func_expr(self):
@@ -348,15 +526,21 @@ class test_cbscript(unittest.TestCase):
 		
 		self.assertEqual(id, 'test_id')
 		
+		func = mock_mcfunction()
+		
 		expr = func_expr(function_call_block(0, 'cos', [num_expr(1)]))
 		id = expr.compile(func, 'test_id')
 		
 		self.assertEqual(id, 'test_id')
 		
+		func = mock_mcfunction()
+		
 		expr = func_expr(function_call_block(0, 'sqrt', [num_expr(1)]))
 		id = expr.compile(func, 'test_id')
 		
-		self.assertEqual(id, 'test_scratch')
+		self.assertEqual(id, 'test_scratch62')
+		
+		func = mock_mcfunction()
 		
 		expr = func_expr(function_call_block(0, 'test_function', []))
 		id = expr.compile(func, 'test_id')
@@ -392,6 +576,11 @@ class test_cbscript(unittest.TestCase):
 		id = expr.compile(func, 'test_id')
 		
 		self.assertEqual(id, 'test_id')
+		self.assertEqual(func.commands, [
+			'scoreboard players add Global _unique 1',
+			'execute unless score @p _id matches 0.. run scoreboard players operation @p _id = Global _unique',
+			'scoreboard players operation Global test_id = @p _id'
+		])
 	
 	def test_selvar_expr(self):
 		func = mock_mcfunction()
@@ -429,7 +618,15 @@ class test_cbscript(unittest.TestCase):
 		ids = expr.compile(func, ['x', 'y', 'z'])
 		
 		self.assertEqual(ids, ['x', 'y', 'z'])
-		self.assertEqual(func.commands, ['scoreboard players operation Global x = Global _test_vector_0', 'scoreboard players operation Global y = Global _test_vector_1', 'scoreboard players operation Global z = Global _test_vector_2', 'scoreboard players set Global test_scratch 2', 'scoreboard players operation Global x *= Global test_scratch', 'scoreboard players operation Global y *= Global test_scratch', 'scoreboard players operation Global z *= Global test_scratch'])
+		self.assertEqual(func.commands, [
+			'scoreboard players operation Global x = Global _test_vector_0',
+			'scoreboard players operation Global y = Global _test_vector_1',
+			'scoreboard players operation Global z = Global _test_vector_2',
+			'scoreboard players set Global test_scratch1 2',
+			'scoreboard players operation Global x *= Global test_scratch1',
+			'scoreboard players operation Global y *= Global test_scratch1',
+			'scoreboard players operation Global z *= Global test_scratch1'
+		])
 		
 	def test_vector_binop_vector_expr(self):
 		func = mock_mcfunction()
@@ -438,7 +635,14 @@ class test_cbscript(unittest.TestCase):
 		ids = expr.compile(func, ['x', 'y', 'z'])
 		
 		self.assertEqual(ids, ['x', 'y', 'z'])
-		self.assertEqual(func.commands, ['scoreboard players operation Global x = Global _test_vector1_0', 'scoreboard players operation Global y = Global _test_vector1_1', 'scoreboard players operation Global z = Global _test_vector1_2', 'scoreboard players operation Global x += Global _test_vector2_0', 'scoreboard players operation Global y += Global _test_vector2_1', 'scoreboard players operation Global z += Global _test_vector2_2'])
+		self.assertEqual(func.commands, [
+			'scoreboard players operation Global x = Global _test_vector1_0',
+			'scoreboard players operation Global y = Global _test_vector1_1',
+			'scoreboard players operation Global z = Global _test_vector1_2',
+			'scoreboard players operation Global x += Global _test_vector2_0',
+			'scoreboard players operation Global y += Global _test_vector2_1',
+			'scoreboard players operation Global z += Global _test_vector2_2'
+		])
 
 	def test_vector_expr(self):
 		func = mock_mcfunction()
@@ -457,7 +661,15 @@ class test_cbscript(unittest.TestCase):
 		ids = expr.compile(func, ['x', 'y', 'z'])
 		
 		self.assertEqual(ids, ['x', 'y', 'z'])
-		self.assertEqual(func.commands, ['scoreboard players add @e _age 1', 'summon area_effect_cloud', 'scoreboard players add @e _age 1', 'execute store result score Global x run data get entity @e[_age==1,limit=1] Pos[0] 100', 'execute store result score Global y run data get entity @e[_age==1,limit=1] Pos[1] 100', 'execute store result score Global z run data get entity @e[_age==1,limit=1] Pos[2] 100', '/kill @e[_age==1]'])
+		self.assertEqual(func.commands, [
+			'scoreboard players add @e _age 1',
+			'summon area_effect_cloud',
+			'scoreboard players add @e _age 1',
+			'execute store result score Global x run data get entity @e[_age==1,limit=1] Pos[0] 100',
+			'execute store result score Global y run data get entity @e[_age==1,limit=1] Pos[1] 100',
+			'execute store result score Global z run data get entity @e[_age==1,limit=1] Pos[2] 100',
+			'/kill @e[_age==1]'
+		])
 		
 	def test_vector_var_expr(self):
 		func = mock_mcfunction()

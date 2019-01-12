@@ -33,8 +33,11 @@ class for_index_block(object):
 		loop_func = func.create_child_function()
 		func.register_function(loop_func_name, loop_func)	
 		
-		if not loop_func.compile_blocks(sub):
-			raise Exception('Unable to compile for block at line {}'.format(self.line))
+		try:
+			loop_func.compile_blocks(sub)
+		except:
+			print(e.message)
+			raise Exception('Unable to compile for block contents at line {}'.format(self.line))
 		
 		if by == None:
 			continue_command = 'execute if score Global {0} <= Global {1} run function {2}:{3}'.format(var, to_scratch, func.namespace, loop_func_name)

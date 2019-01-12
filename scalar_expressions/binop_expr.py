@@ -42,7 +42,7 @@ class binop_expr(scalar_expression_base):
 					id2 = func.add_constant(operand2)
 					func.add_command('scoreboard players operation Global {0} {1}= {2} Constant'.format(id1, self.op, id2))
 			else:
-				id2 = right.compile(func, id1)
+				id2 = right.compile(func, None)
 				if id2 == None:
 					print "Unable to compile RHS of binop {0}".format(self.op)
 					return None

@@ -33,10 +33,7 @@ class cbscript(object):
 		except SyntaxError as e:
 			print(str(e) + '\a')
 		except Exception as e:
-			print "Compiler encountered unexpected error during compilation.\a"
-			print type(e)
-			print e.args
-			print e
+			print "Compiler encountered unexpected error during compilation:\a"
 			traceback.print_exc()
 		
 	def compile_all(self):
@@ -60,7 +57,11 @@ class cbscript(object):
 		
 		self.global_context.scale = parsed['scale']
 
-		global_func.compile_blocks(parsed['assignments'])
+		try:
+			global_func.compile_blocks(parsed['assignments'])
+		except:
+			traceback.print_exc()
+			return False
 
 		for section in parsed['sections']:
 			type, id, template_params, params, sub = section
@@ -72,7 +73,11 @@ class cbscript(object):
 		for section in parsed["sections"]:
 			if section[0] == 'macro' or section[0] == 'template_function':
 				continue
-			if not compile_section(section, global_environment):
+				
+			try:
+				compile_section(section, global_environment)
+			except:
+				traceback.print_exc()
 				return False
 		
 		self.post_processing()

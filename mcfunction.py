@@ -1,5 +1,6 @@
 from selector_definition import selector_definition
 import math
+import traceback
 
 line_numbers = []
 
@@ -24,18 +25,14 @@ def compile_section(section, environment):
 	if type == 'clock':
 		environment.register_clock(name)
 		
-	if not f.compile_blocks(lines):
-		return False
-			
-	return True
+	f.compile_blocks(lines)
 
 def switch_cases(func, var, cases, switch_func_name = 'switch', case_func_name = 'case'):
 	if len(cases) == 1:
 		vmin, vmax, sub, line, dollarid = cases[0]
 		if dollarid != None:
 			func.set_dollarid(dollarid, vmin)
-		if not func.compile_blocks(sub):
-			return False
+		func.compile_blocks(sub)
 	else:
 		for q in range(4):
 			imin = q * len(cases) / 4
@@ -55,8 +52,7 @@ def switch_cases(func, var, cases, switch_func_name = 'switch', case_func_name =
 				vmin, vmax, sub, line, dollarid = sub_cases[0]
 				if dollarid != None:
 					case_func.set_dollarid(dollarid, vmin)
-				if not case_func.compile_blocks(sub):
-					return False
+				case_func.compile_blocks(sub)
 					
 				single_command = case_func.single_command()
 				if single_command != None:
@@ -725,9 +721,6 @@ class mcfunction(object):
 		for block in lines:
 			try:
 				block.compile(self)
-			except Exception as e:
+			except:
 				print('Exception while compiling block at line {}'.format(block.line))
-				print(e)
 				raise
-		
-		return True
