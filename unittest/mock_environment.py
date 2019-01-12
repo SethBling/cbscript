@@ -27,3 +27,6 @@ class mock_environment(object):
 		
 	def update_self_selector(self, selector):
 		self.self_selector = selector
+		
+	def register_local(self, var):
+		None

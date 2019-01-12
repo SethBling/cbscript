@@ -475,6 +475,43 @@ class test_cbscript(unittest.TestCase):
 		
 		self.assertEqual(func.commands, ['/tellraw @a ["",{"text":"hi","color":"dark_red"}]'])
 		
+	def test_compile_template_function_call(self):
+		func = mock_mcfunction()
+		func.template_functions['test_template_function'] = (['test_macro_param'], ['test_function_param'], [])
+		
+		block = template_function_call_block(0, 'test_template_function', ['10'], [num_expr(15)])
+		block.compile(func)
+		
+		self.assertEqual(func.commands, [
+			'scoreboard players set Global Param0 15',
+			'function test_namespace:test_template_function_10'
+		])
+		self.assertTrue('test_template_function_10' in func.functions)
+		self.assertTrue('test_macro_param' in func.functions['test_template_function_10'].environment.dollarid)
+		self.assertEqual(func.functions['test_template_function_10'].environment.dollarid['test_macro_param'], 10)
+		
+	def test_compile_title(self):
+		func = mock_mcfunction()
+		
+		block = title_block(0, 'subtitle', '@a', ['0', '1', '2'], '{rtest')
+		block.compile(func)
+		
+		self.assertEqual(func.commands, [
+			'/title @a times 0 1 2',
+			'/title @a subtitle ["",{"text":"test","color":"dark_red"}]'
+		])
+		
+	def test_compile_while(self):
+		func = mock_mcfunction()
+		
+		block = while_block(0, ['As', '@a'], ['test_block'])
+		block.compile(func)
+		
+		self.assertEqual(func.commands, ['execute run function test_namespace:while001_ln0'])
+		self.assertEqual(len(func.child_functions), 1)
+		self.assertEqual(func.child_functions[0].compiled_blocks[0], ['test_block'])
+		self.assertTrue('execute run function test_namespace:while001_ln0' in func.child_functions[0].commands)
+		
 	def test_arrayconst_expr(self):
 		func = mock_mcfunction()
 		func.arrays['test_array'] = (0, 5)
