@@ -1,7 +1,9 @@
 import unittest
 import mock_source_file
 from mock_mcfunction import mock_mcfunction
+from mock_environment import mock_environment
 import mcfunction
+from selector_definition import selector_definition
 import global_context
 from block_types.array_assignment_block import array_assignment_block
 from block_types.array_definition_block import array_definition_block
@@ -742,6 +744,201 @@ class test_cbscript(unittest.TestCase):
 		ids = expr.compile(func, ['x', 'y', 'z'])
 		
 		self.assertEqual(ids, ['_test_vector_0', '_test_vector_1', '_test_vector_2'])
+		
+	def test_selector_definition(self):
+		env = mock_environment()
+		
+		sel = selector_definition('@a', env)
+		self.assertEqual(sel.compile(), '@a[]')
+		
+		env = mock_environment()
+		
+		sel = selector_definition('@a[test>0]', env)
+		self.assertEqual(sel.compile(), '@a[scores={test=1..}]')
+		
+		env = mock_environment()
+		env.selectors['test_selector'] = selector_definition('@a[nbt={test:"test_val"}]', env)
+		
+		sel = selector_definition('@test_selector[nbt={test2:"test_val2"}]', env)
+		# TODO: merge nbt tags via the json module
+		self.assertEqual(sel.compile(), '@a[nbt={test:"test_val"},nbt={test2:"test_val2"}]')
+		
+		env = mock_environment()
+		
+		sel = selector_definition('@a[test==0]', env)
+		self.assertEqual(sel.compile(), '@a[scores={test=0}]')
+		
+		env = mock_environment()
+		
+		sel = selector_definition('@a[test>=0,test<=0]', env)
+		self.assertEqual(sel.compile(), '@a[scores={test=0}]')
+		
+		env = mock_environment()
+		
+		sel = selector_definition('@e[type=creeper]', env)
+		self.assertEqual(sel.compile(), '@e[type=minecraft:creeper]')
+		self.assertEqual(sel.get_type(), 'minecraft:creeper')
+		self.assertFalse(sel.single_entity())
+		
+		env = mock_environment()
+		
+		sel = selector_definition('@e[limit=1]', env)
+		self.assertTrue(sel.single_entity())
+		
+		env = mock_environment()
+		
+		sel = selector_definition('@p', env)
+		self.assertTrue(sel.single_entity())
+		
+		env = mock_environment()
+		
+		sel = selector_definition('@s', env)
+		self.assertTrue(sel.single_entity())		
+		
+		env = mock_environment()
+		env.selectors['test_selector'] = selector_definition('@e[test==0]', env)
+		env.selectors['test_selector'].set_part('type', 'creeper')
+		env.selectors['test_selector'].paths['test_path'] = 1
+		env.selectors['test_selector'].vector_paths['test_vector_path'] = 2
+		
+		sel = selector_definition('@test_selector[test2>0]', env)
+		self.assertEqual(sel.compile(), '@e[type=creeper,scores={test=0,test2=1..}]')
+		self.assertEqual(sel.paths['test_path'], 1)
+		self.assertEqual(sel.vector_paths['test_vector_path'], 2)
+		
+		env = mock_environment()
+		
+		with self.assertRaises(ValueError):
+			selector_definition('@none', env)
+			
+		env = mock_environment()
+		
+		sel = selector_definition('@e[nbt={test:"test_val",test2:{test3:"test_val3"}}]', env)
+		# TODO: merge nbt tags via the json module
+		self.assertEqual(sel.compile(), '@e[nbt={test:"test_val",test2:{test3:"test_val3"}}]')
+		
+		env = mock_environment()
+		
+		with self.assertRaises(SyntaxError):
+			sel = selector_definition('@a[test>test2]', env)
+			
+	def test_get_friendly_name(self):
+		self.assertEqual(global_context.get_friendly_name('test .,:{}='), 'CBtest_______')
+		
+	def test_global_context(self):
+		gc = global_context.global_context('test_namespace')
+		
+		gc.register_block_tag('test_block_tag', ['test_block'])
+		self.assertEqual(gc.block_tags['test_block_tag'], ['test_block'])
+		
+		gc = global_context.global_context('test_namespace')
+		
+		self.assertEqual(gc.get_unique_id(), 1)
+		self.assertEqual(gc.get_unique_id(), 2)
+
+		gc = global_context.global_context('test_namespace')
+		
+		gc.register_clock('test_clock')
+		self.assertEqual(gc.clocks, ['test_clock'])
+		
+		gc = global_context.global_context('test_namespace')
+		f = mock_mcfunction()
+		
+		gc.register_function('test_function', f)
+		self.assertEqual(gc.functions['test_function'], f)
+		with self.assertRaises(Exception):
+			gc.register_function('test_function', f)
+			
+		gc = global_context.global_context('test_namespace')
+		
+		gc.register_array('test_array', 0, 5)
+		self.assertEqual(gc.arrays['test_array'], (0, 5))
+		with self.assertRaises(Exception):
+			gc.register_array('test_array', 0, 5)
+			
+		gc = global_context.global_context('test_namespace')
+		
+		gc.register_objective('test_objective')
+		self.assertTrue('test_objective' in gc.objectives)
+		
+		with self.assertRaises(Exception):
+			gc.register_objective('test_objective_name_too_long')
+			
+		gc = global_context.global_context('test_namespace')
+		f = mock_mcfunction()
+		
+		gc.register_function('reset', f)
+		self.assertEqual(gc.get_reset_function(), f)
+
+		self.assertEqual(global_context.get_constant_name(0), 'c0')
+		self.assertEqual(global_context.get_constant_name(1), 'c1')
+		self.assertEqual(global_context.get_constant_name(-1), 'minus')
+		self.assertEqual(global_context.get_constant_name(-2), 'cm2')
+		
+		gc = global_context.global_context('test_namespace')
+		
+		self.assertEqual(gc.add_constant(1), 'c1')
+		self.assertTrue(1 in gc.constants)
+		
+		gc = global_context.global_context('test_namespace')
+		f = mock_mcfunction()
+		
+		gc.register_function('reset', f)
+		gc.add_constant(1)
+		gc.add_constant(-1)
+		gc.add_constant_definitions()
+		
+		self.assertEqual(f.commands, [
+			'/scoreboard objectives add Constant dummy',
+			'/scoreboard players set minus Constant -1',
+			'/scoreboard players set c1 Constant 1'
+		])
+		
+		gc = global_context.global_context('test_namespace')
+		
+		gc.allocate_scratch('test_prefix', 2)
+		self.assertEqual(gc.scratch['test_prefix'], 2)
+		gc.allocate_scratch('test_prefix', 3)
+		self.assertEqual(gc.scratch['test_prefix'], 3)
+		gc.allocate_scratch('test_prefix', 2)
+		self.assertEqual(gc.scratch['test_prefix'], 3)
+		
+		gc = global_context.global_context('test_namespace')
+		
+		gc.allocate_temp(2)
+		self.assertEqual(gc.temp, 2)
+		gc.allocate_temp(3)
+		self.assertEqual(gc.temp, 3)
+		gc.allocate_temp(2)
+		self.assertEqual(gc.temp, 3)
+		
+		gc = global_context.global_context('test_namespace')
+		
+		gc.allocate_rand(2)
+		self.assertEqual(gc.rand, 2)
+		gc.allocate_rand(3)
+		self.assertEqual(gc.rand, 3)
+		gc.allocate_rand(2)
+		self.assertEqual(gc.rand, 3)
+		
+		gc = global_context.global_context('test_namespace')
+		f = mock_mcfunction()
+		
+		gc.register_function('reset', f)
+		gc.finalize_functions()
+		
+		self.assertTrue(f.finalized)
+		
+		gc = global_context.global_context('test_namespace')
+		
+		self.assertEqual(gc.get_scratch_prefix('test'), 'tes')
+		self.assertEqual(gc.get_scratch_prefix('test'), 'tes2')
+		self.assertEqual(gc.get_scratch_prefix('test'), 'tes3')
+		
+		gc = global_context.global_context('test_namespace')
+		
+		self.assertEqual(gc.get_random_objective(), 'RVtest_namespace')
+		
 		
 if __name__ == '__main__':
     unittest.main()

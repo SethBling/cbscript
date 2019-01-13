@@ -22,6 +22,7 @@ class mock_mcfunction(object):
 		self.environment_pushes = 0
 		self.environment_pops = 0
 		self.constants = {}
+		self.finalized = False
 		
 	def add_operation(self, selector, id1, operation, id2):
 		self.operations.append((selector, id1, operation, id2))
@@ -30,7 +31,7 @@ class mock_mcfunction(object):
 		self.commands.append(command)
 	
 	def insert_command(self, command, index):
-		None
+		self.commands.insert(index, command)
 		
 	def get_utf8_text(self):
 		return ''
@@ -42,7 +43,7 @@ class mock_mcfunction(object):
 		None
 			
 	def finalize(self):
-		None
+		self.finalized = True
 		
 	def single_command(self):
 		return None

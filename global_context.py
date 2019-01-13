@@ -12,6 +12,14 @@ def get_friendly_name(namespace):
 	
 	return name
 
+def get_constant_name(c):
+		if c == -1:
+			return 'minus'
+		elif c >= 0:
+			return 'c{}'.format(c)
+		else:
+			return 'cm{}'.format(-c)
+		
 class global_context(object):
 	def __init__(self, namespace):
 		self.clocks = []
@@ -51,13 +59,6 @@ class global_context(object):
 			raise Exception('Array "{}" is defined multiple times.'.format(name))
 		self.arrays[name] = (from_val, to_val)
 		
-	def get_placeholder_clock(self, namespace, environment):
-		f = mcfunction(environment)
-		for clock in self.clocks:
-			f.add_command('/function {0}:{1}'.format(namespace, clock))
-		
-		return f
-		
 	def register_objective(self, objective):
 		if len(objective) > 16:
 			raise Exception('Cannot create objective "{0}", name is {1} characters (max is 16)'.format(objective, len(objective)))
@@ -66,19 +67,11 @@ class global_context(object):
 	def get_reset_function(self):
 		return self.functions['reset']
 		
-	def get_constant_name(self, c):
-		if c == -1:
-			return 'minus'
-		elif c >= 0:
-			return 'c{}'.format(c)
-		else:
-			return 'cm{}'.format(-c)
-		
 	def add_constant(self, c):
 		if c not in self.constants:
 			self.constants.append(c)
 	
-		return self.get_constant_name(c)
+		return get_constant_name(c)
 		
 	def add_constant_definitions(self):
 		f = self.get_reset_function()
@@ -86,7 +79,7 @@ class global_context(object):
 		if len(self.constants) > 0:
 			f.insert_command('/scoreboard objectives add Constant dummy', 0)
 			for c in self.constants:
-				f.insert_command('/scoreboard players set {} Constant {}'.format(self.get_constant_name(c), c), 1)
+				f.insert_command('/scoreboard players set {} Constant {}'.format(get_constant_name(c), c), 1)
 
 	def allocate_scratch(self, prefix, n):
 		if prefix not in self.scratch:

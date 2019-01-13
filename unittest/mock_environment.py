@@ -3,6 +3,8 @@ class mock_environment(object):
 		self.dollarid = {}
 		self.functions = {}
 		self.self_selector = None
+		self.selectors = {}
+		self.objectives = []
 		
 	def clone(self, new_function_name=None):
 		env = mock_environment()
@@ -30,3 +32,9 @@ class mock_environment(object):
 		
 	def register_local(self, var):
 		None
+		
+	def apply_replacements(self, text):
+		return text
+		
+	def register_objective(self, objective):
+		self.objectives.append(objective)

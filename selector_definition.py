@@ -1,3 +1,14 @@
+def split_qualifier(qualifier):
+	for op in ['==', '<=', '>=', '<', '>']:
+		if op in qualifier:
+			before,after = tuple(qualifier.split(op, 1))
+			before = before.strip()
+			after = after.strip()
+			
+			return before, op, after
+			
+	return None
+	
 def isNumber(s):
 	try:
 		float(s)
@@ -48,7 +59,7 @@ class selector_definition(object):
 			self.tag = base_selector.tag
 		else:
 			if len(base_name) != 1:
-				raise Exception('Tried to create selector with base name @{0}'.format(base_name))
+				raise ValueError('Tried to create selector with base name @{0}'.format(base_name))
 				
 			self.base_name = base_name
 				
@@ -82,7 +93,7 @@ class selector_definition(object):
 						part = nbt_part + ',' + part
 						nbt_part = None
 					
-				op_parts = env.split_qualifier(part)
+				op_parts = split_qualifier(part)
 				if op_parts == None:
 					if '=' in part:
 						subparts = part.split('=')
@@ -104,8 +115,7 @@ class selector_definition(object):
 					before, op, after = op_parts
 				
 					if not isNumber(after):
-						print '"{0}" is not a number in "{1}"'.format(after, selector)
-						return None
+						raise SyntaxError('"{0}" is not a number in "{1}"'.format(after, selector))
 							
 					if op == '==':				
 						self.scores_min[before] = int(after)

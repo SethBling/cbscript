@@ -1,7 +1,7 @@
 import copy
 from scratch_tracker import scratch_tracker
 from selector_definition import selector_definition
-	
+
 def isNumber(s):
 	try:
 		float(s)
@@ -98,17 +98,6 @@ class environment(object):
 		parts = middle.split(',')
 		
 		return start, [part.strip() for part in parts], end
-		
-	def split_qualifier(self, qualifier):
-		for op in ['==', '<=', '>=', '<', '>']:
-			if op in qualifier:
-				before,after = tuple(qualifier.split(op, 1))
-				before = before.strip()
-				after = after.strip()
-				
-				return before, op, after
-				
-		return None
 		
 	def compile_selector(self, selector):
 		sel = selector_definition(selector, self)
