@@ -103,19 +103,6 @@ def isNumber(s):
 	except TypeError:
 		return False
 		
-def factor(n):
-	i = 2
-	limit = math.sqrt(n)    
-	while i <= limit:
-	  if n % i == 0:
-		yield i
-		n = n / i
-		limit = math.sqrt(n)   
-	  else:
-		i += 1
-	if n > 1:
-		yield n
-
 # Takes a scoreboard objective and returns a (potentially different)
 # scoreboard objective which can be freely modified.
 def get_modifiable_id(func, id, assignto):

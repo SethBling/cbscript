@@ -36,7 +36,7 @@ from scalar_expressions.arrayexpr_expr import arrayexpr_expr
 from scalar_expressions.binop_expr import binop_expr
 from scalar_expressions.create_expr import create_expr
 from scalar_expressions.dot_expr import dot_expr
-from scalar_expressions.func_expr import func_expr
+from scalar_expressions.func_expr import func_expr, factor
 from scalar_expressions.num_expr import num_expr
 from scalar_expressions.scale_expr import scale_expr
 from scalar_expressions.selector_expr import selector_expr
@@ -60,9 +60,9 @@ class test_cbscript(unittest.TestCase):
 		self.assertFalse(mcfunction.isNumber('test'))
 		
 	def test_factor(self):
-		self.assertEqual(list(mcfunction.factor(20)), [2, 2, 5])
-		self.assertEqual(list(mcfunction.factor(2)), [2])
-		self.assertEqual(list(mcfunction.factor(1)), [])
+		self.assertEqual(list(factor(20)), [2, 2, 5])
+		self.assertEqual(list(factor(2)), [2])
+		self.assertEqual(list(factor(1)), [])
 		
 	def test_compile_runs_without_error(self):
 		func = mock_mcfunction()
@@ -591,6 +591,20 @@ class test_cbscript(unittest.TestCase):
 		id = expr.compile(func, 'test_id')
 		
 		self.assertEqual(id, 'test_id')
+		self.assertEqual(func.commands, [
+			'scoreboard players set Global test_scratch1 1',
+			'scoreboard players operation Global test_temp_var = Global test_scratch1',
+			'scoreboard players operation Global test_temp_var %= test_constant Constant',
+			'scoreboard players add Global test_temp_var 360',
+			'scoreboard players operation Global test_temp_var %= test_constant Constant',
+			'scoreboard players operation Global test_temp_var %= test_constant Constant',
+			'scoreboard players operation Global test_id = Global test_temp_var',
+			'scoreboard players operation Global test_id *= test_constant Constant',
+			'scoreboard players set Global test_scratch2 180',
+			'scoreboard players set Global test_scratch4 40500',
+			'scoreboard players set Global test_scratch7 180',
+			'/execute if score Global test_temp_var matches 180.. run scoreboard players operation Global test_id *= minus Constant'
+		])
 		
 		func = mock_mcfunction()
 		
@@ -598,6 +612,20 @@ class test_cbscript(unittest.TestCase):
 		id = expr.compile(func, 'test_id')
 		
 		self.assertEqual(id, 'test_id')
+		self.assertEqual(func.commands, [
+			'scoreboard players set Global test_scratch1 1',
+			'scoreboard players operation Global test_temp_var = Global test_scratch1',
+			'scoreboard players operation Global test_temp_var %= test_constant Constant',
+			'scoreboard players add Global test_temp_var 450',
+			'scoreboard players operation Global test_temp_var %= test_constant Constant',
+			'scoreboard players operation Global test_temp_var %= test_constant Constant',
+			'scoreboard players operation Global test_id = Global test_temp_var',
+			'scoreboard players operation Global test_id *= test_constant Constant',
+			'scoreboard players set Global test_scratch2 180',
+			'scoreboard players set Global test_scratch4 40500',
+			'scoreboard players set Global test_scratch7 180',
+			'/execute if score Global test_temp_var matches 180.. run scoreboard players operation Global test_id *= minus Constant'
+		])
 		
 		func = mock_mcfunction()
 		
@@ -605,6 +633,59 @@ class test_cbscript(unittest.TestCase):
 		id = expr.compile(func, 'test_id')
 		
 		self.assertEqual(id, 'test_scratch62')
+		self.assertEqual(len(func.commands), 32)
+		
+		func = mock_mcfunction()
+		
+		expr = func_expr(function_call_block(0, 'sqrt', []))
+		id = expr.compile(func, 'test_id')
+		
+		self.assertEqual(id, None)
+		
+		func = mock_mcfunction()
+		
+		expr = func_expr(function_call_block(0, 'abs', [num_expr(-1)]))
+		id = expr.compile(func, 'test_id')
+		
+		self.assertEqual(id, 'test_id')
+		self.assertEqual(func.commands, [
+			'scoreboard players set Global test_id -1',
+			'execute if score Global test_id matches ..-1 run scoreboard players operation Global test_id *= minus Constant'
+		])
+		
+		func = mock_mcfunction()
+		
+		expr = func_expr(function_call_block(0, 'abs', []))
+		id = expr.compile(func, 'test_id')
+		
+		self.assertEqual(id, None)
+		
+		func = mock_mcfunction()
+		
+		expr = func_expr(function_call_block(0, 'rand', [num_expr(10)]))
+		id = expr.compile(func, 'test_id')
+		
+		self.assertEqual(id, 'test_scratch1')
+		self.assertEqual(func.commands, [
+			'scoreboard players set Global test_scratch1 0',
+			'scoreboard players operation Global test_scratch1 += @e[type=armor_stand, test_random_objective <= 1, limit=1, sort=random] test_random_objective',
+			'scoreboard players operation Global test_scratch1 *= test_constant Constant',
+			'scoreboard players operation Global test_scratch1 += @e[type=armor_stand, test_random_objective <= 4, limit=1, sort=random] test_random_objective'
+		])
+
+		func = mock_mcfunction()
+		
+		expr = func_expr(function_call_block(0, 'rand', [num_expr(2), num_expr(10)]))
+		id = expr.compile(func, 'test_id')
+		
+		self.assertEqual(id, 'test_scratch1')
+		self.assertEqual(func.commands, [
+			'scoreboard players set Global test_scratch1 0',
+			'scoreboard players operation Global test_scratch1 += @e[type=armor_stand, test_random_objective <= 1, limit=1, sort=random] test_random_objective',
+			'scoreboard players operation Global test_scratch1 *= test_constant Constant', 'scoreboard players operation Global test_scratch1 += @e[type=armor_stand, test_random_objective <= 1, limit=1, sort=random] test_random_objective',
+			'scoreboard players operation Global test_scratch1 *= test_constant Constant', 'scoreboard players operation Global test_scratch1 += @e[type=armor_stand, test_random_objective <= 1, limit=1, sort=random] test_random_objective',
+			'scoreboard players add Global test_scratch1 2'
+		])
 		
 		func = mock_mcfunction()
 		

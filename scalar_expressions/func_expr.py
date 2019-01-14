@@ -1,6 +1,20 @@
 from scalar_expression_base import scalar_expression_base
 from num_expr import num_expr
 from mcfunction import get_modifiable_id
+import math
+
+def factor(n):
+	i = 2
+	limit = math.sqrt(n)    
+	while i <= limit:
+	  if n % i == 0:
+		yield i
+		n = n / i
+		limit = math.sqrt(n)   
+	  else:
+		i += 1
+	if n > 1:
+		yield n
 
 class func_expr(scalar_expression_base):
 	def __init__(self, function_call):
@@ -59,37 +73,38 @@ class func_expr(scalar_expression_base):
 		elif efunc == 'rand':
 			if len(args) == 1:
 				min = 0
-				if args[0][0] == 'NUM':
-					max = func.apply_environment(args[0][1])
+				max = args[0].const_value()
+				
+				if max == None:
 					if not isNumber(max):
-						print "Argument '{0}' to rand is not an integer.".format(args[0][1])
+						print('The argument to rand is not an integer.')
 						return None
+				
+				try:
 					max = int(max)
-				else:
-					print "Function 'rand' accepts only integer arguments."
-					return None
+				except:
+					print('Argument "{}" to rand is not a number.'.format(max))
+				
 			elif len(args) == 2:
-				if args[0][0] == 'NUM':
-					min = func.apply_environment(args[0][1])
-					if not isNumber(min):
-						print "Argument '{0}' to rand is not an integer.".format(args[0][1])
-						return None
+				min = args[0].const_value()
+				if min == None:
+					print('The first argument to rand is not an integer.')
+					return None
+				try:
 					min = int(min)
-				else:
-					print "Function 'rand' accepts only integer arguments."
+				except:
+					print('Argument "{}" to rand is not a number.'.format(min))
+				
+				max = args[1].const_value()
+				if max == None:
+					print('The second argument to rand is not an integer.')
 					return None
-				if args[1][0] == 'NUM':
-					max = func.apply_environment(args[1][1])
-					if not isNumber(max):
-						print "Argument '{0}' to rand is not an integer.".format(args[1][1])
-						return None
+				try:
 					max = int(max)
-
-				else:
-					print "Function 'rand' accepts only integer arguments."
-					return None
+				except:
+					print('Argument "{}" to rand is not a number.'.format(max))
 			else:
-				print "rand takes 1 or 2 arguments, received: {0}".format(args)
+				print('rand takes 1 or 2 arguments, received: {}'.format(args))
 				return None
 				
 			span = max - min
