@@ -16,16 +16,16 @@ class mock_mcfunction(object):
 		self.child_functions = []
 		self.created = []
 		self.compiled_blocks = []
-		self.operations = []
 		self.scratch = 0
 		self.cloned_environments = []
 		self.environment_pushes = 0
 		self.environment_pops = 0
 		self.constants = {}
 		self.finalized = False
+		self.temp = 0
 		
 	def add_operation(self, selector, id1, operation, id2):
-		self.operations.append((selector, id1, operation, id2))
+		self.add_command("scoreboard players operation {0} {1} {2} {0} {3}".format(selector, id1, operation, id2))
 		
 	def add_command(self, command):
 		self.commands.append(command)
@@ -161,7 +161,8 @@ class mock_mcfunction(object):
 		return False
 		
 	def get_temp_var(self):
-		return 'test_temp_var'
+		self.temp += 1
+		return 'temp{}'.format(self.temp)
 		
 	def free_temp_var(self, var):
 		None

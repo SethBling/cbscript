@@ -28,7 +28,7 @@ class func_expr(scalar_expression_base):
 		
 		if efunc == 'sqrt':
 			if len(args) <> 1:
-				print "sqrt takes exactly 1 argument, received: {0}".format(args)
+				print "sqrt takes exactly 1 argument, received: {}".format(len(args))
 				return None
 			
 			id = args[0].compile(func, None)
@@ -55,7 +55,7 @@ class func_expr(scalar_expression_base):
 
 		elif efunc == 'abs':
 			if len(args) <> 1:
-				print "abs takes exactly 1 argument, received: {0}".format(args)
+				print "abs takes exactly 1 argument, received: {}".format(len(args))
 				return None
 
 			id = args[0].compile(func, assignto)
@@ -139,7 +139,7 @@ class func_expr(scalar_expression_base):
 
 		elif efunc == 'sin' or efunc == 'cos':
 			if len(args) <> 1:
-				print "{0} takes exactly 1 argument, received: {1}".format(efunc, args)
+				print "{0} takes exactly 1 argument, received: {}".format(efunc, len(args))
 				return None
 			
 			id = args[0].compile(func, None)
@@ -174,7 +174,7 @@ class func_expr(scalar_expression_base):
 				return None
 			
 			func.add_constant(-1)
-			func.add_command("/execute if score Global {0} matches 180.. run scoreboard players operation Global {1} *= minus Constant".format(moddedId2, retId))
+			func.add_command('execute if score Global {} matches 180.. run scoreboard players operation Global {} *= minus Constant'.format(moddedId2, retId))
 			
 			func.free_temp_var(modId)
 			func.free_temp_var(moddedId2)

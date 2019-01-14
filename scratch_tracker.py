@@ -21,12 +21,10 @@ class scratch_tracker(object):
 			self.temp_allocation = new_length
 			self.global_context.allocate_temp(new_length)
 
-		return '{0}_temp{1}'.format(self.prefix, newScratch)
+		return 'temp{1}'.format(self.prefix, newScratch)
 
 	def free_temp_var(self, id):
-		temp_prefix = '{0}_temp'.format(self.prefix)
-	
-		num = int(id[len(temp_prefix):])
+		num = int(id[len('temp'):])
 		
 		self.temp[num] = False
 
@@ -64,7 +62,7 @@ class scratch_tracker(object):
 		self.scratch[num] = False
 		
 	def get_allocated_variables(self):
-		ret = ['{0}_scratch{1}'.format(self.prefix, i) for i in range(self.scratch_allocation)]
-		ret += ['{0}_temp{1}'.format(self.prefix, i) for i in range(self.temp_allocation)]
+		ret = ['{}_scratch{}'.format(self.prefix, i) for i in range(self.scratch_allocation)]
+		ret += ['temp{}'.format(i) for i in range(self.temp_allocation)]
 		
 		return ret

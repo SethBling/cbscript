@@ -1,9 +1,13 @@
+import new
 import unittest
-import mock_source_file
+from mock_source_file import mock_source_file
 from mock_mcfunction import mock_mcfunction
 from mock_environment import mock_environment
+from mock_global_context import mock_global_context
 import mcfunction
 from selector_definition import selector_definition
+from scratch_tracker import scratch_tracker
+from cbscript import cbscript
 import global_context
 from block_types.array_assignment_block import array_assignment_block
 from block_types.array_definition_block import array_definition_block
@@ -337,12 +341,12 @@ class test_cbscript(unittest.TestCase):
 		
 		block = function_call_block(0, 'test_function', [num_expr(1)])
 		block.compile(func)
-		
+
 		self.assertEqual(func.commands, [
 			'scoreboard players set Global test_scratch1 1',
+			'scoreboard players operation Global Param0 = Global test_scratch1',
 			'function test_namespace:test_function'
 		])
-		self.assertEqual(func.operations, [('Global', 'Param0', '=', 'test_scratch1')])
 		
 	def test_compile_macro_call(self):
 		func = mock_mcfunction()
@@ -368,9 +372,9 @@ class test_cbscript(unittest.TestCase):
 		
 		self.assertEqual(func.commands, [
 			'scoreboard players set Global test_scratch1 1',
+			'scoreboard players operation Global Param0 = Global test_scratch1',
 			'execute as @test_selector run function test_namespace:test_method'
 		])
-		self.assertEqual(func.operations, [('Global', 'Param0', '=', 'test_scratch1')])
 		
 	def test_compile_python_if(self):
 		func = mock_mcfunction()
@@ -553,8 +557,15 @@ class test_cbscript(unittest.TestCase):
 		id = expr.compile(func, 'test_id3')
 		
 		self.assertEqual(id, 'test_scratch1')
-		self.assertTrue(('Global', 'test_scratch1', '=', 'test_id3') in func.operations)
-		self.assertTrue(('Global', 'test_scratch1', '*=', 'test_id3') in func.operations)
+		self.assertEqual(func.commands, [
+			'scoreboard players set Global test_id 3',
+			'scoreboard players add Global test_id 4',
+			'scoreboard players operation Global test_id2 = Global test_var',
+			'scoreboard players add Global test_id2 3',
+			'scoreboard players set Global test_id3 5',
+			'scoreboard players operation Global test_scratch1 = Global test_id3',
+			'scoreboard players operation Global test_scratch1 *= Global test_id3'
+		])
 		
 		expr = binop_expr(num_expr(5), '^', selvar_expr('Global', 'test_var'))
 		id = expr.compile(func, 'test_id4')
@@ -593,17 +604,29 @@ class test_cbscript(unittest.TestCase):
 		self.assertEqual(id, 'test_id')
 		self.assertEqual(func.commands, [
 			'scoreboard players set Global test_scratch1 1',
-			'scoreboard players operation Global test_temp_var = Global test_scratch1',
-			'scoreboard players operation Global test_temp_var %= test_constant Constant',
-			'scoreboard players add Global test_temp_var 360',
-			'scoreboard players operation Global test_temp_var %= test_constant Constant',
-			'scoreboard players operation Global test_temp_var %= test_constant Constant',
-			'scoreboard players operation Global test_id = Global test_temp_var',
+			'scoreboard players operation Global temp1 = Global test_scratch1',
+			'scoreboard players operation Global temp1 %= test_constant Constant',
+			'scoreboard players add Global temp1 360',
+			'scoreboard players operation Global temp1 %= test_constant Constant',
+			'scoreboard players operation Global test_id = Global test_scratch1',
+			'scoreboard players operation Global temp2 = Global temp1',
+			'scoreboard players operation Global temp2 %= test_constant Constant',
+			'scoreboard players operation Global test_id = Global temp2',
 			'scoreboard players operation Global test_id *= test_constant Constant',
 			'scoreboard players set Global test_scratch2 180',
+			'scoreboard players operation Global test_scratch3 = Global test_scratch2',
+			'scoreboard players operation Global test_scratch3 -= Global temp2',
+			'scoreboard players operation Global test_id *= Global test_scratch3',
 			'scoreboard players set Global test_scratch4 40500',
+			'scoreboard players operation Global test_scratch5 = Global test_scratch4',
+			'scoreboard players operation Global test_scratch6 = Global temp2',
 			'scoreboard players set Global test_scratch7 180',
-			'/execute if score Global test_temp_var matches 180.. run scoreboard players operation Global test_id *= minus Constant'
+			'scoreboard players operation Global test_scratch8 = Global test_scratch7',
+			'scoreboard players operation Global test_scratch8 -= Global temp2',
+			'scoreboard players operation Global test_scratch6 *= Global test_scratch8',
+			'scoreboard players operation Global test_scratch5 -= Global test_scratch6',
+			'scoreboard players operation Global test_id /= Global test_scratch5',
+			'execute if score Global temp1 matches 180.. run scoreboard players operation Global test_id *= minus Constant'
 		])
 		
 		func = mock_mcfunction()
@@ -614,17 +637,29 @@ class test_cbscript(unittest.TestCase):
 		self.assertEqual(id, 'test_id')
 		self.assertEqual(func.commands, [
 			'scoreboard players set Global test_scratch1 1',
-			'scoreboard players operation Global test_temp_var = Global test_scratch1',
-			'scoreboard players operation Global test_temp_var %= test_constant Constant',
-			'scoreboard players add Global test_temp_var 450',
-			'scoreboard players operation Global test_temp_var %= test_constant Constant',
-			'scoreboard players operation Global test_temp_var %= test_constant Constant',
-			'scoreboard players operation Global test_id = Global test_temp_var',
-			'scoreboard players operation Global test_id *= test_constant Constant',
-			'scoreboard players set Global test_scratch2 180',
-			'scoreboard players set Global test_scratch4 40500',
-			'scoreboard players set Global test_scratch7 180',
-			'/execute if score Global test_temp_var matches 180.. run scoreboard players operation Global test_id *= minus Constant'
+			'scoreboard players operation Global temp1 = Global test_scratch1', 
+			'scoreboard players operation Global temp1 %= test_constant Constant', 
+			'scoreboard players add Global temp1 450', 
+			'scoreboard players operation Global temp1 %= test_constant Constant', 
+			'scoreboard players operation Global test_id = Global test_scratch1', 
+			'scoreboard players operation Global temp2 = Global temp1', 
+			'scoreboard players operation Global temp2 %= test_constant Constant', 
+			'scoreboard players operation Global test_id = Global temp2', 
+			'scoreboard players operation Global test_id *= test_constant Constant', 
+			'scoreboard players set Global test_scratch2 180', 
+			'scoreboard players operation Global test_scratch3 = Global test_scratch2', 
+			'scoreboard players operation Global test_scratch3 -= Global temp2', 
+			'scoreboard players operation Global test_id *= Global test_scratch3', 
+			'scoreboard players set Global test_scratch4 40500', 
+			'scoreboard players operation Global test_scratch5 = Global test_scratch4', 
+			'scoreboard players operation Global test_scratch6 = Global temp2', 
+			'scoreboard players set Global test_scratch7 180', 
+			'scoreboard players operation Global test_scratch8 = Global test_scratch7', 
+			'scoreboard players operation Global test_scratch8 -= Global temp2', 
+			'scoreboard players operation Global test_scratch6 *= Global test_scratch8', 
+			'scoreboard players operation Global test_scratch5 -= Global test_scratch6', 
+			'scoreboard players operation Global test_id /= Global test_scratch5', 
+			'execute if score Global temp1 matches 180.. run scoreboard players operation Global test_id *= minus Constant'
 		])
 		
 		func = mock_mcfunction()
@@ -633,7 +668,7 @@ class test_cbscript(unittest.TestCase):
 		id = expr.compile(func, 'test_id')
 		
 		self.assertEqual(id, 'test_scratch62')
-		self.assertEqual(len(func.commands), 32)
+		self.assertEqual(len(func.commands), 107)
 		
 		func = mock_mcfunction()
 		
@@ -906,22 +941,25 @@ class test_cbscript(unittest.TestCase):
 	def test_get_friendly_name(self):
 		self.assertEqual(global_context.get_friendly_name('test .,:{}='), 'CBtest_______')
 		
-	def test_global_context(self):
+	def test_global_context_register_block_tag(self):
 		gc = global_context.global_context('test_namespace')
 		
 		gc.register_block_tag('test_block_tag', ['test_block'])
 		self.assertEqual(gc.block_tags['test_block_tag'], ['test_block'])
-		
+	
+	def test_global_context_get_unique_id(self):
 		gc = global_context.global_context('test_namespace')
 		
 		self.assertEqual(gc.get_unique_id(), 1)
 		self.assertEqual(gc.get_unique_id(), 2)
-
+		
+	def test_global_context_register_clock(self):
 		gc = global_context.global_context('test_namespace')
 		
 		gc.register_clock('test_clock')
 		self.assertEqual(gc.clocks, ['test_clock'])
-		
+	
+	def test_global_context_register_function(self):
 		gc = global_context.global_context('test_namespace')
 		f = mock_mcfunction()
 		
@@ -929,14 +967,16 @@ class test_cbscript(unittest.TestCase):
 		self.assertEqual(gc.functions['test_function'], f)
 		with self.assertRaises(Exception):
 			gc.register_function('test_function', f)
-			
+	
+	def test_global_context_register_array(self):
 		gc = global_context.global_context('test_namespace')
 		
 		gc.register_array('test_array', 0, 5)
 		self.assertEqual(gc.arrays['test_array'], (0, 5))
 		with self.assertRaises(Exception):
 			gc.register_array('test_array', 0, 5)
-			
+	
+	def test_global_context_register_objective(self):
 		gc = global_context.global_context('test_namespace')
 		
 		gc.register_objective('test_objective')
@@ -945,9 +985,10 @@ class test_cbscript(unittest.TestCase):
 		with self.assertRaises(Exception):
 			gc.register_objective('test_objective_name_too_long')
 			
+	def test_global_context_get_constant_name(self):
 		gc = global_context.global_context('test_namespace')
 		f = mock_mcfunction()
-		
+	
 		gc.register_function('reset', f)
 		self.assertEqual(gc.get_reset_function(), f)
 
@@ -955,12 +996,14 @@ class test_cbscript(unittest.TestCase):
 		self.assertEqual(global_context.get_constant_name(1), 'c1')
 		self.assertEqual(global_context.get_constant_name(-1), 'minus')
 		self.assertEqual(global_context.get_constant_name(-2), 'cm2')
-		
+	
+	def test_global_context_add_constant(self):
 		gc = global_context.global_context('test_namespace')
 		
 		self.assertEqual(gc.add_constant(1), 'c1')
 		self.assertTrue(1 in gc.constants)
-		
+	
+	def test_global_context_add_constant_definitions(self):
 		gc = global_context.global_context('test_namespace')
 		f = mock_mcfunction()
 		
@@ -974,7 +1017,8 @@ class test_cbscript(unittest.TestCase):
 			'/scoreboard players set minus Constant -1',
 			'/scoreboard players set c1 Constant 1'
 		])
-		
+	
+	def test_global_context_allocate_scratch(self):
 		gc = global_context.global_context('test_namespace')
 		
 		gc.allocate_scratch('test_prefix', 2)
@@ -983,7 +1027,8 @@ class test_cbscript(unittest.TestCase):
 		self.assertEqual(gc.scratch['test_prefix'], 3)
 		gc.allocate_scratch('test_prefix', 2)
 		self.assertEqual(gc.scratch['test_prefix'], 3)
-		
+	
+	def test_global_context_allocate_temp(self):
 		gc = global_context.global_context('test_namespace')
 		
 		gc.allocate_temp(2)
@@ -992,7 +1037,8 @@ class test_cbscript(unittest.TestCase):
 		self.assertEqual(gc.temp, 3)
 		gc.allocate_temp(2)
 		self.assertEqual(gc.temp, 3)
-		
+	
+	def test_global_context_allocate_rand(self):
 		gc = global_context.global_context('test_namespace')
 		
 		gc.allocate_rand(2)
@@ -1002,6 +1048,7 @@ class test_cbscript(unittest.TestCase):
 		gc.allocate_rand(2)
 		self.assertEqual(gc.rand, 3)
 		
+	def test_global_context_finalize_functions(self):
 		gc = global_context.global_context('test_namespace')
 		f = mock_mcfunction()
 		
@@ -1010,15 +1057,104 @@ class test_cbscript(unittest.TestCase):
 		
 		self.assertTrue(f.finalized)
 		
+	def test_global_context_get_scratch_prefix(self):
 		gc = global_context.global_context('test_namespace')
 		
 		self.assertEqual(gc.get_scratch_prefix('test'), 'tes')
 		self.assertEqual(gc.get_scratch_prefix('test'), 'tes2')
 		self.assertEqual(gc.get_scratch_prefix('test'), 'tes3')
-		
+	
+	def test_global_context_get_random_objective(self):
 		gc = global_context.global_context('test_namespace')
 		
 		self.assertEqual(gc.get_random_objective(), 'RVtest_namespace')
+		
+	def test_scratch_tracker_temp(self):
+		gc = mock_global_context()
+		
+		st = scratch_tracker(gc)
+		self.assertEqual(st.get_temp_var(), 'temp0')
+		self.assertEqual(st.temp[0], True)
+		self.assertEqual(st.get_temp_var(), 'temp1')
+		self.assertEqual(st.temp[1], True)
+		st.free_temp_var('temp0')
+		self.assertEqual(st.temp[0], False)
+		self.assertEqual(st.temp[1], True)
+		self.assertEqual(gc.temp, 2)
+		self.assertEqual(st.get_temp_var(), 'temp0')
+		
+	def test_scratch_tracker_scratch(self):
+		gc = mock_global_context()
+		
+		st = scratch_tracker(gc)
+		st.prefix = 'test'
+		self.assertEqual(st.get_scratch(), 'test_scratch0')
+		self.assertEqual(st.scratch[0], True)
+		self.assertEqual(st.get_scratch(), 'test_scratch1')
+		self.assertEqual(st.scratch[1], True)
+		st.free_scratch('test_scratch0')
+		self.assertEqual(st.scratch[0], False)
+		self.assertEqual(st.scratch[1], True)
+		self.assertEqual(gc.scratch['test'], 2)
+		self.assertEqual(st.get_scratch(), 'test_scratch0')
+		
+		st.free_scratch('not_scratch')
+
+	def test_scratch_tracker_vector(self):
+		gc = mock_global_context()
+		
+		st = scratch_tracker(gc)
+		st.prefix = 'test'
+		
+		self.assertEqual(st.get_scratch_vector(), ['test_scratch0', 'test_scratch1', 'test_scratch2'])
+		self.assertEqual(gc.scratch['test'], 3)
+		for i in range(3):
+			self.assertEqual(st.scratch[i], True)
+		
+	def test_scratch_tracker_get_allocated_variables(self):
+		gc = mock_global_context()
+		
+		st = scratch_tracker(gc)
+		st.prefix = 'test'
+		
+		st.get_scratch()
+		st.get_scratch()
+		st.get_scratch()
+		st.free_scratch('test_scratch1')
+		
+		st.get_temp_var()
+		st.get_temp_var()
+		st.get_temp_var()
+		st.free_temp_var('temp0')
+		
+		self.assertEqual(st.get_allocated_variables(), [
+			'test_scratch0',
+			'test_scratch1',
+			'test_scratch2',
+			'temp0',
+			'temp1',
+			'temp2'
+		])
+		
+	def test_cbscript_check_for_update(self):
+		source = mock_source_file()
+		source.time = 1
+		
+		compiles = [0]
+		
+		script = cbscript(source)
+		script.compiles = 0
+		
+		def count_compiles(self):
+			self.compiles += 1
+		script.try_to_compile = new.instancemethod(count_compiles, script, None)
+		
+		self.assertEqual(script.compiles, 0)
+		script.check_for_update()
+		self.assertEqual(script.compiles, 0)
+		source.time = 2
+		script.check_for_update()
+		self.assertEqual(script.compiles, 1)
 		
 		
 if __name__ == '__main__':
