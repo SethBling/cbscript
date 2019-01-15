@@ -1,4 +1,3 @@
-import scriptparse
 import global_context
 import mcworld
 from environment import environment
@@ -10,10 +9,17 @@ import math
 import collections
 
 class cbscript(object):
-	def __init__(self, source_file):
+	def __init__(self, source_file, parse_func):
 		self.source_file = source_file
+		self.parse = parse_func
 		self.namespace = self.source_file.get_base_name().split('.')[0].lower()
 		self.modified = self.source_file.get_last_modified()
+	
+	def log(self, text):
+		print(text)
+		
+	def log_traceback(self):
+		traceback.print_exc()
 	
 	def check_for_update(self):
 		last_modified = self.source_file.get_last_modified()
@@ -24,31 +30,34 @@ class cbscript(object):
 	
 	def try_to_compile(self):
 		try:
-			print('Compiling {0}...'.format(self.namespace))
+			self.log('Compiling {0}...'.format(self.namespace))
 			success = self.compile_all()
 			if success:
-				print "Script successfully applied."
+				self.log("Script successfully applied.")
 			else:
-				print "Script had compile error(s).\a"
+				self.log("Script had compile error(s).\a")
 		except SyntaxError as e:
-			print(str(e) + '\a')
+			self.log(str(e) + '\a')
 		except Exception as e:
-			print "Compiler encountered unexpected error during compilation:\a"
-			traceback.print_exc()
+			self.log("Compiler encountered unexpected error during compilation:\a")
+			self.log_traceback()
 		
+	def create_world(self, dir, namespace):
+		return mcworld.mcworld(dir, namespace)
+	
 	def compile_all(self):
 		text = self.source_file.get_text()
 	
-		result = scriptparse.parse(text + "\n")
+		result = self.parse(text + "\n")
 		
 		if result == None:
-			print('Unable to parse script.')
+			self.log('Unable to parse script.')
 			return False
 		
 		type, parsed = result
 		
 		if type <> 'program':
-			print('Script does not contain a full program.')
+			self.log('Script does not contain a full program.')
 			return False
 			
 		self.global_context = global_context.global_context(self.namespace)
@@ -60,7 +69,7 @@ class cbscript(object):
 		try:
 			global_func.compile_blocks(parsed['assignments'])
 		except:
-			traceback.print_exc()
+			self.log_traceback
 			return False
 
 		for section in parsed['sections']:
@@ -77,12 +86,12 @@ class cbscript(object):
 			try:
 				compile_section(section, global_environment)
 			except:
-				traceback.print_exc()
+				self.log_traceback()
 				return False
 		
 		self.post_processing()
 			
-		world = mcworld.mcworld(parsed["dir"], self.namespace)
+		world = self.create_world(parsed["dir"], self.namespace)
 
 		world.write_functions(self.global_context.functions)
 		world.write_tags(self.global_context.clocks, self.global_context.block_tags)
@@ -112,7 +121,7 @@ class cbscript(object):
 		f = self.global_context.get_reset_function()
 		
 		for t in xrange(self.global_context.temp):
-			f.insert_command('/scoreboard objectives add temp{0} dummy'.format(str(t)), 0)
+			f.insert_command('scoreboard objectives add temp{0} dummy'.format(str(t)), 0)
 	
 	def add_constants(self):
 		self.global_context.add_constant_definitions()
@@ -122,12 +131,16 @@ class cbscript(object):
 		
 		if self.global_context.rand > 0:
 			objective = self.global_context.get_random_objective()
-			f.add_command('/kill @e[type=armor_stand,name=RandBasis,scores={{{0}=0..}}]'.format(objective))
-			f.add_command("/scoreboard objectives add {0} dummy".format(objective))
+			commands = []
+			commands.append('kill @e[type=armor_stand,name=RandBasis,scores={{{0}=0..}}]'.format(objective))
+			commands.append("scoreboard objectives add {0} dummy".format(objective))
 			for i in xrange(self.global_context.rand):
-				f.add_command('/summon minecraft:armor_stand ~ ~ ~ {CustomName:"\\"RandBasis\\"", "Invulnerable":1b, "Invisible":1b, "Marker":1b, "NoGravity":1b}')
-				f.add_command('/scoreboard players add @e[type=armor_stand,name=RandBasis] {0} 1'.format(objective))
-			f.add_command('/scoreboard players remove @e[type=armor_stand,name=RandBasis] {0} 1'.format(objective))	
+				commands.append('summon minecraft:armor_stand ~ ~ ~ {CustomName:"\\"RandBasis\\"", "Invulnerable":1b, "Invisible":1b, "Marker":1b, "NoGravity":1b}')
+				commands.append('scoreboard players add @e[type=armor_stand,name=RandBasis] {0} 1'.format(objective))
+			commands.append('scoreboard players remove @e[type=armor_stand,name=RandBasis] {0} 1'.format(objective))	
+			
+			for i in range(len(commands)):
+				f.insert_command(commands[i], i)
 			
 	def add_trigger_objectives(self):
 		None

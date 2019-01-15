@@ -4,6 +4,7 @@ from mock_source_file import mock_source_file
 from mock_mcfunction import mock_mcfunction
 from mock_environment import mock_environment
 from mock_global_context import mock_global_context
+from mock_mcworld import mock_mcworld
 import mcfunction
 from selector_definition import selector_definition
 from scratch_tracker import scratch_tracker
@@ -1142,7 +1143,7 @@ class test_cbscript(unittest.TestCase):
 		
 		compiles = [0]
 		
-		script = cbscript(source)
+		script = cbscript(source, None)
 		script.compiles = 0
 		
 		def count_compiles(self):
@@ -1156,6 +1157,114 @@ class test_cbscript(unittest.TestCase):
 		script.check_for_update()
 		self.assertEqual(script.compiles, 1)
 		
+	def test_cbscript_try_to_compile(self):
+		source = mock_source_file()
+		
+		script = cbscript(source, None)
+		script.log_lines = []
+		def mock_log(self, text):
+			self.log_lines.append(text)
+		script.log = new.instancemethod(mock_log, script, None)
+		script.compile_all = new.instancemethod(lambda s: True, script, None)
+		
+		script.try_to_compile()
+		self.assertEqual(script.log_lines, [
+			'Compiling unittest...',
+			'Script successfully applied.'
+		])
+		
+		script = cbscript(source, None)
+		script.log_lines = []
+		script.log = new.instancemethod(mock_log, script, None)
+		script.compile_all = new.instancemethod(lambda s: False, script, None)
+		
+		script.try_to_compile()
+		self.assertEqual(script.log_lines, [
+			'Compiling unittest...',
+			'Script had compile error(s).\x07'
+		])
+		
+		def bad_parse(text):
+			raise SyntaxError('Test error')
+		script = cbscript(source, bad_parse)
+		script.log_lines = []
+		script.log = new.instancemethod(mock_log, script, None)
+		
+		script.try_to_compile()
+		self.assertEqual(script.log_lines, [
+			'Compiling unittest...',
+			'Test error\x07'
+		])
+		
+		def bad_compile(text):
+			raise Exception('Test exception')
+		script = cbscript(source, None)
+		script.log_lines = []
+		script.log = new.instancemethod(mock_log, script, None)
+		script.tracebacks = 0
+		def mock_log_traceback(self):
+			self.tracebacks += 1
+		script.log_traceback = new.instancemethod(mock_log_traceback, script, None)
+		script.compile_all = new.instancemethod(bad_compile, script, None)
+		
+		script.try_to_compile()
+		self.assertEqual(script.log_lines, [
+			'Compiling unittest...',
+			'Compiler encountered unexpected error during compilation:\x07'
+		])
+		self.assertEqual(script.tracebacks, 1)
+		
+	def test_cbscript_compile_all(self):
+		source = mock_source_file()
+		
+		parsed = {}
+		parsed['scale'] = 100
+		parsed['assignments'] = [block_tag_block(0, 'test_tag', ['test_block'])]
+		parsed['sections'] = [
+			('macro', 'test_macro', [], [], []),
+			('template_function', 'test_template_function', [], [], []),
+			('function', 'reset', [], [], [scoreboard_assignment_block(0, (('Var', ('Global', 'test_var')), '=', func_expr(function_call_block(0, 'rand', [num_expr(5)]))))]),
+			('clock', 'test_clock', [], [] ,[]),
+		]
+		parsed['dir'] = 'test_dir'
+		parsed['desc'] = 'test description'
+		
+		script = cbscript(source, lambda t: ('program', parsed))
+		def mock_create_world(self, dir, namespace):
+			world = mock_mcworld(dir, namespace)
+			self.mock_world = world
+			return world
+		script.create_world = new.instancemethod(mock_create_world, script, None)
+		
+		self.assertTrue(script.compile_all())
+		world = script.mock_world
+		self.assertEqual(world.functions, ['reset', 'test_clock'])
+		self.assertEqual(world.clocks, ['test_clock'])
+		self.assertEqual(world.tags, ['test_tag'])
+		self.assertEqual(world.desc, 'test description')
+		self.assertTrue(world.written)
+		self.assertTrue('test_var' in script.global_context.objectives)
+		print(script.global_context.get_reset_function().commands)
+		self.assertEqual(script.global_context.get_reset_function().commands, [
+			'scoreboard objectives add test_var dummy',
+			'kill @e[type=minecraft:armor_stand,name=RandBasis,scores={RVunittest=0..}]', 
+			'scoreboard objectives add RVunittest dummy', 
+			'summon minecraft:armor_stand ~ ~ ~ {CustomName:"\\"RandBasis\\"", "Invulnerable":1b, "Invisible":1b, "Marker":1b, "NoGravity":1b}', 
+			'scoreboard players add @e[type=minecraft:armor_stand,name=RandBasis] RVunittest 1', 
+			'summon minecraft:armor_stand ~ ~ ~ {CustomName:"\\"RandBasis\\"", "Invulnerable":1b, "Invisible":1b, "Marker":1b, "NoGravity":1b}', 
+			'scoreboard players add @e[type=minecraft:armor_stand,name=RandBasis] RVunittest 1', 
+			'summon minecraft:armor_stand ~ ~ ~ {CustomName:"\\"RandBasis\\"", "Invulnerable":1b, "Invisible":1b, "Marker":1b, "NoGravity":1b}', 
+			'scoreboard players add @e[type=minecraft:armor_stand,name=RandBasis] RVunittest 1', 
+			'summon minecraft:armor_stand ~ ~ ~ {CustomName:"\\"RandBasis\\"", "Invulnerable":1b, "Invisible":1b, "Marker":1b, "NoGravity":1b}', 
+			'scoreboard players add @e[type=minecraft:armor_stand,name=RandBasis] RVunittest 1', 
+			'summon minecraft:armor_stand ~ ~ ~ {CustomName:"\\"RandBasis\\"", "Invulnerable":1b, "Invisible":1b, "Marker":1b, "NoGravity":1b}', 
+			'scoreboard players add @e[type=minecraft:armor_stand,name=RandBasis] RVunittest 1', 
+			'scoreboard players remove @e[type=minecraft:armor_stand,name=RandBasis] RVunittest 1',
+			'scoreboard objectives add res_scratch0 dummy', 
+			'scoreboard players set Global res_scratch0 0', 
+			'scoreboard players operation Global res_scratch0 += @e[type=minecraft:armor_stand,limit=1,sort=random,scores={RVunittest=..4}] RVunittest', 
+			'scoreboard players operation Global test_var = Global res_scratch0', 
+		])
 		
 if __name__ == '__main__':
     unittest.main()
