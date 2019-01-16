@@ -41,14 +41,16 @@ def formatJsonText(func, text):
 			if unformatted == None:
 				parts = command.split(".")
 				if len(parts) > 2:
-					continue
+					raise SyntaxError('Json text has invalid () text: "{}"'.format(command))
 				if len(parts) == 1:
+					if len(parts[0]) == 0:
+						raise SyntaxError('Empty () in json text.')
 					if parts[0][0] == '@':
 						formatted = formatted + ',{{"selector":"{0}"{1}}}'.format(parts[0],getPropertiesText(properties))
 					else:
 						formatted = formatted + ',{{"score":{{"name":"Global","objective":"{0}"}}{1}}}'.format(parts[0], getPropertiesText(properties))
 				if len(parts) == 2:
-					tempId = func.environment.scratch.get_scratch()
+					tempId = func.get_scratch()
 					local_scratch.append(tempId)
 					func.add_command("/scoreboard players reset @a {0}".format(tempId))
 					func.get_path(parts[0], parts[1])
@@ -70,7 +72,7 @@ def formatJsonText(func, text):
 	formatted = formatted + "]"
 	
 	for scratch_var in local_scratch:
-		func.environment.scratch.free_scratch(scratch_var)
+		func.free_scratch(scratch_var)
 	
 	return formatted
 
@@ -100,8 +102,7 @@ def parseTextFormatting(text):
 	COMMAND = 4
 	SCOREBOARD = 5
 	PROPERTY = 6
-	ESCAPED = 7
-	
+
 	escaped = False
 	
 	mode = NONE
@@ -133,8 +134,6 @@ def parseTextFormatting(text):
 					segments.append((seg, copy.copy(properties)))
 					seg = ""
 				mode = PROPERTY
-			elif ch == "\\":
-				mode = ESCAPED
 			else:
 				seg = seg + ch
 		elif mode == FORMATTED:
@@ -195,11 +194,8 @@ def parseTextFormatting(text):
 			elif ch == "{":
 				seg = seg + ch
 			else:
-				print("Unexpected formatting character {{{0} in tell command".format(ch))
+				raise SyntaxError('Unexpected formatting character {{{0} in tell command'.format(ch))
 			
-			mode = NONE
-		elif mode == ESCAPED:
-			seg = seg + ch
 			mode = NONE
 	
 	if len(seg) > 0:

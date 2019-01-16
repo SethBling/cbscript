@@ -9,6 +9,7 @@ import mcfunction
 from selector_definition import selector_definition
 from scratch_tracker import scratch_tracker
 from cbscript import cbscript
+import tellraw
 import global_context
 from block_types.array_assignment_block import array_assignment_block
 from block_types.array_definition_block import array_definition_block
@@ -1244,7 +1245,6 @@ class test_cbscript(unittest.TestCase):
 		self.assertEqual(world.desc, 'test description')
 		self.assertTrue(world.written)
 		self.assertTrue('test_var' in script.global_context.objectives)
-		print(script.global_context.get_reset_function().commands)
 		self.assertEqual(script.global_context.get_reset_function().commands, [
 			'scoreboard objectives add test_var dummy',
 			'kill @e[type=minecraft:armor_stand,name=RandBasis,scores={RVunittest=0..}]', 
@@ -1265,6 +1265,153 @@ class test_cbscript(unittest.TestCase):
 			'scoreboard players operation Global res_scratch0 += @e[type=minecraft:armor_stand,limit=1,sort=random,scores={RVunittest=..4}] RVunittest', 
 			'scoreboard players operation Global test_var = Global res_scratch0', 
 		])
+		
+	def test_tellraw_get_properties_text(self):
+		properties = {
+			'color': 'red',
+			'bold': True,
+			'underlined': True,
+			'italic': True,
+			'strikethrough': True
+		}
+		self.assertEqual(tellraw.getPropertiesText(properties), ',"color":"red","bold":true,"underlined":true,"italic":true,"strikethrough":true')
+		
+		properties = {
+			'color': None,
+			'bold': False,
+			'underlined': False,
+			'italic': False,
+			'strikethrough': False
+		}
+		self.assertEqual(tellraw.getPropertiesText(properties), '')
+		
+	def test_tellraw_format_json_text(self):
+		func = mock_mcfunction()
+		
+		self.assertEqual(
+			tellraw.formatJsonText(func, 'test'),
+			'["",{"text":"test"}]'
+		)
+		
+		self.assertEqual(
+			tellraw.formatJsonText(func, '{rtest'),
+			'["",{"text":"test","color":"dark_red"}]'
+		)
+		
+		self.assertEqual(
+			tellraw.formatJsonText(func, '[test text](/test_command)'),
+			'["",{"text":"test text","clickEvent":{"action":"run_command","value":"/test_command"}}]'
+		)
+		
+		self.assertEqual(
+			tellraw.formatJsonText(func, '(global_var)'),
+			'["",{"score":{"name":"Global","objective":"global_var"}}]'
+		)
+		
+		self.assertEqual(
+			tellraw.formatJsonText(func, '(@test_selector.test_var)'),
+			'["",{"score":{"name":"@s","objective":"test_scratch1"}}]'
+		)
+		
+		with self.assertRaises(SyntaxError):
+			tellraw.formatJsonText(func, '(a.b.c)')
+		
+		self.assertEqual(
+			tellraw.formatJsonText(func, '(@test_selector[])'),
+			'["",{"selector":"@test_selector[]"}]'
+		)
+		
+		with self.assertRaises(SyntaxError):
+			tellraw.formatJsonText(func, 'test () text'),
+		
+		self.assertEqual(
+			tellraw.formatJsonText(func, '[link](http://sethbling.com)'),
+			'["",{"text":"link","clickEvent":{"action":"open_url","value":"http://sethbling.com"}}]'
+		)
+		
+		self.assertEqual(
+			tellraw.formatJsonText(func, '[link](//suggest_test)'),
+			'["",{"text":"link","clickEvent":{"action":"suggest_command","value":"/suggest_test"}}]'
+		)
+		
+	def test_tellraw_parse_text_formatting(self):
+		self.assertEqual(
+			tellraw.parseTextFormatting('\('),
+			[('(', {'color': None, 'underlined': False, 'strikethrough': False, 'bold': False, 'italic': False})]
+		)
+		
+		self.assertEqual(
+			tellraw.parseTextFormatting('a['),
+			[('a', {'color': None, 'underlined': False, 'strikethrough': False, 'bold': False, 'italic': False})]
+		)
+		
+		self.assertEqual(
+			tellraw.parseTextFormatting('a{'),
+			[('a', {'color': None, 'underlined': False, 'strikethrough': False, 'bold': False, 'italic': False})]
+		)
+		
+		self.assertEqual(
+			tellraw.parseTextFormatting('[formatted]test'),
+			[
+				(('formatted', None), {'color': None, 'underlined': False, 'strikethrough': False, 'bold': False, 'italic': False}),
+				('test', {'color': None, 'underlined': False, 'strikethrough': False, 'bold': False, 'italic': False})
+			]
+		)
+		
+		self.assertEqual(
+			tellraw.parseTextFormatting('{r{Utest{-clear'),
+			[
+				('test', {'color': 'dark_red', 'underlined': True, 'strikethrough': False, 'bold': False, 'italic': False}),
+				('clear', {'color': None, 'underlined': False, 'strikethrough': False, 'bold': False, 'italic': False})
+			]
+		)
+		
+		self.assertEqual(
+			tellraw.parseTextFormatting('{Utest{uclear'),
+			[
+				('test', {'color': None, 'underlined': True, 'strikethrough': False, 'bold': False, 'italic': False}),
+				('clear', {'color': None, 'underlined': False, 'strikethrough': False, 'bold': False, 'italic': False})
+			]
+		)
+		
+		self.assertEqual(
+			tellraw.parseTextFormatting('{Stest{sclear'),
+			[
+				('test', {'color': None, 'underlined': False, 'strikethrough': True, 'bold': False, 'italic': False}),
+				('clear', {'color': None, 'underlined': False, 'strikethrough': False, 'bold': False, 'italic': False})
+			]
+		)
+		
+		self.assertEqual(
+			tellraw.parseTextFormatting('{Dtest{dclear'),
+			[
+				('test', {'color': None, 'underlined': False, 'strikethrough': False, 'bold': True, 'italic': False}),
+				('clear', {'color': None, 'underlined': False, 'strikethrough': False, 'bold': False, 'italic': False})
+			]
+		)
+		
+		self.assertEqual(
+			tellraw.parseTextFormatting('{Itest{iclear'),
+			[
+				('test', {'color': None, 'underlined': False, 'strikethrough': False, 'bold': False, 'italic': True}),
+				('clear', {'color': None, 'underlined': False, 'strikethrough': False, 'bold': False, 'italic': False})
+			]
+		)
+		
+		self.assertEqual(
+			tellraw.parseTextFormatting('{{'),
+			[('{', {'color': None, 'underlined': False, 'strikethrough': False, 'bold': False, 'italic': False})]
+		)
+		
+		with self.assertRaises(SyntaxError):
+			tellraw.parseTextFormatting('{+')
+		
+		self.assertEqual(
+			tellraw.parseTextFormatting('\{'),
+			[('{', {'color': None, 'underlined': False, 'strikethrough': False, 'bold': False, 'italic': False})]
+		)
+		
+		
 		
 if __name__ == '__main__':
     unittest.main()
