@@ -27,58 +27,6 @@ def compile_section(section, environment):
 		
 	f.compile_blocks(lines)
 
-def switch_cases(func, var, cases, switch_func_name = 'switch', case_func_name = 'case'):
-	if len(cases) == 1:
-		vmin, vmax, sub, line, dollarid = cases[0]
-		if dollarid != None:
-			func.set_dollarid(dollarid, vmin)
-		func.compile_blocks(sub)
-	else:
-		for q in range(4):
-			imin = q * len(cases) / 4
-			imax = (q+1) * len(cases) / 4
-			if imin == imax:
-				continue
-		
-			vmin = cases[imin][0]
-			vmax = cases[imax-1][1]
-			line = cases[imin][3]
-			
-			sub_cases = cases[imin:imax]
-			case_func = func.create_child_function()
-			
-			if len(sub_cases) == 1:
-				vmin, vmax, sub, line, dollarid = sub_cases[0]
-				if dollarid != None:
-					case_func.set_dollarid(dollarid, vmin)
-				case_func.compile_blocks(sub)
-					
-				single_command = case_func.single_command()
-				if single_command != None:
-					if single_command.startswith('/'):
-						single_command = single_command[1:]
-						
-					func.add_command('execute if score Global {} matches {}..{} run {}'.format(var, vmin, vmax, single_command))
-				else:
-					unique = func.get_unique_id()
-
-					if vmin == vmax:
-						case_name = '{}{}_{:03}_ln{}'.format(case_func_name, vmin, unique, line)
-					else:
-						case_name = '{}{}-{}_{:03}_ln{}'.format(case_func_name, vmin, vmax, unique, line)
-						
-					func.add_command('execute if score Global {} matches {}..{} run function {}:{}'.format(var, vmin, vmax, func.namespace, case_name))
-					func.register_function(case_name, case_func)
-			else:
-				unique = func.get_unique_id()
-				case_name = '{}{}-{}_{:03}_ln{}'.format(switch_func_name, vmin, vmax, unique, line)
-				func.add_command('execute if score Global {} matches {}..{} run function {}:{}'.format(var, vmin, vmax, func.namespace, case_name))
-				func.register_function(case_name, case_func)
-			
-				if not switch_cases(case_func, var, sub_cases):
-					return False
-			
-	return True
 
 def combine_selectors(selector, qualifiers):
 	if selector[-1] <> ']':
@@ -382,6 +330,60 @@ class mcfunction(object):
 		
 		for param in params:
 			self.register_local(param)
+			
+	def switch_cases(self, var, cases, switch_func_name = 'switch', case_func_name = 'case'):
+		if len(cases) == 1:
+			vmin, vmax, sub, line, dollarid = cases[0]
+			if dollarid != None:
+				self.set_dollarid(dollarid, vmin)
+			self.compile_blocks(sub)
+		else:
+			for q in range(4):
+				imin = q * len(cases) / 4
+				imax = (q+1) * len(cases) / 4
+				if imin == imax:
+					continue
+			
+				vmin = cases[imin][0]
+				vmax = cases[imax-1][1]
+				line = cases[imin][3]
+				
+				sub_cases = cases[imin:imax]
+				case_func = self.create_child_function()
+				
+				if len(sub_cases) == 1:
+					vmin, vmax, sub, line, dollarid = sub_cases[0]
+					if dollarid != None:
+						case_func.set_dollarid(dollarid, vmin)
+					case_func.compile_blocks(sub)
+						
+					single_command = case_func.single_command()
+					if single_command != None:
+						if single_command.startswith('/'):
+							single_command = single_command[1:]
+							
+						self.add_command('execute if score Global {} matches {}..{} run {}'.format(var, vmin, vmax, single_command))
+					else:
+						unique = self.get_unique_id()
+
+						if vmin == vmax:
+							case_name = '{}{}_{:03}_ln{}'.format(case_func_name, vmin, unique, line)
+						else:
+							case_name = '{}{}-{}_{:03}_ln{}'.format(case_func_name, vmin, vmax, unique, line)
+							
+						self.add_command('execute if score Global {} matches {}..{} run function {}:{}'.format(var, vmin, vmax, self.namespace, case_name))
+						self.register_function(case_name, case_func)
+				else:
+					unique = self.get_unique_id()
+					case_name = '{}{}-{}_{:03}_ln{}'.format(switch_func_name, vmin, vmax, unique, line)
+					self.add_command('execute if score Global {} matches {}..{} run function {}:{}'.format(var, vmin, vmax, self.namespace, case_name))
+					self.register_function(case_name, case_func)
+				
+					if not case_func.switch_cases(var, sub_cases):
+						return False
+				
+		return True
+
 		
 	def add_operation(self, selector, id1, operation, id2):
 		selector = self.environment.apply(selector)

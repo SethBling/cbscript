@@ -471,16 +471,17 @@ class test_cbscript(unittest.TestCase):
 		block = switch_block(0, num_expr(2), [case1, case2])
 		block.compile(func)
 		
-		self.assertEqual(len(func.child_functions), 3)
-		self.assertEqual(func.commands, [
-			'scoreboard players set Global test_scratch1 2',
-			'execute if score Global test_scratch1 matches 1..3 run function test_namespace:case1-3_001_lnUnknown',
-			'execute if score Global test_scratch1 matches 4..4 run function test_namespace:case4_001_lnUnknown',
-			'execute if score Global test_scratch1 matches 5..5 run function test_namespace:case5_001_lnUnknown'
+		self.assertEqual(func.switch_calls, [(
+			'test_scratch1',
+			[
+				(1, 3, [], 'Unknown', None),
+				(4, 4, [], 'Unknown', 'test_id'),
+				(5, 5, [], 'Unknown', 'test_id')
+			],
+			'switch',
+			'case')
 		])
-		self.assertTrue('case1-3_001_lnUnknown' in func.functions)
-		self.assertTrue('case4_001_lnUnknown' in func.functions)
-		self.assertTrue('case5_001_lnUnknown' in func.functions)
+		self.assertEqual(func.commands, ['scoreboard players set Global test_scratch1 2'])
 		
 	def test_compile_tell(self):
 		func = mock_mcfunction()

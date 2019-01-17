@@ -23,6 +23,7 @@ class mock_mcfunction(object):
 		self.constants = {}
 		self.finalized = False
 		self.temp = 0
+		self.switch_calls = []
 		
 	def add_operation(self, selector, id1, operation, id2):
 		self.add_command("scoreboard players operation {0} {1} {2} {0} {3}".format(selector, id1, operation, id2))
@@ -166,3 +167,8 @@ class mock_mcfunction(object):
 		
 	def free_temp_var(self, var):
 		None
+		
+	def switch_cases(self, var, cases, switch_func_name = 'switch', case_func_name = 'case'):
+		self.switch_calls.append((var, cases, switch_func_name, case_func_name))
+		
+		return True

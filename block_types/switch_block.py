@@ -1,4 +1,4 @@
-from mcfunction import switch_cases, get_line
+from mcfunction import get_line
 import collections
 
 class switch_block(object):
@@ -61,7 +61,7 @@ class switch_block(object):
 				
 			prevmax = vmax
 			
-		if not switch_cases(func, result, cases):
+		if not func.switch_cases(result, cases):
 			return False
 				
 		func.free_scratch(result)
