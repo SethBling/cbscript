@@ -3,7 +3,7 @@ class comment_block(object):
 		self.line = line
 		self.text = text
 		if text[0] != '#':
-			raise Exception('Comment does not being with "#"')
+			raise Exception('Comment does not begin with "#"')
 		
 	def compile(self, func):
 		func.add_command(self.text)

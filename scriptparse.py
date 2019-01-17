@@ -43,7 +43,7 @@ from vector_expressions.vector_binop_vector_expr import vector_binop_vector_expr
 from vector_expressions.vector_expr import vector_expr
 from vector_expressions.vector_here_expr import vector_here_expr
 from vector_expressions.vector_var_expr import vector_var_expr
-from mcfunction import line_numbers
+import mcfunction
 
 tokens = scriptlex.tokens
 
@@ -58,13 +58,13 @@ precedence = (
 def p_parsed_assignment(p):
 	'''parsed : program'''
 	p[0] = ('program', p[1])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### Parsed
 def p_parsed_expr(p):
 	'''parsed : expr'''
 	p[0] = ('expr', p[1])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Program
 def p_program(p):
@@ -75,17 +75,17 @@ def p_program(p):
 	p[0]['scale'] = p[6]
 	p[0]['assignments'] = p[7]
 	p[0]['sections'] = p[8]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### Optdesc
 def p_optdesc(p):
 	'''optdesc : desc PYTHON newlines
 			   | empty'''
 	if len(p) < 4:
-	    p[0] = 'No Description'
+		p[0] = 'No Description'
 	else:
-	    p[0] = p[2]
-	line_numbers.append((p[0], p.lineno(1)))
+		p[0] = p[2]
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Optscale
 def p_optscale(p):
@@ -100,7 +100,7 @@ def p_optscale_none(p):
 def p_sections_multiple(p):
 	'''sections : section_commented newlines sections'''
 	p[0] = [p[1]] + p[3]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_sections_empty(p):
 	'''sections : empty'''
@@ -111,12 +111,12 @@ def p_section_commented(p):
 	type, name, template_params, params, lines = p[2]
 	
 	p[0] = type, name, template_params, params, [comment_block(p.lineno(1), '#' + line) for line in p[1]] + lines
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_optcomments(p):
 	'''optcomments : COMMENT optnewlines optcomments'''
 	p[0] = [p[1]] + p[3]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_optcomments_empty(p):
 	'''optcomments : empty'''
@@ -129,13 +129,13 @@ def p_section(p):
 			   | macrosection
 			   | template_function_section'''
 	p[0] = p[1]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### Reset Section	
 def p_resetsection(p):
 	'''resetsection : reset newlines blocklist end'''
 	p[0] = ('reset', 'reset', [], [], p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def validate_mcfunction_name(str):
 	for ch in str:
@@ -149,7 +149,7 @@ def p_clocksection(p):
 	validate_mcfunction_name(p[2])
 	
 	p[0] = ('clock', p[2], [], [], p[4])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Function Section
 def p_functionsection(p):
@@ -157,7 +157,7 @@ def p_functionsection(p):
 	validate_mcfunction_name(p[2])
 
 	p[0] = ('function', p[2], [], p[4], p[7])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### Template Function Section
 def p_template_function_section(p):
@@ -165,18 +165,18 @@ def p_template_function_section(p):
 	validate_mcfunction_name(p[2])
 	
 	p[0] = ('template_function', p[2], p[4], p[7], p[10])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### Macro section
 def p_macrosection(p):
 	'''macrosection : macro DOLLAR ID macro_args newlines blocklist end'''
 	p[0] = ('macro', p[3], [], p[4], p[6])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_macro_args(p):
 	'''macro_args : LPAREN macro_params RPAREN'''
 	p[0] = p[2]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_macro_args_empty(p):
 	'''macro_args : empty'''
@@ -185,12 +185,12 @@ def p_macro_args_empty(p):
 def p_macro_params(p):
 	'''macro_params : DOLLAR ID COMMA macro_params'''
 	p[0] = [p[2]] + p[4]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_macro_params_one(p):
 	'''macro_params : DOLLAR ID'''
 	p[0] = [p[2]]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_macro_params_empty(p):
 	'''macro_params : empty'''
@@ -201,7 +201,6 @@ def p_newlines(p):
 	'''newlines : NEWLINE newlines
 				| NEWLINE'''
 	p[0] = None
-	line_numbers.append((p[0], p.lineno(1)))
 	
 def p_optnewlines(p):
 	'''optnewlines : newlines
@@ -211,12 +210,12 @@ def p_optnewlines(p):
 def p_id_list(p):
 	'''id_list : ID COMMA id_list'''
 	p[0] = [p[1]] + p[3]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_id_list_one(p):
 	'''id_list : ID'''
 	p[0] = [p[1]]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_id_list_empty(p):
 	'''id_list : empty'''
@@ -230,12 +229,12 @@ def p_optassignments_multiple(p):
 					  | blocktag newlines optassignments
 					  | array_definition newlines optassignments'''
 	p[0] = [p[1]] + p[3]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_optassignments_comment(p):
 	'''optassignments : COMMENT newlines optassignments'''
 	p[0] = p[3]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_optassignments_empty(p):
 	'''optassignments : empty'''
@@ -262,7 +261,7 @@ def p_variable_array_expr(p):
 def p_optcomment(p):
 	'''optcomment : COMMENT'''
 	p[0] = [comment_block(p.lineno(1), p[1])]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_optcomment_empty(p):
 	'''optcomment : empty'''
@@ -271,7 +270,7 @@ def p_optcomment_empty(p):
 def p_blocklist_multiple(p):
 	'''blocklist : codeblock optcomment newlines blocklist'''
 	p[0] = p[2] + [p[1]] + p[4]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_blocklist_empty(p):
 	'''blocklist : empty'''
@@ -281,175 +280,176 @@ def p_blocklist_empty(p):
 def p_block_comment(p):
 	'''codeblock : COMMENT'''
 	p[0] = comment_block(p.lineno(1), p[1])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_block_command(p):
 	'''codeblock : COMMAND'''
 	p[0] = command_block(p.lineno(1), p[1])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_block_move(p):
 	'''codeblock : move fullselector relcoords'''
 	p[0] = move_block(p.lineno(1), p[2], p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_block_for(p):
 	'''codeblock : for DOLLAR ID in PYTHON newlines blocklist end'''
 	p[0] = python_for_block(p.lineno(1), p[3], p[5], p[7])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Execute
 def p_execute_as_id_global(p):
 	'''codeblock : as variable newlines blocklist end'''
 	p[0] = execute_block(p.lineno(1), [('AsId', (p[2], None))], p[4])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_execute_as_id_type_global(p):
 	'''codeblock : as variable LPAREN ATID RPAREN newlines blocklist end'''
 	p[0] = execute_block(p.lineno(1), [('AsId', (p[2], p[4]))], p[7])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_execute_as_id_do_global(p):
 	'''codeblock : as variable do codeblock'''
 	p[0] = execute_block(p.lineno(1), [('AsId', (p[2], None))], [p[4]])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_execute_as_id_do_type_global(p):
 	'''codeblock : as variable LPAREN ATID RPAREN do codeblock'''
 	p[0] = execute_block(p.lineno(1), [('AsId', (p[2], p[4]))], [p[7]])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_execute_as_create(p):
 	'''codeblock : as create_block newlines blocklist end'''
 	p[0] = execute_block(p.lineno(1), [('AsCreate', p[2])], p[4])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_execute_as_create_do(p):
 	'''codeblock : as create_block do codeblock'''
-	p[0] = execute_block(p.lineno(1), [('AsCreate', p[2][1])], [p[4]])
-	line_numbers.append((p[0], p.lineno(1)))
+	p[0] = execute_block(p.lineno(1), [('AsCreate', p[2])], [p[4]])
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_execute_chain(p):
 	'''codeblock : execute_items newlines blocklist end'''
 	p[0] = execute_block(p.lineno(1), p[1], p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_execute_chain_inline(p):
 	'''codeblock : execute_items do codeblock
 				 | execute_items then codeblock'''
 	p[0] = execute_block(p.lineno(1), p[1], [p[3]])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### Execute Items	
 def p_execute_items_one(p):
 	'''execute_items : execute_item'''
 	p[0] = [p[1]]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_execute_items(p):
 	'''execute_items : execute_item execute_items'''
 	p[0] = [p[1]] + p[2]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_execute_if_condition(p):
 	'''execute_item : if conditions'''
 	p[0] = ('If', p[2])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_execute_unless_condition(p):
 	'''execute_item : unless conditions'''
 	p[0] = ('Unless', p[2])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_execute_as(p):
 	'''execute_item : as fullselector'''
 	p[0] = ('As', p[2])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_execute_rotated(p):
 	'''execute_item : rotated fullselector'''
 	p[0] = ('Rotated', p[2])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_execute_facing_coords(p):
 	'''execute_item : facing relcoords'''
 	p[0] = ('FacingCoords', p[2])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_execute_facing_entity(p):
 	'''execute_item : facing fullselector'''
 	p[0] = ('FacingEntity', p[2])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_execute_align(p):
 	'''execute_item : align ID'''
 	if p[2] not in ['x','y','z','xy','xz','yz','xyz']:
-		raise ParseError('Must align to a combination of x, y, and z axes')
+		raise SyntaxError('Must align to a combination of x, y, and z axes')
 	p[0] = ('Align', p[2])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_execute_at_selector(p):
 	'''execute_item : at fullselector'''
 	p[0] = ('At', (p[2], None))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_execute_at_relcoords(p):
 	'''execute_item : at relcoords'''
 	p[0] = ('At', (None, p[2]))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_execute_at_selector_relcoords(p):
 	'''execute_item : at fullselector relcoords'''
 	p[0] = ('At', (p[2], p[3]))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_execute_at_vector(p):
 	'''execute_item : at vector_expr'''
 	p[0] = ('AtVector', (None, p[2]))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_execute_at_vector_scale(p):
 	'''execute_item : at LPAREN virtualnumber RPAREN vector_expr'''
 	p[0] = ('AtVector', (p[3], p[5]))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_execute_in_dimension(p):
-    '''execute_item : in overworld
-                    | in the_end
-                    | in the_nether'''
-    p[0] = ('In', p[2])
+	'''execute_item : in overworld
+					| in the_end
+					| in the_nether'''
+	p[0] = ('In', p[2])
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### For selector	
 def p_for_selector(p):
 	'''codeblock : for ATID in fullselector newlines blocklist end'''
 	p[0] = for_selector_block(p.lineno(1), p[2], p[4], p[6])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### Conditions
 def p_conditions_one(p):
 	'''conditions : condition'''
 	p[0] = [p[1]]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_conditions(p):
 	'''conditions : condition and conditions'''
 	p[0] = [p[1]] + p[3]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_condition_pointer(p):
 	'''condition : variable EQUALEQUAL fullselector'''
 	p[0] = ('pointer', (p[1], p[3]))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_condition_pointer_reversed(p):
 	'''condition : fullselector EQUALEQUAL variable'''
 	p[0] = ('pointer', (p[3], p[1]))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_condition_fullselector(p):
 	'''condition : fullselector'''
 	p[0] = ('selector', p[1])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_condition_score(p):
 	'''condition : variable LT comparison
@@ -461,77 +461,77 @@ def p_condition_score(p):
 	if op == '==':
 		op = '='
 	p[0] = ('score', (p[1], op, p[3]))	
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_condition_vector_equality(p):
 	'''condition : vector_var EQUALEQUAL vector_var'''
 	p[0] = ('vector_equality', (p[1], p[3]))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_condition_bool(p):
 	'''condition : variable'''
 	p[0] = ('score', (p[1], '>', ('num', '0')))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_condition_not_bool(p):
 	'''condition : not variable'''
 	p[0] = ('score', (p[2], '<=', ('num', '0')))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_condition_block(p):
 	'''condition : block relcoords ID'''
 	p[0] = ('block', (p[2], p[3])) 
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 # Condition Comparisons
 def p_comparison_num(p):
 	'''comparison : virtualinteger'''
 	p[0] = ('num', p[1])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_comparison_global(p):
 	'''comparison : variable'''
 	p[0] = ('score', p[1])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### If python
 def p_block_if_command(p):
 	'''codeblock : if PYTHON newlines blocklist end'''
 	p[0] = python_if_block(p.lineno(1), p[2], p[4], [])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_block_ifelse_command(p):
 	'''codeblock : if PYTHON newlines blocklist else newlines blocklist end'''
 	p[0] = python_if_block(p.lineno(1), p[2], p[4], p[7])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### While
 def p_block_while(p):
 	'''codeblock : while conditions newlines blocklist end'''
 	p[0] = while_block(p.lineno(1), [('If', p[2])], p[4])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_block_while_execute(p):
 	'''codeblock : while conditions execute_items newlines blocklist end'''
 	p[0] = while_block(p.lineno(1), [('If', p[2])] + p[3], p[5])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### For	
 def p_block_for_index_by(p):
 	'''codeblock : for ID EQUALS expr to expr by expr newlines blocklist end'''
 	p[0] = for_index_block(p.lineno(1), p[2], p[4], p[6], p[8], p[10])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_block_for_index(p):
 	'''codeblock : for ID EQUALS expr to expr newlines blocklist end'''
 	p[0] = for_index_block(p.lineno(1), p[2], p[4], p[6], None, p[8])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Switch
 def p_switch(p):
 	'''codeblock : switch expr newlines cases end'''
 	p[0] = switch_block(p.lineno(1), p[2], p[4])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_cases_one(p):
 	'''cases : switch_case newlines'''
@@ -544,120 +544,120 @@ def p_cases_multiple(p):
 def p_switch_case_single(p):
 	'''switch_case : case virtualinteger newlines blocklist end'''
 	p[0] = ('range', (p[2], p[2], p[4]))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_switch_case_range(p):
 	'''switch_case : case virtualinteger to virtualinteger newlines blocklist end'''
 	p[0] = ('range', (p[2], p[4], p[6]))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_switch_case_python(p):
 	'''switch_case : case DOLLAR ID in PYTHON newlines blocklist end'''
 	p[0] = ('python', (p[3], p[5], p[7]))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### Tell/Title	
 def p_block_tell(p):
 	'''codeblock : tell fullselector PYTHON'''
 	p[0] = tell_block(p.lineno(1), p[2], p[3])
-	line_numbers.append((p[0], p.lineno(1)))
-    
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
 def p_block_title(p):
-    '''codeblock : title fullselector PYTHON
-                 | subtitle fullselector PYTHON
-                 | actionbar fullselector PYTHON'''
-    p[0] = title_block(p.lineno(1), p[1], p[2], None, p[3])
-    
+	'''codeblock : title fullselector PYTHON
+				 | subtitle fullselector PYTHON
+				 | actionbar fullselector PYTHON'''
+	p[0] = title_block(p.lineno(1), p[1], p[2], None, p[3])
+	
 def p_block_title_times(p):
-    '''codeblock : title fullselector virtualinteger virtualinteger virtualinteger PYTHON
-                 | subtitle fullselector virtualinteger virtualinteger virtualinteger PYTHON
-                 | actionbar fullselector virtualinteger virtualinteger virtualinteger PYTHON'''
-    p[0] = title_block(p.lineno(1), p[1], p[2], (p[3], p[4], p[5]), p[6])
+	'''codeblock : title fullselector virtualinteger virtualinteger virtualinteger PYTHON
+				 | subtitle fullselector virtualinteger virtualinteger virtualinteger PYTHON
+				 | actionbar fullselector virtualinteger virtualinteger virtualinteger PYTHON'''
+	p[0] = title_block(p.lineno(1), p[1], p[2], (p[3], p[4], p[5]), p[6])
 	
 def p_block_function_call(p):
 	'''codeblock : function_call
-	             | method_call
-	             | macro_call'''
+				 | method_call
+				 | macro_call'''
 	p[0] = p[1]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_block_template_function_call(p):
 	'''codeblock : template_function_call'''
 	p[0] = p[1]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_block_assignment(p):
 	'''codeblock : pythonassignment'''
 	p[0] = p[1]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_block_math(p):
 	'''codeblock : assignment'''
 	p[0] = scoreboard_assignment_block(p.lineno(1), p[1])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_block_selector_assignment(p):
 	'''codeblock : selector_assignment
-	             | selector_define_block'''
+				 | selector_define_block'''
 	p[0] = p[1]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 
 #### Number
 def p_number_integer(p):
 	'''number : INTEGER
-	          | HEX
+			  | HEX
 			  | BINARY'''
 	p[0] = p[1]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_number_minus_integer(p):
 	'''number : MINUS INTEGER
-	          | MINUS HEX
+			  | MINUS HEX
 			  | MINUS BINARY'''
 	p[0] = str(-int(p[2]))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 		
 def p_number_float(p):
 	'''number : FLOAT'''
 	p[0] = p[1]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_number_minus_float(p):
 	'''number : MINUS FLOAT'''
 	p[0] = str(-float(p[2]))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 		
 #### Virtual number    
 def p_virtualnumber_literal(p):
 	'''virtualnumber : number'''
 	p[0] = p[1]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_virtualnumber_symbol(p):
 	'''virtualnumber : DOLLAR ID'''
 	p[0] = '$' + p[2]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Virtual integer
 def p_virtualinteger_literal(p):
 	'''virtualinteger : INTEGER
-	                  | HEX
+					  | HEX
 					  | BINARY'''
 	p[0] = p[1]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_virtualinteger_literal_minus(p):
 	'''virtualinteger : MINUS INTEGER
-	                  | MINUS HEX
+					  | MINUS HEX
 					  | MINUS BINARY'''
 	p[0] = str(-int(p[2]))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_virtualinteger_symbol(p):
 	'''virtualinteger : DOLLAR ID'''
 	p[0] = '$' + p[2]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### Block tags
 def p_blocktag(p):
@@ -676,12 +676,12 @@ def p_block_list_one(p):
 def p_selector_assignment(p):
 	'''selector_assignment : ATID EQUALS fullselector'''
 	p[0] = selector_assignment_block(p.lineno(1), p[1], p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_selector_define(p):
 	'''selector_define_block : define ATID EQUALS fullselector newlines selector_definition end'''
 	p[0] = selector_definition_block(p.lineno(1), p[2], p[4], p[6])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_selector_definition_empty(p):
 	'''selector_definition : empty'''
@@ -690,52 +690,52 @@ def p_selector_definition_empty(p):
 def p_selector_definition(p):
 	'''selector_definition : selector_item newlines selector_definition'''
 	p[0] = [p[1]] + p[3]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_selector_item_tag(p):
 	'''selector_item : create PYTHON'''
 	p[0] = ('Tag', p[2])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_selector_item_path_scale(p):
 	'''selector_item : ID EQUALS data_path data_type virtualnumber'''
 	p[0] = ('Path', (p[1], p[3], p[4], p[5]))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_selector_item_path(p):
 	'''selector_item : ID EQUALS data_path data_type'''
 	p[0] = ('Path', (p[1], p[3], p[4], None))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_selector_item_vector_path_scale(p):
 	'''selector_item : LT ID GT EQUALS data_path data_type virtualnumber'''
 	p[0] = ('VectorPath', (p[2], p[5], p[6], p[7]))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_selector_item_vector_path(p):
 	'''selector_item : LT ID GT EQUALS data_path data_type'''
 	p[0] = ('VectorPath', (p[2], p[5], p[6], None))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_selector_item_method(p):
 	'''selector_item : functionsection'''
 	p[0] = ('Method', p[1])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_data_path_id(p):
 	'''data_path : ID'''
 	p[0] = p[1]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_data_path_array(p):
 	'''data_path : ID LBRACK virtualinteger RBRACK'''
 	p[0] = '{0}[{1}]'.format(p[1], p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_data_path_multi(p):
 	'''data_path : data_path DOT data_path'''
 	p[0] = '{0}.{1}'.format(p[1], p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_data_type(p):
 	'''data_type : byte
@@ -745,40 +745,40 @@ def p_data_type(p):
 				 | long
 				 | short'''
 	p[0] = p[1]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Array
 def p_array_definition(p):
 	'''array_definition : array ID LBRACK virtualinteger RBRACK'''
 	p[0] = array_definition_block(p.lineno(1), p[2], '0', p[4])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_array_definition_range(p):
 	'''array_definition : array ID LBRACK virtualinteger to virtualinteger RBRACK'''
 	p[0] = array_definition_block(p.lineno(1), p[2], p[4], p[6])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Create
 def p_block_create(p):
 	'''codeblock : create_block'''
 	p[0] = p[1]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_create(p):
 	'''create_block : create ATID relcoords'''
 	p[0] = create_block(p.lineno(1), p[2], p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_create_nocoords(p):
 	'''create_block : create ATID'''
 	p[0] = create_block(p.lineno(1), p[2], ['~','~','~'])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Python Assignment
 def p_pythonassignment(p):
 	'''pythonassignment : DOLLAR ID PYTHON'''
 	p[0] = python_assignment_block(p.lineno(1), p[2], p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 
 #### Qualifier list
@@ -786,12 +786,12 @@ def p_qualifiers_multiple(p):
 	'''qualifiers : qualifiers COMMA qualifier
 				  | qualifiers and qualifier'''
 	p[0] = p[1] + "," + p[3]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_qualifiers_one(p):
 	'''qualifiers : qualifier'''
 	p[0] = p[1]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_qualifiers(p):
 	'''qualifiers : empty'''
@@ -801,7 +801,7 @@ def p_qualifiers(p):
 def p_qualifier_integer(p):
 	'''qualifier : virtualinteger'''
 	p[0] = p[1]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_qualifier_binop(p):
 	'''qualifier : ID EQUALS virtualinteger
@@ -812,81 +812,81 @@ def p_qualifier_binop(p):
 				 | ID GT virtualinteger
 				 | ID LT virtualinteger'''
 	p[0] = p[1] + p[2] + p[3]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_qualifier_builtin(p):
 	'''qualifier : ID EQUALS virtualinteger DOT DOT virtualinteger
 				 | ID EQUALS DOT DOT virtualinteger
 				 | ID EQUALS virtualinteger DOT DOT'''
 	p[0] = ''.join(p[1:])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_qualifier_empty(p):
 	'''qualifier : ID EQUALS'''
 	p[0] = p[1] + p[2]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_qualifier_is_not(p):
 	'''qualifier : ID EQUALS NOT ID'''
 	p[0] = p[1] + p[2] + p[3] + p[4]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_qualifier_is(p):
 	'''qualifier : ID'''
 	p[0] = p[1]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_qualifier_not(p):
 	'''qualifier : not ID'''
 	p[0] = 'not ' + p[2]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### Full Selector
 def p_fullselector_symbol(p):
 	'''fullselector : ATID
-	                | ATID LBRACK qualifiers RBRACK'''
+					| ATID LBRACK qualifiers RBRACK'''
 	if len(p) == 2:
 		p[0] = "@{0}[]".format(p[1])
 	else:
 		p[0] = "@{0}[{1}]".format(p[1], p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### Relative Coordinates
 def p_relcoord_number(p):
 	'''relcoord : virtualnumber'''
 	p[0] = p[1]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_relcoord_relnumber(p):
 	'''relcoord : TILDE virtualnumber'''
 	p[0] = '~' + p[2]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_relcoord_relzero(p):
 	'''relcoord : TILDEEMPTY'''
 	p[0] = "~"	
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_relcoord_relzerotilde(p):
 	'''relcoord : TILDE'''
 	p[0] = "~"
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### Local Coordinates
 def p_localcoord_localnumber(p):
 	'''localcoord : POWER virtualnumber'''
 	p[0] = '^' + p[2]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_localcoord_localzeroempty(p):
 	'''localcoord : POWEREMPTY'''
 	p[0] = "^"	
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 				
 def p_localcoord_localzero(p):
 	'''localcoord : POWER'''
 	p[0] = "^"
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 	
 # Relcoords
@@ -895,13 +895,13 @@ def p_relcoords(p):
 				 | relcoord relcoord relcoord
 				 | localcoord localcoord localcoord'''
 	p[0] = (p[1], p[2], p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### Assignment
 def p_return_expression(p):
 	'''assignment : return expr'''
 	p[0] = (('Var', ('Global', 'ReturnValue')), '=', p[2])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_assignment(p):
 	'''assignment : variable EQUALS expr
@@ -911,7 +911,7 @@ def p_assignment(p):
 				  | variable DIVIDEEQUALS expr
 				  | variable MODEQUALS expr'''
 	p[0] = (p[1], p[2], p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_assignment_unary_default(p):
 	'''assignment : variable PLUSPLUS
@@ -919,18 +919,18 @@ def p_assignment_unary_default(p):
 	op = p[2][0]+'='
 	operand = num_expr(1)
 	p[0] = (p[1], op, operand)
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_assignment_selector_global(p):
 	'''assignment : variable EQUALS fullselector'''
 	p[0] = (p[1], p[2], selector_expr(p[3]))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 	
 def p_assignment_create(p):
 	'''assignment : variable EQUALS create_block'''
 	p[0] = (p[1], p[2], create_expr(p[3]))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Vector assignment
 def p_vector_assignment_vector(p):
@@ -938,7 +938,7 @@ def p_vector_assignment_vector(p):
 							   | vector_var PLUSEQUALS vector_expr
 							   | vector_var MINUSEQUALS vector_expr'''
 	p[0] = vector_assignment_block(p.lineno(1), p[1], p[2], p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_vector_assignment_scalar(p):
 	'''codeblock : vector_var EQUALS expr
@@ -948,23 +948,23 @@ def p_vector_assignment_scalar(p):
 									  | vector_var DIVIDEEQUALS expr
 									  | vector_var MODEQUALS expr'''
 	p[0] = vector_assignment_scalar_block(p.lineno(1), p[1], p[2], p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Vector LHS
 def p_vector_var_id(p):
 	'''vector_var : LT ID GT'''
 	p[0] = ('VAR_ID', p[2])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_vector_var_sel_id(p):
 	'''vector_var : fullselector DOT LT ID GT'''
 	p[0] = ('SEL_VAR_ID', (p[1], p[4]))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_vector_var_components(p):	
 	'''vector_var : LT variable COMMA variable COMMA variable GT'''
 	p[0] = ('VAR_COMPONENTS', [p[2], p[4], p[6]])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 
 #### Arithmetic expressions
@@ -980,52 +980,52 @@ def p_expr_binary(p):
 			| expr POWER BINARY'''
 
 	p[0] = binop_expr(p[1], p[2], p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_expr_dot(p):
 	'''expr : vector_expr TIMES vector_expr'''
 	p[0] = dot_expr(p[1], p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_expr_number(p):
 	'''expr : virtualinteger'''
 	p[0] = num_expr(p[1])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_expr_scale(p):
 	'''expr : scale'''
 	p[0] = scale_expr()
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_expr_variable(p):
 	'''expr : ID'''
 	p[0] = selvar_expr('Global', p[1])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_expr_array_const(p):
 	'''expr : ID LBRACK virtualinteger RBRACK'''
 	p[0] = arrayconst_expr(p[1], p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_expr_array_expr(p):
 	'''expr : ID LBRACK expr RBRACK'''
 	p[0] = arrayexpr_expr(p[1], p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_expr_selector_variable(p):
 	'''expr : fullselector DOT ID'''
 	p[0] = selvar_expr(p[1], p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_expr_function(p):
 	'''expr : function_call'''
 	p[0] = func_expr(p[1])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_expr_group(p):
 	'''expr : LPAREN expr RPAREN'''
 	p[0] = p[2]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_expr_unary(p):
 	'''expr : MINUS expr %prec UMINUS'''
@@ -1035,34 +1035,34 @@ def p_expr_unary(p):
 	else:
 		p[0] = num_expr(str(-int(cv)))
 	
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 ### Vector expressions
 def p_vector_expr_paren(p):
 	'''vector_expr : LPAREN vector_expr RPAREN'''
 	p[0] = p[2]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_vector_expr_vector_triplet(p):
 	'''vector_expr : LT expr COMMA expr COMMA expr GT'''
 	p[0] = vector_expr((p[2], p[4], p[6]))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_vector_expr_vector_unit(p):
 	'''vector_expr : LT ID GT'''
 	p[0] = vector_var_expr(p[2])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_vector_expr_selector_vector(p):
 	'''vector_expr : fullselector DOT LT ID GT'''
 	p[0] = sel_vector_var_expr(p[1], p[4])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_vector_expr_binop_vector(p):
 	'''vector_expr : vector_expr PLUS vector_expr
 				   | vector_expr MINUS vector_expr'''
 	p[0] = vector_binop_vector_expr(p[1], p[2], p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_vector_expr_binop_scalar(p):
 	'''vector_expr : vector_expr PLUS expr
@@ -1071,51 +1071,51 @@ def p_vector_expr_binop_scalar(p):
 				   | vector_expr DIVIDE expr
 				   | vector_expr MOD expr'''
 	p[0] = vector_binop_scalar_expr(p[1], p[2], p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_vector_expr_binop_reversed(p):
 	'''vector_expr : expr PLUS vector_expr
 				   | expr TIMES vector_expr'''
 	p[0] = vector_binop_scalar_expr(p[3], p[2], p[1])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_vector_expr_negative(p):
 	'''vector_expr : MINUS vector_expr'''
 	p[0] = vector_binop_scalar_expr(p[2], '*', num_expr(-1))
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_vector_expr_here(p):
 	'''vector_expr : here'''
 	p[0] = vector_here_expr(None)
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_vector_expr_here_scale(p):
 	'''vector_expr : here LPAREN virtualnumber RPAREN'''
 	p[0] = vector_here_expr(p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Function call
 def p_function_call(p):
 	'''function_call : ID LPAREN exprlist RPAREN'''
 	p[0] = function_call_block(p.lineno(1), p[1], p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_method_call(p):
 	'''method_call : fullselector DOT ID LPAREN exprlist RPAREN'''
 	p[0] = method_call_block(p.lineno(1), p[1], p[3], p[5])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Expression list
 def p_exprlist_multiple(p):
 	'''exprlist : exprlist COMMA expr'''
 	p[0] = p[1]
 	p[0].append(p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_exprlist_single(p):
 	'''exprlist : expr'''
 	p[0] = [p[1]]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_exprlist_empty(p):
 	'''exprlist : empty'''
@@ -1125,33 +1125,33 @@ def p_exprlist_empty(p):
 def p_template_function_call(p):
 	'''template_function_call : ID LT macro_call_params GT LPAREN exprlist RPAREN'''
 	p[0] = template_function_call_block(p.lineno(1), p[1], p[3], p[6])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Macro call	
 def p_macro_call(p):
 	'''macro_call : DOLLAR ID macro_call_args'''
 	p[0] = macro_call_block(p.lineno(1), p[2], p[3])
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_macro_call_args(p):
 	'''macro_call_args : LPAREN macro_call_params RPAREN'''
 	p[0] = p[2]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_macro_call_args_empty(p):
 	'''macro_call_args : empty'''
 	p[0] = []
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_macro_call_params(p):
 	'''macro_call_params : macro_call_param COMMA macro_call_params'''
 	p[0] = [p[1]] + p[3]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_macro_call_params_one(p):
 	'''macro_call_params : macro_call_param'''
 	p[0] = [p[1]]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_macro_call_params_empty(p):
 	'''macro_call_params : empty'''
@@ -1160,7 +1160,7 @@ def p_macro_call_params_empty(p):
 def p_macro_call_param_number(p):
 	'''macro_call_param : virtualnumber'''
 	p[0] = p[1]
-	line_numbers.append((p[0], p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Empty
 def p_empty(p):

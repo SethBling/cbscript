@@ -1,16 +1,21 @@
 import new
 import unittest
-from mock_source_file import mock_source_file
-from mock_mcfunction import mock_mcfunction
-from mock_environment import mock_environment
-from mock_global_context import mock_global_context
-from mock_mcworld import mock_mcworld
 import mcfunction
+import tellraw
+import global_context
+import scriptparse
+
 from selector_definition import selector_definition
 from scratch_tracker import scratch_tracker
 from cbscript import cbscript
-import tellraw
-import global_context
+
+from mock_environment import mock_environment
+from mock_global_context import mock_global_context
+from mock_mcfunction import mock_mcfunction
+from mock_mcworld import mock_mcworld
+from mock_parsed import mock_parsed
+from mock_source_file import mock_source_file
+
 from block_types.array_assignment_block import array_assignment_block
 from block_types.array_definition_block import array_definition_block
 from block_types.block_tag_block import block_tag_block
@@ -37,6 +42,7 @@ from block_types.title_block import title_block
 from block_types.vector_assignment_block import vector_assignment_block
 from block_types.vector_assignment_scalar_block import vector_assignment_scalar_block
 from block_types.while_block import while_block
+
 from scalar_expressions.arrayconst_expr import arrayconst_expr
 from scalar_expressions.arrayexpr_expr import arrayexpr_expr
 from scalar_expressions.binop_expr import binop_expr
@@ -48,6 +54,7 @@ from scalar_expressions.scale_expr import scale_expr
 from scalar_expressions.selector_expr import selector_expr
 from scalar_expressions.selvar_expr import selvar_expr
 from scalar_expressions.unary_expr import unary_expr
+
 from vector_expressions.sel_vector_var_expr import sel_vector_var_expr
 from vector_expressions.vector_binop_scalar_expr import vector_binop_scalar_expr
 from vector_expressions.vector_binop_vector_expr import vector_binop_vector_expr
@@ -1411,7 +1418,434 @@ class test_cbscript(unittest.TestCase):
 			[('{', {'color': None, 'underlined': False, 'strikethrough': False, 'bold': False, 'italic': False})]
 		)
 		
+	def test_parser(self):
+		mcfunction.line_numbers = []
+	
+		p = mock_parsed('test1')
+		scriptparse.p_parsed_assignment(p)
+		self.assertEqual(p[0], ('program', 'test1'))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
 		
+		p = mock_parsed('test2')
+		scriptparse.p_parsed_expr(p)
+		self.assertEqual(p[0], ('expr', 'test2'))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed('comments', None, 'dir', None, 'desc', 'scale', 'assignments', 'sections')
+		scriptparse.p_program(p)
+		self.assertEqual(p[0], {'assignments': 'assignments', 'scale': 'scale', 'sections': 'sections', 'dir': 'dir', 'desc': 'desc'})
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'desc', None)
+		scriptparse.p_optdesc(p)
+		self.assertEqual(p[0], 'desc')
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None)
+		scriptparse.p_optdesc(p)
+		self.assertEqual(p[0], 'No Description')
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 500, None)
+		scriptparse.p_optscale(p)
+		self.assertEqual(p[0], 500)
+		
+		p = mock_parsed(None)
+		scriptparse.p_optscale_none(p)
+		self.assertEqual(p[0], 1000)
+		
+		p = mock_parsed('section', None, ['sections'])
+		scriptparse.p_sections_multiple(p)
+		self.assertEqual(p[0], ['section', 'sections'])
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None)
+		scriptparse.p_sections_empty(p)
+		self.assertEqual(p[0], [])
+		
+		p = mock_parsed(['comment'], ('type', 'name', ['template_params'], ['params'], ['lines']))
+		scriptparse.p_section_commented(p)
+		p_type, p_name, p_template_params, p_params, p_lines = p[0]
+		self.assertEqual(p_type, 'type')
+		self.assertEqual(p_name, 'name')
+		self.assertEqual(p_template_params, ['template_params'])
+		self.assertEqual(p_params, ['params'])
+		self.assertEqual(type(p_lines[0]), comment_block)
+		self.assertEqual(p_lines[0].text, '#comment')
+		self.assertEqual(p_lines[1], 'lines')
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed('comment', None, ['comments'])
+		scriptparse.p_optcomments(p)
+		self.assertEqual(p[0], ['comment', 'comments'])
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None)
+		scriptparse.p_optcomments_empty(p)
+		self.assertEqual(p[0], [])
+		
+		p = mock_parsed('section')
+		scriptparse.p_section(p)
+		self.assertEqual(p[0], 'section')
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, None, 'lines', None)
+		scriptparse.p_resetsection(p)
+		self.assertEqual(p[0], ('reset', 'reset', [], [], 'lines'))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'id', None, 'lines', None)
+		scriptparse.p_clocksection(p)
+		self.assertEqual(p[0], ('clock', 'id', [], [], 'lines'))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'id', None, ['id_list'], None, None, 'lines', None)
+		scriptparse.p_functionsection(p)
+		self.assertEqual(p[0], ('function', 'id', [], ['id_list'], 'lines'))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'id', None, ['macro_params'], None, None, ['id_list'], None, None, 'lines', None)
+		scriptparse.p_template_function_section(p)
+		self.assertEqual(p[0], ('template_function', 'id', ['macro_params'], ['id_list'], 'lines'))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, None, 'id', 'macro_args', None, 'lines', None)
+		scriptparse.p_macrosection(p)
+		self.assertEqual(p[0], ('macro', 'id', [], 'macro_args', 'lines'))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'params', None)
+		scriptparse.p_macro_args(p)
+		self.assertEqual(p[0], 'params')
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None)
+		scriptparse.p_macro_args_empty(p)
+		self.assertEqual(p[0], [])
+		
+		p = mock_parsed(None, 'id', None, ['params'])
+		scriptparse.p_macro_params(p)
+		self.assertEqual(p[0], ['id', 'params'])
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'macro_id')
+		scriptparse.p_macro_params_one(p)
+		self.assertEqual(p[0], ['macro_id'])
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None)
+		scriptparse.p_macro_params_empty(p)
+		self.assertEqual(p[0], [])
+
+		p = mock_parsed(None, None)
+		scriptparse.p_newlines(p)
+		self.assertEqual(p[0], None)
+		
+		p = mock_parsed(None)
+		scriptparse.p_newlines(p)
+		self.assertEqual(p[0], None)
+		
+		p = mock_parsed(None)
+		scriptparse.p_optnewlines(p)
+		self.assertEqual(p[0], None)
+		
+		p = mock_parsed('id', None, ['ids'])
+		scriptparse.p_id_list(p)
+		self.assertEqual(p[0], ['id', 'ids'])
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed('id')
+		scriptparse.p_id_list_one(p)
+		self.assertEqual(p[0], ['id'])
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None)
+		scriptparse.p_id_list_empty(p)
+		self.assertEqual(p[0], [])
+		
+		p = mock_parsed('assignment', None, ['assignments'])
+		scriptparse.p_optassignments_multiple(p)
+		self.assertEqual(p[0], ['assignment', 'assignments'])
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed('comment', None, ['assignments'])
+		scriptparse.p_optassignments_comment(p)
+		self.assertEqual(p[0], ['assignments'])
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None)
+		scriptparse.p_optassignments_empty(p)
+		self.assertEqual(p[0], [])
+		
+		p = mock_parsed('fullselector', None, 'id')
+		scriptparse.p_variable_selector(p)
+		self.assertEqual(p[0], ('Var', ('fullselector', 'id')))
+		
+		p = mock_parsed('id')
+		scriptparse.p_variable_global(p)
+		self.assertEqual(p[0], ('Var', ('Global', 'id')))
+		
+		p = mock_parsed('id', None, 'idx')
+		scriptparse.p_variable_array_const(p)
+		self.assertEqual(p[0], ('ArrayConst', ('id', 'idx')))
+		
+		p = mock_parsed('id', None, 'expr')
+		scriptparse.p_variable_array_expr(p)
+		self.assertEqual(p[0], ('ArrayExpr', ('id', 'expr')))
+		
+		p = mock_parsed('#comment')
+		scriptparse.p_optcomment(p)
+		self.assertEqual(len(p[0]), 1)
+		self.assertTrue(type(p[0][0]) is comment_block)
+		self.assertEqual(p[0][0].text, '#comment')
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+
+		p = mock_parsed(None)
+		scriptparse.p_optcomment_empty(p)
+		self.assertEqual(p[0], [])
+		
+		p = mock_parsed('codeblock', ['optcomment'], None, ['lines'])
+		scriptparse.p_blocklist_multiple(p)
+		self.assertEqual(p[0], ['optcomment', 'codeblock', 'lines'])
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None)
+		scriptparse.p_blocklist_empty(p)
+		self.assertEqual(p[0], [])
+		
+		p = mock_parsed('#comment')
+		scriptparse.p_block_comment(p)
+		self.assertTrue(type(p[0]) is comment_block)
+		self.assertEqual(p[0].text, '#comment')
+		self.assertEqual(p[0].line, 0)
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed('command')
+		scriptparse.p_block_command(p)
+		self.assertTrue(type(p[0]) is command_block)
+		self.assertEqual(p[0].text, 'command')
+		self.assertEqual(p[0].line, 0)
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'selector', 'coords')
+		scriptparse.p_block_move(p)
+		self.assertTrue(type(p[0]) is move_block)
+		self.assertEqual(p[0].selector, 'selector')
+		self.assertEqual(p[0].coords, 'coords')
+		self.assertEqual(p[0].line, 0)
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, None, 'id', None, 'python', None, 'lines', None)
+		scriptparse.p_block_for(p)
+		self.assertTrue(type(p[0]) is python_for_block)
+		self.assertEqual(p[0].id, 'id')
+		self.assertEqual(p[0].code, 'python')
+		self.assertEqual(p[0].sub, 'lines')
+		self.assertEqual(p[0].line, 0)
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'var', None, 'lines', None)
+		scriptparse.p_execute_as_id_global(p)
+		self.assertTrue(type(p[0]) is execute_block)
+		self.assertEqual(p[0].exec_items, [('AsId',('var', None))])
+		self.assertEqual(p[0].sub, 'lines')
+		self.assertEqual(p[0].line, 0)
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'var', None, '@id', None, None, 'lines', None)
+		scriptparse.p_execute_as_id_type_global(p)
+		self.assertTrue(type(p[0]) is execute_block)
+		self.assertEqual(p[0].exec_items, [('AsId',('var', '@id'))])
+		self.assertEqual(p[0].sub, 'lines')
+		self.assertEqual(p[0].line, 0)
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'var', None, 'line')
+		scriptparse.p_execute_as_id_do_global(p)
+		self.assertTrue(type(p[0]) is execute_block)
+		self.assertEqual(p[0].exec_items, [('AsId',('var', None))])
+		self.assertEqual(p[0].sub, ['line'])
+		self.assertEqual(p[0].line, 0)
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'var', None, '@id', None, None, 'line')
+		scriptparse.p_execute_as_id_do_type_global(p)
+		self.assertTrue(type(p[0]) is execute_block)
+		self.assertEqual(p[0].exec_items, [('AsId',('var', '@id'))])
+		self.assertEqual(p[0].sub, ['line'])
+		self.assertEqual(p[0].line, 0)
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'create', None, 'lines', None)
+		scriptparse.p_execute_as_create(p)
+		self.assertTrue(type(p[0]) is execute_block)
+		self.assertEqual(p[0].exec_items, [('AsCreate','create')])
+		self.assertEqual(p[0].sub, 'lines')
+		self.assertEqual(p[0].line, 0)
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'create', None, 'line')
+		scriptparse.p_execute_as_create_do(p)
+		self.assertTrue(type(p[0]) is execute_block)
+		self.assertEqual(p[0].exec_items, [('AsCreate','create')])
+		self.assertEqual(p[0].sub, ['line'])
+		self.assertEqual(p[0].line, 0)
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed('items', None, 'lines', None)
+		scriptparse.p_execute_chain(p)
+		self.assertTrue(type(p[0]) is execute_block)
+		self.assertEqual(p[0].exec_items, 'items')
+		self.assertEqual(p[0].sub, 'lines')
+		self.assertEqual(p[0].line, 0)
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed('items', None, 'line')
+		scriptparse.p_execute_chain_inline(p)
+		self.assertTrue(type(p[0]) is execute_block)
+		self.assertEqual(p[0].exec_items, 'items')
+		self.assertEqual(p[0].sub, ['line'])
+		self.assertEqual(p[0].line, 0)
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed('item')
+		scriptparse.p_execute_items_one(p)
+		self.assertEqual(p[0], ['item'])
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed('item', ['items'])
+		scriptparse.p_execute_items(p)
+		self.assertEqual(p[0], ['item', 'items'])
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'conditions')
+		scriptparse.p_execute_if_condition(p)
+		self.assertEqual(p[0], ('If', 'conditions'))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'conditions')
+		scriptparse.p_execute_unless_condition(p)
+		self.assertEqual(p[0], ('Unless', 'conditions'))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'fullselector')
+		scriptparse.p_execute_as(p)
+		self.assertEqual(p[0], ('As', 'fullselector'))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'fullselector')
+		scriptparse.p_execute_rotated(p)
+		self.assertEqual(p[0], ('Rotated', 'fullselector'))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'relcoords')
+		scriptparse.p_execute_facing_coords(p)
+		self.assertEqual(p[0], ('FacingCoords', 'relcoords'))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'fullselector')
+		scriptparse.p_execute_facing_entity(p)
+		self.assertEqual(p[0], ('FacingEntity', 'fullselector'))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		for axes in ['x','y','z','xy','xz','yz','xyz']:
+			p = mock_parsed(None, axes)
+			scriptparse.p_execute_align(p)
+			self.assertEqual(p[0], ('Align', axes))
+			self.assertEqual(mcfunction.get_line(p[0]), 0)
+			
+		p = mock_parsed(None, '')
+		with self.assertRaises(SyntaxError):
+			scriptparse.p_execute_align(p)
+		
+		p = mock_parsed(None, 'fullselector')
+		scriptparse.p_execute_at_selector(p)
+		self.assertEqual(p[0], ('At', ('fullselector', None)))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'relcoords')
+		scriptparse.p_execute_at_relcoords(p)
+		self.assertEqual(p[0], ('At', (None, 'relcoords')))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'fullselector', 'relcoords')
+		scriptparse.p_execute_at_selector_relcoords(p)
+		self.assertEqual(p[0], ('At', ('fullselector', 'relcoords')))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'vector_expr')
+		scriptparse.p_execute_at_vector(p)
+		self.assertEqual(p[0], ('AtVector', (None, 'vector_expr')))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, None, '200', None, 'vector_expr')
+		scriptparse.p_execute_at_vector_scale(p)
+		self.assertEqual(p[0], ('AtVector', ('200', 'vector_expr')))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'overworld')
+		scriptparse.p_execute_in_dimension(p)
+		self.assertEqual(p[0], ('In', 'overworld'))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'id', None, '@id', None, 'lines', None)
+		scriptparse.p_for_selector(p)
+		self.assertTrue(type(p[0]) is for_selector_block)
+		self.assertEqual(p[0].id, 'id')
+		self.assertEqual(p[0].selector, '@id')
+		self.assertEqual(p[0].sub, 'lines')
+		self.assertEqual(p[0].line, 0)
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed('condition')
+		scriptparse.p_conditions_one(p)
+		self.assertEqual(p[0], ['condition'])
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed('condition', None, ['conditions'])
+		scriptparse.p_conditions(p)
+		self.assertEqual(p[0], ['condition', 'conditions'])
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed('var', None, 'fullselector')
+		scriptparse.p_condition_pointer(p)
+		self.assertEqual(p[0], ('pointer', ('var', 'fullselector')))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed('fullselector', None, 'var')
+		scriptparse.p_condition_pointer_reversed(p)
+		self.assertEqual(p[0], ('pointer', ('var', 'fullselector')))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed('fullselector')
+		scriptparse.p_condition_fullselector(p)
+		self.assertEqual(p[0], ('selector', 'fullselector'))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed('var', '<', 'comp')
+		scriptparse.p_condition_score(p)
+		self.assertEqual(p[0], ('score', ('var', '<', 'comp')))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed('var', '==', 'comp')
+		scriptparse.p_condition_score(p)
+		self.assertEqual(p[0], ('score', ('var', '=', 'comp')))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed('v1', '==', 'v2')
+		scriptparse.p_condition_vector_equality(p)
+		self.assertEqual(p[0], ('vector_equality', ('v1', 'v2')))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed('var')
+		scriptparse.p_condition_bool(p)
+		self.assertEqual(p[0], ('score', ('var', '>', ('num', '0'))))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, 'var')
+		scriptparse.p_condition_not_bool(p)
+		self.assertEqual(p[0], ('score', ('var', '<=', ('num', '0'))))
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
 		
 if __name__ == '__main__':
     unittest.main()
