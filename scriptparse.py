@@ -497,7 +497,7 @@ def p_comparison_global(p):
 #### If python
 def p_block_if_command(p):
 	'''codeblock : if PYTHON newlines blocklist end'''
-	p[0] = python_if_block(p.lineno(1), p[2], p[4], [])
+	p[0] = python_if_block(p.lineno(1), p[2], p[4], None)
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_block_ifelse_command(p):
@@ -567,27 +567,22 @@ def p_block_title(p):
 				 | subtitle fullselector PYTHON
 				 | actionbar fullselector PYTHON'''
 	p[0] = title_block(p.lineno(1), p[1], p[2], None, p[3])
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
 	
 def p_block_title_times(p):
 	'''codeblock : title fullselector virtualinteger virtualinteger virtualinteger PYTHON
 				 | subtitle fullselector virtualinteger virtualinteger virtualinteger PYTHON
 				 | actionbar fullselector virtualinteger virtualinteger virtualinteger PYTHON'''
 	p[0] = title_block(p.lineno(1), p[1], p[2], (p[3], p[4], p[5]), p[6])
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_block_function_call(p):
 	'''codeblock : function_call
 				 | method_call
-				 | macro_call'''
-	p[0] = p[1]
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-	
-def p_block_template_function_call(p):
-	'''codeblock : template_function_call'''
-	p[0] = p[1]
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-	
-def p_block_assignment(p):
-	'''codeblock : pythonassignment'''
+				 | macro_call
+				 | template_function_call
+				 | pythonassignment'''
 	p[0] = p[1]
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -604,65 +599,54 @@ def p_block_selector_assignment(p):
 	
 
 #### Number
-def p_number_integer(p):
-	'''number : INTEGER
-			  | HEX
-			  | BINARY'''
+def p_integer(p):
+	'''integer : DECIMAL
+	           | HEX
+			   | BINARY'''
 	p[0] = p[1]
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
-def p_number_minus_integer(p):
-	'''number : MINUS INTEGER
-			  | MINUS HEX
-			  | MINUS BINARY'''
+def p_integer_minus(p):
+	'''integer : MINUS DECIMAL
+	           | MINUS HEX
+			   | MINUS BINARY'''
 	p[0] = str(-int(p[2]))
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-		
-def p_number_float(p):
-	'''number : FLOAT'''
+
+def p_number_integer(p):
+	'''number : integer
+			  | float_val'''
 	p[0] = p[1]
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
-def p_number_minus_float(p):
-	'''number : MINUS FLOAT'''
+def p_float_val(p):
+	'''float_val : FLOAT'''
+	p[0] = p[1]
+	
+def p_float_val_minus(p):
+	'''float_val : MINUS FLOAT'''
 	p[0] = str(-float(p[2]))
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 		
 #### Virtual number    
 def p_virtualnumber_literal(p):
 	'''virtualnumber : number'''
 	p[0] = p[1]
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_virtualnumber_symbol(p):
 	'''virtualnumber : DOLLAR ID'''
 	p[0] = '$' + p[2]
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Virtual integer
 def p_virtualinteger_literal(p):
-	'''virtualinteger : INTEGER
-					  | HEX
-					  | BINARY'''
+	'''virtualinteger : integer'''
 	p[0] = p[1]
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
-def p_virtualinteger_literal_minus(p):
-	'''virtualinteger : MINUS INTEGER
-					  | MINUS HEX
-					  | MINUS BINARY'''
-	p[0] = str(-int(p[2]))
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-
 def p_virtualinteger_symbol(p):
 	'''virtualinteger : DOLLAR ID'''
 	p[0] = '$' + p[2]
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### Block tags
 def p_blocktag(p):
 	'''blocktag : define block ID newlines block_list end'''
 	p[0] = block_tag_block(p.lineno(1), p[3], p[5])
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_block_list(p):
 	'''block_list : ID newlines block_list'''
@@ -690,7 +674,6 @@ def p_selector_definition_empty(p):
 def p_selector_definition(p):
 	'''selector_definition : selector_item newlines selector_definition'''
 	p[0] = [p[1]] + p[3]
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_selector_item_tag(p):
 	'''selector_item : create PYTHON'''
@@ -863,15 +846,11 @@ def p_relcoord_relnumber(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_relcoord_relzero(p):
-	'''relcoord : TILDEEMPTY'''
+	'''relcoord : TILDE
+	            | TILDEEMPTY'''
 	p[0] = "~"	
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
-def p_relcoord_relzerotilde(p):
-	'''relcoord : TILDE'''
-	p[0] = "~"
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-
 #### Local Coordinates
 def p_localcoord_localnumber(p):
 	'''localcoord : POWER virtualnumber'''
@@ -879,15 +858,10 @@ def p_localcoord_localnumber(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_localcoord_localzeroempty(p):
-	'''localcoord : POWEREMPTY'''
+	'''localcoord : POWER
+	              | POWEREMPTY'''
 	p[0] = "^"	
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-				
-def p_localcoord_localzero(p):
-	'''localcoord : POWER'''
-	p[0] = "^"
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-
 	
 # Relcoords
 def p_relcoords(p):
@@ -975,7 +949,7 @@ def p_expr_binary(p):
 			| expr TIMES expr
 			| expr DIVIDE expr
 			| expr MOD expr
-			| expr POWER INTEGER
+			| expr POWER integer
 			| expr POWER HEX
 			| expr POWER BINARY'''
 
@@ -1073,7 +1047,7 @@ def p_vector_expr_binop_scalar(p):
 	p[0] = vector_binop_scalar_expr(p[1], p[2], p[3])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
-def p_vector_expr_binop_reversed(p):
+def p_vector_expr_binop_scalar_reversed(p):
 	'''vector_expr : expr PLUS vector_expr
 				   | expr TIMES vector_expr'''
 	p[0] = vector_binop_scalar_expr(p[3], p[2], p[1])

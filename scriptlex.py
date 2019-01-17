@@ -14,7 +14,7 @@ tokens = keywords + (
      'LEQ','GEQ','GT','LT','EQUALEQUAL','DOLLAR','DOT',
      'PLUSEQUALS','MINUSEQUALS','TIMESEQUALS','DIVIDEEQUALS','MODEQUALS','PLUSPLUS','MINUSMINUS',
      'EQUALS','PLUS','MINUS','TIMES','DIVIDE','MOD','POWEREMPTY','POWER',
-     'LPAREN','RPAREN','COMMA','INTEGER','FLOAT','HEX','BINARY','ID','NEWLINE','LBRACK','RBRACK',
+     'LPAREN','RPAREN','COMMA','DECIMAL','FLOAT','HEX','BINARY','ID','NEWLINE','LBRACK','RBRACK',
      'ATID', 'NOT', 'TILDEEMPTY', 'TILDE',
      'PYTHON', 'COMMENT',
 )
@@ -22,21 +22,21 @@ tokens = keywords + (
 def t_None(t):
     r'None'
     t.value = "0"
-    t.type = "INTEGER"
+    t.type = "DECIMAL"
         
     return t
 
 def t_False(t):
     r'False'
     t.value = "0"
-    t.type = "INTEGER"
+    t.type = "DECIMAL"
         
     return t
 
 def t_True(t):
     r'True'
     t.value = "1"
-    t.type = "INTEGER"
+    t.type = "DECIMAL"
         
     return t
 
@@ -92,7 +92,7 @@ def t_TILDEEMPTY(t):
     return t
 t_TILDE = r'~'
 t_FLOAT = r'\d+\.\d+'
-t_INTEGER = r'\d+'
+t_DECIMAL = r'\d+'
 
 def t_HEX(t):
 	r'0x[0-9A-Fa-f]+'
