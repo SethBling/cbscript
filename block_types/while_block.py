@@ -1,5 +1,4 @@
 from execute_base import execute_base
-from mcfunction import get_execute_command
 
 class while_block(execute_base):
 	def __init__(self, line, exec_items, sub):
@@ -17,7 +16,7 @@ class while_block(execute_base):
 	# Adds the recursive continuation execute command to the end of the sub function
 	def add_continuation_command(self, func_name, exec_func):
 		dummy_func = exec_func.create_child_function()
-		sub_cmd = get_execute_command(self.exec_items, exec_func, dummy_func)
+		sub_cmd = exec_func.get_execute_command(self.exec_items, dummy_func)
 		if sub_cmd == None:
 			raise Exception('Unable to compile continuation command for while block at line {}'.format(self.line))
 

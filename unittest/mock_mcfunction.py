@@ -24,6 +24,8 @@ class mock_mcfunction(object):
 		self.finalized = False
 		self.temp = 0
 		self.switch_calls = []
+		self.execute_command_calls = []
+		self.set_var = {}
 		
 	def add_operation(self, selector, id1, operation, id2):
 		self.add_command("scoreboard players operation {0} {1} {2} {0} {3}".format(selector, id1, operation, id2))
@@ -172,3 +174,18 @@ class mock_mcfunction(object):
 		self.switch_calls.append((var, cases, switch_func_name, case_func_name))
 		
 		return True
+		
+	def get_execute_command(self, exec_items, exec_func):
+		self.execute_command_calls.append(exec_items)
+		
+		return 'execute_dummy '
+		
+	def get_variable(self, variable, initialize):
+		self.scratch += 1
+		return ('Global', 'var{}'.format(self.scratch))
+		
+	def set_variable(self, variable):
+		self.set_var[variable] = True
+		
+	def get_arrayconst_var(self, name, idxval):
+		return '{}{}'.format(name, idxval)

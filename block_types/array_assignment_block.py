@@ -1,5 +1,3 @@
-from mcfunction import get_arrayconst_var
-
 class array_assignment_block(object):
 	def __init__(self, line, name, idxtype, idxval, expr):
 		self.line = line
@@ -13,7 +11,7 @@ class array_assignment_block(object):
 			raise NameError('Tried to assign to undefined array "{}"'.format(self.name))
 		
 		if self.idxtype == 'Const':
-			array_var = get_arrayconst_var(func, self.name, self.idxval)
+			array_var = func.get_arrayconst_var(self.name, self.idxval)
 			
 			id = self.expr.compile(func, array_var)
 			

@@ -1,5 +1,3 @@
-from mcfunction import get_execute_command
-
 class execute_base(object):
 	# Override to force the creation of a sub function, even for a single command
 	def force_sub_function(self):
@@ -12,7 +10,7 @@ class execute_base(object):
 	def perform_execute(self, func):
 		exec_func = func.create_child_function()
 		
-		cmd = get_execute_command(self.exec_items, func, exec_func)
+		cmd = func.get_execute_command(self.exec_items, exec_func)
 		if cmd == None:
 			raise Exception('Unable to compile {0} block at line {1}'.format(self.display_name(), self.line))
 		

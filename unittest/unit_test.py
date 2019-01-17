@@ -308,12 +308,12 @@ class test_cbscript(unittest.TestCase):
 		
 	def test_compile_execute(self):
 		func = mock_mcfunction()
-		func.get_execute_command = lambda (x, y): 'execute_command'
 		
-		block = execute_block(0, [], 'sub')
+		block = execute_block(0, 'test', 'sub')
 		block.compile(func)
 		
 		self.assertEqual(len(func.child_functions), 1)
+		self.assertEqual(func.execute_command_calls, ['test'])
 		
 	def test_compile_for_selector(self):
 		func = mock_mcfunction()
@@ -421,21 +421,21 @@ class test_cbscript(unittest.TestCase):
 		block = scoreboard_assignment_block(0, (var, '+=', num_expr(1)))
 		block.compile(func)
 		
-		self.assertEqual(func.commands, ['/scoreboard players add Global test_var 1'])
+		self.assertEqual(func.commands, ['/scoreboard players add Global var1 1'])
 		
 		func = mock_mcfunction()
 		
 		block = scoreboard_assignment_block(0, (var, '=', num_expr(1)))
 		block.compile(func)
 		
-		self.assertEqual(func.commands, ['/scoreboard players set Global test_var 1'])
+		self.assertEqual(func.commands, ['/scoreboard players set Global var1 1'])
 		
 		func = mock_mcfunction()
 		
 		block = scoreboard_assignment_block(0, (var, '*=', num_expr(1)))
 		block.compile(func)
 		
-		self.assertEqual(func.commands, ['/scoreboard players operation Global test_var *= test_constant Constant'])
+		self.assertEqual(func.commands, ['/scoreboard players operation Global var1 *= test_constant Constant'])
 		self.assertTrue(1 in func.constants)
 		
 	def test_compile_selector_definition(self):
@@ -520,13 +520,14 @@ class test_cbscript(unittest.TestCase):
 	def test_compile_while(self):
 		func = mock_mcfunction()
 		
-		block = while_block(0, ['As', '@a'], ['test_block'])
+		block = while_block(0, 'test', ['test_block'])
 		block.compile(func)
 		
-		self.assertEqual(func.commands, ['execute run function test_namespace:while001_ln0'])
+		self.assertEqual(func.commands, ['execute_dummy run function test_namespace:while001_ln0'])
+		self.assertEqual(func.execute_command_calls, ['test'])
 		self.assertEqual(len(func.child_functions), 1)
 		self.assertEqual(func.child_functions[0].compiled_blocks[0], ['test_block'])
-		self.assertTrue('execute run function test_namespace:while001_ln0' in func.child_functions[0].commands)
+		self.assertTrue('execute_dummy run function test_namespace:while001_ln0' in func.child_functions[0].commands)
 		
 	def test_arrayconst_expr(self):
 		func = mock_mcfunction()

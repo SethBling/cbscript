@@ -65,80 +65,6 @@ def get_modifiable_id(func, id, assignto):
 		
 	return id
 	
-def get_arrayconst_var(func, name, idxval):
-	if name not in func.arrays:
-		print('Tried to use undefined array "{}"'.format(name))
-		return None
-		
-	from_val, to_val = func.arrays[name]
-	
-	index = int(func.apply_replacements(idxval))
-	
-	if index < from_val or index >= to_val:
-		if from_val == 0:
-			print('Tried to index {} outside of array {}[{}]'.format(index, name, to_val))
-		else:
-			print('Tried to index {} outside of array {}[{} to {}]'.format(index, name, from_val, to_val))
-
-	return '{}{}'.format(name, index)
-	
-def get_variable(func, variable, initialize):
-	type, content = variable
-	
-	if type == 'Var':
-		id, var = content
-		
-		if initialize:
-			func.get_path(id, var)
-			
-		func.register_objective(var)
-		
-		return content
-		
-	if type == 'ArrayConst':
-		name, idxval = content
-		
-		array_var = get_arrayconst_var(func, name, idxval)
-		
-		return 'Global', array_var
-		
-	if type == 'ArrayExpr':
-		name, idx_expr = content
-		
-		if name not in func.arrays:
-			print('Tried to use undefined array "{}"'.format(name))
-			return None
-			
-		index_var = '{}Idx'.format(name)
-		id = idx_expr.compile(func, index_var)
-		if id == None:
-			raise Exception('Unable to calculate array "{}" index'.format(name))
-		
-		if id != index_var:
-			func.add_command('scoreboard players operation Global {} = Global {}'.format(index_var, id))
-			
-		if initialize:
-			func.add_command('function {}:array_{}_get'.format(func.namespace, name.lower()))
-		
-		func.free_scratch(id)
-		
-		return 'Global', '{}Val'.format(name)
-	
-	else:
-		raise Exception('Tried to get unknown variable type "{}"'.format(type))
-
-		
-def set_variable(func, variable):
-	type, content = variable
-	
-	if type == 'Var':
-		id, var = content
-		func.set_path(id, var)
-		
-	elif type == 'ArrayExpr':
-		name, idx_expr = content
-		func.add_command('function {}:array_{}_set'.format(func.namespace, name.lower()))
-	
 def evaluate_params(func, params):
 	results = []
 	for p in range(len(params)):
@@ -147,178 +73,6 @@ def evaluate_params(func, params):
 		func.add_operation('Global', 'Param{0}'.format(p), '=', val)
 	
 	return True
-
-def get_if_chain(func, conditions, iftype='if'):
-	test = ''
-	for type, val in conditions:
-		if type == 'selector':
-			test += '{0} entity {1} '.format(iftype, val)
-		elif type == 'score':
-			var, op, (rtype, rval) = val
-			
-			lselector, lvar = get_variable(func, var, initialize = True)
-			
-			func.register_objective(lvar)
-			func.get_path(lselector, lvar)
-			
-			if rtype == 'num':
-				rval = func.apply_replacements(rval)
-				if op == '>':						
-					test += '{3} score {0} {1} matches {2}.. '.format(lselector, lvar, str(int(rval)+1), iftype)
-				if op == '>=':						
-					test += '{3} score {0} {1} matches {2}.. '.format(lselector, lvar, rval, iftype)
-				if op == '<':						
-					test += '{3} score {0} {1} matches ..{2} '.format(lselector, lvar, str(int(rval)-1), iftype)
-				if op == '<=':						
-					test += '{3} score {0} {1} matches ..{2} '.format(lselector, lvar, rval, iftype)
-				if op == '=':						
-					test += '{3} score {0} {1} matches {2}..{2} '.format(lselector, lvar, rval, iftype)
-			elif rtype == 'score':
-				rselector, rvar = get_variable(func, rval, initialize = True)
-				
-				func.register_objective(rvar)
-				func.get_path(rselector, rvar)
-				test += '{0} score {1} {2} {3} {4} {5} '.format(iftype, lselector, lvar, op, rselector, rvar)
-				
-		elif type == 'pointer':
-			var, rselector = val
-			
-			lselector, id = get_variable(func, var, initialize = True)
-			
-			func.register_objective(id)
-			test += '{0} score {1} {2} = {3} _id '.format(iftype, lselector, id, rselector)
-			
-		elif type == 'vector_equality':
-			if iftype == 'unless':
-				print('Vector equality may not  be used with "unless"')
-				return None
-			
-			(type1, var1), (type2, var2) = val
-			
-			for i in range(3):
-				if type1 == 'VAR_ID':
-					sel1 = 'Global'
-					sco1 = '_{}_{}'.format(var1, i)
-				elif type1 == 'SEL_VAR_ID':
-					sel1, selvar1 = var1
-					sco1 = '_{}_{}'.format(selvar1, i)
-				elif type1 == 'VAR_COMPONENTS':
-					sel1, sco1 = var1[i]
-					
-				if type2 == 'VAR_ID':
-					sel2 = 'Global'
-					sco2 = '_{}_{}'.format(var2, i)
-				elif type2 == 'SEL_VAR_ID':
-					sel2, selvar2 = var2
-					sco2 = '_{}_{}'.format(selvar2, i)
-				elif type2 == 'VAR_COMPONENTS':
-					sel2, sco2 = var1[i]
-				test += 'if score {} {} = {} {} '.format(sel1, sco1, sel2, sco2)
-				
-		elif type == 'block':
-			relcoords, block = val
-			if block in func.block_tags:
-				block = '#{0}:{1}'.format(func.namespace, block)
-			else:
-				block = 'minecraft:{0}'.format(block)
-			test += '{0} block {1} {2} '.format(iftype, ' '.join(relcoords), block)
-		else:
-			print('Unknown "if" type: {0}'.format(type))
-			return None
-	
-	return test
-
-
-def get_execute_command(exec_items, func, exec_func):	
-	cmd = 'execute '
-	as_count = 0
-	for type, _ in exec_items:
-		if type[:2] == 'As':
-			as_count += 1
-			
-			if as_count >= 2:
-				print('Execute chain may only contain a single "as" clause in block at line {0}'.format(get_line(line)))
-				return None
-	
-	at_vector_count = 0
-	
-	for type, val in exec_items:
-		if type == 'If':
-			cmd += get_if_chain(func, val)
-		if type == 'Unless':
-			cmd += get_if_chain(func, val, 'unless')
-		elif type == 'As':
-			cmd += 'as {0} '.format(val)
-			exec_func.update_self_selector(val)
-		elif type == 'AsId':
-			var, attype = val
-			
-			selector, id = get_variable(func, var, initialize = True)
-			
-			func.register_objective('_id')
-			func.register_objective(id)
-			
-			func.add_command('scoreboard players operation Global _id = {0} {1}'.format(selector, id))
-								
-			cmd += 'as @e if score @s _id = Global _id '.format(selector, id)
-			
-			if attype != None:
-				exec_func.update_self_selector('@' + attype)
-			else:
-				exec_func.update_self_selector('@s')
-		elif type == 'AsCreate':
-			if len(exec_items) > 1:
-				print('"as create" must be its own block at line {0}'.format(get_line(line)))
-				return None
-			create_operation = val
-				
-			func.register_objective('_age')
-			func.add_command('scoreboard players add @e _age 1')
-			
-			create_operation.compile(func)
-				
-			func.add_command('scoreboard players add @e _age 1')
-			cmd += 'as @e[_age==1] '
-			
-			exec_func.update_self_selector('@'+create_operation.atid)
-		elif type == 'Rotated':
-			cmd += 'rotated as {0} '.format(val)
-		elif type == 'FacingCoords':
-			cmd += 'facing {0} '.format(' '.join(val))
-		elif type == 'FacingEntity':
-			cmd += 'facing entity {0} feet '.format(val)
-		elif type == 'Align':
-			cmd += 'align {0} '.format(val)
-		elif type == 'At':
-			selector, relcoords = val
-			if selector != None:
-				cmd += 'at {0} '.format(selector)
-			if relcoords != None:
-				cmd += 'positioned {0} '.format(' '.join(relcoords))
-		elif type == 'AtVector':
-			at_vector_count += 1
-			if at_vector_count >= 2:
-				print('Tried to execute at multiple vector locations.')
-				return None
-				
-			scale, expr = val
-			if scale == None:
-				scale = func.scale
-
-			vec_vals = expr.compile(func, None)
-			func.add_command('scoreboard players add @e _age 1')
-			func.add_command('summon area_effect_cloud')
-			func.add_command('scoreboard players add @e _age 1')
-			for i in range(3):
-				func.add_command('execute store result entity @e[_age==1,limit=1] Pos[{0}] double {1} run scoreboard players get Global {2}'.format(i, 1/float(scale), vec_vals[i]))
-			cmd += 'at @e[_age == 1] '
-			exec_func.add_command('/kill @e[_age == 1]')
-		elif type == 'In':
-			dimension = val
-			cmd += 'in {} '.format(dimension)
-			
-	return cmd
-	
 
 class mcfunction(object):
 	def __init__(self, environment, callable = False, params = []):
@@ -330,6 +84,251 @@ class mcfunction(object):
 		
 		for param in params:
 			self.register_local(param)
+			
+
+	def get_variable(self, variable, initialize):
+		type, content = variable
+		
+		if type == 'Var':
+			id, var = content
+			
+			if initialize:
+				self.get_path(id, var)
+				
+			self.register_objective(var)
+			
+			return content
+			
+		if type == 'ArrayConst':
+			name, idxval = content
+			
+			array_var = self.get_arrayconst_var(name, idxval)
+			
+			return 'Global', array_var
+			
+		if type == 'ArrayExpr':
+			name, idx_expr = content
+			
+			if name not in self.environment.arrays:
+				print('Tried to use undefined array "{}"'.format(name))
+				return None
+				
+			index_var = '{}Idx'.format(name)
+			id = idx_expr.compile(self, index_var)
+			if id == None:
+				raise Exception('Unable to calculate array "{}" index'.format(name))
+			
+			if id != index_var:
+				self.add_command('scoreboard players operation Global {} = Global {}'.format(index_var, id))
+				
+			if initialize:
+				self.add_command('function {}:array_{}_get'.format(self.namespace, name.lower()))
+			
+			self.free_scratch(id)
+			
+			return 'Global', '{}Val'.format(name)
+		
+		else:
+			raise Exception('Tried to get unknown variable type "{}"'.format(type))
+
+			
+	def set_variable(self, variable):
+		type, content = variable
+		
+		if type == 'Var':
+			id, var = content
+			self.set_path(id, var)
+			
+		elif type == 'ArrayExpr':
+			name, idx_expr = content
+			self.add_command('function {}:array_{}_set'.format(self.namespace, name.lower()))
+	
+	def get_arrayconst_var(self, name, idxval):
+		if name not in self.environment.arrays:
+			print('Tried to use undefined array "{}"'.format(name))
+			return None
+			
+		from_val, to_val = self.environment.arrays[name]
+		
+		index = int(self.environment.apply_replacements(idxval))
+		
+		if index < from_val or index >= to_val:
+			if from_val == 0:
+				print('Tried to index {} outside of array {}[{}]'.format(index, name, to_val))
+			else:
+				print('Tried to index {} outside of array {}[{} to {}]'.format(index, name, from_val, to_val))
+
+		return '{}{}'.format(name, index)
+
+	def get_if_chain(self, conditions, iftype='if'):
+		test = ''
+		for type, val in conditions:
+			if type == 'selector':
+				test += '{0} entity {1} '.format(iftype, val)
+			elif type == 'score':
+				var, op, (rtype, rval) = val
+				
+				lselector, lvar = self.get_variable(var, initialize = True)
+				
+				self.register_objective(lvar)
+				self.get_path(lselector, lvar)
+				
+				if rtype == 'num':
+					rval = self.apply_replacements(rval)
+					if op == '>':						
+						test += '{3} score {0} {1} matches {2}.. '.format(lselector, lvar, str(int(rval)+1), iftype)
+					if op == '>=':						
+						test += '{3} score {0} {1} matches {2}.. '.format(lselector, lvar, rval, iftype)
+					if op == '<':						
+						test += '{3} score {0} {1} matches ..{2} '.format(lselector, lvar, str(int(rval)-1), iftype)
+					if op == '<=':						
+						test += '{3} score {0} {1} matches ..{2} '.format(lselector, lvar, rval, iftype)
+					if op == '=':						
+						test += '{3} score {0} {1} matches {2}..{2} '.format(lselector, lvar, rval, iftype)
+				elif rtype == 'score':
+					rselector, rvar = self.get_variable(rval, initialize = True)
+					
+					self.register_objective(rvar)
+					self.get_path(rselector, rvar)
+					test += '{0} score {1} {2} {3} {4} {5} '.format(iftype, lselector, lvar, op, rselector, rvar)
+					
+			elif type == 'pointer':
+				var, rselector = val
+				
+				lselector, id = self.get_variable(var, initialize = True)
+				
+				self.register_objective(id)
+				test += '{0} score {1} {2} = {3} _id '.format(iftype, lselector, id, rselector)
+				
+			elif type == 'vector_equality':
+				if iftype == 'unless':
+					print('Vector equality may not  be used with "unless"')
+					return None
+				
+				(type1, var1), (type2, var2) = val
+				
+				for i in range(3):
+					if type1 == 'VAR_ID':
+						sel1 = 'Global'
+						sco1 = '_{}_{}'.format(var1, i)
+					elif type1 == 'SEL_VAR_ID':
+						sel1, selvar1 = var1
+						sco1 = '_{}_{}'.format(selvar1, i)
+					elif type1 == 'VAR_COMPONENTS':
+						sel1, sco1 = var1[i]
+						
+					if type2 == 'VAR_ID':
+						sel2 = 'Global'
+						sco2 = '_{}_{}'.format(var2, i)
+					elif type2 == 'SEL_VAR_ID':
+						sel2, selvar2 = var2
+						sco2 = '_{}_{}'.format(selvar2, i)
+					elif type2 == 'VAR_COMPONENTS':
+						sel2, sco2 = var1[i]
+					test += 'if score {} {} = {} {} '.format(sel1, sco1, sel2, sco2)
+					
+			elif type == 'block':
+				relcoords, block = val
+				if block in self.block_tags:
+					block = '#{0}:{1}'.format(self.namespace, block)
+				else:
+					block = 'minecraft:{0}'.format(block)
+				test += '{0} block {1} {2} '.format(iftype, ' '.join(relcoords), block)
+			else:
+				print('Unknown "if" type: {0}'.format(type))
+				return None
+		
+		return test
+		
+	def get_execute_command(self, exec_items, exec_func):	
+		cmd = 'execute '
+		as_count = 0
+		for type, _ in exec_items:
+			if type[:2] == 'As':
+				as_count += 1
+				
+				if as_count >= 2:
+					print('Execute chain may only contain a single "as" clause in block at line {0}'.format(get_line(line)))
+					return None
+		
+		at_vector_count = 0
+		
+		for type, val in exec_items:
+			if type == 'If':
+				cmd += self.get_if_chain(val)
+			if type == 'Unless':
+				cmd += self.get_if_chain(val, 'unless')
+			elif type == 'As':
+				cmd += 'as {0} '.format(val)
+				exec_func.update_self_selector(val)
+			elif type == 'AsId':
+				var, attype = val
+				
+				selector, id = self.get_variable(var, initialize = True)
+				
+				self.register_objective('_id')
+				self.register_objective(id)
+				
+				self.add_command('scoreboard players operation Global _id = {0} {1}'.format(selector, id))
+									
+				cmd += 'as @e if score @s _id = Global _id '.format(selector, id)
+				
+				if attype != None:
+					exec_func.update_self_selector('@' + attype)
+				else:
+					exec_func.update_self_selector('@s')
+			elif type == 'AsCreate':
+				if len(exec_items) > 1:
+					print('"as create" must be its own block at line {0}'.format(get_line(line)))
+					return None
+				create_operation = val
+					
+				self.register_objective('_age')
+				self.add_command('scoreboard players add @e _age 1')
+				
+				create_operation.compile(self)
+					
+				self.add_command('scoreboard players add @e _age 1')
+				cmd += 'as @e[_age==1] '
+				
+				exec_func.update_self_selector('@'+create_operation.atid)
+			elif type == 'Rotated':
+				cmd += 'rotated as {0} '.format(val)
+			elif type == 'FacingCoords':
+				cmd += 'facing {0} '.format(' '.join(val))
+			elif type == 'FacingEntity':
+				cmd += 'facing entity {0} feet '.format(val)
+			elif type == 'Align':
+				cmd += 'align {0} '.format(val)
+			elif type == 'At':
+				selector, relcoords = val
+				if selector != None:
+					cmd += 'at {0} '.format(selector)
+				if relcoords != None:
+					cmd += 'positioned {0} '.format(' '.join(relcoords))
+			elif type == 'AtVector':
+				at_vector_count += 1
+				if at_vector_count >= 2:
+					print('Tried to execute at multiple vector locations.')
+					return None
+					
+				scale, expr = val
+				if scale == None:
+					scale = self.scale
+
+				vec_vals = expr.compile(self, None)
+				self.add_command('scoreboard players add @e _age 1')
+				self.add_command('summon area_effect_cloud')
+				self.add_command('scoreboard players add @e _age 1')
+				for i in range(3):
+					self.add_command('execute store result entity @e[_age==1,limit=1] Pos[{0}] double {1} run scoreboard players get Global {2}'.format(i, 1/float(scale), vec_vals[i]))
+				cmd += 'at @e[_age == 1] '
+				exec_func.add_command('/kill @e[_age == 1]')
+			elif type == 'In':
+				dimension = val
+				cmd += 'in {} '.format(dimension)
+				
+		return cmd
 			
 	def switch_cases(self, var, cases, switch_func_name = 'switch', case_func_name = 'case'):
 		if len(cases) == 1:

@@ -1,5 +1,3 @@
-from mcfunction import get_variable, set_variable
-
 class vector_assignment_base(object):
 	def perform_vector_assignment(self, func):
 		var, op, expr = self.var, self.op, self.expr
@@ -17,7 +15,7 @@ class vector_assignment_base(object):
 			component_vars = []
 			
 			for i in range(3):
-				sel, id = get_variable(func, components[i], initialize = modify)
+				sel, id = func.get_variable(components[i], initialize = modify)
 				component_vars.append((sel, id))
 		
 		if not modify:
@@ -78,7 +76,7 @@ class vector_assignment_base(object):
 				if sel != 'Global' or id != component_val_vars[i]:
 					func.add_command('scoreboard players operation {0} {1} {2} Global {3}'.format(sel, id, op, component_val_vars[i]))
 					
-				set_variable(func, var)
+				func.set_variable(var)
 				
 		else:
 			raise Exception('Unknown vector variable type "{0}" at line {1}'.format(var_type, self.line))

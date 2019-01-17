@@ -1,4 +1,4 @@
-from mcfunction import get_variable, set_variable, isNumber
+from mcfunction import isNumber
 
 class scoreboard_assignment_block(object):
 	def __init__(self, line, assignment):
@@ -13,7 +13,7 @@ class scoreboard_assignment_block(object):
 		else:
 			modify = False
 		
-		(raw_selector, objective) = get_variable(func, var, initialize = modify)
+		(raw_selector, objective) = func.get_variable(var, initialize = modify)
 		
 		selector = func.apply_environment(raw_selector)
 		
@@ -44,7 +44,7 @@ class scoreboard_assignment_block(object):
 				func.add_command(command)
 				
 				# Is this redundant with the call at the end of the function?
-				set_variable(func, var)
+				func.set_variable(var)
 		else:
 			assignto = None
 			if op == '=' and objective != 'ReturnValue' and selector == 'Global':
@@ -63,4 +63,4 @@ class scoreboard_assignment_block(object):
 				
 			func.free_scratch(result)
 
-		set_variable(func, var)
+		func.set_variable(var)
