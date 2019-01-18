@@ -1,6 +1,5 @@
 from scalar_expression_base import scalar_expression_base
 from num_expr import num_expr
-from mcfunction import get_modifiable_id
 import math
 
 def factor(n):
@@ -63,7 +62,7 @@ class func_expr(scalar_expression_base):
 				print 'Unable to compile argument for abs function'
 				return None
 			
-			id = get_modifiable_id(func, id, assignto)
+			id = func.get_modifiable_id(id, assignto)
 		
 			func.add_constant(-1)
 			func.add_command("execute if score Global {0} matches ..-1 run scoreboard players operation Global {0} *= minus Constant".format(id))
@@ -160,7 +159,7 @@ class func_expr(scalar_expression_base):
 			if modret != moddedId2:
 				func.add_command('scoreboard players operation Global {0} = Global {1}'.format(moddedId2, modret))
 				
-			id = get_modifiable_id(func, id, assignto)
+			id = func.get_modifiable_id(id, assignto)
 			
 			modId = func.get_temp_var()
 			func.add_operation('Global', modId, '=', moddedId2)

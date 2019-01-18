@@ -189,3 +189,20 @@ class mock_mcfunction(object):
 		
 	def get_arrayconst_var(self, name, idxval):
 		return '{}{}'.format(name, idxval)
+		
+	def get_modifiable_id(self, id, assignto):
+		if assignto != None:
+			if id != assignto:
+				self.add_operation('Global', assignto, '=', id)
+				id = assignto
+			else:
+				return id
+		else:
+			newId = self.get_scratch()
+			self.add_operation('Global', newId, '=', id)
+			id = newId
+			
+			return id
+			
+	def evaluate_params(self, params):
+		return True

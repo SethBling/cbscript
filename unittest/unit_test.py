@@ -351,11 +351,7 @@ class test_cbscript(unittest.TestCase):
 		block = function_call_block(0, 'test_function', [num_expr(1)])
 		block.compile(func)
 
-		self.assertEqual(func.commands, [
-			'scoreboard players set Global test_scratch1 1',
-			'scoreboard players operation Global Param0 = Global test_scratch1',
-			'function test_namespace:test_function'
-		])
+		self.assertEqual(func.commands, ['function test_namespace:test_function'])
 		
 	def test_compile_macro_call(self):
 		func = mock_mcfunction()
@@ -379,11 +375,7 @@ class test_cbscript(unittest.TestCase):
 		block = method_call_block(0, '@test_selector', 'test_method', [num_expr(1)])
 		block.compile(func)
 		
-		self.assertEqual(func.commands, [
-			'scoreboard players set Global test_scratch1 1',
-			'scoreboard players operation Global Param0 = Global test_scratch1',
-			'execute as @test_selector run function test_namespace:test_method'
-		])
+		self.assertEqual(func.commands, ['execute as @test_selector run function test_namespace:test_method'])
 		
 	def test_compile_python_if(self):
 		func = mock_mcfunction()

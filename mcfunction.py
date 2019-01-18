@@ -51,28 +51,7 @@ def isNumber(s):
 	except TypeError:
 		return False
 		
-# Takes a scoreboard objective and returns a (potentially different)
-# scoreboard objective which can be freely modified.
-def get_modifiable_id(func, id, assignto):
-	if assignto != None:
-		if id != assignto:
-			func.add_operation('Global', assignto, '=', id)
-			id = assignto
-	elif not func.is_scratch(id):
-		newId = func.get_scratch()
-		func.add_operation('Global', newId, '=', id)
-		id = newId
-		
-	return id
-	
-def evaluate_params(func, params):
-	results = []
-	for p in range(len(params)):
-		param_name = 'Param{0}'.format(p)
-		val = params[p].compile(func, None)
-		func.add_operation('Global', 'Param{0}'.format(p), '=', val)
-	
-	return True
+
 
 class mcfunction(object):
 	def __init__(self, environment, callable = False, params = []):
@@ -84,7 +63,29 @@ class mcfunction(object):
 		
 		for param in params:
 			self.register_local(param)
+
+	# Takes a scoreboard objective and returns a (potentially different)
+	# scoreboard objective which can be freely modified.
+	def get_modifiable_id(self, id, assignto):
+		if assignto != None:
+			if id != assignto:
+				self.add_operation('Global', assignto, '=', id)
+				id = assignto
+		elif not self.is_scratch(id):
+			newId = self.get_scratch()
+			self.add_operation('Global', newId, '=', id)
+			id = newId
 			
+		return id
+	
+	def evaluate_params(self, params):
+		results = []
+		for p in range(len(params)):
+			param_name = 'Param{0}'.format(p)
+			val = params[p].compile(self, None)
+			self.add_operation('Global', 'Param{0}'.format(p), '=', val)
+		
+		return True			
 
 	def get_variable(self, variable, initialize):
 		type, content = variable

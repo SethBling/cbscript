@@ -1,6 +1,4 @@
 from scalar_expression_base import scalar_expression_base
-from mcfunction import get_modifiable_id
-
 class binop_expr(scalar_expression_base):
 	def __init__(self, lhs, op, rhs):
 		self.lhs = lhs
@@ -22,7 +20,7 @@ class binop_expr(scalar_expression_base):
 				print "Unable to compile LHS of binop {0}".format(self.op)
 				return None
 			
-			id1 = get_modifiable_id(func, id1, assignto)
+			id1 = func.get_modifiable_id(id1, assignto)
 				
 			const = right.const_value(func)
 			if const != None:

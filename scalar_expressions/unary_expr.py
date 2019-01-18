@@ -1,5 +1,4 @@
 from scalar_expression_base import scalar_expression_base
-from mcfunction import get_modifiable_id
 
 class unary_expr(scalar_expression_base):
 	def __init__(self, type, expr):
@@ -13,7 +12,7 @@ class unary_expr(scalar_expression_base):
 			if id == None:
 				return None
 			
-			id = get_modifiable_id(func, id, assignto)
+			id = func.get_modifiable_id(id, assignto)
 
 			func.add_constant(-1)
 			func.add_command("scoreboard players operation Global {0} *= minus Constant".format(id))
