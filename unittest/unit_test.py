@@ -9,11 +9,13 @@ from selector_definition import selector_definition
 from scratch_tracker import scratch_tracker
 from cbscript import cbscript
 
+from mock_block import mock_block
 from mock_environment import mock_environment
 from mock_global_context import mock_global_context
 from mock_mcfunction import mock_mcfunction
 from mock_mcworld import mock_mcworld
 from mock_parsed import mock_parsed
+from mock_selector_definition import mock_selector_definition
 from mock_source_file import mock_source_file
 
 from block_types.array_assignment_block import array_assignment_block
@@ -2523,6 +2525,497 @@ class test_cbscript(unittest.TestCase):
 		self.assertEqual(p[0], '100')
 		self.assertEqual(mcfunction.get_line(p[0]), 0)
 		
+	def test_mcfunction_get_modifiable_id(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		id = func.get_modifiable_id('test', 'assign')
+		self.assertEqual(id, 'assign')
+		self.assertEqual(func.commands, ['scoreboard players operation Global assign = Global test'])
+		
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		id = func.get_modifiable_id('test', 'test')
+		self.assertEqual(id, 'test')
+		self.assertEqual(func.commands, [])
+		
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		id = func.get_modifiable_id('test', None)
+		self.assertEqual(id, 'test_scratch1')
+		self.assertEqual(func.commands, ['scoreboard players operation Global test_scratch1 = Global test'])
+		
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		id = func.get_modifiable_id('test_scratch1', None)
+		self.assertEqual(id, 'test_scratch1')
+		self.assertEqual(func.commands, [])
+		
+	def test_mcfunction_evaluate_params(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		self.assertTrue(func.evaluate_params([num_expr(1)]))
+		self.assertEqual(func.commands, [
+			'scoreboard players set Global test_scratch1 1',
+			'scoreboard players operation Global Param0 = Global test_scratch1'
+		])		
+		
+	def test_mcfunction_get_variable_non_single_entity(self):
+		env = mock_environment()
+		sel = mock_selector_definition()
+		sel.paths['test_path'] = 'path', 'float', 100
+		sel.base_name = '@e'
+		sel.is_single_entity = False
+		env.selectors['test_selector'] = sel
+		env.selector_definitions['@test_selector'] = sel
+		func = mcfunction.mcfunction(env)
+		
+		var = 'Var', ('@test_selector', 'test_path')
+		
+		with self.assertRaises(Exception):
+			var_ret = func.get_variable(var, True)
+	
+	def test_mcfunction_get_variable_path(self):
+		env = mock_environment()
+		sel = mock_selector_definition()
+		sel.paths['test_path'] = 'path', 'float', 100
+		sel.base_name = '@s'
+		sel.is_single_entity = True
+		env.selectors['test_selector'] = sel
+		env.selector_definitions['@test_selector'] = sel
+		func = mcfunction.mcfunction(env)
+		
+		var = 'Var', ('@test_selector', 'test_path')
+		
+		var_ret = func.get_variable(var, True)
+		self.assertEqual(var_ret, var[1])
+		self.assertEqual(func.commands, ['execute store result score @test_selector test_path run data get entity @test_selector path 100'])
+		
+	def test_mcfunction_get_variable_arrayconst(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		var = 'ArrayConst', ('test_array', '1')
+		var_ret = func.get_variable(var, True)
+		
+		self.assertEqual(var_ret, ('Global', 'test_array1'))
+		self.assertEqual(func.commands, [])
+		
+	def test_mcfunction_get_variable_arrayexpr(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		env.arrays['test_array'] = (0, 10)
+		
+		var = 'ArrayExpr', ('test_array', num_expr(1))
+		var_ret = func.get_variable(var, True)
+		
+		self.assertEqual(var_ret, ('Global', 'test_arrayVal'))
+		self.assertEqual(func.commands, [
+			'scoreboard players set Global test_arrayIdx 1',
+			'function test_namespace:array_test_array_get'
+		])
+		
+	def test_mcfunction_get_variable_arrayexpr_noarray(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		var = 'ArrayExpr', ('test_array', num_expr(1))
+		with self.assertRaises(NameError):
+			var_ret = func.get_variable(var, True)
+			
+	def test_mcfunction_set_variable_var(self):
+		env = mock_environment()
+		sel = mock_selector_definition()
+		sel.paths['test_path'] = 'path', 'float', 100
+		sel.base_name = '@s'
+		sel.is_single_entity = True
+		env.selectors['test_selector'] = sel
+		env.selector_definitions['@test_selector'] = sel
+		func = mcfunction.mcfunction(env)
+		
+		var = 'Var', ('@test_selector', 'test_path')
+		
+		func.set_variable(var)
+		self.assertEqual(func.commands, ['execute store result entity @test_selector path float 0.01 run scoreboard players get @test_selector test_path'])
+		
+	def test_mcfunction_set_variable_arrayexpr(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		var = ('ArrayExpr', ('test_array', num_expr(1)))
+		
+		func.set_variable(var)
+		self.assertEqual(func.commands, ['function test_namespace:array_test_array_set'])
+		
+	def test_mcfunction_get_if_chain_selector(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		condition = 'selector', '@p'
+		chain = func.get_if_chain([condition])
+		
+		self.assertEqual(chain, 'if entity @p ')
+		
+	def test_mcfunction_get_if_chain_score_num(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		for op, match in [
+			('>', '2..'),
+			('<', '..0'),
+			('>=', '1..'),
+			('<=', '..1'),
+			('=', '1..1'),
+		]:				
+			condition = 'score', (('Var', ('@test_selector', 'test_var')), op, ('num', 1))
+			chain = func.get_if_chain([condition])
+		
+			self.assertEqual(chain, 'if score @test_selector test_var matches {} '.format(match))
+		
+	def test_mcfunction_get_if_chain_score_var(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		condition = 'score', (('Var', ('@test_selector', 'test_var')), '>', ('score', ('Var', ('@test_selector2', 'test_var2'))))
+		chain = func.get_if_chain([condition])
+	
+		self.assertEqual(chain, 'if score @test_selector test_var > @test_selector2 test_var2 ')
+		
+	def test_mcfunction_get_if_chain_score_bad_comparison_type(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		condition = 'score', (('Var', ('@test_selector', 'test_var')), '>', ('bad', None))
+		with self.assertRaises(ValueError):
+			func.get_if_chain([condition])
+			
+	def test_mcfunction_get_if_chain_pointer(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		condition = 'pointer', (('Var', ('@test_selector', 'test_var')), '@test_selector2')
+		chain = func.get_if_chain([condition])
+		
+		self.assertEqual(chain, 'if score @test_selector test_var = @test_selector2 _id ')
+
+	def test_mcfunction_get_if_chain_vector_equality_var_id(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		condition = 'vector_equality', (('VAR_ID','var1'),('VAR_ID','var2'))
+		chain = func.get_if_chain([condition])
+		
+		self.assertEqual(chain, 'if score Global _var1_0 = Global _var2_0 if score Global _var1_1 = Global _var2_1 if score Global _var1_2 = Global _var2_2 ')
+		
+	def test_mcfunction_get_if_chain_vector_equality_sel_var_id(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		condition = 'vector_equality', (('SEL_VAR_ID',('@sel1','var1')),('SEL_VAR_ID',('@sel2','var2')))
+		chain = func.get_if_chain([condition])
+		
+		self.assertEqual(chain, 'if score @sel1 _var1_0 = @sel2 _var2_0 if score @sel1 _var1_1 = @sel2 _var2_1 if score @sel1 _var1_2 = @sel2 _var2_2 ')
+
+	def test_mcfunction_mcfunction_get_if_chain_vector_equality_var_components(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		condition = 'vector_equality', (('VAR_COMPONENTS',[('a1', 'x1'), ('b1', 'y1'), ('c1', 'z1')]),('VAR_COMPONENTS',[('a2', 'x2'), ('b2', 'y2'), ('c2', 'z2')]))
+		chain = func.get_if_chain([condition])
+		
+		self.assertEqual(chain, 'if score a1 x1 = a2 x2 if score b1 y1 = b2 y2 if score c1 z1 = c2 z2 ')
+		
+	def test_mcfunction_mcfunction_get_if_chain_unless(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		condition = 'vector_equality', (('VAR_ID','var1'),('VAR_ID','var2'))
+		with self.assertRaises(ValueError):
+			func.get_if_chain([condition], 'unless')
+			
+	def test_mcfunction_mcfunction_get_if_chain_block(self):
+		env = mock_environment()
+		env.block_tags['test_block_tag'] = ['test_block1']
+		func = mcfunction.mcfunction(env)
+		
+		condition1 = 'block', (['1', '2', '3'], 'test_block_tag')
+		condition2 = 'block', (['4', '5', '6'], 'test_block2')
+		chain = func.get_if_chain([condition1, condition2])
+		
+		self.assertEqual(chain, 'if block 1 2 3 #test_namespace:test_block_tag if block 4 5 6 minecraft:test_block2 ')
+
+	def test_mcfunction_mcfunction_get_if_chain_bad_type(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		condition = 'bad', None
+		with self.assertRaises(ValueError):
+			func.get_if_chain([condition])
+			
+	def test_mcfunction_execute_command_multiple_as(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		exec_func = mock_mcfunction()
+		
+		cmd = func.get_execute_command([('As', None), ('As', None)], exec_func)
+		self.assertEqual(cmd, None)
+		
+	def test_mcfunction_execute_command_if(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		exec_func = mock_mcfunction()
+		
+		item = 'If', [('selector', '@p')]
+		
+		cmd = func.get_execute_command([item], exec_func)
+		self.assertEqual(cmd, 'execute if entity @p ')
+		
+	def test_mcfunction_execute_command_unless(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		exec_func = mock_mcfunction()
+		
+		item = 'Unless', [('selector', '@p')]
+		
+		cmd = func.get_execute_command([item], exec_func)
+		self.assertEqual(cmd, 'execute unless entity @p ')
+		
+	def test_mcfunction_execute_command_as_id_attype(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		exec_func = mock_mcfunction()
+		
+		item = 'AsId', (('Var', ('Global', 'test_var')), 'at_type')
+		
+		cmd = func.get_execute_command([item], exec_func)
+		self.assertEqual(func.commands, ['scoreboard players operation Global _id = Global test_var'])
+		self.assertEqual(cmd, 'execute as @e if score @s _id = Global _id ')
+		self.assertEqual(exec_func.self_selector, '@at_type')
+		
+	def test_mcfunction_execute_command_as_id(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		exec_func = mock_mcfunction()
+		
+		item = 'AsId', (('Var', ('Global', 'test_var')), None)
+		
+		cmd = func.get_execute_command([item], exec_func)
+		self.assertEqual(func.commands, ['scoreboard players operation Global _id = Global test_var'])
+		self.assertEqual(cmd, 'execute as @e if score @s _id = Global _id ')
+	
+	def test_mcfunction_execute_command_as_create(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		exec_func = mock_mcfunction()
+		sel = mock_selector_definition()
+		sel.type = 'creeper'
+		env.selectors['test_id'] = sel
+		
+		item = 'AsCreate', create_block(0, 'test_id', ['1', '2', '3'])
+		
+		cmd = func.get_execute_command([item], exec_func)
+		self.assertEqual(func.commands, [
+			'scoreboard players add @e _age 1',
+			'summon creeper 1 2 3 ',
+			'scoreboard players add @e _age 1'
+		])
+		self.assertEqual(cmd, 'execute as @e[_age==1] ')
+		
+	def test_mcfunction_execute_command_as_create_multiple(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		exec_func = mock_mcfunction()
+		
+		item = 'AsCreate', create_block(0, 'test_id', ['1', '2', '3'])
+		item2 = 'If', [('selector', '@p')]
+		
+		cmd = func.get_execute_command([item, item2], exec_func)
+		
+		self.assertEqual(cmd, None)
+		
+	def test_mcfunction_execute_command_rotated_etc(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		exec_func = mock_mcfunction()
+		
+		for type, code, target, target_code, extra in [
+			('As', 'as', '@p', '@p', ''),
+			('Rotated', 'rotated as', '@p', '@p', ''),
+			('FacingCoords', 'facing', ['1', '2', '3'], '1 2 3', ''),
+			('FacingEntity', 'facing entity', '@p', '@p', ' feet'),
+			('Align', 'align', 'xyz', 'xyz', ''),
+			('In', 'in', 'the_end', 'the_end', ''),
+		]:
+			item = type, target
+			
+			cmd = func.get_execute_command([item], exec_func)
+			self.assertEqual(cmd, 'execute {} {}{} '.format(code, target_code, extra))
+			
+	def test_mcfunction_execute_command_at_selector_coords(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		exec_func = mock_mcfunction()
+		
+		item = 'At', ('@test_selector', ['1', '2', '3'])
+		
+		cmd = func.get_execute_command([item], exec_func)
+		self.assertEqual(cmd, 'execute at @test_selector positioned 1 2 3 ')
+		
+	def test_mcfunction_execute_command_at_selector(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		exec_func = mock_mcfunction()
+		
+		item = 'At', ('@test_selector', None)
+		
+		cmd = func.get_execute_command([item], exec_func)
+		self.assertEqual(cmd, 'execute at @test_selector ')
+		
+	def test_mcfunction_execute_command_at_coords(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		exec_func = mock_mcfunction()
+		
+		item = 'At', (None, ['1', '2', '3'])
+		
+		cmd = func.get_execute_command([item], exec_func)
+		self.assertEqual(cmd, 'execute positioned 1 2 3 ')
+		
+	def test_mcfunction_execute_command_at_vector(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		exec_func = mock_mcfunction()
+		
+		item = 'AtVector', (None, vector_var_expr('test_vector'))
+		
+		cmd = func.get_execute_command([item], exec_func)
+		self.assertEqual(cmd, 'execute at @e[_age == 1] ')
+		self.assertEqual(func.commands, [
+			'scoreboard players add @e _age 1',
+			'summon area_effect_cloud',
+			'scoreboard players add @e _age 1',
+			'execute store result entity @e[_age==1,limit=1] Pos[0] double 0.001 run scoreboard players get Global _test_vector_0',
+			'execute store result entity @e[_age==1,limit=1] Pos[1] double 0.001 run scoreboard players get Global _test_vector_1',
+			'execute store result entity @e[_age==1,limit=1] Pos[2] double 0.001 run scoreboard players get Global _test_vector_2'
+		])
+		self.assertEqual(exec_func.commands, ['/kill @e[_age == 1]'])
+		
+	def test_mcfunction_execute_command_at_vector_scale(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		exec_func = mock_mcfunction()
+		
+		item = 'AtVector', (200, vector_var_expr('test_vector'))
+		
+		cmd = func.get_execute_command([item], exec_func)
+		self.assertEqual(cmd, 'execute at @e[_age == 1] ')
+		self.assertEqual(func.commands, [
+			'scoreboard players add @e _age 1',
+			'summon area_effect_cloud',
+			'scoreboard players add @e _age 1',
+			'execute store result entity @e[_age==1,limit=1] Pos[0] double 0.005 run scoreboard players get Global _test_vector_0',
+			'execute store result entity @e[_age==1,limit=1] Pos[1] double 0.005 run scoreboard players get Global _test_vector_1',
+			'execute store result entity @e[_age==1,limit=1] Pos[2] double 0.005 run scoreboard players get Global _test_vector_2'
+		])
+		self.assertEqual(exec_func.commands, ['/kill @e[_age == 1]'])
+		
+	def test_mcfunction_execute_command_at_vector_multiple(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		exec_func = mock_mcfunction()
+		
+		item1 = 'AtVector', (200, vector_var_expr('test_vector'))
+		item2 = 'AtVector', (200, vector_var_expr('test_vector'))
+		
+		cmd = func.get_execute_command([item1, item2], exec_func)
+		self.assertEqual(cmd, None)
+		
+	def test_mcfunction_switch_cases_four(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		case1 = 1, 2, [mock_block('command1')], 0, None
+		case2 = 3, 3, [mock_block('command2')], 0, None
+		case3 = 4, 5, [mock_block('command3')], 0, None
+		case4 = 6, 10, [mock_block('command4')], 0, None
+		
+		self.assertTrue(func.switch_cases('switch_var', [case1, case2, case3, case4]))
+		self.assertEqual(func.commands, [
+			'execute if score Global switch_var matches 1..2 run command1',
+			'execute if score Global switch_var matches 3..3 run command2',
+			'execute if score Global switch_var matches 4..5 run command3',
+			'execute if score Global switch_var matches 6..10 run command4'
+		])
+		
+	def test_mcfunction_switch_cases_three(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		case1 = 1, 2, [mock_block('command1')], 0, None
+		case2 = 3, 3, [mock_block('command2')], 0, 'test_python_var'
+		case3 = 4, 5, [mock_block('command3')], 0, None
+		
+		self.assertTrue(func.switch_cases('switch_var', [case1, case2, case3]))
+		self.assertEqual(func.commands, [
+			'execute if score Global switch_var matches 1..2 run command1',
+			'execute if score Global switch_var matches 3..3 run command2',
+			'execute if score Global switch_var matches 4..5 run command3'
+		])
+		self.assertEqual(env.cloned_environments[1].dollarid['test_python_var'], 3)
+		
+	def test_mcfunction_switch_cases_multiline(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		case1 = 1, 2, [mock_block('command1')], 0, None
+		case2 = 3, 3, [mock_block('command2'), mock_block('command5')], 0, None,
+		case3 = 4, 5, [mock_block('command3'), mock_block('command4')], 0, None
+		
+		self.assertTrue(func.switch_cases('switch_var', [case1, case2, case3]))
+		self.assertEqual(func.commands, [
+			'execute if score Global switch_var matches 1..2 run command1',
+			'execute if score Global switch_var matches 3..3 run function test_namespace:case3_001_ln0',
+			'execute if score Global switch_var matches 4..5 run function test_namespace:case4-5_001_ln0'
+		])
+		self.assertEqual(env.functions['case3_001_ln0'].commands, ['command2', 'command5'])
+		self.assertEqual(env.functions['case4-5_001_ln0'].commands, ['command3', 'command4'])
+		
+	def test_mcfunction_switch_cases_five(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		case1 = 1, 2, [mock_block('command1')], 0, None
+		case2 = 3, 3, [mock_block('command2')], 0, None
+		case3 = 4, 5, [mock_block('command3')], 0, None
+		case4 = 6, 10, [mock_block('command4')], 0, None
+		case5 = 11, 15, [mock_block('command5')], 0, None
+		
+		self.assertTrue(func.switch_cases('switch_var', [case1, case2, case3, case4, case5]))
+		self.assertEqual(func.commands, [
+			'execute if score Global switch_var matches 1..2 run command1',
+			'execute if score Global switch_var matches 3..3 run command2',
+			'execute if score Global switch_var matches 4..5 run command3',
+			'execute if score Global switch_var matches 6..15 run function test_namespace:switch6-15_001_ln0',
+		])
+		self.assertEqual(env.functions['switch6-15_001_ln0'].commands, [
+			'execute if score Global switch_var matches 6..10 run command4',
+			'execute if score Global switch_var matches 11..15 run command5'
+		])
+		
+	def test_mcfunction_add_operation(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		func.add_operation('@test_selector', 'var1', '+=', 'var2')
+		self.assertEqual(env.applied, [
+			'@test_selector',
+			'scoreboard players operation @test_selector var1 += @test_selector var2'
+		])
+		self.assertEqual(func.commands, ['scoreboard players operation @test_selector var1 += @test_selector var2'])
 		
 if __name__ == '__main__':
     unittest.main()

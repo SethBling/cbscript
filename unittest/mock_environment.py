@@ -5,13 +5,23 @@ class mock_environment(object):
 		self.self_selector = None
 		self.selectors = {}
 		self.objectives = []
+		self.scratch = 0
+		self.selector_definitions = {}
+		self.arrays = {}
+		self.block_tags = {}
+		self.scale = 1000
+		self.cloned_environments = []
+		self.applied = []
 		
 	def clone(self, new_function_name=None):
 		env = mock_environment()
 		env.function_name = new_function_name
+		self.cloned_environments.append(env)
 		return env
 		
 	def apply(self, text):
+		self.applied.append(text)
+		
 		return text
 		
 	def get_unique_id(self):
@@ -38,3 +48,19 @@ class mock_environment(object):
 		
 	def register_objective(self, objective):
 		self.objectives.append(objective)
+		
+	def is_scratch(self, id):
+		return 'scratch' in id
+		
+	def get_scratch(self):
+		self.scratch += 1
+		return 'test_scratch{}'.format(self.scratch)
+		
+	def free_scratch(self, id):
+		None
+		
+	def get_selector_definition(self, selector_text):
+		return self.selector_definitions[selector_text]
+	
+	def get_arrayconst_var(self, name, idxval):
+		return '{}{}'.format(name, idxval)

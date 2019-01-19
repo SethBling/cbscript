@@ -26,6 +26,7 @@ class mock_mcfunction(object):
 		self.switch_calls = []
 		self.execute_command_calls = []
 		self.set_var = {}
+		self.self_selector = None
 		
 	def add_operation(self, selector, id1, operation, id2):
 		self.add_command("scoreboard players operation {0} {1} {2} {0} {3}".format(selector, id1, operation, id2))
@@ -116,7 +117,7 @@ class mock_mcfunction(object):
 		return 1
 		
 	def update_self_selector(self, selector):
-		None
+		self.self_selector = selector
 		
 	def get_python_env(self):
 		return {}

@@ -24,7 +24,7 @@ define @Buffer = @Entity[type=area_effect_cloud, tag=Buffer, limit=1]
 end
 
 define @Marker = @Entity[type=area_effect_cloud]
-    create: {Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+	create: {Duration:-1,Age:-2147483648,WaitTime:-2147483648}
 end
 
 define @Self = @s
@@ -420,7 +420,7 @@ function global_reset()
 	end
 
 	/scoreboard objectives remove right_click
-    /scoreboard objectives add right_click minecraft.used:minecraft.carrot_on_a_stick
+	/scoreboard objectives add right_click minecraft.used:minecraft.carrot_on_a_stick
 end
 
 function draw_controller()

@@ -27,13 +27,6 @@ def compile_section(section, environment):
 		
 	f.compile_blocks(lines)
 
-
-def combine_selectors(selector, qualifiers):
-	if selector[-1] <> ']':
-		return selector + qualifiers
-	else:
-		return selector[:-1] + "," + qualifiers[1:]
-
 def isNumber(s):
 	try:
 		val = float(s)
@@ -111,8 +104,7 @@ class mcfunction(object):
 			name, idx_expr = content
 			
 			if name not in self.environment.arrays:
-				print('Tried to use undefined array "{}"'.format(name))
-				return None
+				raise NameError('Tried to use undefined array "{}"'.format(name))
 				
 			index_var = '{}Idx'.format(name)
 			id = idx_expr.compile(self, index_var)
@@ -145,21 +137,7 @@ class mcfunction(object):
 			self.add_command('function {}:array_{}_set'.format(self.namespace, name.lower()))
 	
 	def get_arrayconst_var(self, name, idxval):
-		if name not in self.environment.arrays:
-			print('Tried to use undefined array "{}"'.format(name))
-			return None
-			
-		from_val, to_val = self.environment.arrays[name]
-		
-		index = int(self.environment.apply_replacements(idxval))
-		
-		if index < from_val or index >= to_val:
-			if from_val == 0:
-				print('Tried to index {} outside of array {}[{}]'.format(index, name, to_val))
-			else:
-				print('Tried to index {} outside of array {}[{} to {}]'.format(index, name, from_val, to_val))
-
-		return '{}{}'.format(name, index)
+		return self.environment.get_arrayconst_var(name, idxval)
 
 	def get_if_chain(self, conditions, iftype='if'):
 		test = ''
@@ -170,9 +148,6 @@ class mcfunction(object):
 				var, op, (rtype, rval) = val
 				
 				lselector, lvar = self.get_variable(var, initialize = True)
-				
-				self.register_objective(lvar)
-				self.get_path(lselector, lvar)
 				
 				if rtype == 'num':
 					rval = self.apply_replacements(rval)
@@ -192,7 +167,8 @@ class mcfunction(object):
 					self.register_objective(rvar)
 					self.get_path(rselector, rvar)
 					test += '{0} score {1} {2} {3} {4} {5} '.format(iftype, lselector, lvar, op, rselector, rvar)
-					
+				else:
+					raise ValueError('Unknown if comparison type: "{}"'.format(rtype))
 			elif type == 'pointer':
 				var, rselector = val
 				
@@ -203,8 +179,7 @@ class mcfunction(object):
 				
 			elif type == 'vector_equality':
 				if iftype == 'unless':
-					print('Vector equality may not  be used with "unless"')
-					return None
+					raise ValueError('Vector equality may not  be used with "unless"')
 				
 				(type1, var1), (type2, var2) = val
 				
@@ -225,7 +200,7 @@ class mcfunction(object):
 						sel2, selvar2 = var2
 						sco2 = '_{}_{}'.format(selvar2, i)
 					elif type2 == 'VAR_COMPONENTS':
-						sel2, sco2 = var1[i]
+						sel2, sco2 = var2[i]
 					test += 'if score {} {} = {} {} '.format(sel1, sco1, sel2, sco2)
 					
 			elif type == 'block':
@@ -236,8 +211,7 @@ class mcfunction(object):
 					block = 'minecraft:{0}'.format(block)
 				test += '{0} block {1} {2} '.format(iftype, ' '.join(relcoords), block)
 			else:
-				print('Unknown "if" type: {0}'.format(type))
-				return None
+				raise ValueError('Unknown "if" type: {0}'.format(type))
 		
 		return test
 		
@@ -249,7 +223,7 @@ class mcfunction(object):
 				as_count += 1
 				
 				if as_count >= 2:
-					print('Execute chain may only contain a single "as" clause in block at line {0}'.format(get_line(line)))
+					print('Execute chain may only contain a single "as" clause.')
 					return None
 		
 		at_vector_count = 0
@@ -280,7 +254,7 @@ class mcfunction(object):
 					exec_func.update_self_selector('@s')
 			elif type == 'AsCreate':
 				if len(exec_items) > 1:
-					print('"as create" must be its own block at line {0}'.format(get_line(line)))
+					print('"as create" may not be paired with other execute commands.')
 					return None
 				create_operation = val
 					
@@ -332,56 +306,52 @@ class mcfunction(object):
 		return cmd
 			
 	def switch_cases(self, var, cases, switch_func_name = 'switch', case_func_name = 'case'):
-		if len(cases) == 1:
-			vmin, vmax, sub, line, dollarid = cases[0]
-			if dollarid != None:
-				self.set_dollarid(dollarid, vmin)
-			self.compile_blocks(sub)
-		else:
-			for q in range(4):
-				imin = q * len(cases) / 4
-				imax = (q+1) * len(cases) / 4
-				if imin == imax:
-					continue
+		for q in range(4):
+			imin = q * len(cases) / 4
+			imax = (q+1) * len(cases) / 4
+			if imin == imax:
+				continue
+		
+			vmin = cases[imin][0]
+			vmax = cases[imax-1][1]
+			line = cases[imin][3]
 			
-				vmin = cases[imin][0]
-				vmax = cases[imax-1][1]
-				line = cases[imin][3]
-				
-				sub_cases = cases[imin:imax]
-				case_func = self.create_child_function()
-				
-				if len(sub_cases) == 1:
-					vmin, vmax, sub, line, dollarid = sub_cases[0]
-					if dollarid != None:
-						case_func.set_dollarid(dollarid, vmin)
+			sub_cases = cases[imin:imax]
+			case_func = self.create_child_function()
+			
+			if len(sub_cases) == 1:
+				vmin, vmax, sub, line, dollarid = sub_cases[0]
+				if dollarid != None:
+					case_func.set_dollarid(dollarid, vmin)
+				try:
 					case_func.compile_blocks(sub)
-						
-					single_command = case_func.single_command()
-					if single_command != None:
-						if single_command.startswith('/'):
-							single_command = single_command[1:]
-							
-						self.add_command('execute if score Global {} matches {}..{} run {}'.format(var, vmin, vmax, single_command))
-					else:
-						unique = self.get_unique_id()
-
-						if vmin == vmax:
-							case_name = '{}{}_{:03}_ln{}'.format(case_func_name, vmin, unique, line)
-						else:
-							case_name = '{}{}-{}_{:03}_ln{}'.format(case_func_name, vmin, vmax, unique, line)
-							
-						self.add_command('execute if score Global {} matches {}..{} run function {}:{}'.format(var, vmin, vmax, self.namespace, case_name))
-						self.register_function(case_name, case_func)
+				except Exception as e:
+					print(e.message)
+					print('Unable to compile case at line {}'.format(line))
+					return False
+					
+				single_command = case_func.single_command()
+				if single_command != None:
+					self.add_command('execute if score Global {} matches {}..{} run {}'.format(var, vmin, vmax, single_command))
 				else:
 					unique = self.get_unique_id()
-					case_name = '{}{}-{}_{:03}_ln{}'.format(switch_func_name, vmin, vmax, unique, line)
+
+					if vmin == vmax:
+						case_name = '{}{}_{:03}_ln{}'.format(case_func_name, vmin, unique, line)
+					else:
+						case_name = '{}{}-{}_{:03}_ln{}'.format(case_func_name, vmin, vmax, unique, line)
+						
 					self.add_command('execute if score Global {} matches {}..{} run function {}:{}'.format(var, vmin, vmax, self.namespace, case_name))
 					self.register_function(case_name, case_func)
-				
-					if not case_func.switch_cases(var, sub_cases):
-						return False
-				
+			else:
+				unique = self.get_unique_id()
+				case_name = '{}{}-{}_{:03}_ln{}'.format(switch_func_name, vmin, vmax, unique, line)
+				self.add_command('execute if score Global {} matches {}..{} run function {}:{}'.format(var, vmin, vmax, self.namespace, case_name))
+				self.register_function(case_name, case_func)
+			
+				if not case_func.switch_cases(var, sub_cases):
+					return False
+			
 		return True
 
 		
@@ -390,8 +360,8 @@ class mcfunction(object):
 		
 		self.add_command("scoreboard players operation {0} {1} {2} {0} {3}".format(selector, id1, operation, id2))
 			
-		if self.environment.scratch.is_scratch(id2):
-			self.environment.scratch.free_scratch(id2)
+		if self.is_scratch(id2):
+			self.free_scratch(id2)
 		
 	def add_command(self, command):
 		self.insert_command(command, len(self.commands))
@@ -458,7 +428,7 @@ class mcfunction(object):
 		if selector[0] != '@':
 			return True
 			
-		parsed = selector_definition(selector, self.environment)
+		parsed = self.environment.get_selector_definition(selector)
 		return parsed.single_entity()
 			
 	def get_path(self, selector, var):

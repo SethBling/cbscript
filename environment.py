@@ -236,3 +236,23 @@ class environment(object):
 		
 	def register_clock(self, name):
 		self.global_context.register_clock(name)
+		
+	def get_arrayconst_var(self, name, idxval):
+		if name not in self.arrays:
+			print('Tried to use undefined array "{}"'.format(name))
+			return None
+				
+		from_val, to_val = self.arrays[name]
+		
+		index = int(self.apply_replacements(idxval))
+		
+		if index < from_val or index >= to_val:
+			if from_val == 0:
+				print('Tried to index {} outside of array {}[{}]'.format(index, name, to_val))
+			else:
+				print('Tried to index {} outside of array {}[{} to {}]'.format(index, name, from_val, to_val))
+
+		return '{}{}'.format(name, index)
+		
+	def get_selector_definition(self, selector_text):
+		return selector_definition(selector_text, self)

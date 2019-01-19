@@ -62,6 +62,6 @@ class switch_block(object):
 			prevmax = vmax
 			
 		if not func.switch_cases(result, cases):
-			return False
+			raise Exception('Unable to compile switch block at line {}'.format(line))
 				
 		func.free_scratch(result)
