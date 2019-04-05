@@ -2,41 +2,62 @@ dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
 desc: A camera with shading
 scale: 1000
 
-define @Scan = @Entity[type=area_effect_cloud,tag=Scan]
+define @Entity = @e
+	x = Pos[0] double
+	y = Pos[1] double
+	z = Pos[2] double
+	<pos> = Pos double
+	vx = Motion[0] double
+	vy = Motion[1] double
+	vz = Motion[2] double
+	ry = Rotation[0] float
+	rx = Rotation[1] float
+	on_ground = OnGround byte 1
+	no_gravity = NoGravity byte 1
+end
+
+define @Scan = @Entity[type=area_effect_cloud,tag=Scan,limit=1]
 	create: {Tags:["Scan"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
 end
+
+define @Position = @Entity[type=area_effect_cloud,tag=Position,limit=1]
+	create: {Tags:["Position"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
 
 $Pixels: 128
 $Radius: 10
 $MinusRadius: -Radius
 $Diameter: 2 * Radius
 $MinusDiameter: -Diameter
-$PixelMove: Diameter / Pixels
+$PixelMove: float(Diameter) / Pixels
+$MinusPixelMove: -PixelMove
 
-define block NONE
+define block none
 	air
 	cave_air
 	grass
 	tall_grass
 end
 
-define block GRASS
+define block grass
 	grass_block
 end
 
-define block SAND
+define block sand
 	sand
+	sandstone
 end
 
-define block CLOTH
+define block cloth
 	cobweb
 end
 
-define block TNT
+define block tnt
 	tnt
 end
 
-define block ICE
+define block ice
 	ice
 	blue_ice
 	packed_ice
@@ -55,333 +76,339 @@ define block snow
 	snow_block
 end
 
-define block CLAY
+define block clay
 	clay
 end
 
-define block DIRT
+define block dirt
 	dirt
 end
 
-define block STONE
+define block stone
 	stone
 end
 
 #define block WATER
 
-define block WOOD
+define block wood
 	oak_planks
+	oak_log
 end
 
-define block QUARTZ
+define block quartz
 	quartz_block
 end
 
-define block ADOBE
+define block adobe
 	acacia_planks
 end
 
-define block MAGENTA
+define block magenta
 	magenta_wool
 end
 
-define block LIGHT_BLUE
+define block light_blue
 	light_blue_wool
 end
 
-define block YELLOW
+define block yellow
 	yellow_wool
 end
 
-define block LIME
+define block lime
 	lime_wool
 end
 
-define block PINK
+define block pink
 	pink_wool
 end
 
-define block GRAY
+define block gray
 	gray_wool
 end
 
-define block SILVER
+define block silver
 	light_gray_wool
 end
 
-define block CYAN
+define block cyan
 	cyan_wool
 end
 
-define block PURPLE
+define block purple
 	purple_wool
 end
 
-define block BLUE
+define block blue
 	blue_wool
 	water
 end
 
-define block BROWN
+define block brown
 	brown_wool
 end
 
-define block GREEN
+define block green
 	green_wool
 end
 
-define block RED
+define block red
 	red_wool
 end
 
-define block BLACK
+define block black
 	black_wool
 end
 
-define block GOLD
+define block gold
 	gold_block
 end
 
-define block DIAMOND
+define block diamond
 	diamond_block
 end
 
-define block LAPIS
+define block lapis
 	lapis_block
 end
 
-define block EMERALD
+define block emerald
 	emerald_block
 end
 
-define block OBSIDIAN
+define block obsidian
 	obsidian
 end
 
-define block NETHERRACK
+define block netherrack
 	netherrack
 end
 
-define block WHITE_STAINED_HARDENED_CLAY
+define block white_stained_hardened_clay
 	white_glazed_terracotta
 end
 
-define block ORANGE_STAINED_HARDENED_CLAY
+define block orange_stained_hardened_clay
 	orange_glazed_terracotta
 end
 
-define block MAGENTA_STAINED_HARDENED_CLAY
+define block magenta_stained_hardened_clay
 	magenta_glazed_terracotta
 end
 
-define block LIGHT_BLUE_STAINED_HARDENED_CLAY
+define block light_blue_stained_hardened_clay
 	light_blue_glazed_terracotta
 end
 
-define block YELLOW_STAINED_HARDENED_CLAY
+define block yellow_stained_hardened_clay
 	yellow_glazed_terracotta
 end
 
-define block LIME_STAINED_HARDENED_CLAY
+define block lime_stained_hardened_clay
 	lime_glazed_terracotta
 end
 
-define block PINK_STAINED_HARDENED_CLAY
+define block pink_stained_hardened_clay
 	pink_glazed_terracotta
 end
 
-define block GRAY_STAINED_HARDENED_CLAY
+define block gray_stained_hardened_clay
 	gray_glazed_terracotta
 end
 
-define block SILVER_STAINED_HARDENED_CLAY
+define block silver_stained_hardened_clay
 	light_gray_glazed_terracotta
 end
 
-define block CYAN_STAINED_HARDENED_CLAY
+define block cyan_stained_hardened_clay
 	cyan_glazed_terracotta
 end
 
-define block PURPLE_STAINED_HARDENED_CLAY
+define block purple_stained_hardened_clay
 	purple_glazed_terracotta
 end
 
-define block BLUE_STAINED_HARDENED_CLAY
+define block blue_stained_hardened_clay
 	blue_glazed_terracotta
 end
 
-define block BROWN_STAINED_HARDENED_CLAY
+define block brown_stained_hardened_clay
 	brown_glazed_terracotta
 end
 
-define block GREEN_STAINED_HARDENED_CLAY
+define block green_stained_hardened_clay
 	green_glazed_terracotta
 end
 
-define block RED_STAINED_HARDENED_CLAY
+define block red_stained_hardened_clay
 	red_glazed_terracotta
 end
 
-define block BLACK_STAINED_HARDENED_CLAY
+define block black_stained_hardened_clay
 	black_glazed_terracotta
 end
 
 macro $replace_block()
-	if block ~ ~ ~ GRASS
+	if block ~ ~ ~ grass
 		/setblock 0 1 0 grass_block
 	end
-	if block ~ ~ ~ SAND
+	if block ~ ~ ~ sand
 		/setblock 0 1 0 sandstone
 	end
-	if block ~ ~ ~ CLOTH
+	if block ~ ~ ~ cloth
 		/setblock 0 1 0 cobweb
 	end
-	if block ~ ~ ~ TNT
+	if block ~ ~ ~ tnt
 		/setblock 0 1 0 tnt
 	end
-	if block ~ ~ ~ ICE
+	if block ~ ~ ~ ice
 		/setblock 0 1 0 ice
 	end
-	if block ~ ~ ~ IRON
+	if block ~ ~ ~ iron
 		/setblock 0 1 0 iron_block
 	end
-	if block ~ ~ ~ FOLIAGE
+	if block ~ ~ ~ foliage
 		/setblock 0 1 0 oak_leaves
 	end
-	if block ~ ~ ~ SNOW
+	if block ~ ~ ~ snow
 		/setblock 0 1 0 snow_block
 	end
-	if block ~ ~ ~ CLAY
+	if block ~ ~ ~ clay
 		/setblock 0 1 0 clay
 	end
-	if block ~ ~ ~ DIRT
+	if block ~ ~ ~ dirt
 		/setblock 0 1 0 dirt
 	end
-	if block ~ ~ ~ STONE
+	if block ~ ~ ~ stone
 		/setblock 0 1 0 stone
 	end
-	if block ~ ~ ~ WOOD
+	if block ~ ~ ~ wood
 		/setblock 0 1 0 oak_planks
 	end
-	if block ~ ~ ~ QUARTZ
+	if block ~ ~ ~ quartz
 		/setblock 0 1 0 quartz_block
 	end
-	if block ~ ~ ~ ADOBE
+	if block ~ ~ ~ adobe
 		/setblock 0 1 0 acacia_planks
 	end
-	if block ~ ~ ~ MAGENTA
+	if block ~ ~ ~ magenta
 		/setblock 0 1 0 magenta_wool
 	end
-	if block ~ ~ ~ LIGHT_BLUE
+	if block ~ ~ ~ light_blue
 		/setblock 0 1 0 light_blue_wool
 	end
-	if block ~ ~ ~ YELLOW
+	if block ~ ~ ~ yellow
 		/setblock 0 1 0 yellow_wool
 	end
-	if block ~ ~ ~ LIME
+	if block ~ ~ ~ lime
 		/setblock 0 1 0 lime_wool
 	end
-	if block ~ ~ ~ PINK
+	if block ~ ~ ~ pink
 		/setblock 0 1 0 pink_wool
 	end
-	if block ~ ~ ~ GRAY
+	if block ~ ~ ~ gray
 		/setblock 0 1 0 gray_wool
 	end
-	if block ~ ~ ~ SILVER
+	if block ~ ~ ~ silver
 		/setblock 0 1 0 light_gray_wool
 	end
-	if block ~ ~ ~ CYAN
+	if block ~ ~ ~ cyan
 		/setblock 0 1 0 cyan_wool
 	end
-	if block ~ ~ ~ PURPLE
+	if block ~ ~ ~ purple
 		/setblock 0 1 0 purple_wool
 	end
-	if block ~ ~ ~ BLUE
+	if block ~ ~ ~ blue
 		/setblock 0 1 0 blue_wool
 	end
-	if block ~ ~ ~ BROWN
+	if block ~ ~ ~ brown
 		/setblock 0 1 0 brown_wool
 	end
-	if block ~ ~ ~ GREEN
+	if block ~ ~ ~ green
 		/setblock 0 1 0 green_wool
 	end
-	if block ~ ~ ~ RED
+	if block ~ ~ ~ red
 		/setblock 0 1 0 red_wool
 	end
-	if block ~ ~ ~ BLACK
+	if block ~ ~ ~ black
 		/setblock 0 1 0 black_wool
 	end
-	if block ~ ~ ~ GOLD
+	if block ~ ~ ~ gold
 		/setblock 0 1 0 gold_block
 	end
-	if block ~ ~ ~ DIAMOND
+	if block ~ ~ ~ diamond
 		/setblock 0 1 0 diamond_block
 	end
-	if block ~ ~ ~ LAPIS
+	if block ~ ~ ~ lapis
 		/setblock 0 1 0 lapis_block
 	end
-	if block ~ ~ ~ EMERALD
+	if block ~ ~ ~ emerald
 		/setblock 0 1 0 emerald_block
 	end
-	if block ~ ~ ~ OBSIDIAN
+	if block ~ ~ ~ obsidian
 		/setblock 0 1 0 obsidian
 	end
-	if block ~ ~ ~ NETHERRACK
+	if block ~ ~ ~ netherrack
 		/setblock 0 1 0 netherrack
 	end
-	if block ~ ~ ~ WHITE_STAINED_HARDENED_CLAY
+	if block ~ ~ ~ white_stained_hardened_clay
 		/setblock 0 1 0 white_glazed_terracotta
 	end
-	if block ~ ~ ~ ORANGE_STAINED_HARDENED_CLAY
+	if block ~ ~ ~ orange_stained_hardened_clay
 		/setblock 0 1 0 orange_glazed_terracotta
 	end
-	if block ~ ~ ~ MAGENTA_STAINED_HARDENED_CLAY
+	if block ~ ~ ~ magenta_stained_hardened_clay
 		/setblock 0 1 0 magenta_glazed_terracotta
 	end
-	if block ~ ~ ~ LIGHT_BLUE_STAINED_HARDENED_CLAY
+	if block ~ ~ ~ light_blue_stained_hardened_clay
 		/setblock 0 1 0 light_blue_glazed_terracotta
 	end
-	if block ~ ~ ~ YELLOW_STAINED_HARDENED_CLAY
+	if block ~ ~ ~ yellow_stained_hardened_clay
 		/setblock 0 1 0 yellow_glazed_terracotta
 	end
-	if block ~ ~ ~ LIME_STAINED_HARDENED_CLAY
+	if block ~ ~ ~ lime_stained_hardened_clay
 		/setblock 0 1 0 lime_glazed_terracotta
 	end
-	if block ~ ~ ~ PINK_STAINED_HARDENED_CLAY
+	if block ~ ~ ~ pink_stained_hardened_clay
 		/setblock 0 1 0 pink_glazed_terracotta
 	end
-	if block ~ ~ ~ GRAY_STAINED_HARDENED_CLAY
+	if block ~ ~ ~ gray_stained_hardened_clay
 		/setblock 0 1 0 gray_glazed_terracotta
 	end
-	if block ~ ~ ~ SILVER_STAINED_HARDENED_CLAY
+	if block ~ ~ ~ silver_stained_hardened_clay
 		/setblock 0 1 0 light_gray_glazed_terracotta
 	end
-	if block ~ ~ ~ CYAN_STAINED_HARDENED_CLAY
+	if block ~ ~ ~ cyan_stained_hardened_clay
 		/setblock 0 1 0 cyan_glazed_terracotta
 	end
-	if block ~ ~ ~ PURPLE_STAINED_HARDENED_CLAY
+	if block ~ ~ ~ purple_stained_hardened_clay
 		/setblock 0 1 0 purple_glazed_terracotta
 	end
-	if block ~ ~ ~ BLUE_STAINED_HARDENED_CLAY
+	if block ~ ~ ~ blue_stained_hardened_clay
 		/setblock 0 1 0 blue_glazed_terracotta
 	end
-	if block ~ ~ ~ BROWN_STAINED_HARDENED_CLAY
+	if block ~ ~ ~ brown_stained_hardened_clay
 		/setblock 0 1 0 brown_glazed_terracotta
 	end
-	if block ~ ~ ~ GREEN_STAINED_HARDENED_CLAY
+	if block ~ ~ ~ green_stained_hardened_clay
 		/setblock 0 1 0 green_glazed_terracotta
 	end
-	if block ~ ~ ~ RED_STAINED_HARDENED_CLAY
+	if block ~ ~ ~ red_stained_hardened_clay
 		/setblock 0 1 0 red_glazed_terracotta
 	end
-	if block ~ ~ ~ BLACK_STAINED_HARDENED_CLAY
+	if block ~ ~ ~ black_stained_hardened_clay
 		/setblock 0 1 0 black_glazed_terracotta
 	end
 end
 
 reset
 	/gamerule maxCommandChainLength 1000000000
+	
+    /bossbar add progress "Progress"
+    /bossbar set progress max 128
+
 	unless @Scan do create @Scan
+	unless @Position do create @Position
 
 	tell @a: {Y[\[Take Picture\]](/function shaded_camera:take_picture) [\[Setup\]](/function shaded_camera:setup)
 end
@@ -391,17 +418,41 @@ function setup()
 end
 
 function take_picture()
-	/tp @Scan @s
-	move @Scan ^$MinusRadius ^$MinusRadius ^10
+	/bossbar set progress players @s
+              
+	at @s
+		/tp @Scan ~ ~1.6 ~ ~ ~
+	end
+	
+	move @Scan ^$Radius ^$Radius ^10
 	at -705 56 64
 		col = 0
-		while col < 128 at ~1 ~ ~
+		while col < 128 at ~1 128 ~
 			# Recursively capture column pixels
 			row = 0
+			/execute store result bossbar progress value run scoreboard players get Global col
 			take_picture_col()
 			
 			col++
-			move @Scan ^$MinusDiameter ^$PixelMove ^0
+			move @Scan ^$MinusPixelMove ^$Diameter ^
+			<x, y, z> = @Scan.<pos>
+		end
+	end
+	/bossbar set progress players
+end
+
+macro $take_picture_col_recurse($dy)
+	at ~ ~$dy ~
+		# Copy the block into the map area
+		/clone 0 1 0 0 1 0 ~ ~ ~
+		/fill ~ ~1 ~ ~ 255 ~ air
+		
+		# Move on to the next row
+		row++
+		move @Scan ^ ^$MinusPixelMove ^
+		<x, y, z> = @Scan.<pos>
+		if row < 128 at ~ ~ ~1
+			take_picture_col()
 		end
 	end
 end
@@ -409,34 +460,134 @@ end
 function take_picture_col()
 	# Perform recursive ray trace
 	step = 0
-	at @s facing @Scan
+	at @s ~ ~1.6 ~ facing @Scan
 		ray_trace_step()
 	end
 	
-	# Copy the block into the map area
-	/clone 0 1 0 0 1 0 ~ ~ ~
+	handled = False
+	if face_x
+		$take_picture_col_recurse(-1)
+		handled = True
+	end
 	
-	# Move on to the next row
-	row++
-	move @Scan ^$PixelMove ^0 ^0
-	if row < 128 at ~ ~ ~1
-		capture_pixel()
+	if face_y and not handled
+		$take_picture_col_recurse(0)
+		handled = True
+	end
+	
+	if face_z and not handled
+		$take_picture_col_recurse(1)
+		handled = True
 	end
 end
 
 function ray_trace_step()
+	$Step: 0.25
+	$MinusStep: -Step
 	handled = False
-	if block ~ ~ ~ NONE
-		handled = True
+	if block ~ ~ ~ none and step < 200
 		step++
-		at ^ ^ ^1 do ray_trace_step()
+		at ^ ^ ^$Step do ray_trace_step()
+		handled = True
+	end
+	
+	if not handled
+		at ^ ^ ^$MinusStep
+			fine_step = 0
+			ray_trace_fine_step()
+		end
+	end
+end
+
+function ray_trace_fine_step()
+	$FineStep: 0.02
+	$MinusFineStep: -FineStep
+
+	handled = False
+	if block ~ ~ ~ none and fine_step < 50
+		fine_step++
+		at ^ ^ ^$FineStep do ray_trace_fine_step()
+		handled = True
 	end
 	
 	if not handled
 		$replace_block()
+		if fine_step >= 50
+			/setblock 0 1 0 light_blue_wool
+		end
+		
+		# Compute which face was crossed first		
+		as @Position
+			/tp @s ~ ~ ~ ~ ~
+			<x2, y2, z2> = @s.<pos>
+			move @s ^ ^ ^$MinusFineStep
+			<x1, y1, z1> = @s.<pos>
+		end
+		<bx1, by1, bz1> = <x1, y1, z1> % 1000
+		<dx, dy, dz> = <x2, y2, z2> - <x1, y1, z1>
+		<bx2, by2, bz2> = <bx1, by1, bz1> + <dx, dy, dz>
+		
+		if bx2 > 1000
+			px = (1000-bx1) * 100 / dx
+		end
+		if bx2 < 0
+			px = bx1 * 100 / -dx
+		end
+		if bx2 >= 0 and bx2 < 1000
+			px = 0
+		end
+		
+		if by2 > 1000
+			py = (1000-by1) * 100 / dy
+			top_face = False
+			bottom_face = True
+		end
+		if by2 < 0
+			py = by1 * 100 / -dy
+			top_face = True
+			bottom_face = False
+		end
+		if by2 >= 0 and by2 < 1000
+			py = 0
+		end
+		
+		if bz2 > 1000
+			pz = (1000-bz1) * 100 / dz
+		end
+		if bz2 < 0
+			pz = bz1 * 100 / -dz
+		end
+		if bz2 >= 0 and bz2 < 1000
+			pz = 0
+		end
+		
+		if face_x and block ~ ~ ~ grass_block
+			/setblock 0 1 0 dirt
+		end
+		if face_z and block ~ ~ ~ grass_block
+			/setblock 0 1 0 dirt
+		end
+		if face_y and bottom_face and block ~ ~ ~ grass_block
+			/setblock 0 1 0 dirt
+		end
+		
+		if px >= py and px >= pz
+			face_x = True
+			face_y = False
+			face_z = False
+		end
+		
+		if py >= px and py >= pz
+			face_x = False
+			face_y = True
+			face_z = False
+		end
+		
+		if pz >= px and pz >= py
+			face_x = False
+			face_y = False
+			face_z = True
+		end
 	end
 end
 
-clock main
-	
-end
