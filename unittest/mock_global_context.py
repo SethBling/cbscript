@@ -9,3 +9,6 @@ class mock_global_context(object):
 		
 	def allocate_scratch(self, prefix, size):
 		self.scratch[prefix] = size
+		
+	def get_scratch_prefix(self, name):
+		return '{}_prefix'.format(name)

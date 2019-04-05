@@ -1,0 +1,104 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+desc: Runs the map grid puzzle.
+
+define @Entity = @e
+    x = Pos[0] double
+    y = Pos[1] double
+    z = Pos[2] double
+    <pos> = Pos double
+    vx = Motion[0] double
+    vy = Motion[1] double
+    vz = Motion[2] double
+    <vel> = Motion double
+    ry = Rotation[0] float 1
+    rx = Rotation[1] float 1
+    on_ground = OnGround byte 1
+    no_gravity = NoGravity byte 1
+    absorption = AbsorptionAmount float 1
+    fire_timer = Fire short 1
+	invulnerable = Invulnerable byte 1
+end
+
+@Player = @Entity[type=player]
+
+define @Marker = @Entity[type=area_effect_cloud]
+    create: {Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+$FacingDown: 0
+$FacingUp: 1
+$FacingNorth: 2
+$FacingSouth: 3
+$FacingWest: 4
+$FacingEast: 5
+define @Frame = @Entity[type=item_frame, tag=PuzzleFrame]
+	create: {Tags:["PuzzleFrame"], Facing:$FacingUp, Invulnerable:1b}
+	rotation = ItemRotation byte 1
+	face = Facing byte 1
+	map = Item.tag.map int 1
+end
+
+reset
+	/kill @Frame
+	
+	for dx = 0 to 4 by 1
+		for dy = 0 to 0 by 1
+			for dz = 0 to 4 by 1
+				at (<-791, 58, 182> + <dx, dy, dz>) * 1000
+					as create @Frame
+						@s.puzzle_x = dx
+						@s.puzzle_y = dy
+						@s.puzzle_z = dz
+					end
+				end
+			end
+		end
+	end
+end
+
+clock conditional_invulnerability
+	@Frame.has_item = False
+	/scoreboard players set @Frame[nbt={Item:{}}] has_item 1
+	as @Frame
+		if @s.invulnerable and @s.has_item
+			@s.invulnerable = False
+		end
+		if not @s.invulnerable and not @s.has_item
+			@s.invulnerable = True
+		end
+	end
+end
+
+clock main
+	as @Frame
+		map = 0
+		map = @s.map
+		rotation = @s.rotation
+		update = False
+		unless map == @s.prev_map do update = True
+		unless rotation == @s.prev_rotation do update = True
+		
+		if update
+			at (<-800, 55, 151> + <@s.puzzle_x*5, 0, @s.puzzle_z*5>) * 1000
+				switch map
+					case 0
+						/clone -783 55 189 -779 57 193 ~ ~ ~
+					end
+					case $m in: range(361, 369)
+						switch rotation % 4
+							case $r in: range(4)
+								$y: 58 + (m-361)*3
+								$yp: y+2
+								$x: -783 + 5*r
+								$xp: x+4
+								/clone $x $y 189 $xp $yp 193 ~ ~ ~
+							end
+						end
+					end
+				end
+			end
+		end
+		@s.prev_map = map
+		@s.prev_rotation = rotation
+	end
+end

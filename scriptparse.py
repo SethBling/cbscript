@@ -480,7 +480,12 @@ def p_condition_not_bool(p):
 	
 def p_condition_block(p):
 	'''condition : block relcoords ID'''
-	p[0] = ('block', (p[2], p[3])) 
+	p[0] = ('block', (p[2], p[3]))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+
+def p_condition_block_virtual(p):
+	'''condition : block relcoords DOLLAR ID'''
+	p[0] = ('block', (p[2], p[3]+p[4])) 
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 # Condition Comparisons
@@ -848,25 +853,26 @@ def p_relcoord_relnumber(p):
 def p_relcoord_relzero(p):
 	'''relcoord : TILDE
 	            | TILDEEMPTY'''
-	p[0] = "~"	
+	p[0] = '~'
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
+# Optional Virtual Number
+def p_optional_virtualnumber(p):
+	'''optional_virtualnumber : virtualnumber'''
+	p[0] = p[1]
+
+def p_optional_virtualnumber_empty(p):
+	'''optional_virtualnumber : empty'''
+	p[0] = ''
+
 #### Local Coordinates
 def p_localcoord_localnumber(p):
-	'''localcoord : POWER virtualnumber'''
-	p[0] = '^' + p[2]
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-	
-def p_localcoord_localzeroempty(p):
-	'''localcoord : POWER
-	              | POWEREMPTY'''
-	p[0] = "^"	
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	'''localcoord : POWER optional_virtualnumber'''
+	p[0] = p[1] + p[2]
 	
 # Relcoords
 def p_relcoords(p):
-	'''relcoords : virtualnumber virtualnumber virtualnumber
-				 | relcoord relcoord relcoord
+	'''relcoords : relcoord relcoord relcoord
 				 | localcoord localcoord localcoord'''
 	p[0] = (p[1], p[2], p[3])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
@@ -949,9 +955,7 @@ def p_expr_binary(p):
 			| expr TIMES expr
 			| expr DIVIDE expr
 			| expr MOD expr
-			| expr POWER integer
-			| expr POWER HEX
-			| expr POWER BINARY'''
+			| expr POWER integer'''
 
 	p[0] = binop_expr(p[1], p[2], p[3])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
@@ -1141,8 +1145,7 @@ def p_empty(p):
 	'''empty : '''
 
 def p_error(p):
-	raise SyntaxError('Syntax error at line {} column {}. Unexpected symbol: "{}"'.format(p.lineno, scriptlex.find_column(bparser.data, p), p.value.replace('\n', '\\n')))
-	
+	raise SyntaxError('Syntax error at line {} column {}. Unexpected {} symbol "{}"'.format(p.lineno, scriptlex.find_column(bparser.data, p), p.type, p.value.replace('\n', '\\n')))
 
 bparser = yacc.yacc()
 

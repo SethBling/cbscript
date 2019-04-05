@@ -1,9 +1,11 @@
 import new
 import unittest
-import mcfunction
-import tellraw
+
+import environment
 import global_context
+import mcfunction
 import scriptparse
+import tellraw
 
 from selector_definition import selector_definition
 from scratch_tracker import scratch_tracker
@@ -66,13 +68,13 @@ from vector_expressions.vector_var_expr import vector_var_expr
 
 class test_cbscript(unittest.TestCase):
 	def test_is_number(self):
-		self.assertTrue(mcfunction.isNumber(1))
-		self.assertTrue(mcfunction.isNumber(0))
-		self.assertTrue(mcfunction.isNumber(1.0))
-		self.assertFalse(mcfunction.isNumber(float('inf')))
-		self.assertFalse(mcfunction.isNumber(float('nan')))
-		self.assertFalse(mcfunction.isNumber(None))
-		self.assertFalse(mcfunction.isNumber('test'))
+		self.assertTrue(environment.isNumber(1))
+		self.assertTrue(environment.isNumber(0))
+		self.assertTrue(environment.isNumber(1.0))
+		self.assertFalse(environment.isNumber(float('inf')))
+		self.assertFalse(environment.isNumber(float('nan')))
+		self.assertFalse(environment.isNumber(None))
+		self.assertFalse(environment.isNumber('test'))
 		
 	def test_factor(self):
 		self.assertEqual(list(factor(20)), [2, 2, 5])
@@ -2231,15 +2233,9 @@ class test_cbscript(unittest.TestCase):
 		self.assertEqual(p[0], '~')
 		self.assertEqual(mcfunction.get_line(p[0]), 0)
 		
-		p = mock_parsed(None, '100') 
+		p = mock_parsed('^', '100') 
 		scriptparse.p_localcoord_localnumber(p)
 		self.assertEqual(p[0], '^100')
-		self.assertEqual(mcfunction.get_line(p[0]), 0)
-		
-		p = mock_parsed(None) 
-		scriptparse.p_localcoord_localzeroempty(p)
-		self.assertEqual(p[0], '^')
-		self.assertEqual(mcfunction.get_line(p[0]), 0)
 		
 		p = mock_parsed('1', '2', '3') 
 		scriptparse.p_relcoords(p)
@@ -3006,6 +3002,18 @@ class test_cbscript(unittest.TestCase):
 			'execute if score Global switch_var matches 11..15 run command5'
 		])
 		
+	def test_mcfunction_switch_cases_error(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		case1 = 1, 2, [mock_block('command1')], 0, None
+		case2 = 3, 3, [mock_block('command2')], 0, 'test_python_var'
+		case3 = 4, 5, [mock_block('command3')], 0, None
+		case4 = 6, 7, [mock_block('command4')], 0, None
+		case5 = 8, 9, [mock_block(raiseException=True, line=1)], 0, None
+		
+		self.assertFalse(func.switch_cases('switch_var', [case1, case2, case3, case4, case5]))
+		
 	def test_mcfunction_add_operation(self):
 		env = mock_environment()
 		func = mcfunction.mcfunction(env)
@@ -3016,6 +3024,55 @@ class test_cbscript(unittest.TestCase):
 			'scoreboard players operation @test_selector var1 += @test_selector var2'
 		])
 		self.assertEqual(func.commands, ['scoreboard players operation @test_selector var1 += @test_selector var2'])
+		
+	def test_mcfunction_insert_command_empty(self):
+		env = mock_environment()
+		func = mcfunction.mcfunction(env)
+		
+		func.insert_command('', 0)
+		self.assertEqual(func.commands, [])
+		
+	def test_mcfunction_get_vector_path(self):
+		env = mock_environment()
+		sel = mock_selector_definition()
+		sel.vector_paths['test_var'] = 'path.to.data', 'float', None
+		sel.is_single_entity = True
+		env.selectors['test_selector'] = sel
+		env.selector_definitions['@test_selector[x=1]'] = sel
+		func = mcfunction.mcfunction(env)
+		
+		self.assertTrue(func.get_vector_path('@test_selector[x=1]', 'test_var', ['assign_var1', 'assign_var2', 'assign_var3']))
+		self.assertEqual(func.commands, [
+			'execute store result score Global assign_var1 run data get entity @test_selector[x=1] path.to.data[0] 1000',
+			'execute store result score Global assign_var2 run data get entity @test_selector[x=1] path.to.data[1] 1000',
+			'execute store result score Global assign_var3 run data get entity @test_selector[x=1] path.to.data[2] 1000'
+		])
+		
+	def test_mcfunction_set_selector_path(self):
+		env = mock_environment()
+		sel = mock_selector_definition()
+		sel.vector_paths['test_var'] = 'path.to.data', 'float', None
+		sel.is_single_entity = True
+		env.selectors['test_selector'] = sel
+		env.selector_definitions['@test_selector[x=1]'] = sel
+		func = mcfunction.mcfunction(env)
+		
+		self.assertTrue(func.set_vector_path('@test_selector[x=1]', 'test_var', ['x', 'y', 'z']))
+		self.assertEqual(func.commands, [
+			'execute store result entity @test_selector[x=1] path.to.data[0] float 0.001 run scoreboard players get Global x',
+			'execute store result entity @test_selector[x=1] path.to.data[1] float 0.001 run scoreboard players get Global y',
+			'execute store result entity @test_selector[x=1] path.to.data[2] float 0.001 run scoreboard players get Global z'
+		])
+		
+	def test_environment_clone(self):
+		gc = mock_global_context()
+		env = environment.environment(gc)
+		
+		new_env = env.clone('new_name')
+		
+		self.assertEqual(new_env.scratch.prefix, 'new_name_prefix')
+		
+	
 		
 if __name__ == '__main__':
     unittest.main()

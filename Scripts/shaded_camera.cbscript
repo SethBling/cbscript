@@ -1,0 +1,442 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+desc: A camera with shading
+scale: 1000
+
+define @Scan = @Entity[type=area_effect_cloud,tag=Scan]
+	create: {Tags:["Scan"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+$Pixels: 128
+$Radius: 10
+$MinusRadius: -Radius
+$Diameter: 2 * Radius
+$MinusDiameter: -Diameter
+$PixelMove: Diameter / Pixels
+
+define block NONE
+	air
+	cave_air
+	grass
+	tall_grass
+end
+
+define block GRASS
+	grass_block
+end
+
+define block SAND
+	sand
+end
+
+define block CLOTH
+	cobweb
+end
+
+define block TNT
+	tnt
+end
+
+define block ICE
+	ice
+	blue_ice
+	packed_ice
+end
+
+define block iron
+	iron_block
+end
+
+define block foliage
+	oak_leaves
+end
+
+define block snow
+	snow
+	snow_block
+end
+
+define block CLAY
+	clay
+end
+
+define block DIRT
+	dirt
+end
+
+define block STONE
+	stone
+end
+
+#define block WATER
+
+define block WOOD
+	oak_planks
+end
+
+define block QUARTZ
+	quartz_block
+end
+
+define block ADOBE
+	acacia_planks
+end
+
+define block MAGENTA
+	magenta_wool
+end
+
+define block LIGHT_BLUE
+	light_blue_wool
+end
+
+define block YELLOW
+	yellow_wool
+end
+
+define block LIME
+	lime_wool
+end
+
+define block PINK
+	pink_wool
+end
+
+define block GRAY
+	gray_wool
+end
+
+define block SILVER
+	light_gray_wool
+end
+
+define block CYAN
+	cyan_wool
+end
+
+define block PURPLE
+	purple_wool
+end
+
+define block BLUE
+	blue_wool
+	water
+end
+
+define block BROWN
+	brown_wool
+end
+
+define block GREEN
+	green_wool
+end
+
+define block RED
+	red_wool
+end
+
+define block BLACK
+	black_wool
+end
+
+define block GOLD
+	gold_block
+end
+
+define block DIAMOND
+	diamond_block
+end
+
+define block LAPIS
+	lapis_block
+end
+
+define block EMERALD
+	emerald_block
+end
+
+define block OBSIDIAN
+	obsidian
+end
+
+define block NETHERRACK
+	netherrack
+end
+
+define block WHITE_STAINED_HARDENED_CLAY
+	white_glazed_terracotta
+end
+
+define block ORANGE_STAINED_HARDENED_CLAY
+	orange_glazed_terracotta
+end
+
+define block MAGENTA_STAINED_HARDENED_CLAY
+	magenta_glazed_terracotta
+end
+
+define block LIGHT_BLUE_STAINED_HARDENED_CLAY
+	light_blue_glazed_terracotta
+end
+
+define block YELLOW_STAINED_HARDENED_CLAY
+	yellow_glazed_terracotta
+end
+
+define block LIME_STAINED_HARDENED_CLAY
+	lime_glazed_terracotta
+end
+
+define block PINK_STAINED_HARDENED_CLAY
+	pink_glazed_terracotta
+end
+
+define block GRAY_STAINED_HARDENED_CLAY
+	gray_glazed_terracotta
+end
+
+define block SILVER_STAINED_HARDENED_CLAY
+	light_gray_glazed_terracotta
+end
+
+define block CYAN_STAINED_HARDENED_CLAY
+	cyan_glazed_terracotta
+end
+
+define block PURPLE_STAINED_HARDENED_CLAY
+	purple_glazed_terracotta
+end
+
+define block BLUE_STAINED_HARDENED_CLAY
+	blue_glazed_terracotta
+end
+
+define block BROWN_STAINED_HARDENED_CLAY
+	brown_glazed_terracotta
+end
+
+define block GREEN_STAINED_HARDENED_CLAY
+	green_glazed_terracotta
+end
+
+define block RED_STAINED_HARDENED_CLAY
+	red_glazed_terracotta
+end
+
+define block BLACK_STAINED_HARDENED_CLAY
+	black_glazed_terracotta
+end
+
+macro $replace_block()
+	if block ~ ~ ~ GRASS
+		/setblock 0 1 0 grass_block
+	end
+	if block ~ ~ ~ SAND
+		/setblock 0 1 0 sandstone
+	end
+	if block ~ ~ ~ CLOTH
+		/setblock 0 1 0 cobweb
+	end
+	if block ~ ~ ~ TNT
+		/setblock 0 1 0 tnt
+	end
+	if block ~ ~ ~ ICE
+		/setblock 0 1 0 ice
+	end
+	if block ~ ~ ~ IRON
+		/setblock 0 1 0 iron_block
+	end
+	if block ~ ~ ~ FOLIAGE
+		/setblock 0 1 0 oak_leaves
+	end
+	if block ~ ~ ~ SNOW
+		/setblock 0 1 0 snow_block
+	end
+	if block ~ ~ ~ CLAY
+		/setblock 0 1 0 clay
+	end
+	if block ~ ~ ~ DIRT
+		/setblock 0 1 0 dirt
+	end
+	if block ~ ~ ~ STONE
+		/setblock 0 1 0 stone
+	end
+	if block ~ ~ ~ WOOD
+		/setblock 0 1 0 oak_planks
+	end
+	if block ~ ~ ~ QUARTZ
+		/setblock 0 1 0 quartz_block
+	end
+	if block ~ ~ ~ ADOBE
+		/setblock 0 1 0 acacia_planks
+	end
+	if block ~ ~ ~ MAGENTA
+		/setblock 0 1 0 magenta_wool
+	end
+	if block ~ ~ ~ LIGHT_BLUE
+		/setblock 0 1 0 light_blue_wool
+	end
+	if block ~ ~ ~ YELLOW
+		/setblock 0 1 0 yellow_wool
+	end
+	if block ~ ~ ~ LIME
+		/setblock 0 1 0 lime_wool
+	end
+	if block ~ ~ ~ PINK
+		/setblock 0 1 0 pink_wool
+	end
+	if block ~ ~ ~ GRAY
+		/setblock 0 1 0 gray_wool
+	end
+	if block ~ ~ ~ SILVER
+		/setblock 0 1 0 light_gray_wool
+	end
+	if block ~ ~ ~ CYAN
+		/setblock 0 1 0 cyan_wool
+	end
+	if block ~ ~ ~ PURPLE
+		/setblock 0 1 0 purple_wool
+	end
+	if block ~ ~ ~ BLUE
+		/setblock 0 1 0 blue_wool
+	end
+	if block ~ ~ ~ BROWN
+		/setblock 0 1 0 brown_wool
+	end
+	if block ~ ~ ~ GREEN
+		/setblock 0 1 0 green_wool
+	end
+	if block ~ ~ ~ RED
+		/setblock 0 1 0 red_wool
+	end
+	if block ~ ~ ~ BLACK
+		/setblock 0 1 0 black_wool
+	end
+	if block ~ ~ ~ GOLD
+		/setblock 0 1 0 gold_block
+	end
+	if block ~ ~ ~ DIAMOND
+		/setblock 0 1 0 diamond_block
+	end
+	if block ~ ~ ~ LAPIS
+		/setblock 0 1 0 lapis_block
+	end
+	if block ~ ~ ~ EMERALD
+		/setblock 0 1 0 emerald_block
+	end
+	if block ~ ~ ~ OBSIDIAN
+		/setblock 0 1 0 obsidian
+	end
+	if block ~ ~ ~ NETHERRACK
+		/setblock 0 1 0 netherrack
+	end
+	if block ~ ~ ~ WHITE_STAINED_HARDENED_CLAY
+		/setblock 0 1 0 white_glazed_terracotta
+	end
+	if block ~ ~ ~ ORANGE_STAINED_HARDENED_CLAY
+		/setblock 0 1 0 orange_glazed_terracotta
+	end
+	if block ~ ~ ~ MAGENTA_STAINED_HARDENED_CLAY
+		/setblock 0 1 0 magenta_glazed_terracotta
+	end
+	if block ~ ~ ~ LIGHT_BLUE_STAINED_HARDENED_CLAY
+		/setblock 0 1 0 light_blue_glazed_terracotta
+	end
+	if block ~ ~ ~ YELLOW_STAINED_HARDENED_CLAY
+		/setblock 0 1 0 yellow_glazed_terracotta
+	end
+	if block ~ ~ ~ LIME_STAINED_HARDENED_CLAY
+		/setblock 0 1 0 lime_glazed_terracotta
+	end
+	if block ~ ~ ~ PINK_STAINED_HARDENED_CLAY
+		/setblock 0 1 0 pink_glazed_terracotta
+	end
+	if block ~ ~ ~ GRAY_STAINED_HARDENED_CLAY
+		/setblock 0 1 0 gray_glazed_terracotta
+	end
+	if block ~ ~ ~ SILVER_STAINED_HARDENED_CLAY
+		/setblock 0 1 0 light_gray_glazed_terracotta
+	end
+	if block ~ ~ ~ CYAN_STAINED_HARDENED_CLAY
+		/setblock 0 1 0 cyan_glazed_terracotta
+	end
+	if block ~ ~ ~ PURPLE_STAINED_HARDENED_CLAY
+		/setblock 0 1 0 purple_glazed_terracotta
+	end
+	if block ~ ~ ~ BLUE_STAINED_HARDENED_CLAY
+		/setblock 0 1 0 blue_glazed_terracotta
+	end
+	if block ~ ~ ~ BROWN_STAINED_HARDENED_CLAY
+		/setblock 0 1 0 brown_glazed_terracotta
+	end
+	if block ~ ~ ~ GREEN_STAINED_HARDENED_CLAY
+		/setblock 0 1 0 green_glazed_terracotta
+	end
+	if block ~ ~ ~ RED_STAINED_HARDENED_CLAY
+		/setblock 0 1 0 red_glazed_terracotta
+	end
+	if block ~ ~ ~ BLACK_STAINED_HARDENED_CLAY
+		/setblock 0 1 0 black_glazed_terracotta
+	end
+end
+
+reset
+	/gamerule maxCommandChainLength 1000000000
+	unless @Scan do create @Scan
+
+	tell @a: {Y[\[Take Picture\]](/function shaded_camera:take_picture) [\[Setup\]](/function shaded_camera:setup)
+end
+
+function setup()
+
+end
+
+function take_picture()
+	/tp @Scan @s
+	move @Scan ^$MinusRadius ^$MinusRadius ^10
+	at -705 56 64
+		col = 0
+		while col < 128 at ~1 ~ ~
+			# Recursively capture column pixels
+			row = 0
+			take_picture_col()
+			
+			col++
+			move @Scan ^$MinusDiameter ^$PixelMove ^0
+		end
+	end
+end
+
+function take_picture_col()
+	# Perform recursive ray trace
+	step = 0
+	at @s facing @Scan
+		ray_trace_step()
+	end
+	
+	# Copy the block into the map area
+	/clone 0 1 0 0 1 0 ~ ~ ~
+	
+	# Move on to the next row
+	row++
+	move @Scan ^$PixelMove ^0 ^0
+	if row < 128 at ~ ~ ~1
+		capture_pixel()
+	end
+end
+
+function ray_trace_step()
+	handled = False
+	if block ~ ~ ~ NONE
+		handled = True
+		step++
+		at ^ ^ ^1 do ray_trace_step()
+	end
+	
+	if not handled
+		$replace_block()
+	end
+end
+
+clock main
+	
+end

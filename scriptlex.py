@@ -13,7 +13,9 @@ tokens = keywords + (
      'COMMAND',
      'LEQ','GEQ','GT','LT','EQUALEQUAL','DOLLAR','DOT',
      'PLUSEQUALS','MINUSEQUALS','TIMESEQUALS','DIVIDEEQUALS','MODEQUALS','PLUSPLUS','MINUSMINUS',
-     'EQUALS','PLUS','MINUS','TIMES','DIVIDE','MOD','POWEREMPTY','POWER',
+     'EQUALS','PLUS','MINUS','TIMES','DIVIDE','MOD',
+	 #'POWEREMPTY',
+	 'POWER',
      'LPAREN','RPAREN','COMMA','DECIMAL','FLOAT','HEX','BINARY','ID','NEWLINE','LBRACK','RBRACK',
      'ATID', 'NOT', 'TILDEEMPTY', 'TILDE',
      'PYTHON', 'COMMENT',
@@ -80,10 +82,10 @@ t_MINUSMINUS	= r'--'
 t_DOT			= r'\.'
 t_NOT			= r'!'
 
-def t_POWEREMPTY(t):
-    r'\^[ \t]'
-    t.value = "^"
-    return t
+#def t_POWEREMPTY(t):
+#    r'\^[ \t]'
+#    t.value = "^"
+#    return t
 t_POWER   = r'\^'
 
 def t_TILDEEMPTY(t):

@@ -326,6 +326,20 @@ define @Player = @Entity[type=player]
     
         /gamerule sendCommandFeedback false
     end
+	
+	function toggle_clone_in_place()
+		enabled = @s.clone_in_place
+		if enabled
+			@s.clone_in_place = False
+			tell @s: Clone In Place: {RDisabled
+		end
+		unless enabled
+			@s.clone_in_place = True
+			tell @s: Clone In Place: {GEnabled
+		end
+		
+		/gamerule sendCommandFeedback false
+	end
     
     function clone_flip_leftright()
 		ry = (@s.ry % 360 + 360 + @s.clone_rotation) % 360
@@ -651,6 +665,9 @@ define @Player = @Entity[type=player]
                 
                 player = @s
                 @s.get_cursor_position()
+				if @s.clone_in_place
+					<cursor> = <center>
+				end
                 
                 as @Corner if @s.player == player and @s.type == $Type_Source
                     <dpos> = @s.<pos> - <center>
@@ -672,10 +689,16 @@ define @Player = @Entity[type=player]
                 end
                 
                 move @Corner ~ ~ ~
-
-                @s.moving = moving
-                @s.state = $MovingDest
-                @s.create_click()
+				
+				if @s.clone_in_place
+					@s.state = $EditDest
+				end
+				
+				unless @s.clone_in_place
+					@s.moving = moving
+					@s.state = $MovingDest
+					@s.create_click()
+				end
                 
                 @s.from_display = create @CloneDisplay
                 as @s.from_display(@CloneDisplay)
@@ -699,6 +722,8 @@ define @Player = @Entity[type=player]
                 tell @s: 
                 tell @s: Move {BDest{w: {C[\[Up\]](/function blingedit:move_up) [\[Down\]](/function blingedit:move_down) [\[Left\]](/function blingedit:move_left) [\[Right\]](/function blingedit:move_right) [\[Forward\]](/function blingedit:move_forward) [\[Backward\]](/function blingedit:move_backward)
                 tell @s: Clone Options: {g[\[Do Clone Air\]](/function blingedit:clone_air) [\[Don't Clone Air\]](/function blingedit:dont_clone_air)
+				if @s.clone_in_place do tell @s: Clone In Place: {G[\[Enabled\]](/function blingedit:toggle_clone_in_place)
+				unless @s.clone_in_place do tell @s: Clone In Place: {R[\[Disabled\]](/function blingedit:toggle_clone_in_place)
                 tell @s: Flip: {g[\[Flip Left/Right\]](/function blingedit:clone_flip_leftright) [\[Flip Front/Back\]](/function blingedit:clone_flip_frontback)
                 tell @s: Rotate: {g[\[Rotate Left\]](/function blingedit:clone_rotate_left) [\[Rotate Right\]](/function blingedit:clone_rotate_right)
                 tell @s: Actions: {G[\[Confirm Clone\]](/function blingedit:confirm_clone) [\[Clone&Repeat\]](/function blingedit:clone_and_repeat) [\[Clone Brush\]](/function blingedit:clone_brush) [\[Cancel\]](/function blingedit:cancel)
@@ -1246,7 +1271,7 @@ reset
     /bossbar add progress "Progress"
     /bossbar set progress max 100
     
-    /say Loaded BlingEdit v1.0.5 by SethBling
+    /say Loaded BlingEdit v1.0.6 by SethBling
 end
 
 function check_loaded()

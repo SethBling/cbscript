@@ -1,4 +1,5 @@
 from selector_definition import selector_definition
+from environment import isNumber
 import math
 import traceback
 
@@ -26,25 +27,6 @@ def compile_section(section, environment):
 		environment.register_clock(name)
 		
 	f.compile_blocks(lines)
-
-def isNumber(s):
-	try:
-		val = float(s)
-		
-		if math.isinf(val):
-			return False
-			
-		if math.isnan(val):
-			return False
-		
-		return True
-	except ValueError:
-		return False
-		
-	except TypeError:
-		return False
-		
-
 
 class mcfunction(object):
 	def __init__(self, environment, callable = False, params = []):
@@ -75,7 +57,12 @@ class mcfunction(object):
 		results = []
 		for p in range(len(params)):
 			param_name = 'Param{0}'.format(p)
-			val = params[p].compile(self, None)
+			try:
+				val = params[p].compile(self, None)
+			except Exception as e:
+				print(e)
+				print('Unable to compile parameter {}.'.format(p))
+				return False
 			self.add_operation('Global', 'Param{0}'.format(p), '=', val)
 		
 		return True			
@@ -205,10 +192,13 @@ class mcfunction(object):
 					
 			elif type == 'block':
 				relcoords, block = val
+				block = self.apply_environment(block)
+				
 				if block in self.block_tags:
 					block = '#{0}:{1}'.format(self.namespace, block)
 				else:
 					block = 'minecraft:{0}'.format(block)
+					
 				test += '{0} block {1} {2} '.format(iftype, ' '.join(relcoords), block)
 			else:
 				raise ValueError('Unknown "if" type: {0}'.format(type))
@@ -407,7 +397,7 @@ class mcfunction(object):
 	
 			for p in range(len(self.params)):
 				self.insert_command('scoreboard players operation Global {0} = Global Param{1}'.format(self.params[p], p), 0)
-				self.environment.global_context.register_objective("Param{0}".format(p))
+				self.register_objective("Param{0}".format(p))
 			
 		self.commands = comments + self.commands
 		
@@ -448,7 +438,7 @@ class mcfunction(object):
 		if var in sel_def.paths:
 			path, data_type, scale = sel_def.paths[var]
 			if scale == None:
-				scale = self.environment.global_context.scale
+				scale = self.scale
 			
 			if not self.check_single_entity(selector):
 				raise Exception('Tried to get data "{0}" from selector "{1}" which is not limited to a single entity.'.format(var, selector))
@@ -472,7 +462,7 @@ class mcfunction(object):
 		if var in sel_def.paths:
 			path, data_type, scale = sel_def.paths[var]
 			if scale == None:
-				scale = self.environment.global_context.scale
+				scale = self.scale
 
 			if not self.check_single_entity(selector):
 				raise Exception('Tried to set data "{0}" for selector "{1}" which is not limited to a single entity.'.format(var, selector))
@@ -496,7 +486,7 @@ class mcfunction(object):
 		if var in sel_def.vector_paths:
 			path, data_type, scale = sel_def.vector_paths[var]
 			if scale == None:
-				scale = self.environment.global_context.scale
+				scale = self.scale
 
 			if not self.check_single_entity(selector):
 				raise Exception('Tried to get vector data "{0}" from selector "{1}" which is not limited to a single entity.'.format(var, selector))
@@ -525,7 +515,7 @@ class mcfunction(object):
 		if var in sel_def.vector_paths:
 			path, data_type, scale = sel_def.vector_paths[var]
 			if scale == None:
-				scale = self.environment.global_context.scale
+				scale = self.scale
 
 			if not self.check_single_entity(selector):
 				raise Exception('Tried to set vector data "{0}" for selector "{1}" which is not limited to a single entity.'.format(var, selector))
@@ -680,5 +670,5 @@ class mcfunction(object):
 			try:
 				block.compile(self)
 			except:
-				print('Exception while compiling block at line {}'.format(block.line))
+				print('Error compiling block at line {}'.format(block.line))
 				raise

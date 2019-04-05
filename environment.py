@@ -1,13 +1,25 @@
 import copy
+import math
 from scratch_tracker import scratch_tracker
 from selector_definition import selector_definition
 
 def isNumber(s):
 	try:
-		float(s)
+		val = float(s)
+		
+		if math.isinf(val):
+			return False
+			
+		if math.isnan(val):
+			return False
+		
 		return True
 	except ValueError:
 		return False
+		
+	except TypeError:
+		return False
+		
 		
 class environment(object):
 	def __init__(self, global_context):

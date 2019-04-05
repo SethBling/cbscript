@@ -1,0 +1,312 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+desc: Robot arm.
+scale: 1000
+
+$marker: "Marker:1b, Invisible:1b, NoGravity:1b, Invulnerable:1b, Silent:1b"
+
+$NumPieces: 9
+$NumSegments: 4
+
+define @Entity = @e
+	x = Pos[0] double
+	y = Pos[1] double
+	z = Pos[2] double
+	<pos> = Pos double
+	vx = Motion[0] double
+	vy = Motion[1] double
+	vz = Motion[2] double
+	ry = Rotation[0] float
+	rx = Rotation[1] float
+	on_ground = OnGround byte 1
+	no_gravity = NoGravity byte 1
+end
+
+@Player = @Entity[type=player]
+
+define @Marker = @Entity[type=area_effect_cloud,tag=Marker]
+	create: {Tags:["Marker"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+define @MiniBlock = @Entity[type=armor_stand,tag=MiniBlock]
+	create: {Tags:["MiniBlock"], Pose:{Head:[0.0001f,0f,0f]}, $marker}
+	
+	pose_rot_x = Pose.Head[0] float
+	pose_rot_y = Pose.Head[1] float
+	
+	function update()
+		@s.<pos> = here - <0, 1700, 0>
+		
+		/data merge entity @s {Pose:{Head:[0.0001f,0.0001f,0.0001f]}}
+		@s.pose_rot_x = @s.rot_x
+		@s.pose_rot_y = @s.rot_y
+		
+		my_rx = @s.rot_x
+		my_ry = @s.rot_y
+		
+		as create @Marker
+			<base> = @s.<pos>
+
+			move @s ^ ^-0.287 ^
+			@s.rx = my_rx
+			@s.ry = my_ry
+			move @s ^ ^0.287 ^
+			
+			<delta> = <base> - @s.<pos>
+			
+			/kill @s
+		end
+		
+		@s.<pos> += <delta>
+		
+		/data merge entity @s {Fire:32767s}	
+		
+		at @s rotated @s
+			/tp @s ~ ~ ~ 0 0
+		end
+	end	
+end
+
+define @Pushable = @Entity[type=armor_stand, tag=Pushable]
+	create: {Tags:["Pushable"], Invisible:1b, Invulnerable:1b}
+	
+	function get_velocity_signs()
+		vx = @s.vx
+		vz = @s.vz
+		
+		if vx > 0
+			sx = 1
+		end
+		unless vx > 0
+			sx = -1
+		end
+		if vz > 0
+			sz = 1
+		end
+		unless vz > 0
+			sz = -1
+		end
+		avx = abs(vx)
+		avz = abs(vz)
+		
+		havx = avx / 2
+		havz = avz / 2
+	end
+end
+
+define @Physics = @Entity[type=armor_stand, tag=Physics]
+	create: {Tags:["Physics"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"shulker", NoGravity:1b, Invulnerable:1b, Invisible:1b, NoAI:1b, Silent:1b, Tags:["SolidBlock"]}]}
+end
+
+@SolidBlock = @Entity[type=shulker, tag=SolidBlock]
+
+define @Disguise = @Entity[type=armor_stand, tag=Disguise]
+	create: {Tags:["Disguise"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"falling_block", Time:1b, NoGravity:1b, BlockState:{Name:"minecraft:diamond_block"}, Tags:["FakeBlock"]}]}
+end
+
+define @FakeBlock = @Entity[type=falling_block, tag=FakeBlock]
+	time = Time byte 1
+end
+
+reset
+
+end
+
+function refresh()
+	/kill @MiniBlock
+	/kill @Marker
+	at @Pushable[arm_control]
+		/function pushables:remove_here
+	end
+	
+	at -796 56 89
+		/setblock ~ ~ ~ diamond_block
+		/function pushables:create_block
+		@Pushable[distance=..1].arm_control = 1
+		@Pushable[distance=..1].lock_x = True
+	end
+	
+	at -794 56 89
+		/setblock ~ ~ ~ gold_block
+		/function pushables:create_block
+		@Pushable[distance=..1].arm_control = 2
+		@Pushable[distance=..1].lock_x = True
+	end
+	
+	at -792 56 89
+		/setblock ~ ~ ~ iron_block
+		/function pushables:create_block
+		@Pushable[distance=..1].arm_control = 3
+		@Pushable[distance=..1].lock_x = True
+	end
+	
+	at -790 56 89
+		/setblock ~ ~ ~ emerald_block
+		/function pushables:create_block
+		@Pushable[distance=..1].arm_control = 4
+		@Pushable[distance=..1].lock_x = True
+	end
+	
+	at @p
+		seg = 0
+		while seg < $NumSegments
+			seg++
+			piece = 0
+			while piece < $NumPieces
+				piece++
+				as create @MiniBlock
+					switch seg
+						case 1
+							/replaceitem entity @s armor.head minecraft:diamond_block
+						end
+						case 2
+							/replaceitem entity @s armor.head minecraft:gold_block
+						end
+						case 3
+							/replaceitem entity @s armor.head minecraft:iron_block
+						end
+						case 4
+							/replaceitem entity @s armor.head minecraft:emerald_block
+						end
+					end
+					@s.seg = seg
+					@s.piece = piece
+					
+					@s.nonstick = True
+				end
+			end
+			
+			as create @Marker
+				@s.seg = seg
+				@s.drx = -25000
+				@s.dry = 20000
+				
+				@s.nonstick = True
+			end
+		end
+		
+		as create @MiniBlock
+			/replaceitem entity @s armor.head white_banner
+			@s.claw_left = True
+			@s.nonstick = True
+		end
+		as create @MiniBlock
+			/replaceitem entity @s armor.head white_banner
+			@s.claw_right = True
+			@s.nonstick = True
+		end
+	end
+	
+	@Physics.nonstick = True
+	@SolidBlock.nonstick = True
+	@Disguise.nonstick = True
+	@FakeBlock.nonstick = True
+end
+
+function apply_rotation()
+	<arm_pos> = <-805500, 62500, 86500>
+	seg = 0
+	crx = 0
+	cry = 0
+	while seg < $NumSegments
+		seg++
+		as @Marker if @s.seg == seg
+			if @s.drx > 180000
+				@s.drx -= 360000
+			end
+			if @s.drx < -180000
+				@s.drx += 360000
+			end
+			
+			crx += @s.drx
+			cry += @s.dry
+			
+			local_ry = cry
+			local_rx = crx
+
+			if crx > 90000
+				local_rx = -crx + 180000
+				local_ry += 180000
+			end
+			if crx < -90000
+				local_rx = -crx - 180000
+				local_ry += 180000
+			end
+			@s.rx = local_rx
+			@s.ry = local_ry
+			@s.<pos> = <arm_pos>
+			piece = 0
+			while piece < $NumPieces
+				piece++
+
+				at @s as @MiniBlock if @s.seg == seg and @s.piece == piece
+					@s.rot_x = local_rx
+					@s.rot_y = local_ry
+					@s.update()
+				end
+				
+				move @s ^ ^ ^0.6
+			end
+			<arm_pos> = @s.<pos>
+		end
+	end
+end
+
+clock main
+	live = False
+	
+	apply_rotation()
+	basedist = tdist
+	
+	if @Entity[hooked, not drop]
+		@MiniBlock[claw_left].rot_x = 165000
+		@MiniBlock[claw_right].rot_x = 165000
+		@MiniBlock[claw_right].rot_y = 180000
+	end
+	unless @Entity[hooked, not drop]
+		@MiniBlock[claw_left].rot_x = 135000
+		@MiniBlock[claw_right].rot_x = 135000
+		@MiniBlock[claw_right].rot_y = 180000
+	end
+		
+	at <arm_pos>
+		@MiniBlock[claw_left].update()
+		@MiniBlock[claw_right].update()
+		at ~ ~-1 ~
+			@Entity[distance=..2].nonstick += 0
+			unless @Entity[hooked, distance=..3]
+				as @Entity[distance=..2,limit=1, not nonstick]
+					@s.hooked = True
+					@s.drop = False
+				end
+			end
+		end
+	end
+	
+	
+	@Entity[hooked, not drop, limit=1].<pos> = <arm_pos> - <0, 2000, 0>
+	/data merge entity @Entity[hooked, not drop, limit=1] {NoGravity:1b}
+	/data merge entity @Entity[hooked, drop, limit=1] {NoGravity:0b}
+
+	move @MiniBlock ~ ~ ~
+	move @Entity[hooked, not drop, limit=1] ~ ~ ~
+	
+	@Marker[seg==1].dry = (@Pushable[arm_control==1,limit=1].z * 20) % 360000 - 180000
+	@Marker[seg==2].drx = (@Pushable[arm_control==2,limit=1].z * 20 - 100000) % 360000 - 180000
+	@Marker[seg==3].dry = (@Pushable[arm_control==3,limit=1].z * 20) % 360000 - 180000
+	@Marker[seg==4].drx = (@Pushable[arm_control==4,limit=1].z * 10 - 200000) % 360000 - 180000
+
+	drop = False
+	/execute if block -787 56 91 redstone_lamp[lit=true] run scoreboard players set Global drop 1
+	
+	if drop
+		@Entity[hooked].drop = True
+	end
+	
+	as @Entity[hooked, drop] at @s unless @MiniBlock[claw_left,distance=..3]
+		@s.hooked = False
+		@s.drop = False
+		/data merge entity @s {NoGravity:0b}
+	end
+	
+end
+

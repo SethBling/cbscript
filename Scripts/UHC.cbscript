@@ -1,0 +1,130 @@
+dir: D:\Minecraft Server\1.13\world
+desc: UHC Datapack
+
+$marker: "\"Marker\":1b, \"Invisible\":1b, \"NoGravity\":1b, \"Invulnerable\":1b"
+
+define @Entity = @e
+    x = Pos[0] double
+    y = Pos[1] double
+    z = Pos[2] double
+    <pos> = Pos double
+    vx = Motion[0] double
+    vy = Motion[1] double
+    vz = Motion[2] double
+    <vel> = Motion double
+    ry = Rotation[0] float 1
+    rx = Rotation[1] float 1
+    on_ground = OnGround byte 1
+    no_gravity = NoGravity byte 1
+    absorption = AbsorptionAmount float 1
+    fire_timer = Fire short 1
+end
+
+define @Marker = @Entity[type=area_effect_cloud]
+    create: {Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+$teams: ['aqua', 'blue', 'gold', 'green', 'light_purple', 'red', 'yellow', 'dark_aqua', 'dark_green', 'dark_purple', 'dark_red']
+
+reset
+	/scoreboard objectives add health health
+	/scoreboard objectives add deaths deathCount
+	/scoreboard objectives setdisplay list health
+	/gamerule naturalRegeneration false
+
+	for $team in: teams
+		/team add $team
+		/team modify $team color $team
+	end
+	
+	running = False
+end
+
+function options()
+	tell @s: {RTeam Size: {W [\[1\]](/function uhc:team_size_1) [\[2\]](/function uhc:team_size_2) [\[3\]](/function uhc:team_size_3) [\[4\]](/function uhc:team_size_4)
+end
+
+function team_size_1()
+	team_size = 1
+end
+
+function team_size_2()
+	team_size = 2
+end
+
+function team_size_3()
+	team_size = 3
+end
+
+function team_size_4()
+	team_size = 4
+end
+
+function randomize()
+	/team leave @a
+	for $team in: teams
+		for i = 1 to team_size
+			/team join $team @r[team=]
+		end
+	end
+	tell @a: Teams have been randomized!
+end
+
+function spread()
+	/worldborder set 1600
+	/spreadplayers 0 0 300 800 true @a
+	/effect give @a minecraft:instant_health 1 10
+	/effect give @a minecraft:saturation 1 10
+	/clear @a
+end
+
+function start()
+	running = True
+	timer = -200
+	test_commands = False
+	@a.deaths = 0
+end
+
+function test_start()
+	running = True
+	timer = -200
+	test_commands = True
+	@a.deaths = 0
+end
+
+clock main
+	if running
+		second_remainder = timer % 20
+		$ticks_per_episode: 20 * 60 * 20
+		episode_remain = timer % $ticks_per_episode
+		if timer < 0 and second_remainder == 0
+			seconds_left = timer / - 20
+			tell @a: Game starts in {R{D(seconds_left){-!
+		end
+		if timer == 0
+			tell @a: {R{DGo! UHC Begins!
+			/time set day
+			/gamerule doDaylightCycle true
+			unless test_commands
+				$UHC_Total_Time: 3600 * 3
+				/worldborder set 1 $UHC_Total_Time
+			end
+			if test_commands
+				/worldborder set 1 20
+			end
+		end
+		if timer > 0 and episode_remain == 0
+			episode = timer / $ticks_per_episode
+			tell @a: {R{DMARKER:{- End of episode (episode)!
+		end
+		test_remain = timer % 40
+		if test_commands and timer > 0 and test_remain == 0
+			episode = timer / 40
+			tell @a: {R{DTEST MARKER:{- End of episode (episode)!
+		end
+		timer++
+		
+		/gamemode spectator @a[deaths > 0]
+		/scoreboard players set @a[gamemode=spectator] deaths 0
+	end
+end

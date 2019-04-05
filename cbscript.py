@@ -69,7 +69,7 @@ class cbscript(object):
 		try:
 			global_func.compile_blocks(parsed['assignments'])
 		except:
-			self.log_traceback
+			self.log_traceback()
 			return False
 
 		for section in parsed['sections']:
