@@ -68,8 +68,8 @@ class cbscript(object):
 
 		try:
 			global_func.compile_blocks(parsed['assignments'])
-		except:
-			self.log_traceback()
+		except Exception as e:
+			print(e)
 			return False
 
 		for section in parsed['sections']:
