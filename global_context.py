@@ -38,6 +38,7 @@ class global_context(object):
 		self.block_tags = {}
 		self.scratch_prefixes = {}
 		self.namespace = namespace
+		self.parser = None
 
 	def register_block_tag(self, name, blocks):
 		self.block_tags[name] = blocks

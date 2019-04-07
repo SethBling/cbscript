@@ -1,5 +1,6 @@
 from selector_definition import selector_definition
 from environment import isNumber
+from source_file import source_file
 import math
 import traceback
 
@@ -672,3 +673,33 @@ class mcfunction(object):
 			except:
 				print('Error compiling block at line {}'.format(block.line))
 				raise
+					
+	@property
+	def parser(self):
+		return self.environment.parser
+		
+	def import_file(self, filename):
+		file = source_file(filename)
+		result = self.parser(file.get_text() + '\n')
+		if result == None:
+			raise Exception('Unable to parse file "{}"'.format(filename))
+		
+		type, parsed = result
+		if type != 'lib':
+			raise Exception('Unable to import non-lib-file "{}"'.format(filename))
+			
+		self.compile_blocks(parsed['assignments'])
+		
+		for section in parsed['sections']:
+			type, id, template_params, params, sub = section
+			if type == 'macro':
+				self.macros[id] = (params, sub)
+			elif type == 'template_function':
+				self.template_functions[id] = (template_params, params, sub)
+				
+		for section in parsed["sections"]:
+			if section[0] == 'macro' or section[0] == 'template_function':
+				continue
+				
+			compile_section(section, self.environment)
+			

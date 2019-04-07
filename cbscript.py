@@ -65,6 +65,7 @@ class cbscript(object):
 		global_func = mcfunction(global_environment)
 		
 		self.global_context.scale = parsed['scale']
+		self.global_context.parser = self.parse
 
 		try:
 			global_func.compile_blocks(parsed['assignments'])

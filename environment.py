@@ -268,3 +268,7 @@ class environment(object):
 		
 	def get_selector_definition(self, selector_text):
 		return selector_definition(selector_text, self)
+		
+	@property
+	def parser(self):
+		return self.global_context.parser

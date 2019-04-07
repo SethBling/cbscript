@@ -1,7 +1,7 @@
 from ply import *
 
 keywords = (
-    'for', 'dir', 'desc', 'scale', 'in', 'end', 'not', 'and', 'to', 'by',
+    'for', 'dir', 'desc', 'scale', 'in', 'end', 'not', 'and', 'to', 'by', 'import',
     'at', 'as', 'facing', 'rotated', 'align', 'here', 'the_end', 'the_nether', 'overworld',
     'move', 'create', 'tell', 'title', 'subtitle', 'actionbar',
     'reset', 'clock', 'function', 'if', 'unless', 'then', 'do', 'else', 'switch', 'case',

@@ -10,6 +10,7 @@ from block_types.execute_block import execute_block
 from block_types.for_index_block import for_index_block
 from block_types.for_selector_block import for_selector_block
 from block_types.function_call_block import function_call_block
+from block_types.import_block import import_block
 from block_types.macro_call_block import macro_call_block
 from block_types.method_call_block import method_call_block
 from block_types.move_block import move_block
@@ -60,10 +61,14 @@ def p_parsed_assignment(p):
 	p[0] = ('program', p[1])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
-#### Parsed
 def p_parsed_expr(p):
 	'''parsed : expr'''
 	p[0] = ('expr', p[1])
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
+def p_parsed_lib(p):
+	'''parsed : lib'''
+	p[0] = ('lib', p[1])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Program
@@ -75,6 +80,14 @@ def p_program(p):
 	p[0]['scale'] = p[6]
 	p[0]['assignments'] = p[7]
 	p[0]['sections'] = p[8]
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
+### Lib
+def p_lib(p):
+	'''lib : optcomments optassignments sections'''
+	p[0] = {}
+	p[0]['assignments'] = p[2]
+	p[0]['sections'] = p[3]
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### Optdesc
@@ -227,7 +240,8 @@ def p_optassignments_multiple(p):
 					  | selector_assignment newlines optassignments
 					  | selector_define_block newlines optassignments
 					  | blocktag newlines optassignments
-					  | array_definition newlines optassignments'''
+					  | array_definition newlines optassignments
+					  | import_statement newlines optassignments'''
 	p[0] = [p[1]] + p[3]
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -240,6 +254,11 @@ def p_optassignments_empty(p):
 	'''optassignments : empty'''
 	p[0] = []
 
+#### Import	
+def p_import_statement(p):
+	'''import_statement : import PYTHON'''
+	p[0] = import_block(p.lineno(1), p[2])
+	
 #### Variable
 def p_variable_selector(p):
 	'''variable : fullselector DOT ID'''

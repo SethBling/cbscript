@@ -11,6 +11,9 @@ class source_file(object):
 	def get_base_name(self):
 		return os.path.basename(self.filename)
 		
+	def get_directory(self):
+		return os.path.dirname(self.filename)
+		
 	def get_text(self):
 		text = ""
 		while len(text) == 0:
