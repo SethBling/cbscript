@@ -61,14 +61,14 @@ def p_parsed_assignment(p):
 	p[0] = ('program', p[1])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
+def p_parsed_lib(p):
+	'''parsed : import lib'''
+	p[0] = ('lib', p[2])
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
 def p_parsed_expr(p):
 	'''parsed : expr'''
 	p[0] = ('expr', p[1])
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-	
-def p_parsed_lib(p):
-	'''parsed : lib'''
-	p[0] = ('lib', p[1])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Program
@@ -1164,7 +1164,8 @@ def p_empty(p):
 	'''empty : '''
 
 def p_error(p):
-	raise SyntaxError('Syntax error at line {} column {}. Unexpected {} symbol "{}"'.format(p.lineno, scriptlex.find_column(bparser.data, p), p.type, p.value.replace('\n', '\\n')))
+	print(' '.join([str(state) for state in bparser.statestack]))
+	raise SyntaxError('Syntax error at line {} column {}. Unexpected {} symbol "{}" in state {}.'.format(p.lineno, scriptlex.find_column(bparser.data, p), p.type, p.value.replace('\n', '\\n'), bparser.state))
 
 bparser = yacc.yacc()
 

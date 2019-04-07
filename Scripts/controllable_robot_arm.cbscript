@@ -2,16 +2,10 @@ dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
 desc: Robot arm.
 scale: 1000
 
-$marker: "Marker:1b, Invisible:1b, NoGravity:1b, Invulnerable:1b, Silent:1b"
-
 $NumPieces: 9
 $NumSegments: 4
 
 import: common.cblib
-
-define @Marker = @Entity[type=area_effect_cloud,tag=Marker]
-	create: {Tags:["Marker"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
-end
 
 define @MiniBlock = @Entity[type=armor_stand,tag=MiniBlock]
 	create: {Tags:["MiniBlock"], Pose:{Head:[0.0001f,0f,0f]}, $marker}

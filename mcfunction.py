@@ -680,7 +680,7 @@ class mcfunction(object):
 		
 	def import_file(self, filename):
 		file = source_file(filename)
-		result = self.parser(file.get_text() + '\n')
+		result = self.parser('import ' + file.get_text() + '\n')
 		if result == None:
 			raise Exception('Unable to parse file "{}"'.format(filename))
 		
