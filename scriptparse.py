@@ -256,7 +256,7 @@ def p_optassignments_empty(p):
 
 #### Import	
 def p_import_statement(p):
-	'''import_statement : import PYTHON'''
+	'''import_statement : import ID'''
 	p[0] = import_block(p.lineno(1), p[2])
 	
 #### Variable

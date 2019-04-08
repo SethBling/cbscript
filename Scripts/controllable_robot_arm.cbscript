@@ -2,8 +2,8 @@ dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
 desc: Robot arm.
 scale: 1000
 
-import: miniblock.cblib
-import: pushable.cblib
+import miniblock
+import pushable
 
 $NumPieces: 9
 $NumSegments: 4

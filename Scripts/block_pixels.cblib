@@ -1,0 +1,687 @@
+define block self
+	stone
+	granite
+	polished_granite
+	diorite
+	polished_diorite
+	andesite
+	polished_andesite
+	dirt
+	coarse_dirt
+	cobblestone
+	oak_planks
+	spruce_planks
+	birch_planks
+	jungle_planks
+	acacia_planks
+	dark_oak_planks
+	bedrock
+	gold_ore
+	iron_ore
+	coal_ore
+	oak_log
+	spruce_log
+	birch_log
+	jungle_log
+	acacia_log
+	dark_oak_log
+	stripped_spruce_log
+	stripped_birch_log
+	stripped_jungle_log
+	stripped_acacia_log
+	stripped_dark_oak_log
+	stripped_oak_log
+	oak_wood
+	spruce_wood
+	birch_wood
+	jungle_wood
+	acacia_wood
+	dark_oak_wood
+	stripped_oak_wood
+	stripped_spruce_wood
+	stripped_birch_wood
+	stripped_jungle_wood
+	stripped_acacia_wood
+	stripped_dark_oak_wood
+	sponge
+	wet_sponge
+	lapis_ore
+	lapis_block
+	dispenser
+	sandstone
+	chiseled_sandstone
+	cut_sandstone
+	note_block
+	sticky_piston
+	cobweb
+	piston
+	piston_head
+	white_wool
+	orange_wool
+	magenta_wool
+	light_blue_wool
+	yellow_wool
+	lime_wool
+	pink_wool
+	gray_wool
+	light_gray_wool
+	cyan_wool
+	purple_wool
+	blue_wool
+	brown_wool
+	green_wool
+	red_wool
+	black_wool
+	gold_block
+	iron_block
+	bricks
+	tnt
+	bookshelf
+	mossy_cobblestone
+	obsidian
+	spawner
+	oak_stairs
+	chest
+	diamond_ore
+	diamond_block
+	crafting_table
+	farmland
+	furnace
+	cobblestone_stairs
+	redstone_ore
+	ice
+	snow_block
+	clay
+	jukebox
+	pumpkin
+	netherrack
+	soul_sand
+	glowstone
+	carved_pumpkin
+	jack_o_lantern
+	white_stained_glass
+	orange_stained_glass
+	magenta_stained_glass
+	light_blue_stained_glass
+	yellow_stained_glass
+	lime_stained_glass
+	pink_stained_glass
+	gray_stained_glass
+	light_gray_stained_glass
+	cyan_stained_glass
+	purple_stained_glass
+	blue_stained_glass
+	brown_stained_glass
+	green_stained_glass
+	red_stained_glass
+	black_stained_glass
+	infested_stone
+	infested_cobblestone
+	infested_stone_bricks
+	infested_mossy_stone_bricks
+	infested_cracked_stone_bricks
+	infested_chiseled_stone_bricks
+	stone_bricks
+	mossy_stone_bricks
+	cracked_stone_bricks
+	chiseled_stone_bricks
+	brown_mushroom_block
+	red_mushroom_block
+	mushroom_stem
+	iron_bars
+	melon
+	brick_stairs
+	stone_brick_stairs
+	mycelium
+	nether_bricks
+	nether_brick_fence
+	nether_brick_stairs
+	enchanting_table
+	cauldron
+	end_portal_frame
+	end_stone
+	dragon_egg
+	redstone_lamp
+	sandstone_stairs
+	emerald_ore
+	ender_chest
+	emerald_block
+	spruce_stairs
+	birch_stairs
+	jungle_stairs
+	command_block
+	beacon
+	cobblestone_wall
+	mossy_cobblestone_wall
+	anvil
+	chipped_anvil
+	damaged_anvil
+	trapped_chest
+	daylight_detector
+	redstone_block
+	nether_quartz_ore
+	hopper
+	quartz_block
+	chiseled_quartz_block
+	quartz_pillar
+	quartz_stairs
+	activator_rail
+	dropper
+	white_terracotta
+	orange_terracotta
+	magenta_terracotta
+	light_blue_terracotta
+	yellow_terracotta
+	lime_terracotta
+	pink_terracotta
+	gray_terracotta
+	light_gray_terracotta
+	cyan_terracotta
+	purple_terracotta
+	blue_terracotta
+	brown_terracotta
+	green_terracotta
+	red_terracotta
+	black_terracotta
+	white_stained_glass_pane
+	orange_stained_glass_pane
+	magenta_stained_glass_pane
+	light_blue_stained_glass_pane
+	yellow_stained_glass_pane
+	lime_stained_glass_pane
+	pink_stained_glass_pane
+	gray_stained_glass_pane
+	light_gray_stained_glass_pane
+	cyan_stained_glass_pane
+	purple_stained_glass_pane
+	blue_stained_glass_pane
+	brown_stained_glass_pane
+	green_stained_glass_pane
+	red_stained_glass_pane
+	black_stained_glass_pane
+	acacia_stairs
+	dark_oak_stairs
+	slime_block
+	prismarine
+	prismarine_bricks
+	dark_prismarine
+	prismarine_stairs
+	prismarine_brick_stairs
+	dark_prismarine_stairs
+	prismarine_slab
+	prismarine_brick_slab
+	dark_prismarine_slab
+	sea_lantern
+	hay_block
+	terracotta
+	coal_block
+	packed_ice
+	white_banner
+	orange_banner
+	magenta_banner
+	light_blue_banner
+	yellow_banner
+	lime_banner
+	pink_banner
+	gray_banner
+	light_gray_banner
+	cyan_banner
+	purple_banner
+	blue_banner
+	brown_banner
+	green_banner
+	red_banner
+	black_banner
+	white_wall_banner
+	orange_wall_banner
+	magenta_wall_banner
+	light_blue_wall_banner
+	yellow_wall_banner
+	lime_wall_banner
+	pink_wall_banner
+	gray_wall_banner
+	light_gray_wall_banner
+	cyan_wall_banner
+	purple_wall_banner
+	blue_wall_banner
+	brown_wall_banner
+	green_wall_banner
+	red_wall_banner
+	black_wall_banner
+	red_sandstone
+	chiseled_red_sandstone
+	cut_red_sandstone
+	red_sandstone_stairs
+	oak_slab
+	spruce_slab
+	birch_slab
+	jungle_slab
+	acacia_slab
+	dark_oak_slab
+	stone_slab
+	sandstone_slab
+	petrified_oak_slab
+	cobblestone_slab
+	brick_slab
+	stone_brick_slab
+	nether_brick_slab
+	quartz_slab
+	red_sandstone_slab
+	purpur_slab
+	smooth_stone
+	smooth_sandstone
+	smooth_quartz
+	smooth_red_sandstone
+	purpur_block
+	purpur_pillar
+	purpur_stairs
+	end_stone_bricks
+	end_gateway
+	repeating_command_block
+	chain_command_block
+	frosted_ice
+	magma_block
+	nether_wart_block
+	red_nether_bricks
+	bone_block
+	structure_void
+	observer
+	shulker_box
+	white_shulker_box
+	orange_shulker_box
+	magenta_shulker_box
+	light_blue_shulker_box
+	yellow_shulker_box
+	lime_shulker_box
+	pink_shulker_box
+	gray_shulker_box
+	light_gray_shulker_box
+	cyan_shulker_box
+	purple_shulker_box
+	blue_shulker_box
+	brown_shulker_box
+	green_shulker_box
+	red_shulker_box
+	black_shulker_box
+	white_glazed_terracotta
+	orange_glazed_terracotta
+	magenta_glazed_terracotta
+	light_blue_glazed_terracotta
+	yellow_glazed_terracotta
+	lime_glazed_terracotta
+	pink_glazed_terracotta
+	gray_glazed_terracotta
+	light_gray_glazed_terracotta
+	cyan_glazed_terracotta
+	purple_glazed_terracotta
+	blue_glazed_terracotta
+	brown_glazed_terracotta
+	green_glazed_terracotta
+	red_glazed_terracotta
+	black_glazed_terracotta
+	white_concrete
+	orange_concrete
+	magenta_concrete
+	light_blue_concrete
+	yellow_concrete
+	lime_concrete
+	pink_concrete
+	gray_concrete
+	light_gray_concrete
+	cyan_concrete
+	purple_concrete
+	blue_concrete
+	brown_concrete
+	green_concrete
+	red_concrete
+	black_concrete
+	white_concrete_powder
+	orange_concrete_powder
+	magenta_concrete_powder
+	light_blue_concrete_powder
+	yellow_concrete_powder
+	lime_concrete_powder
+	pink_concrete_powder
+	gray_concrete_powder
+	light_gray_concrete_powder
+	cyan_concrete_powder
+	purple_concrete_powder
+	blue_concrete_powder
+	brown_concrete_powder
+	green_concrete_powder
+	red_concrete_powder
+	black_concrete_powder
+	dried_kelp_block
+	dead_tube_coral_block
+	dead_brain_coral_block
+	dead_bubble_coral_block
+	dead_fire_coral_block
+	dead_horn_coral_block
+	tube_coral_block
+	brain_coral_block
+	bubble_coral_block
+	fire_coral_block
+	horn_coral_block
+	dead_tube_coral
+	dead_brain_coral
+	dead_bubble_coral
+	dead_fire_coral
+	dead_horn_coral
+	tube_coral
+	brain_coral
+	bubble_coral
+	fire_coral
+	horn_coral
+	blue_ice
+	conduit
+	structure_block
+end
+
+define block none
+	air
+	tall_grass
+	large_fern
+	oak_sapling
+	spruce_sapling
+	birch_sapling
+	jungle_sapling
+	acacia_sapling
+	dark_oak_sapling
+	glass
+	white_bed
+	orange_bed
+	magenta_bed
+	light_blue_bed
+	yellow_bed
+	lime_bed
+	pink_bed
+	gray_bed
+	light_gray_bed
+	cyan_bed
+	purple_bed
+	blue_bed
+	brown_bed
+	green_bed
+	red_bed
+	black_bed
+	powered_rail
+	detector_rail
+	moving_piston
+	dandelion
+	poppy
+	blue_orchid
+	allium
+	azure_bluet
+	red_tulip
+	orange_tulip
+	white_tulip
+	pink_tulip
+	oxeye_daisy
+	brown_mushroom
+	red_mushroom
+	torch
+	wall_torch
+	redstone_wire
+	rail
+	lever
+	redstone_torch
+	redstone_wall_torch
+	stone_button
+	repeater
+	glass_pane
+	attached_pumpkin_stem
+	attached_melon_stem
+	pumpkin_stem
+	melon_stem
+	nether_wart
+	brewing_stand
+	cocoa
+	tripwire_hook
+	tripwire
+	flower_pot
+	potted_oak_sapling
+	potted_spruce_sapling
+	potted_birch_sapling
+	potted_jungle_sapling
+	potted_acacia_sapling
+	potted_dark_oak_sapling
+	potted_fern
+	potted_dandelion
+	potted_poppy
+	potted_blue_orchid
+	potted_allium
+	potted_azure_bluet
+	potted_red_tulip
+	potted_orange_tulip
+	potted_white_tulip
+	potted_pink_tulip
+	potted_oxeye_daisy
+	potted_red_mushroom
+	potted_brown_mushroom
+	potted_dead_bush
+	potted_cactus
+	carrots
+	potatoes
+	oak_button
+	spruce_button
+	birch_button
+	jungle_button
+	acacia_button
+	dark_oak_button
+	skeleton_wall_skull
+	skeleton_skull
+	wither_skeleton_wall_skull
+	wither_skeleton_skull
+	zombie_wall_head
+	zombie_head
+	player_wall_head
+	player_head
+	creeper_wall_head
+	creeper_head
+	dragon_wall_head
+	dragon_head
+	comparator
+	barrier
+	end_rod
+	chorus_plant
+	chorus_flower
+	beetroots
+	turtle_egg
+	dead_tube_coral_wall_fan
+	dead_brain_coral_wall_fan
+	dead_bubble_coral_wall_fan
+	dead_fire_coral_wall_fan
+	dead_horn_coral_wall_fan
+	tube_coral_wall_fan
+	brain_coral_wall_fan
+	bubble_coral_wall_fan
+	fire_coral_wall_fan
+	horn_coral_wall_fan
+	dead_tube_coral_fan
+	dead_brain_coral_fan
+	dead_bubble_coral_fan
+	dead_fire_coral_fan
+	dead_horn_coral_fan
+	tube_coral_fan
+	brain_coral_fan
+	bubble_coral_fan
+	fire_coral_fan
+	horn_coral_fan
+	sea_pickle
+	void_air
+	cave_air
+	bubble_column
+end
+
+define block lime_concrete
+	grass_block
+	grass
+	fern
+	seagrass
+	tall_seagrass
+	cactus
+	sugar_cane
+	vine
+	lily_pad
+	lime_carpet
+	sunflower
+	lilac
+	rose_bush
+	peony
+	kelp
+	kelp_plant
+end
+
+define block pink_concrete
+	pink_carpet
+end
+
+define block gray_concrete
+	gray_carpet
+end
+
+define block brown_concrete
+	podzol
+	dead_bush
+	brown_carpet
+end
+
+define block green_concrete
+	green_carpet
+	oak_leaves
+	spruce_leaves
+	birch_leaves
+	jungle_leaves
+	acacia_leaves
+	dark_oak_leaves
+end
+
+define block red_concrete
+	red_sand
+	red_carpet
+end
+
+define block orange_concrete
+	fire
+	lava
+	orange_carpet
+end
+
+define block yellow_concrete
+	wheat
+	yellow_carpet
+	grass_path
+end
+
+define block purple_concrete
+	nether_portal
+	purple_carpet
+end
+
+define block white_concrete
+	white_carpet
+	cake
+end
+
+define block black_concrete
+	end_portal
+	black_carpet
+end
+
+define block magenta_concrete
+	magenta_carpet
+end
+
+define block light_blue_concrete
+	light_blue_carpet
+end
+
+define block blue_concrete
+	water
+	blue_carpet
+end
+
+define block sandstone
+	sand
+end
+
+define block light_gray_concrete
+	gravel
+	light_gray_carpet
+end
+
+define block cyan_concrete
+	cyan_carpet
+end
+
+define block oak_planks
+	sign
+	oak_door
+	ladder
+	wall_sign
+	oak_pressure_plate
+	oak_fence
+	oak_trapdoor
+	oak_fence_gate
+end
+
+define block spruce_planks
+	spruce_pressure_plate
+	spruce_trapdoor
+	spruce_fence_gate
+	spruce_fence
+	spruce_door
+end
+
+define block birch_planks
+	birch_pressure_plate
+	birch_trapdoor
+	birch_fence_gate
+	birch_fence
+	birch_door
+end
+
+define block jungle_planks
+	jungle_pressure_plate
+	jungle_trapdoor
+	jungle_fence_gate
+	jungle_fence
+	jungle_door
+end
+
+define block acacia_planks
+	acacia_pressure_plate
+	acacia_trapdoor
+	acacia_fence_gate
+	acacia_fence
+	acacia_door
+end
+
+define block dark_oak_planks
+	dark_oak_pressure_plate
+	dark_oak_trapdoor
+	dark_oak_fence_gate
+	dark_oak_fence
+	dark_oak_door
+end
+
+define block stone
+	stone_pressure_plate
+end
+
+define block iron_block
+	iron_door
+end
+
+define block snow_block
+	snow
+end
+
+define block gold_block
+	light_weighted_pressure_plate
+end
+
+define block iron_block
+	heavy_weighted_pressure_plate
+	iron_trapdoor
+end

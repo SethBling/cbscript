@@ -1,4 +1,4 @@
-import: common.cblib
+import common
 
 define @MiniBlock = @Entity[type=armor_stand,tag=MiniBlock]
 	create: {Tags:["MiniBlock"], Pose:{Head:[0.0001f,0f,0f]}, $marker}

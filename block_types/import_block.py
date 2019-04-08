@@ -5,6 +5,6 @@ class import_block(object):
 		
 	def compile(self, func):
 		try:
-			func.import_file(self.filename)
+			func.import_file(self.filename + '.cblib')
 		except Exception as e:
 			raise Exception('Importing file "{}" failed at line {}:\n{}'.format(self.filename, self.line, e))

@@ -1,4 +1,4 @@
-import: common.cblib
+import common
 
 define @Pushable = @Entity[type=armor_stand, tag=Pushable]
 	create: {Tags:["Pushable"], Invisible:1b, Invulnerable:1b}
