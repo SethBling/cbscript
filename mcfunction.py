@@ -679,7 +679,10 @@ class mcfunction(object):
 		return self.environment.parser
 		
 	def import_file(self, filename):
+		self.environment.register_dependency(filename)
+
 		file = source_file(filename)
+		
 		result = self.parser('import ' + file.get_text() + '\n')
 		if result == None:
 			raise Exception('Unable to parse file "{}"'.format(filename))

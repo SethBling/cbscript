@@ -1145,7 +1145,7 @@ class test_cbscript(unittest.TestCase):
 		
 	def test_cbscript_check_for_update(self):
 		source = mock_source_file()
-		source.time = 1
+		source.updated = False
 		
 		compiles = [0]
 		
@@ -1159,7 +1159,7 @@ class test_cbscript(unittest.TestCase):
 		self.assertEqual(script.compiles, 0)
 		script.check_for_update()
 		self.assertEqual(script.compiles, 0)
-		source.time = 2
+		source.updated = True
 		script.check_for_update()
 		self.assertEqual(script.compiles, 1)
 		

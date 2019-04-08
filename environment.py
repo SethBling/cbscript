@@ -272,3 +272,6 @@ class environment(object):
 	@property
 	def parser(self):
 		return self.global_context.parser
+
+	def register_dependency(self, filename):
+		self.global_context.register_dependency(filename)

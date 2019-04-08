@@ -39,6 +39,7 @@ class global_context(object):
 		self.scratch_prefixes = {}
 		self.namespace = namespace
 		self.parser = None
+		self.dependencies = []
 
 	def register_block_tag(self, name, blocks):
 		self.block_tags[name] = blocks
@@ -117,3 +118,6 @@ class global_context(object):
 
 	def get_random_objective(self):
 		return "RV" + self.friendly_name[2:]
+		
+	def register_dependency(self, filename):
+		self.dependencies.append(filename)

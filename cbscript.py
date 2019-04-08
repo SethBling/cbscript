@@ -3,6 +3,7 @@ import mcworld
 from environment import environment
 from mcfunction import mcfunction, get_line, compile_section
 from selector_definition import selector_definition
+from source_file import source_file
 import tellraw
 import traceback
 import math
@@ -13,7 +14,7 @@ class cbscript(object):
 		self.source_file = source_file
 		self.parse = parse_func
 		self.namespace = self.source_file.get_base_name().split('.')[0].lower()
-		self.modified = self.source_file.get_last_modified()
+		self.dependencies = []
 	
 	def log(self, text):
 		print(text)
@@ -22,10 +23,14 @@ class cbscript(object):
 		traceback.print_exc()
 	
 	def check_for_update(self):
-		last_modified = self.source_file.get_last_modified()
-		
-		if last_modified > self.modified:
-			self.modified = last_modified
+		recompile = False
+		# It's important to go through all the files, to make sure that if multiple were updated
+		# we don't try to compile multiple times
+		for file in [self.source_file] + self.dependencies:
+			if file.was_updated():
+				recompile = True
+				
+		if recompile:
 			self.try_to_compile()
 	
 	def try_to_compile(self):
@@ -71,6 +76,7 @@ class cbscript(object):
 			global_func.compile_blocks(parsed['assignments'])
 		except Exception as e:
 			print(e)
+			self.dependencies = [source_file(d) for d in self.global_context.dependencies]
 			return False
 
 		for section in parsed['sections']:
@@ -98,6 +104,8 @@ class cbscript(object):
 		world.write_tags(self.global_context.clocks, self.global_context.block_tags)
 		world.write_mcmeta(parsed['desc'])
 		world.write_zip()
+		
+		self.dependencies = [source_file(d) for d in self.global_context.dependencies]
 			
 		return True
 		

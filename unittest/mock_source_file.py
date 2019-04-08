@@ -5,6 +5,7 @@ class mock_source_file(object):
 		self.base_name = base_name
 		self.text = text
 		self.time = 0
+		self.updated = True
 		
 	def get_last_modified(self):
 		return time.ctime(self.time)
@@ -14,3 +15,6 @@ class mock_source_file(object):
 		
 	def get_text(self):
 		return self.text
+		
+	def was_updated(self):
+		return self.updated
