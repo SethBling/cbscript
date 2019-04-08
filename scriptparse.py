@@ -1159,12 +1159,16 @@ def p_macro_call_param_number(p):
 	p[0] = p[1]
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
+def p_macro_call_param_string(p):
+	'''macro_call_param : NORMSTRING'''
+	p[0] = '"' + p[1] + '"'
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
 #### Empty
 def p_empty(p):
 	'''empty : '''
 
 def p_error(p):
-	print(' '.join([str(state) for state in bparser.statestack]))
 	raise SyntaxError('Syntax error at line {} column {}. Unexpected {} symbol "{}" in state {}.'.format(p.lineno, scriptlex.find_column(bparser.data, p), p.type, p.value.replace('\n', '\\n'), bparser.state))
 
 bparser = yacc.yacc()

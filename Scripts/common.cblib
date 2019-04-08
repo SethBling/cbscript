@@ -14,6 +14,7 @@ define @Entity = @e
 	on_ground = OnGround byte 1
 	no_gravity = NoGravity byte 1
 	fire = Fire short 1
+    absorption = AbsorptionAmount float 1
 	invulnerable = Invulnerable byte 1
 end
 

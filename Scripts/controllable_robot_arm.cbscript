@@ -12,40 +12,26 @@ reset
 
 end
 
+macro $create_control_block($x, $y, $z, $idx, $block_type)
+	at $x $y $z
+		/setblock ~ ~ ~ $block_type
+		/function pushables:create_block
+		@Pushable[distance=..1].arm_control = $idx
+		@Pushable[distance=..1].lock_x = True
+	end
+end
+
 function refresh()
 	/kill @MiniBlock
 	/kill @Marker
 	at @Pushable[arm_control]
 		/function pushables:remove_here
 	end
-	
-	at -796 56 89
-		/setblock ~ ~ ~ diamond_block
-		/function pushables:create_block
-		@Pushable[distance=..1].arm_control = 1
-		@Pushable[distance=..1].lock_x = True
-	end
-	
-	at -794 56 89
-		/setblock ~ ~ ~ gold_block
-		/function pushables:create_block
-		@Pushable[distance=..1].arm_control = 2
-		@Pushable[distance=..1].lock_x = True
-	end
-	
-	at -792 56 89
-		/setblock ~ ~ ~ iron_block
-		/function pushables:create_block
-		@Pushable[distance=..1].arm_control = 3
-		@Pushable[distance=..1].lock_x = True
-	end
-	
-	at -790 56 89
-		/setblock ~ ~ ~ emerald_block
-		/function pushables:create_block
-		@Pushable[distance=..1].arm_control = 4
-		@Pushable[distance=..1].lock_x = True
-	end
+
+	$create_control_block(-796, 56, 89, 1, "diamond_block")
+	$create_control_block(-794, 56, 89, 2, "gold_block")
+	$create_control_block(-792, 56, 89, 3, "iron_block")
+	$create_control_block(-790, 56, 89, 4, "emerald_block")
 	
 	at @p
 		seg = 0

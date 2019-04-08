@@ -22,6 +22,8 @@ class macro_call_block(object):
 					new_env.set_dollarid(params[p], int(self.args[p]))
 				else:
 					new_env.set_dollarid(params[p], float(self.args[p]))
+			elif self.args[p].startswith('"') and self.args[p].endswith('"') and len(self.args[p]) >= 2:
+				new_env.set_dollarid(params[p], self.args[p][1:-1])
 			elif self.args[p].startswith('$'):
 				new_env.copy_dollarid(params[p], self.args[p])
 			else:
