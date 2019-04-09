@@ -14,10 +14,15 @@ def isNumber(s):
 			return False
 		
 		return True
-	except ValueError:
+	except Exception:
 		return False
 		
-	except TypeError:
+def isInt(s):
+	try:
+		if s == str(int(s)):
+			return True
+		return False
+	except Exception:
 		return False
 		
 		
@@ -59,6 +64,10 @@ class environment(object):
 		
 	def apply_replacements(self, text):
 		for identifier in reversed(sorted(self.dollarid.keys())):
+			if isInt(self.dollarid[identifier]):
+				text = str(text).replace('-$' + identifier, str(-int(self.dollarid[identifier])))
+			elif isNumber(self.dollarid[identifier]):
+				text = str(text).replace('-$' + identifier, str(-float(self.dollarid[identifier])))
 			text = str(text).replace('$' + identifier, str(self.dollarid[identifier]))	
 				
 		return text

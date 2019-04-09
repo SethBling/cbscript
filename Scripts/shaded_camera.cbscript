@@ -15,11 +15,8 @@ end
 
 $Pixels: 128
 $Radius: 10
-$MinusRadius: -Radius
 $Diameter: 2 * Radius
-$MinusDiameter: -Diameter
 $PixelMove: float(Diameter) / Pixels
-$MinusPixelMove: -PixelMove
 
 reset
 	/gamerule maxCommandChainLength 1000000000
@@ -65,7 +62,7 @@ function take_picture()
 			take_picture_col()
 			
 			col++
-			move @Scan ^$MinusPixelMove ^$Diameter ^
+			move @Scan ^-$PixelMove ^$Diameter ^
 			<x, y, z> = @Scan.<pos>
 		end
 	end
@@ -80,7 +77,7 @@ macro $take_picture_col_recurse($dy)
 		
 		# Move on to the next row
 		row++
-		move @Scan ^ ^$MinusPixelMove ^
+		move @Scan ^ ^-$PixelMove ^
 		<x, y, z> = @Scan.<pos>
 		if row < 128 at ~ ~ ~1
 			take_picture_col()
@@ -114,7 +111,6 @@ end
 
 function ray_trace_step()
 	$Step: 0.25
-	$MinusStep: -Step
 	handled = False
 	if block ~ ~ ~ none and step < 800
 		step++
@@ -123,7 +119,7 @@ function ray_trace_step()
 	end
 	
 	if not handled
-		at ^ ^ ^$MinusStep
+		at ^ ^ ^-$Step
 			fine_step = 0
 			ray_trace_fine_step()
 		end
@@ -132,8 +128,7 @@ end
 
 function ray_trace_fine_step()
 	$FineStep: 0.02
-	$MinusFineStep: -FineStep
-
+	
 	handled = False
 	if block ~ ~ ~ none and fine_step < 50
 		fine_step++
@@ -151,7 +146,7 @@ function ray_trace_fine_step()
 		as @Position
 			/tp @s ~ ~ ~ ~ ~
 			<x2, y2, z2> = @s.<pos>
-			move @s ^ ^ ^$MinusFineStep
+			move @s ^ ^ ^-$FineStep
 			<x1, y1, z1> = @s.<pos>
 		end
 		<bx1, by1, bz1> = <x1, y1, z1> % 1000

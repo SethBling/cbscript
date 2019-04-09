@@ -1,0 +1,57 @@
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
+desc: Experience Zero-G
+scale: 1000
+
+import common
+
+@FishingBobber = @Entity[type=fishing_bobber]
+define @FlyingMachine = @Entity[type=minecart, tag=Flying]
+	create: {Tags:["Flying"], NoGravity:1b, Invulnerable:1b}
+end
+
+reset
+	/scoreboard objectives add used_rod minecraft.used:minecraft.fishing_rod
+	@a.used_rod = 0
+
+	/kill @FlyingMachine
+	at @a
+		as create @FlyingMachine
+			@s.<prev_vel> = <0, 0, 0>
+		end
+	end
+end
+
+clock main
+	as @FlyingMachine
+		<vx, vy, vz> = @s.<vel>
+		<pvx, pvy, pvz> = @s.<prev_vel>
+		@s.<vel> = @s.<prev_vel>
+		if vx == 0 then @s.vx = -pvx
+		if vy == 0 then @s.vy = -pvy
+		if vz == 0 then @s.vz = -pvz
+		@s.<prev_vel> = @s.<vel>
+	end
+	for @bobber in @FishingBobber
+		unless @s.player > 0 at @s
+			@s.player = @Player[distance=..3,limit=1]
+		end
+		
+		as @s.player(@Player)
+			@s.<bobber> = @bobber.<pos>
+			@s.bobber = @bobber
+		end
+	end
+	as @Player at @s
+		if @s.bobber
+			bobber_exists = False
+			as @s.bobber
+				bobber_exists = True			
+			end
+		
+			if not bobber_exists
+				@FlyingMachine[distance=..2,limit=1].<prev_vel> += (@s.<bobber> - @s.<pos>) / 40
+				@s.bobber = None
+			end
+		end
+	end
+end

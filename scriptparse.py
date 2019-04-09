@@ -657,6 +657,10 @@ def p_virtualnumber_symbol(p):
 	'''virtualnumber : DOLLAR ID'''
 	p[0] = '$' + p[2]
 	
+def p_virtualnumber_symbol_negative(p):
+	'''virtualnumber : MINUS DOLLAR ID'''
+	p[0] = '-$' + p[3]
+	
 #### Virtual integer
 def p_virtualinteger_literal(p):
 	'''virtualinteger : integer'''

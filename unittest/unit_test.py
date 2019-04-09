@@ -68,13 +68,22 @@ from vector_expressions.vector_var_expr import vector_var_expr
 
 class test_cbscript(unittest.TestCase):
 	def test_is_number(self):
-		self.assertTrue(environment.isNumber(1))
-		self.assertTrue(environment.isNumber(0))
-		self.assertTrue(environment.isNumber(1.0))
+		self.assertTrue(environment.isNumber('1'))
+		self.assertTrue(environment.isNumber('0'))
+		self.assertTrue(environment.isNumber('1.0'))
 		self.assertFalse(environment.isNumber(float('inf')))
 		self.assertFalse(environment.isNumber(float('nan')))
 		self.assertFalse(environment.isNumber(None))
 		self.assertFalse(environment.isNumber('test'))
+		
+	def test_is_int(self):
+		self.assertTrue(environment.isInt('1'))
+		self.assertTrue(environment.isInt('0'))
+		self.assertFalse(environment.isInt('1.0'))
+		self.assertFalse(environment.isInt(float('inf')))
+		self.assertFalse(environment.isInt(float('nan')))
+		self.assertFalse(environment.isInt(None))
+		self.assertFalse(environment.isInt('test'))
 		
 	def test_factor(self):
 		self.assertEqual(list(factor(20)), [2, 2, 5])
