@@ -24,7 +24,7 @@ class macro_call_block(object):
 					new_env.set_dollarid(params[p], float(self.args[p]))
 			elif self.args[p].startswith('"') and self.args[p].endswith('"') and len(self.args[p]) >= 2:
 				new_env.set_dollarid(params[p], self.args[p][1:-1])
-			elif self.args[p].startswith('$'):
+			elif self.args[p].startswith('$') or self.args[p].startswith('-$'):
 				new_env.copy_dollarid(params[p], self.args[p])
 			else:
 				print('Unknown macro parameter "{}" in macro call at line {}'.format(self.args[p], self.line))

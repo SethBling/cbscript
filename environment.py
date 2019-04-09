@@ -82,6 +82,7 @@ class environment(object):
 		self.dollarid[id] = val
 		
 	def copy_dollarid(self, id, copyid):
+		negate = False
 		if len(id) == 0:
 			raise Exception('Dollar ID is empty string.')
 		
@@ -91,7 +92,18 @@ class environment(object):
 		if copyid.startswith('$'):
 			copyid = copyid[1:]
 			
+		if copyid.startswith('-$'):
+			copyid = copyid[2:]
+			negate = True
+			
 		self.dollarid[id] = self.dollarid[copyid]
+		if negate:
+			if isInt(self.dollarid[id]):
+				self.dollarid[id] = str(-int(self.dollarid[id]))
+			elif isNumber(self.dollarid[id]):
+				self.dollarid[id] = str(-float(self.dollarid[id]))
+			else:
+				raise ValueError('Unable to negate value of ${} when copying to ${}, it has non-numeric value "{}"'.format(copyid, id, self.dollarid[id]))
 		
 	def set_atid(self, id, fullselector):
 		self.selectors[id] = selector_definition(fullselector, self)

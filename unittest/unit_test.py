@@ -3081,6 +3081,25 @@ class test_cbscript(unittest.TestCase):
 		
 		self.assertEqual(new_env.scratch.prefix, 'new_name_prefix')
 		
+	def test_environment_copy_dollarid(self):
+		gc = mock_global_context()
+		env = environment.environment(gc)
+		
+		env.dollarid['test1'] = '10'
+		env.copy_dollarid('$test2', '-$test1')
+		
+		self.assertTrue('test2' in env.dollarid)
+		self.assertEqual(env.dollarid['test2'], '-10')
+		
+		env.dollarid['test3'] = '20.0'
+		env.copy_dollarid('$test4', '-$test3')
+
+		self.assertTrue('test4' in env.dollarid)
+		self.assertEqual(env.dollarid['test4'], '-20.0')
+
+		env.dollarid['test5'] = 'string'
+		with self.assertRaises(ValueError) as context:
+			env.copy_dollarid('$test6', '-$test5')
 	
 		
 if __name__ == '__main__':

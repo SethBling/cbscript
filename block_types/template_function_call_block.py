@@ -1,4 +1,5 @@
-from mcfunction import mcfunction, isNumber
+from mcfunction import mcfunction
+from environment import isNumber, isInt
 
 class template_function_call_block(object):
 	def __init__(self, line, function, template_args, args):
@@ -45,12 +46,13 @@ class template_function_call_block(object):
 			
 			# Bind template paramters in the function's environment
 			for p in range(len(template_args)):
-				if isNumber(template_args[p]):
-					if template_args[p].isdigit() or template_args[p][0] == '-' and template_args[p][1:].isdigit():
-						new_env.set_dollarid(template_params[p], int(template_args[p]))
-					else:
-						new_env.set_dollarid(template_params[p], float(template_args[p]))
-				elif template_args[p].startswith('$'):
+				if isInt(template_args[p]):
+					new_env.set_dollarid(template_params[p], int(template_args[p]))
+				elif isNumber(template_args[p]):
+					new_env.set_dollarid(template_params[p], float(template_args[p]))
+				elif self.args[p].startswith('"') and self.args[p].endswith('"') and len(self.args[p]) >= 2:
+					new_env.set_dollarid(params[p], self.args[p][1:-1])
+				elif template_args[p].startswith('$') or template_args[p].startswith('-$'):
 					new_env.copy_dollarid(template_params[p], template_args[p])
 				else:
 					print('Unknown macro parameter "{0}"'.format(template_args[p]))

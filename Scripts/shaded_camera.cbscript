@@ -1,4 +1,4 @@
-dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\Shaded Camera
+dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
 desc: A camera with shading
 scale: 1000
 
@@ -13,10 +13,17 @@ define @Position = @Entity[type=area_effect_cloud,tag=Position,limit=1]
 	create: {Tags:["Position"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
 end
 
+define @Texture = @Entity[type=area_effect_cloud,tag=Texture,limit=1]
+	create: {Tags:["Texture"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
 $Pixels: 128
 $Radius: 10
 $Diameter: 2 * Radius
 $PixelMove: float(Diameter) / Pixels
+
+$map_x: -704
+$map_z: -64
 
 reset
 	/gamerule maxCommandChainLength 1000000000
@@ -27,16 +34,17 @@ reset
 
 	unless @Scan do create @Scan
 	unless @Position do create @Position
+	unless @Texture do create @Texture
 
 	tell @a: {Y[\[Take Picture\]](/function shaded_camera:take_picture) [\[Setup\]](/function shaded_camera:setup)
 end
 
 function setup()
 	/bossbar set progress players @s
-    for $x in: range(-64, -64+128, 8)
-		$dx: x + 64
+    for $x in: range(map_x, map_x+128, 8)
+		$dx: x - map_x
 		/bossbar set progress value $dx
-		for $z in: range(-64, -64+128, 8)
+		for $z in: range(map_z, map_z+128, 8)
 			$xp: x+7
 			$zp: z+7
 			/fill $x 0 $z $xp 255 $zp air
@@ -53,7 +61,8 @@ function take_picture()
 	end
 	
 	move @Scan ^$Radius ^$Radius ^10
-	at -65 128 -64
+	$x_start: map_x-1
+	at $x_start 128 $map_z
 		col = 0
 		while col < 128 at ~1 128 ~
 			# Recursively capture column pixels
@@ -99,12 +108,12 @@ function take_picture_col()
 	end
 	
 	if face_y and not handled
-		$take_picture_col_recurse(0)
+		$take_picture_col_recurse(1)
 		handled = True
 	end
 	
 	if face_z and not handled
-		$take_picture_col_recurse(1)
+		$take_picture_col_recurse(0)
 		handled = True
 	end
 end
@@ -201,23 +210,37 @@ function ray_trace_fine_step()
 			face_x = True
 			face_y = False
 			face_z = False
+			u = by1
+			v = bz1
 		end
 		
 		if py >= px and py >= pz
 			face_x = False
 			face_y = True
 			face_z = False
+			u = bx1
+			v = bz1
 		end
 		
 		if pz >= px and pz >= py
 			face_x = False
 			face_y = False
 			face_z = True
+			u = by1
+			v = bx1
 		end
+		
 		if fine_step >= 50
 			face_x = False
 			face_y = True
 			face_z = False
+		end
+		
+		if block ~ ~ ~ oak_planks
+			@Texture.<pos> = <-733000 + u * 16, 56000, 1940000 + v * 16>
+			at @Texture
+				/clone ~ ~ ~ ~ ~ ~ 0 1 0
+			end
 		end
 	end
 end
