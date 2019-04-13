@@ -1,9 +1,10 @@
 dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\Texture Camera
-desc: A camera with shading
+desc: Records gifs
 scale: 1000
 
 import common
 import map_blocks
+import item_frame
 
 define @Scan = @Entity[type=area_effect_cloud,tag=Scan,limit=1]
 	create: {Tags:["Scan"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
@@ -15,6 +16,14 @@ end
 
 define @Texture = @Entity[type=area_effect_cloud,tag=Texture,limit=1]
 	create: {Tags:["Texture"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+define @Frame = @Entity[type=area_effect_cloud,tag=Frame]
+	create: {Tags:["Frame"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+define @Player = @Player
+	map_id = SelectedItem.tag.map int 1
 end
 
 $Pixels: 128
@@ -36,7 +45,12 @@ reset
 	unless @Position do create @Position
 	unless @Texture do create @Texture
 
-	tell @a: {Y[\[Take Picture\]](/function shaded_camera:take_picture) [\[Setup\]](/function shaded_camera:setup)
+	tell @a: {Y[\[Record\]](/function gif_recorder:record) [\[Setup\]](/function gif_recorder:setup)
+	
+	@a.render = False
+	@a.recording = False
+
+	/kill @Frame
 end
 
 function fill_ceiling()
@@ -45,6 +59,7 @@ function fill_ceiling()
 	$xmax: map_x+128+16
 	$zmin: map_z-16
 	$zmax: map_z+128+16
+	/fill $xmin 254 $zmin $xmax 254 $zmax redstone_lamp
 	/fill $xmin 255 $zmin $xmax 255 $zmax redstone_lamp
 	tell @a: Ceiling done.
 end
@@ -53,30 +68,175 @@ function setup()
 	fill_ceiling()
 	
 	/bossbar set progress players @s
-    for $x in: range(map_x, map_x+128, 8)
+    for $x in: range(map_x-8, map_x+128+8, 8)
 		$dx: x - map_x
-		/bossbar set progress value $dx
-		for $z in: range(map_z, map_z+128, 8)
+		if: dx >= 0
+			/bossbar set progress value $dx
+		end
+		for $z in: range(map_z-8, map_z+128+8, 8)
 			$xp: x+7
 			$zp: z+7
-			/fill $x 0 $z $xp 254 $zp air
+			/fill $x 0 $z $xp 253 $zp air
 		end
 	end
 	/bossbar set progress players
 end
 
+function record()
+	tell @s: {R[\[Stop Recording\]](/function gif_recorder:stop_recording)
+	/kill @Frame
+	@s.recording = True
+	@s.frame = 0
+	@s.render = False
+end
+
+function get_looking_at()
+	@s.facing_block = False
+	at @s ~ ~1.6 ~
+		/tp @Position ~ ~ ~ ~ ~
+		for step = 1 to 30
+			move @Position ^ ^ ^0.2
+			at @Position unless block ~ ~ ~ air
+				@s.facing_block = True
+				@s.<cursor_pos> = @Position.<pos>
+				step = 100
+			end
+		end
+	end
+end
+
+clock recording
+	as @Player
+		@s.broke_block = False
+		if @s.facing_block
+			@Position.<pos> = @s.<cursor_pos>
+			at @Position if block ~ ~ ~ air
+				@s.broke_block = True
+				@s.<break_pos> = @s.<cursor_pos>
+			end
+		end
+		get_looking_at()		
+	end
+
+	for @player in @Player[recording]
+		at @s
+			holding = 0
+			frame = @s.frame
+			/execute if entity @s[nbt={SelectedItem:{id:"minecraft:diamond_pickaxe"}}] run scoreboard players set Global holding 1
+			as create @Frame
+				/tp @s ~ ~ ~ ~ ~
+				@s.holding = holding
+				@s.frame = frame
+				if @player.broke_block
+					@s.broke_block = True
+					@s.<break_pos> = @player.<break_pos>
+				end
+			end
+			@s.frame++
+		end
+	end
+end
+
+function stop_recording()
+	@s.last_frame = @s.frame - 1
+	@s.recording = False
+	
+	tell @s: {G[\[Render\]](/function gif_recorder:start_render)
+end
+
+function start_render()
+	@s.render_frame = 0
+	@s.render = True
+	@s.render_id = 0
+	@s.give_map_delay = 0
+	/give @s map
+	at @s
+		/playsound minecraft:entity.experience_orb.pickup ambient @a ~ ~ ~
+	end
+	/tp @s 0 200 0
+	render_frame()
+end
+
+clock render
+	as @Player
+		@s.prev_item_slot = @s.item_slot
+		@s.item_slot = @s.selected_slot
+		@s.was_hold_map = @s.hold_map
+		@s.was_hold_filled = @s.hold_filled
+		@s.hold_map = False
+		@s.hold_filled = False
+		/execute if entity @s[nbt={SelectedItem:{id:"minecraft:map"}}] run scoreboard players set @s hold_map 1
+		/execute if entity @s[nbt={SelectedItem:{id:"minecraft:filled_map"}}] run scoreboard players set @s hold_filled 1
+	end
+
+	as @Player[render]
+		if @s.item_slot == @s.prev_item_slot and @s.hold_filled unless @s.render_id
+			if @s.render_frame == 1
+				@s.start_id = @s.map_id
+				@s.end_id = @s.start_id + @s.last_frame
+				@s.render_id = @s.map_id
+			end
+		end	
+		
+		if @s.render_id and @s.map_id == @s.render_id
+			@s.give_map_delay = 40
+			@s.render_id++
+		end
+	end
+	
+	@Player[give_map_delay].give_map_delay--
+	as @Player[give_map_delay == 1]
+		/replaceitem entity @s weapon map
+		at @s
+			/playsound minecraft:entity.experience_orb.pickup ambient @a ~ ~ ~
+		end
+		render_frame()
+	end
+end
+
+function render_frame()
+	render_frame = @s.render_frame
+	tell @s: Rendering frame (render_frame) of (@s.last_frame)...
+	as @Frame if @s.frame == render_frame
+		if @s.broke_block
+			@Position.<pos> = @s.<break_pos>
+			at @Position
+				/setblock ~ ~ ~ air
+			end
+		end
+		take_picture()
+	end
+	@s.render_frame++
+	if @s.render_frame > @s.last_frame
+		@s.render = False
+		tell @s: Done rendering gif!
+	end
+end
+
+macro $clone_overlay($val, $Y)
+	if @s.holding == $val
+		$OverlayXmin: -64
+		$OverlayZmin: 192
+		$OverlayXmax: OverlayXmin+127
+		$OverlayZmax: OverlayZmin+127
+		/clone $OverlayXmin $Y $OverlayZmin $OverlayXmax $Y $OverlayZmax $map_x 254 $map_z
+	end
+end
+
 function take_picture()
-	/bossbar set progress players @s
-              
+	/bossbar set progress players @a
+	$clone_overlay(0, 63)
+	$clone_overlay(1, 69)
+	
 	at @s
 		/tp @Scan ~ ~1.8 ~ ~ ~
 	end
 	
 	move @Scan ^$Radius ^$Radius ^10
 	$x_start: map_x-1
-	at $x_start 128 $map_z
+	at $x_start 125 $map_z
 		col = 0
-		while col < 128 at ~1 128 ~
+		while col < 125 at ~1 128 ~
 			# Recursively capture column pixels
 			row = 0
 			/execute store result bossbar progress value run scoreboard players get Global col
@@ -94,7 +254,7 @@ macro $take_picture_col_recurse($dy)
 	at ~ ~$dy ~
 		# Copy the block into the map area
 		/clone 0 1 0 0 1 0 ~ ~ ~
-		/fill ~ ~1 ~ ~ 254 ~ air
+		/fill ~ ~1 ~ ~ 253 ~ air
 		
 		# Move on to the next row
 		row++
@@ -268,5 +428,33 @@ function ray_trace_fine_step()
 			$get_texture("grass_block", 68)
 		end
 		$get_texture("dirt", 70)
+		$get_texture("iron_ore", 71)
+	end
+end
+
+clock draw
+	for @itemframe in @ItemFrame
+		map_id = 0
+		map_id = @s.map
+		
+		unless @s.start_id if map_id
+			as @Player
+				if map_id >= @s.start_id and map_id <= @s.end_id
+					@itemframe.start_id = @s.start_id
+					@itemframe.end_id = @s.end_id
+					@itemframe.silent = True
+				end
+			end
+		end
+		
+		if @s.start_id
+			@s.map++
+			if @s.map > @s.end_id then @s.map = @s.start_id
+		end
+		
+		unless @s.frame >= @s.start_id
+			@s.frame = @s.start_id
+			@s.map = @s.frame
+		end
 	end
 end

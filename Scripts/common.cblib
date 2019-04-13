@@ -16,10 +16,13 @@ define @Entity = @e
 	fire = Fire short 1
     absorption = AbsorptionAmount float 1
 	invulnerable = Invulnerable byte 1
+	silent = Silent byte 1
 end
 
 define @Marker = @Entity[type=area_effect_cloud,tag=Marker]
 	create: {Tags:["Marker"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
 end
 
-@Player = @Entity[type=player]
+define @Player = @Entity[type=player]
+	selected_slot = SelectedItemSlot int 1
+end

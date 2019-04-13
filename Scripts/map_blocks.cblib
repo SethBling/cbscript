@@ -751,154 +751,205 @@ define block black_stained_hardened_clay
 end
 
 macro $create_map_block_at($x, $y, $z)
+	handled = False
 	if block ~ ~ ~ grass
 		/setblock $x $y $z grass_block
+		handled = True
 	end
-	if block ~ ~ ~ sand
+	if not handled and block ~ ~ ~ sand
 		/setblock $x $y $z sandstone
+		handled = True
 	end
-	if block ~ ~ ~ cloth
+	if not handled and block ~ ~ ~ cloth
 		/setblock $x $y $z cobweb
+		handled = True
 	end
-	if block ~ ~ ~ tnt
+	if not handled and block ~ ~ ~ tnt
 		/setblock $x $y $z tnt
+		handled = True
 	end
-	if block ~ ~ ~ ice
+	if not handled and block ~ ~ ~ ice
 		/setblock $x $y $z ice
+		handled = True
 	end
-	if block ~ ~ ~ iron
+	if not handled and block ~ ~ ~ iron
 		/setblock $x $y $z iron_block
+		handled = True
 	end
-	if block ~ ~ ~ foliage
+	if not handled and block ~ ~ ~ foliage
 		/setblock $x $y $z oak_leaves
+		handled = True
 	end
-	if block ~ ~ ~ snow
+	if not handled and block ~ ~ ~ snow
 		/setblock $x $y $z snow_block
+		handled = True
 	end
-	if block ~ ~ ~ clay
+	if not handled and block ~ ~ ~ clay
 		/setblock $x $y $z clay
+		handled = True
 	end
-	if block ~ ~ ~ dirt
+	if not handled and block ~ ~ ~ dirt
 		/setblock $x $y $z coarse_dirt
+		handled = True
 	end
-	if block ~ ~ ~ stone
+	if not handled and block ~ ~ ~ stone
 		/setblock $x $y $z stone
+		handled = True
 	end
-	if block ~ ~ ~ wood
+	if not handled and block ~ ~ ~ wood
 		/setblock $x $y $z oak_planks
+		handled = True
 	end
-	if block ~ ~ ~ quartz
+	if not handled and block ~ ~ ~ quartz
 		/setblock $x $y $z quartz_block
+		handled = True
 	end
-	if block ~ ~ ~ adobe
+	if not handled and block ~ ~ ~ adobe
 		/setblock $x $y $z acacia_planks
+		handled = True
 	end
-	if block ~ ~ ~ magenta
+	if not handled and block ~ ~ ~ magenta
 		/setblock $x $y $z magenta_wool
+		handled = True
 	end
-	if block ~ ~ ~ light_blue
+	if not handled and block ~ ~ ~ light_blue
 		/setblock $x $y $z light_blue_wool
+		handled = True
 	end
-	if block ~ ~ ~ yellow
+	if not handled and block ~ ~ ~ yellow
 		/setblock $x $y $z yellow_wool
+		handled = True
 	end
-	if block ~ ~ ~ lime
+	if not handled and block ~ ~ ~ lime
 		/setblock $x $y $z lime_wool
+		handled = True
 	end
-	if block ~ ~ ~ pink
+	if not handled and block ~ ~ ~ pink
 		/setblock $x $y $z pink_wool
+		handled = True
 	end
-	if block ~ ~ ~ gray
+	if not handled and block ~ ~ ~ gray
 		/setblock $x $y $z gray_wool
+		handled = True
 	end
-	if block ~ ~ ~ silver
+	if not handled and block ~ ~ ~ silver
 		/setblock $x $y $z light_gray_wool
+		handled = True
 	end
-	if block ~ ~ ~ cyan
+	if not handled and block ~ ~ ~ cyan
 		/setblock $x $y $z cyan_wool
+		handled = True
 	end
-	if block ~ ~ ~ purple
+	if not handled and block ~ ~ ~ purple
 		/setblock $x $y $z purple_wool
+		handled = True
 	end
-	if block ~ ~ ~ blue
+	if not handled and block ~ ~ ~ blue
 		/setblock $x $y $z blue_wool
+		handled = True
 	end
-	if block ~ ~ ~ brown
+	if not handled and block ~ ~ ~ brown
 		/setblock $x $y $z brown_wool
+		handled = True
 	end
-	if block ~ ~ ~ green
+	if not handled and block ~ ~ ~ green
 		/setblock $x $y $z green_wool
+		handled = True
 	end
-	if block ~ ~ ~ red
+	if not handled and block ~ ~ ~ red
 		/setblock $x $y $z red_wool
+		handled = True
 	end
-	if block ~ ~ ~ black
+	if not handled and block ~ ~ ~ black
 		/setblock $x $y $z black_wool
+		handled = True
 	end
-	if block ~ ~ ~ gold
+	if not handled and block ~ ~ ~ gold
 		/setblock $x $y $z gold_block
+		handled = True
 	end
-	if block ~ ~ ~ diamond
+	if not handled and block ~ ~ ~ diamond
 		/setblock $x $y $z diamond_block
+		handled = True
 	end
-	if block ~ ~ ~ lapis
+	if not handled and block ~ ~ ~ lapis
 		/setblock $x $y $z lapis_block
+		handled = True
 	end
-	if block ~ ~ ~ emerald
+	if not handled and block ~ ~ ~ emerald
 		/setblock $x $y $z emerald_block
+		handled = True
 	end
-	if block ~ ~ ~ obsidian
+	if not handled and block ~ ~ ~ obsidian
 		/setblock $x $y $z obsidian
+		handled = True
 	end
-	if block ~ ~ ~ netherrack
+	if not handled and block ~ ~ ~ netherrack
 		/setblock $x $y $z netherrack
+		handled = True
 	end
-	if block ~ ~ ~ white_stained_hardened_clay
+	if not handled and block ~ ~ ~ white_stained_hardened_clay
 		/setblock $x $y $z white_glazed_terracotta
+		handled = True
 	end
-	if block ~ ~ ~ orange_stained_hardened_clay
+	if not handled and block ~ ~ ~ orange_stained_hardened_clay
 		/setblock $x $y $z orange_glazed_terracotta
+		handled = True
 	end
-	if block ~ ~ ~ magenta_stained_hardened_clay
+	if not handled and block ~ ~ ~ magenta_stained_hardened_clay
 		/setblock $x $y $z magenta_glazed_terracotta
+		handled = True
 	end
-	if block ~ ~ ~ light_blue_stained_hardened_clay
+	if not handled and block ~ ~ ~ light_blue_stained_hardened_clay
 		/setblock $x $y $z light_blue_glazed_terracotta
+		handled = True
 	end
-	if block ~ ~ ~ yellow_stained_hardened_clay
+	if not handled and block ~ ~ ~ yellow_stained_hardened_clay
 		/setblock $x $y $z yellow_glazed_terracotta
+		handled = True
 	end
-	if block ~ ~ ~ lime_stained_hardened_clay
+	if not handled and block ~ ~ ~ lime_stained_hardened_clay
 		/setblock $x $y $z lime_glazed_terracotta
+		handled = True
 	end
-	if block ~ ~ ~ pink_stained_hardened_clay
+	if not handled and block ~ ~ ~ pink_stained_hardened_clay
 		/setblock $x $y $z pink_glazed_terracotta
+		handled = True
 	end
-	if block ~ ~ ~ gray_stained_hardened_clay
+	if not handled and block ~ ~ ~ gray_stained_hardened_clay
 		/setblock $x $y $z gray_glazed_terracotta
+		handled = True
 	end
-	if block ~ ~ ~ silver_stained_hardened_clay
+	if not handled and block ~ ~ ~ silver_stained_hardened_clay
 		/setblock $x $y $z light_gray_glazed_terracotta
+		handled = True
 	end
-	if block ~ ~ ~ cyan_stained_hardened_clay
+	if not handled and block ~ ~ ~ cyan_stained_hardened_clay
 		/setblock $x $y $z cyan_glazed_terracotta
+		handled = True
 	end
-	if block ~ ~ ~ purple_stained_hardened_clay
+	if not handled and block ~ ~ ~ purple_stained_hardened_clay
 		/setblock $x $y $z purple_glazed_terracotta
+		handled = True
 	end
-	if block ~ ~ ~ blue_stained_hardened_clay
+	if not handled and block ~ ~ ~ blue_stained_hardened_clay
 		/setblock $x $y $z blue_glazed_terracotta
+		handled = True
 	end
-	if block ~ ~ ~ brown_stained_hardened_clay
+	if not handled and block ~ ~ ~ brown_stained_hardened_clay
 		/setblock $x $y $z brown_glazed_terracotta
+		handled = True
 	end
-	if block ~ ~ ~ green_stained_hardened_clay
+	if not handled and block ~ ~ ~ green_stained_hardened_clay
 		/setblock $x $y $z green_glazed_terracotta
+		handled = True
 	end
-	if block ~ ~ ~ red_stained_hardened_clay
+	if not handled and block ~ ~ ~ red_stained_hardened_clay
 		/setblock $x $y $z red_glazed_terracotta
+		handled = True
 	end
-	if block ~ ~ ~ black_stained_hardened_clay
+	if not handled and block ~ ~ ~ black_stained_hardened_clay
 		/setblock $x $y $z black_glazed_terracotta
+		handled = True
 	end
 end

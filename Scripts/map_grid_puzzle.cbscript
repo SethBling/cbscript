@@ -1,41 +1,11 @@
 dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
 desc: Runs the map grid puzzle.
 
-define @Entity = @e
-    x = Pos[0] double
-    y = Pos[1] double
-    z = Pos[2] double
-    <pos> = Pos double
-    vx = Motion[0] double
-    vy = Motion[1] double
-    vz = Motion[2] double
-    <vel> = Motion double
-    ry = Rotation[0] float 1
-    rx = Rotation[1] float 1
-    on_ground = OnGround byte 1
-    no_gravity = NoGravity byte 1
-    absorption = AbsorptionAmount float 1
-    fire_timer = Fire short 1
-	invulnerable = Invulnerable byte 1
-end
+import common
+import item_frame
 
-@Player = @Entity[type=player]
-
-define @Marker = @Entity[type=area_effect_cloud]
-    create: {Duration:-1,Age:-2147483648,WaitTime:-2147483648}
-end
-
-$FacingDown: 0
-$FacingUp: 1
-$FacingNorth: 2
-$FacingSouth: 3
-$FacingWest: 4
-$FacingEast: 5
-define @Frame = @Entity[type=item_frame, tag=PuzzleFrame]
+define @Frame = @ItemFrame[tag=PuzzleFrame]
 	create: {Tags:["PuzzleFrame"], Facing:$FacingUp, Invulnerable:1b}
-	rotation = ItemRotation byte 1
-	face = Facing byte 1
-	map = Item.tag.map int 1
 end
 
 reset
