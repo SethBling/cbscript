@@ -1,38 +1,38 @@
-dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\Texture Camera
-desc: Records gifs
-scale: 1000
+dir 'C:\Users\Seth\AppData\Roaming\.minecraft\saves\Gif Recorder'
+desc 'Records gifs'
+scale 1000
 
 import common
 import map_blocks
 import item_frame
 
 define @Scan = @Entity[type=area_effect_cloud,tag=Scan,limit=1]
-	create: {Tags:["Scan"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+	create '{Tags:["Scan"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}'
 end
 
 define @Position = @Entity[type=area_effect_cloud,tag=Position,limit=1]
-	create: {Tags:["Position"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+	create '{Tags:["Position"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}'
 end
 
 define @Texture = @Entity[type=area_effect_cloud,tag=Texture,limit=1]
-	create: {Tags:["Texture"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+	create '{Tags:["Texture"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}'
 end
 
 define @Frame = @Entity[type=area_effect_cloud,tag=Frame]
-	create: {Tags:["Frame"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+	create '{Tags:["Frame"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}'
 end
 
 define @Player = @Player
 	map_id = SelectedItem.tag.map int 1
 end
 
-$Pixels: 128
-$Radius: 10
-$Diameter: 2 * Radius
-$PixelMove: float(Diameter) / Pixels
+$Pixels = $"128"
+$Radius = $"10"
+$Diameter = $"2 * Radius"
+$PixelMove = $"float(Diameter) / Pixels"
 
-$map_x: -64
-$map_z: -64
+$map_x = $"-64"
+$map_z = $"-64"
 
 reset
 	/gamerule maxCommandChainLength 1000000000
@@ -45,7 +45,7 @@ reset
 	unless @Position do create @Position
 	unless @Texture do create @Texture
 
-	tell @a: {Y[\[Record\]](/function gif_recorder:record) [\[Setup\]](/function gif_recorder:setup)
+	tell @a "{Y[\[Record\]](/function gif_recorder:record) [\[Setup\]](/function gif_recorder:setup)"
 	
 	@a.render = False
 	@a.recording = False
@@ -54,28 +54,28 @@ reset
 end
 
 function fill_ceiling()
-	tell @a: Filling ceiling...
-	$xmin: map_x-16
-	$xmax: map_x+128+16
-	$zmin: map_z-16
-	$zmax: map_z+128+16
+	tell @a "Filling ceiling..."
+	$xmin = $"map_x-16"
+	$xmax = $"map_x+128+16"
+	$zmin = $"map_z-16"
+	$zmax = $"map_z+128+16"
 	/fill $xmin 254 $zmin $xmax 254 $zmax redstone_lamp
 	/fill $xmin 255 $zmin $xmax 255 $zmax redstone_lamp
-	tell @a: Ceiling done.
+	tell @a "Ceiling done."
 end
 
 function setup()
 	fill_ceiling()
 	
 	/bossbar set progress players @s
-    for $x in: range(map_x-8, map_x+128+8, 8)
-		$dx: x - map_x
-		if: dx >= 0
+    for $x in $"range(map_x-8, map_x+128+8, 8)"
+		$dx = $"x - map_x"
+		if $"dx >= 0"
 			/bossbar set progress value $dx
 		end
-		for $z in: range(map_z-8, map_z+128+8, 8)
-			$xp: x+7
-			$zp: z+7
+		for $z in $"range(map_z-8, map_z+128+8, 8)"
+			$xp = $"x+7"
+			$zp = $"z+7"
 			/fill $x 0 $z $xp 253 $zp air
 		end
 	end
@@ -83,7 +83,7 @@ function setup()
 end
 
 function record()
-	tell @s: {R[\[Stop Recording\]](/function gif_recorder:stop_recording)
+	tell @s "{R[\[Stop Recording\]](/function gif_recorder:stop_recording)"
 	/kill @Frame
 	@s.recording = True
 	@s.frame = 0
@@ -141,7 +141,7 @@ function stop_recording()
 	@s.last_frame = @s.frame - 1
 	@s.recording = False
 	
-	tell @s: {G[\[Render\]](/function gif_recorder:start_render)
+	tell @s "{G[\[Render\]](/function gif_recorder:start_render)"
 end
 
 function start_render()
@@ -196,7 +196,7 @@ end
 
 function render_frame()
 	render_frame = @s.render_frame
-	tell @s: Rendering frame (render_frame) of (@s.last_frame)...
+	tell @s "Rendering frame (render_frame) of (@s.last_frame)..."
 	as @Frame if @s.frame == render_frame
 		if @s.broke_block
 			@Position.<pos> = @s.<break_pos>
@@ -209,16 +209,16 @@ function render_frame()
 	@s.render_frame++
 	if @s.render_frame > @s.last_frame
 		@s.render = False
-		tell @s: Done rendering gif!
+		tell @s "Done rendering gif!"
 	end
 end
 
 macro $clone_overlay($val, $Y)
 	if @s.holding == $val
-		$OverlayXmin: -64
-		$OverlayZmin: 192
-		$OverlayXmax: OverlayXmin+127
-		$OverlayZmax: OverlayZmin+127
+		$OverlayXmin = $"-64"
+		$OverlayZmin = $"192"
+		$OverlayXmax = $"OverlayXmin+127"
+		$OverlayZmax = $"OverlayZmin+127"
 		/clone $OverlayXmin $Y $OverlayZmin $OverlayXmax $Y $OverlayZmax $map_x 254 $map_z
 	end
 end
@@ -233,10 +233,10 @@ function take_picture()
 	end
 	
 	move @Scan ^$Radius ^$Radius ^10
-	$x_start: map_x-1
-	at $x_start 125 $map_z
+	$x_start = $"map_x-1"
+	at $x_start 128 $map_z
 		col = 0
-		while col < 125 at ~1 128 ~
+		while col < 128 at ~1 128 ~
 			# Recursively capture column pixels
 			row = 0
 			/execute store result bossbar progress value run scoreboard players get Global col
@@ -291,7 +291,7 @@ function take_picture_col()
 end
 
 function ray_trace_step()
-	$Step: 0.2
+	$Step = $"0.2"
 	handled = False
 	if block ~ ~ ~ none and step < 800
 		step++
@@ -314,7 +314,7 @@ macro $get_texture($block_type, $y)
 end
 
 macro $set_texture($y)
-	$scaled_y: y*1000
+	$scaled_y = $"y*1000"
 	@Texture.<pos> = <22000 + u * 16, $scaled_y, 100000 + (999-v) * 16>
 	at @Texture
 		/clone ~ ~ ~ ~ ~ ~ 0 1 0
@@ -322,7 +322,7 @@ macro $set_texture($y)
 end
 
 function ray_trace_fine_step()
-	$FineStep: 0.02
+	$FineStep = $"0.02"
 	
 	handled = False
 	if block ~ ~ ~ none and fine_step < 11

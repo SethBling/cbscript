@@ -1,30 +1,22 @@
 # Script Atari 2600 Emulator
 
-dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\Atari 2600 1-13
-desc: Atari 2600 Emulator
+dir "C:\Users\Seth\AppData\Roaming\.minecraft\saves\Atari 2600 1-13"
+desc "Atari 2600 Emulator"
+scale 1
 
-$marker: "\"Marker\":1b, \"Invisible\":1b, \"NoGravity\":1b, \"Invulnerable\":1b"
-
-define @Entity = @e
-	x = Pos[0] double 1
-	y = Pos[1] double 1
-	z = Pos[2] double 1
-	<pos> = Pos double 1
-	ry = Rotation[0] float 1
-	rx = Rotation[1] float 1
-end
+import common
 
 define @Beam = @Entity[type=area_effect_cloud, name=Beam, limit=1]
-	create: {"CustomName":"\"Beam\"", Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+	create '{"CustomName":"\"Beam\"", Duration:-1,Age:-2147483648,WaitTime:-2147483648}'
 end
 
 # Temporary buffer armor stands. These should not live longer than a single tick.
 define @Buffer = @Entity[type=area_effect_cloud, tag=Buffer, limit=1]
-	create: {"CustomName":"\"Buffer\"", Duration:-1,Age:-2147483648,WaitTime:-2147483648, Tags:["Buffer"]}
+	create '{"CustomName":"\"Buffer\"", Duration:-1,Age:-2147483648,WaitTime:-2147483648, Tags:["Buffer"]}'
 end
 
 define @Marker = @Entity[type=area_effect_cloud]
-	create: {Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+	create '{Duration:-1,Age:-2147483648,WaitTime:-2147483648}'
 end
 
 define @Self = @s
@@ -57,216 +49,216 @@ end
 @mnemonic = @Marker[mnemonic]
 
 # Atari MMI/O Address Constants
-$VSYNC: 0x00
-$VBLANK: 0x01
-$WSYNC: 0x02
-$PF0: 0x0D
-$PF1: 0x0E
-$PF2: 0x0F
-$CTRLPF: 0x0A
+$VSYNC = 0x00
+$VBLANK = 0x01
+$WSYNC = 0x02
+$PF0 = 0x0D
+$PF1 = 0x0E
+$PF2 = 0x0F
+$CTRLPF = 0x0A
 
-$GRP0: 0x1B
-$GRP1: 0x1C
+$GRP0 = 0x1B
+$GRP1 = 0x1C
 
-$ENAM0: 0x1D
-$ENAM1: 0x1E
-$ENABL: 0x1F
+$ENAM0 = 0x1D
+$ENAM1 = 0x1E
+$ENABL = 0x1F
 
-$NUSIZ0: 0x04
-$NUSIZ1: 0x05
-$REFP0: 0x0B
-$REFP1: 0x0C
+$NUSIZ0 = 0x04
+$NUSIZ1 = 0x05
+$REFP0 = 0x0B
+$REFP1 = 0x0C
 
-$VDELP0: 0x25
-$VDELP1: 0x26
-$VDELBL: 0x27
+$VDELP0 = 0x25
+$VDELP1 = 0x26
+$VDELBL = 0x27
 
-$RESP0: 0x10
-$RESP1: 0x11
-$RESM0: 0x12
-$RESM1: 0x13
-$RESBL: 0x14
+$RESP0 = 0x10
+$RESP1 = 0x11
+$RESM0 = 0x12
+$RESM1 = 0x13
+$RESBL = 0x14
 
-$RESMP0: 0x28
-$RESMP1: 0x29
+$RESMP0 = 0x28
+$RESMP1 = 0x29
 
-$HMP0: 0x20
-$HMP1: 0x21
-$HMM0: 0x22
-$HMM1: 0x23
-$HMBL: 0x24
+$HMP0 = 0x20
+$HMP1 = 0x21
+$HMM0 = 0x22
+$HMM1 = 0x23
+$HMBL = 0x24
 
-$HMOVE: 0x2A
-$HMCLR: 0x2B
+$HMOVE = 0x2A
+$HMCLR = 0x2B
 
-$CXM0P: 0x30
-$CXM1P: 0x31
-$CXP0FB: 0x32
-$CXP1FB: 0x33
-$CXM0FB: 0x34
-$CXM1FB: 0x35
-$CXBLPF: 0x36
-$CXPPMM: 0x37
+$CXM0P = 0x30
+$CXM1P = 0x31
+$CXP0FB = 0x32
+$CXP1FB = 0x33
+$CXM0FB = 0x34
+$CXM1FB = 0x35
+$CXBLPF = 0x36
+$CXPPMM = 0x37
 
-$CXCLR: 0x2C
+$CXCLR = 0x2C
 
-$COLUP0: 0x06
-$COLUP1: 0x07
-$COLUPF: 0x08
-$COLUBK: 0x09
+$COLUP0 = 0x06
+$COLUP1 = 0x07
+$COLUPF = 0x08
+$COLUBK = 0x09
 
-$INPT0: 0x38
-$INPT1: 0x39
-$INPT2: 0x3A
-$INPT3: 0x3B
-$INPT4: 0x3C
-$INPT5: 0x3D
+$INPT0 = 0x38
+$INPT1 = 0x39
+$INPT2 = 0x3A
+$INPT3 = 0x3B
+$INPT4 = 0x3C
+$INPT5 = 0x3D
 
-$INTIM: 0x0284
-$INSTAT: 0x285
-$TIM1T: 0x294
-$TIM8T: 0x295
-$TIM64T: 0x296
-$TIM1024T: 0x297
+$INTIM = 0x0284
+$INSTAT = 0x285
+$TIM1T = 0x294
+$TIM8T = 0x295
+$TIM64T = 0x296
+$TIM1024T = 0x297
 
-$SWCHA: 0x280
-$SWACNT: 0x281
-$SWCHB: 0x282
-$SWBCNT: 0x283
+$SWCHA = 0x280
+$SWACNT = 0x281
+$SWCHB = 0x282
+$SWBCNT = 0x283
 
-$MemoryAddresses: list(range(0x80, 0x100)) + [SWACNT, SWBCNT, INSTAT]
+$MemoryAddresses = $"list(range(0x80, 0x100)) + [SWACNT, SWBCNT, INSTAT]"
 
 
 # Function ID enum, sorted by instruction length
 
 # Addressing Mode Dependent
-$LENGTHVARLOW: 1
-$ADC: 1
-$AND: 2
-$ASL: 3
-$BIT: 4
-$CMP: 5
-$CPX: 6
-$CPY: 7
-$DEC: 8
-$EOR: 9
-$INC: 10
-$LDA: 11
-$LDX: 12
-$LDY: 13
-$LSR: 14
-$ORA: 15
-$ROL: 16
-$ROR: 17
-$SBC: 18
-$STA: 19
-$STX: 20
-$STY: 21
-$LENGTHVARHIGH: 21
+$LENGTHVARLOW = 1
+$ADC = 1
+$AND = 2
+$ASL = 3
+$BIT = 4
+$CMP = 5
+$CPX = 6
+$CPY = 7
+$DEC = 8
+$EOR = 9
+$INC = 10
+$LDA = 11
+$LDX = 12
+$LDY = 13
+$LSR = 14
+$ORA = 15
+$ROL = 16
+$ROR = 17
+$SBC = 18
+$STA = 19
+$STX = 20
+$STY = 21
+$LENGTHVARHIGH = 21
 
 # Length 1
-$LENGTH1LOW: 22
-$CLC: 22
-$CLD: 23
-$CLI: 24
-$CLV: 25
-$DEX: 26
-$DEY: 27
-$INX: 28
-$INY: 29
-$NOP: 30
-$PHA: 31
-$PHP: 32
-$PLA: 33
-$PLP: 34
-$RTI: 35
-$RTS: 36
-$SEC: 37
-$SED: 38
-$SEI: 39
-$TAX: 40
-$TAY: 41
-$TSX: 42
-$TXA: 43
-$TXS: 44
-$TYA: 45
-$LENGTH1HIGH: 45
+$LENGTH1LOW = 22
+$CLC = 22
+$CLD = 23
+$CLI = 24
+$CLV = 25
+$DEX = 26
+$DEY = 27
+$INX = 28
+$INY = 29
+$NOP = 30
+$PHA = 31
+$PHP = 32
+$PLA = 33
+$PLP = 34
+$RTI = 35
+$RTS = 36
+$SEC = 37
+$SED = 38
+$SEI = 39
+$TAX = 40
+$TAY = 41
+$TSX = 42
+$TXA = 43
+$TXS = 44
+$TYA = 45
+$LENGTH1HIGH = 45
 
 # Length 2
-$LENGTH2LOW: 46
-$BCC: 46
-$BCS: 47
-$BEQ: 48
-$BMI: 49
-$BNE: 50
-$BPL: 51
-$BRK: 52
-$BVC: 53
-$BVS: 54
-$LENGTH2HIGH: 54
+$LENGTH2LOW = 46
+$BCC = 46
+$BCS = 47
+$BEQ = 48
+$BMI = 49
+$BNE = 50
+$BPL = 51
+$BRK = 52
+$BVC = 53
+$BVS = 54
+$LENGTH2HIGH = 54
 
 # Length 3
-$LENGTH3LOW: 55
-$JMP: 55
-$JSR: 56
-$LENGTH3HIGH: 56
+$LENGTH3LOW = 55
+$JMP = 55
+$JSR = 56
+$LENGTH3HIGH = 56
 
-$Mnemonics: {1: "ADC", 2: "AND", 3: "ASL", 4: "BIT", 5: "CMP", 6: "CPX", 7: "CPY", 8: "DEC", 9: "EOR", 10: "INC", 11: "LDA", 12: "LDX", 13: "LDY", 14: "LSR", 15: "ORA", 16: "ROL", 17: "ROR", 18: "SBC", 19: "STA", 20: "STX", 21: "STY", 22: "CLC", 23: "CLD", 24: "CLI", 25: "CLV", 26: "DEX", 27: "DEY", 28: "INX", 29: "INY", 30: "NOP", 31: "PHA", 32: "PHP", 33: "PLA", 34: "PLP", 35: "RTI", 36: "RTS", 37: "SEC", 38: "SED", 39: "SEI", 40: "TAX", 41: "TAY", 42: "TSX", 43: "TXA", 44: "TXS", 45: "TYA", 46: "BCC", 47: "BCS", 48: "BEQ", 49: "BMI", 50: "BNE", 51: "BPL", 52: "BRK", 53: "BVC", 54: "BVS", 55: "JMP", 56: "JSR"}
+$Mnemonics = $'{1: "ADC", 2: "AND", 3: "ASL", 4: "BIT", 5: "CMP", 6: "CPX", 7: "CPY", 8: "DEC", 9: "EOR", 10: "INC", 11: "LDA", 12: "LDX", 13: "LDY", 14: "LSR", 15: "ORA", 16: "ROL", 17: "ROR", 18: "SBC", 19: "STA", 20: "STX", 21: "STY", 22: "CLC", 23: "CLD", 24: "CLI", 25: "CLV", 26: "DEX", 27: "DEY", 28: "INX", 29: "INY", 30: "NOP", 31: "PHA", 32: "PHP", 33: "PLA", 34: "PLP", 35: "RTI", 36: "RTS", 37: "SEC", 38: "SED", 39: "SEI", 40: "TAX", 41: "TAY", 42: "TSX", 43: "TXA", 44: "TXS", 45: "TYA", 46: "BCC", 47: "BCS", 48: "BEQ", 49: "BMI", 50: "BNE", 51: "BPL", 52: "BRK", 53: "BVC", 54: "BVS", 55: "JMP", 56: "JSR"}'
 
 # Addressing modes
-$CONST: 0x09
-$ZPG: 0x05
-$ZPGX: 0x15
-$ABS: 0x0D
-$ABSX: 0x1D
+$CONST = 0x09
+$ZPG = 0x05
+$ZPGX = 0x15
+$ABS = 0x0D
+$ABSX = 0x1D
 
-$OpCodes: {0x00: BRK, 0x08: PHP, 0x10: BPL, 0x18: CLC, 0x20: JSR, 0x24: BIT, 0x28: PLP, 0x0C: BIT, 0x30: BMI, 0x38: SEC, 0x40: RTI, 0x48: PHA, 0x4C: JMP, 0x50: BVC, 0x58: CLI, 0x60: RTS, 0x68: PLA, 0x6C: JMP, 0x70: BVS, 0x78: SEI, 0x84: STY, 0x88: DEY, 0x8A: TXA, 0x8C: STY, 0x90: BCC, 0x94: STY, 0x98: TYA, 0x9A: TXS, 0xA0: LDY, 0xA2: LDX, 0xA4: LDY, 0xA8: TAY, 0xAA: TAX, 0xAC: LDY, 0xB0: BCS, 0xB4: LDY, 0xB8: CLV, 0xBA: TSX, 0xBC: LDY, 0xC0: CPY, 0xC4: CPY, 0xC8: INY, 0xCA: DEX, 0xCC: CPY, 0xD0: BNE, 0xD8: CLD, 0xE0: CPX, 0xE4: CPX, 0xE8: INX, 0xEA: NOP, 0xEC: CPX, 0xF0: BEQ, 0xF8: SED}
-$AddrModes: {0xA0: CONST, 0xC0: CONST, 0xE0: CONST, 0xA2: CONST, 0x24: ZPG, 0x84: ZPG, 0x94: ZPGX, 0xA4: ZPG, 0xB4: ZPGX, 0xC4: ZPG, 0xE4: ZPG, 0x2C: ABS, 0x4C: ABS, 0x8C: ABS, 0xAC: ABS, 0xBC: ABSX, 0xCC: ABS, 0xEC: ABS, 0x6C: ABS}
-$BaseCycles: {0xA8: 2, 0xAA: 2, 0xBA: 2, 0x98: 2, 0x8A: 2, 0x9A: 2, 0xA9: 2, 0xA2: 2, 0xA0: 2, 0x48: 3, 0x08: 3, 0x68: 4, 0x28: 4, 0x4C: 3, 0x6C: 5, 0x20: 6, 0x40: 6, 0x60: 6, 0x10: 2, 0x30: 2, 0x50: 2, 0x70: 2, 0x90: 2, 0xB0: 2, 0xD0: 2, 0xF0: 2, 0x00: 7, 0x18: 2, 0x58: 2, 0xD8: 2, 0xB8: 2, 0x38: 2, 0x78: 2, 0xF8: 2, 0xEA: 2, 0xCA: 2, 0x88: 2, 0xE8: 2, 0xC8: 2}
-$Pulls: {0x40: 3, 0x60: 2, 0x28: 1, 0x68: 1}
-$Pushes: {0x00: 3, 0x20: 2, 0x08: 1, 0x48: 1}
+$OpCodes = $'{0x00: BRK, 0x08: PHP, 0x10: BPL, 0x18: CLC, 0x20: JSR, 0x24: BIT, 0x28: PLP, 0x0C: BIT, 0x30: BMI, 0x38: SEC, 0x40: RTI, 0x48: PHA, 0x4C: JMP, 0x50: BVC, 0x58: CLI, 0x60: RTS, 0x68: PLA, 0x6C: JMP, 0x70: BVS, 0x78: SEI, 0x84: STY, 0x88: DEY, 0x8A: TXA, 0x8C: STY, 0x90: BCC, 0x94: STY, 0x98: TYA, 0x9A: TXS, 0xA0: LDY, 0xA2: LDX, 0xA4: LDY, 0xA8: TAY, 0xAA: TAX, 0xAC: LDY, 0xB0: BCS, 0xB4: LDY, 0xB8: CLV, 0xBA: TSX, 0xBC: LDY, 0xC0: CPY, 0xC4: CPY, 0xC8: INY, 0xCA: DEX, 0xCC: CPY, 0xD0: BNE, 0xD8: CLD, 0xE0: CPX, 0xE4: CPX, 0xE8: INX, 0xEA: NOP, 0xEC: CPX, 0xF0: BEQ, 0xF8: SED}'
+$AddrModes = $'{0xA0: CONST, 0xC0: CONST, 0xE0: CONST, 0xA2: CONST, 0x24: ZPG, 0x84: ZPG, 0x94: ZPGX, 0xA4: ZPG, 0xB4: ZPGX, 0xC4: ZPG, 0xE4: ZPG, 0x2C: ABS, 0x4C: ABS, 0x8C: ABS, 0xAC: ABS, 0xBC: ABSX, 0xCC: ABS, 0xEC: ABS, 0x6C: ABS}'
+$BaseCycles = $'{0xA8: 2, 0xAA: 2, 0xBA: 2, 0x98: 2, 0x8A: 2, 0x9A: 2, 0xA9: 2, 0xA2: 2, 0xA0: 2, 0x48: 3, 0x08: 3, 0x68: 4, 0x28: 4, 0x4C: 3, 0x6C: 5, 0x20: 6, 0x40: 6, 0x60: 6, 0x10: 2, 0x30: 2, 0x50: 2, 0x70: 2, 0x90: 2, 0xB0: 2, 0xD0: 2, 0xF0: 2, 0x00: 7, 0x18: 2, 0x58: 2, 0xD8: 2, 0xB8: 2, 0x38: 2, 0x78: 2, 0xF8: 2, 0xEA: 2, 0xCA: 2, 0x88: 2, 0xE8: 2, 0xC8: 2}'
+$Pulls = $'{0x40: 3, 0x60: 2, 0x28: 1, 0x68: 1}'
+$Pushes = $'{0x00: 3, 0x20: 2, 0x08: 1, 0x48: 1}'
 
-$color_black:			(0, 0, 0, 'black_concrete')
-$color_gray1:			(0, 1, 1, 'obsidian')
-$color_gray2:			(0, 2, 2, 'gray_wool')
-$color_gray3:			(0, 3, 3, 'stone')
-$color_gray4:			(0, 4, 4, 'stone')
-$color_gray5:			(0, 5, 5, 'light_gray_wool') 
-$color_gray6:			(0, 6, 6, 'stone')
-$color_white:			(0, 7, 7, 'white_wool')
-$color_dark_yellow: 	(1, 0, 2, 'brown_terracotta')
-$color_yellow:			(1, 3, 7, 'yellow_wool')
-$color_dark_orange: 	(2, 0, 2, 'orange_terracotta')
-$color_orange:			(2, 3, 7, 'orange_wool')
-$color_dark_red:		(3, 0, 1, 'red_terracotta')
-$color_red:				(3, 2, 5, 'red_concrete')
-$color_light_red:		(3, 6, 7, 'orange_wool')
-$color_dark_pink:		(4, 0, 2, 'pink_terracotta')
-$color_pink:			(4, 3, 7, 'pink_wool')
-$color_light_magenta:	(5, 0, 3, 'purple_wool')
-$color_magenta:			(5, 4, 7, 'magenta_wool')
-$color_purple:			(6, 0, 7, 'purple_wool')
-$color_dark_purple:		(7, 0, 5, 'purple_concrete')
-$color_light_purple:	(7, 6, 7, 'pink_concrete')
-$color_blue:			(8, 0, 7, 'light_blue_wool')
-$color_light_blue2:		(9, 0, 1, 'blue_wool')
-$color_light_blue1:		(9, 2, 7, 'light_blue_wool')
-$color_cyan:			(10, 0, 7, 'cyan_wool')
-$color_lime:			(11, 0, 7, 'lime_wool')
-$color_green2:			(12, 0, 1, 'green_concrete')
-$color_green1:			(12, 2, 7, 'green_wool')
-$color_light_green:		(13, 0, 7, 'lime_concrete')
-$color_gold:			(14, 0, 7, 'yellow_concrete')
-$color_brown:			(15, 0, 3, 'brown_concrete')
-$color_light_brown:		(15, 4, 7, 'yellow_concrete')
-$atari_colors: [color_black, color_gray1, color_gray2, color_gray3, color_gray4, color_gray5, color_gray6, color_white, color_dark_yellow, color_yellow, color_dark_orange, color_orange, color_dark_red, color_red, color_light_red, color_dark_pink, color_pink, color_light_magenta, color_magenta, color_purple, color_dark_purple, color_light_purple, color_blue, color_light_blue1, color_light_blue2, color_cyan, color_lime, color_green1, color_green2, color_light_green, color_gold, color_brown, color_light_brown]
+$color_black = 			$"(0, 0, 0, 'black_concrete')"
+$color_gray1 =			$"(0, 1, 1, 'obsidian')"
+$color_gray2 =			$"(0, 2, 2, 'gray_wool')"
+$color_gray3 =			$"(0, 3, 3, 'stone')"
+$color_gray4 =			$"(0, 4, 4, 'stone')"
+$color_gray5 =			$"(0, 5, 5, 'light_gray_wool')"
+$color_gray6 =			$"(0, 6, 6, 'stone')"
+$color_white =			$"(0, 7, 7, 'white_wool')"
+$color_dark_yellow = 	$"(1, 0, 2, 'brown_terracotta')"
+$color_yellow =			$"(1, 3, 7, 'yellow_wool')"
+$color_dark_orange = 	$"(2, 0, 2, 'orange_terracotta')"
+$color_orange =			$"(2, 3, 7, 'orange_wool')"
+$color_dark_red =		$"(3, 0, 1, 'red_terracotta')"
+$color_red =			$"(3, 2, 5, 'red_concrete')"
+$color_light_red =		$"(3, 6, 7, 'orange_wool')"
+$color_dark_pink =		$"(4, 0, 2, 'pink_terracotta')"
+$color_pink =			$"(4, 3, 7, 'pink_wool')"
+$color_light_magenta =	$"(5, 0, 3, 'purple_wool')"
+$color_magenta =		$"(5, 4, 7, 'magenta_wool')"
+$color_purple =			$"(6, 0, 7, 'purple_wool')"
+$color_dark_purple =	$"(7, 0, 5, 'purple_concrete')"
+$color_light_purple =	$"(7, 6, 7, 'pink_concrete')"
+$color_blue =			$"(8, 0, 7, 'light_blue_wool')"
+$color_light_blue2 =	$"(9, 0, 1, 'blue_wool')"
+$color_light_blue1 =	$"(9, 2, 7, 'light_blue_wool')"
+$color_cyan =			$"(10, 0, 7, 'cyan_wool')"
+$color_lime =			$"(11, 0, 7, 'lime_wool')"
+$color_green2 =			$"(12, 0, 1, 'green_concrete')"
+$color_green1 =			$"(12, 2, 7, 'green_wool')"
+$color_light_green =	$"(13, 0, 7, 'lime_concrete')"
+$color_gold =			$"(14, 0, 7, 'yellow_concrete')"
+$color_brown =			$"(15, 0, 3, 'brown_concrete')"
+$color_light_brown =	$"(15, 4, 7, 'yellow_concrete')"
+$atari_colors = $'[color_black, color_gray1, color_gray2, color_gray3, color_gray4, color_gray5, color_gray6, color_white, color_dark_yellow, color_yellow, color_dark_orange, color_orange, color_dark_red, color_red, color_light_red, color_dark_pink, color_pink, color_light_magenta, color_magenta, color_purple, color_dark_purple, color_light_purple, color_blue, color_light_blue1, color_light_blue2, color_cyan, color_lime, color_green1, color_green2, color_light_green, color_gold, color_brown, color_light_brown]'
 
-$PFplaceholder: 'coal_block'
-$BKplaceholder: 'smooth_quartz'
-$P0placeholder: 'diamond_block'
-$P1placeholder: 'gold_block'
+$PFplaceholder = 'coal_block'
+$BKplaceholder = 'smooth_quartz'
+$P0placeholder = 'diamond_block'
+$P1placeholder = 'gold_block'
 
-$ScreenWidth: 160
+$ScreenWidth = 160
 
 array NUSIZ[2]
 array GRP[2]
@@ -305,26 +297,26 @@ function global_reset()
 	create @Beam 0 0 0
 	create @Buffer 0 0 0
 	
-	for $addr in: MemoryAddresses
+	for $addr in $"MemoryAddresses"
 		/scoreboard objectives add Memory$addr dummy
 		/scoreboard players set Global Memory$addr 0
 	end
-	for $player in: range(2)
-		for $bit in: range(8)
+	for $player in $"range(2)"
+		for $bit in $"range(8)"
 			/scoreboard objectives add GRP$playerBit$bit dummy
 		end
 	end
 	
 	# Fill in the pallete from 0, 0, -8 to 3, 15, -1
-	for $color_data in: atari_colors
-		$color: color_data[0]
-		$minlum: color_data[1]
-		$maxlum: color_data[2]
-		$material: color_data[3]
+	for $color_data in $"atari_colors"
+		$color = $"color_data[0]"
+		$minlum = $"color_data[1]"
+		$maxlum = $"color_data[2]"
+		$material = $"color_data[3]"
 		
-		$y: color
-		$zmin: minlum - 8
-		$zmax: maxlum - 8
+		$y = $"color"
+		$zmin = $"minlum - 8"
+		$zmax = $"maxlum - 8"
 		/fill 0 $y $zmin 3 $y $zmax $material
 	end
 	
@@ -356,7 +348,7 @@ function global_reset()
 	RESP0 = False
 	RESP1 = False
 	
-	for $player in: range(2)
+	for $player in $"range(2)"
 		NUSIZ[$player] = 0
 		GRP[$player] = 0
 		PX[$player] = 0
@@ -425,43 +417,43 @@ end
 
 function draw_controller()
 	if SelectSwitch and ResetSwitch
-		tell @s: {w[\[select\]](/function atari:select_switch) {w[\[reset\]](/function atari:reset_switch)
+		tell @s "{w[\[select\]](/function atari:select_switch) {w[\[reset\]](/function atari:reset_switch)"
 	end
 	if not SelectSwitch and ResetSwitch
-		tell @s: {W[\[SELECT\]](/function atari:select_switch) {w[\[reset\]](/function atari:reset_switch)
+		tell @s "{W[\[SELECT\]](/function atari:select_switch) {w[\[reset\]](/function atari:reset_switch)"
 	end
 	if SelectSwitch and not ResetSwitch
-		tell @s: {w[\[select\]](/function atari:select_switch) {W[\[RESET\]](/function atari:reset_switch)
+		tell @s "{w[\[select\]](/function atari:select_switch) {W[\[RESET\]](/function atari:reset_switch)"
 	end
 	if not SelectSwitch and not ResetSwitch
-		tell @s: {W[\[SELECT\]](/function atari:select_switch) {W[\[RESET\]](/function atari:reset_switch)
+		tell @s "{W[\[SELECT\]](/function atari:select_switch) {W[\[RESET\]](/function atari:reset_switch)"
 	end
 	if Button
-		tell @s: {R[\[BUTTON\]](/function atari:button)
+		tell @s "{R[\[BUTTON\]](/function atari:button)"
 	end
 	unless Button
-		tell @s: {r[\[button\]](/function atari:button)
+		tell @s "{r[\[button\]](/function atari:button)"
 	end
 	if Up
-		tell @s: \          {W[\[UP\]](/function atari:up)
+		tell @s "\          {W[\[UP\]](/function atari:up)"
 	end
 	unless Up
-		tell @s: \          {w[\[up\]](/function atari:up)
+		tell @s "\          {w[\[up\]](/function atari:up)"
 	end
 	if Left
-		tell @s: \     {W[\[LEFT\]](/function atari:left) {w[\[right\]](/function atari:right)  
+		tell @s "\     {W[\[LEFT\]](/function atari:left) {w[\[right\]](/function atari:right)"
 	end
 	if Right
-		tell @s: \     {w[\[left\]](/function atari:left) {W[\[RIGHT\]](/function atari:right)  
+		tell @s "\     {w[\[left\]](/function atari:left) {W[\[RIGHT\]](/function atari:right)"
 	end
 	unless Left unless Right
-		tell @s: \     {w[\[left\]](/function atari:left) {w[\[right\]](/function atari:right)  	
+		tell @s "\     {w[\[left\]](/function atari:left) {w[\[right\]](/function atari:right)"
 	end
 	if Down
-		tell @s: \         {W[\[DOWN\]](/function atari:down)
+		tell @s "\         {W[\[DOWN\]](/function atari:down)"
 	end
 	unless Down
-		tell @s: \         {w[\[down\]](/function atari:down)
+		tell @s "\         {w[\[down\]](/function atari:down)"
 	end
 end
 
@@ -498,7 +490,7 @@ function check_right_click()
 				end
 				at @s unless block ~ ~ ~ air
 					<ROMX, ROMY, ROMZ> = @s.<pos>
-					tell @a: Loading ROM at (ROMX), (ROMY), (ROMZ)...
+					tell @a "Loading ROM at (ROMX), (ROMY), (ROMZ)..."
 					global_reset()
 				end
 				
@@ -595,8 +587,8 @@ function read_whole_rom()
 
 				# Read Byte
 				val = 0
-				for $bit in: range(8)
-					$exp: 2 ** bit
+				for $bit in $"range(8)"
+					$exp = $"2 ** bit"
 					at @s if block ~ ~$bit ~ stone do val += $exp
 				end	
 				
@@ -621,9 +613,9 @@ function read_3bytes_rom(addr)
 	addr += 0xE000
 	
 	switch addr
-		case $addr in: range(0xF000, 0xFFFD)
-			$addr2: addr+1
-			$addr3: addr+2
+		case $addr in $"range(0xF000, 0xFFFD)"
+			$addr2 = $"addr+1"
+			$addr3 = $"addr+2"
 			rom1 = ROM[$addr]
 			rom2 = ROM[$addr2]
 			rom3 = ROM[$addr3]
@@ -634,7 +626,7 @@ end
 # Read an arbitrary address in the memory space.
 function read_addr(addr)
 	if addr == BreakOnRead
-		tell @a: Read from break point (Addr). {G[\[Continue\]](/scoreboard players set Global Halt 0) {R[\[Remove Breakpoint\]](/scoreboard players set Global BreakOnRead -1)
+		tell @a "Read from break point (Addr). {G[\[Continue\]](/scoreboard players set Global Halt 0) {R[\[Remove Breakpoint\]](/scoreboard players set Global BreakOnRead -1)"
 		display_instruction()
 		Halt = True
 	end
@@ -651,10 +643,10 @@ function read_addr(addr)
 		update_clock()
 	end
 	
-	$read_mirrors : lambda a: [a % 0x10 + i for i in range(0x00, 0x80, 0x10)]
+	$read_mirrors = $"lambda a: [a % 0x10 + i for i in range(0x00, 0x80, 0x10)]"
 	
 	switch addr
-		case $addr in: MemoryAddresses
+		case $addr in $"MemoryAddresses"
 			/scoreboard players operation Global ReturnValue = Global Memory$addr
 		end
 		case 0x300 to 0x0FFF
@@ -663,7 +655,7 @@ function read_addr(addr)
 				hex_number(Instruction, 4, 2)
 				hex_number(raw_addr, 6, 4)
 				mnemonic()
-				tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) \($(@digit4)(@digit5)\) performed invalid read from $(@digit6)(@digit7)(@digit8)(@digit9)
+				tell @a "$(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) \($(@digit4)(@digit5)\) performed invalid read from $(@digit6)(@digit7)(@digit8)(@digit9)"
 				clear_digits()
 				Halt = True
 			end
@@ -671,7 +663,7 @@ function read_addr(addr)
 		case 0x1000 to 0x1FFF
 			return read_rom(addr)
 		end
-		case $i in: read_mirrors(INPT4)
+		case $i in $"read_mirrors(INPT4)"
 			if INPT45Control
 				if LatchedButton
 					return 0x7F
@@ -689,7 +681,7 @@ function read_addr(addr)
 				end
 			end
 		end
-		case $i in: read_mirrors(INPT5)
+		case $i in $"read_mirrors(INPT5)"
 			return 0xFF
 		end
 		case $SWCHA
@@ -704,28 +696,28 @@ function read_addr(addr)
 		case $SWCHB
 			return Difficulty1 * 0x80 + Difficulty0 * 0x40 + ColorMode * 0x08 + SelectSwitch * 0x02 + ResetSwitch * 0x01
 		end
-		case $i in: read_mirrors(CXM0P)
+		case $i in $"read_mirrors(CXM0P)"
 			return CXM0P1 * 0x80 + CXM0P0 * 0x40
 		end
-		case $i in: read_mirrors(CXM1P)
+		case $i in $"read_mirrors(CXM1P)"
 			return CXM1P0 * 0x80 + CXM1P1 * 0x40
 		end
-		case $i in: read_mirrors(CXP0FB)
+		case $i in $"read_mirrors(CXP0FB)"
 			return CXP0PF * 0x80 + CXP0BL * 0x40
 		end
-		case $i in: read_mirrors(CXP1FB)
+		case $i in $"read_mirrors(CXP1FB)"
 			return CXP1PF * 0x80 + CXP1BL * 0x40
 		end
-		case $i in: read_mirrors(CXM0FB)
+		case $i in $"read_mirrors(CXM0FB)"
 			return CXM0PF * 0x80 + CXM0BL * 0x40
 		end
-		case $i in: read_mirrors(CXM1FB)
+		case $i in $"read_mirrors(CXM1FB)"
 			return CXM1PF * 0x80 + CXM1BL * 0x40
 		end
-		case $i in: read_mirrors(CXBLPF)
+		case $i in $"read_mirrors(CXBLPF)"
 			return CXBLPF * 0x80
 		end
-		case $i in: read_mirrors(CXPPMM)
+		case $i in $"read_mirrors(CXPPMM)"
 			return CXP0P1 * 0x80 + CXM0M1 * 0x40
 		end
 	end
@@ -791,17 +783,17 @@ function read_instruction()
 
 	Function = $NOP
 
-	$MemFunctions: [ASL, ROL, LSR, ROR, STX, LDX, DEC, INC, ORA, AND, EOR, ADC, STA, LDA, CMP, SBC]
+	$MemFunctions = $"[ASL, ROL, LSR, ROR, STX, LDX, DEC, INC, ORA, AND, EOR, ADC, STA, LDA, CMP, SBC]"
 	switch OpBit*8 + OpFamily
-		case $i in: range(len(MemFunctions))
-			$func: MemFunctions[i]
+		case $i in $"range(len(MemFunctions))"
+			$func = $"MemFunctions[i]"
 			Function = $func
 		end
 	end
 	
 	switch Instruction
-		case $op in: OpCodes.keys()
-			$func: OpCodes[op]
+		case $op in $"OpCodes.keys()"
+			$func = $"OpCodes[op]"
 			Function = $func
 		end
 	end
@@ -822,7 +814,7 @@ function read_instruction()
 	Pull = 0
 	Write = False	# Write Byte to instructed memory address
 	switch Function
-		case $write in: [STA, STX, STY, INC, DEC, ASL, LSR, ROL, ROR]
+		case $write in $"[STA, STX, STY, INC, DEC, ASL, LSR, ROL, ROR]"
 			Write = True
 		end
 	end
@@ -832,8 +824,8 @@ end
 function get_base_cycles()
 	Cycles = 0
 	switch Instruction
-		case $op in: BaseCycles.keys()
-			$cycles: BaseCycles[op]
+		case $op in $"BaseCycles.keys()"
+			$cycles = $"BaseCycles[op]"
 			Cycles = $cycles
 		end
 	end
@@ -852,16 +844,16 @@ function get_addressing_mode()
 	
 	# Get Non-Standard Addressing Modes
 	switch Instruction
-		case $op in: AddrModes.keys()
-			$mode: AddrModes[op]
+		case $op in $"AddrModes.keys()"
+			$mode = $"AddrModes[op]"
 			AddrMode = $mode
 		end
-		case $op in: Pushes.keys()
-			$push: Pushes[op]
+		case $op in $"Pushes.keys()"
+			$push = $"Pushes[op]"
 			Push = $push
 		end
-		case $op in: Pulls.keys()
-			$pull: Pulls[op]
+		case $op in $"Pulls.keys()"
+			$pull = $"Pulls[op]"
 			Pull = $pull
 		end
 	end
@@ -944,7 +936,7 @@ function get_addressing_mode()
 	
 	# Read+write functions take an extra 2 cycles
 	switch Function
-		case $readwrite in: [ASL, LSR, ROL, ROR, INC, DEC]
+		case $readwrite in $"[ASL, LSR, ROL, ROR, INC, DEC]"
 			Cycles += 2
 		end
 	end
@@ -972,7 +964,7 @@ function get_pc_data()
 	end
 	
 	if PC == BreakOnExecute
-		tell @a: Executed break point at (Addr). {G[\[Continue\]](/scoreboard players set Global Halt 0) {R[\[Remove Breakpoint\]](/scoreboard players set Global BreakOnExecute -1)
+		tell @a "Executed break point at (Addr). {G[\[Continue\]](/scoreboard players set Global Halt 0) {R[\[Remove Breakpoint\]](/scoreboard players set Global BreakOnExecute -1)"
 		display_instruction()
 		Halt = True
 	end
@@ -995,33 +987,33 @@ function display_instruction()
 	
 	switch OpLength
 		case 1
-			tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic)
+			tell @a "$(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic)"
 		end
 		case 2
 			hex_number(Op1, 4, 2)
 			Handled = False
 			if Constant
-				tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) #$(@digit4)(@digit5)
+				tell @a "$(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) #$(@digit4)(@digit5)"
 				Handled = True
 			end
 			if XIndexPre and not Indirect
-				tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit4)(@digit5),X
+				tell @a "$(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit4)(@digit5),X"
 				Handled = True
 			end
 			if XIndexPre and Indirect
-				tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) \($(@digit4)(@digit5),X\)
+				tell @a "$(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) \($(@digit4)(@digit5),X\)"
 				Handled = True
 			end
 			if YIndexPre
-				tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit4)(@digit5),Y
+				tell @a "$(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit4)(@digit5),Y"
 				Handled = True
 			end
 			if YIndexPost
-				tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) \($(@digit4)(@digit5)\),Y
+				tell @a "$(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) \($(@digit4)(@digit5)\),Y"
 				Handled = True
 			end
 			if not Handled
-				tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit4)(@digit5)
+				tell @a "$(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit4)(@digit5)"
 			end
 		end
 		case 3
@@ -1030,19 +1022,19 @@ function display_instruction()
 			
 			Handled = False
 			if XIndexPre
-				tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit6)(@digit7)(@digit4)(@digit5),X
+				tell @a "$(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit6)(@digit7)(@digit4)(@digit5),X"
 				Handled = True
 			end
 			if YIndexPre
-				tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit6)(@digit7)(@digit4)(@digit5),Y
+				tell @a "$(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit6)(@digit7)(@digit4)(@digit5),Y"
 				Handled = True
 			end				
 			if not Handled
-				tell @a: $(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit6)(@digit7)(@digit4)(@digit5)
+				tell @a "$(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit6)(@digit7)(@digit4)(@digit5)"
 			end
 		end
 	end
-	tell @a: \   Instruction $(@digit8)(@digit9) A=$(@digit10)(@digit11) X=$(@digit12)(@digit13) Y=$(@digit14)(@digit15) S=$(@digit16)(@digit17)
+	tell @a "\   Instruction $(@digit8)(@digit9) A=$(@digit10)(@digit11) X=$(@digit12)(@digit13) Y=$(@digit14)(@digit15) S=$(@digit16)(@digit17)"
 	clear_digits()
 end
 
@@ -1097,7 +1089,7 @@ function run_branch_instruction()
 	end
 	
 	if Debug and DisplayCycles
-		tell @a: \   (Cycles) cycles
+		tell @a "\   (Cycles) cycles"
 	end
 end
 
@@ -1200,10 +1192,10 @@ function read_direct()
 		hex_number(Byte, 4, 2)
 		if Byte2 >= 0
 			hex_number(Byte2, 6, 2)
-			tell @a: \   Memory Direct Read at Addr $(@digit0)(@digit1)(@digit2)(@digit3) -- Byte: $(@digit4)(@digit5) Byte2: $(@digit6)(@digit7)
+			tell @a "\   Memory Direct Read at Addr $(@digit0)(@digit1)(@digit2)(@digit3) -- Byte: $(@digit4)(@digit5) Byte2: $(@digit6)(@digit7)"
 		end
 		if Byte2 < 0
-			tell @a: \   Memory Direct Read at Addr $(@digit0)(@digit1)(@digit2)(@digit3) -- Byte: $(@digit4)(@digit5)
+			tell @a "\   Memory Direct Read at Addr $(@digit0)(@digit1)(@digit2)(@digit3) -- Byte: $(@digit4)(@digit5)"
 		end
 		clear_digits()
 	end
@@ -1222,7 +1214,7 @@ function move_to_indirect_addr()
 		if Debug
 			hex_number(Addr, 0, 4)
 			hex_number(Byte, 4, 2)
-			tell @a: \   Memory Indirect Read at Addr $(@digit0)(@digit1)(@digit2)(@digit3) -- Byte: $(@digit4)(@digit5)
+			tell @a "\   Memory Indirect Read at Addr $(@digit0)(@digit1)(@digit2)(@digit3) -- Byte: $(@digit4)(@digit5)"
 			clear_digits()
 		end
 	end	
@@ -1237,7 +1229,7 @@ function run_instruction()
 	
 	if Function == $BRK
 		GetP = True
-		tell @a: BRK at address (PC) A=(A) X=(X) Y=(Y) S=(Stack) Scan=(@Beam.Scan)
+		tell @a "BRK at address (PC) A=(A) X=(X) Y=(Y) S=(Stack) Scan=(@Beam.Scan)"
 		Halt = True
 	end
 	if Function == $PHP then GetP = True
@@ -1299,7 +1291,7 @@ function run_instruction()
 			operate_memory_bus()
 			
 			Byte2 = 0
-			for $exp in: [128, 64, 32, 16, 8, 4, 2, 1]
+			for $exp in $"[128, 64, 32, 16, 8, 4, 2, 1]"
 				if A >= $exp and Byte >= $exp then Byte2 += $exp
 				
 				if Byte >= $exp then Byte -= $exp
@@ -1340,7 +1332,7 @@ function run_instruction()
 			Overflow = False
 			if Byte >= 0x40 then Overflow = True
 
-			for $exp in: [64, 32, 16, 8, 4, 2, 1]
+			for $exp in $"[64, 32, 16, 8, 4, 2, 1]"
 				# If there are any bits in common, Zero is cleared
 				if Byte2 >= $exp and Byte >= $exp then Zero = False
 				
@@ -1422,7 +1414,7 @@ function run_instruction()
 			operate_memory_bus()
 			
 			Byte2 = 0
-			for $exp in: [128, 64, 32, 16, 8, 4, 2, 1]
+			for $exp in $"[128, 64, 32, 16, 8, 4, 2, 1]"
 				if A >= $exp and Byte < $exp then Byte2 += $exp
 				if A < $exp and Byte >= $exp then Byte2 += $exp
 				
@@ -1508,7 +1500,7 @@ function run_instruction()
 			operate_memory_bus()
 			
 			Byte2 = 0
-			for $exp in: [128, 64, 32, 16, 8, 4, 2, 1]
+			for $exp in $"[128, 64, 32, 16, 8, 4, 2, 1]"
 				if A >= $exp then Byte2 += $exp
 				if A < $exp and Byte >= $exp then Byte2 += $exp
 				
@@ -1839,7 +1831,7 @@ function draw_beam()
 		
 		end_point = Scan + Pixels - 1
 		if end_point >= $ScreenWidth
-			$ScreenEnd: ScreenWidth - 1
+			$ScreenEnd = $"ScreenWidth - 1"
 			end_point = $ScreenEnd
 		end
 		
@@ -1859,10 +1851,10 @@ end
 # Draw all pixels in the range
 function draw_range(x1, x2)
 	x = x1
-	for $reflect in: [0, 1]
+	for $reflect in $"[0, 1]"
 		if ReflectPF == $reflect
 			switch x1
-				case $x in: range(160)
+				case $x in $"range(160)"
 					draw_pixels<$x, $reflect>()
 				end
 			end
@@ -1873,7 +1865,7 @@ end
 # Draw pixels from $x to x2
 function draw_pixels<$x, $reflect>()
 	if x <= x2
-		$bit: (x/4) if x < 80 else ((19 - (x - 80)/4) if reflect else ((x-80)/4))
+		$bit = $"(x/4) if x < 80 else ((19 - (x - 80)/4) if reflect else ((x-80)/4))"
 		if PFBit[$bit]
 			/execute unless blocks 0 254 -2 0 254 -2 $x ~ 0 all run clone 0 254 -2 0 254 -2 $x ~ ~
 			PFPixel = True
@@ -1887,11 +1879,11 @@ function draw_pixels<$x, $reflect>()
 		
 		x++
 		
-		$next_x: x+1
-		if: next_x % 4 != 0 and next_x < ScreenWidth
+		$next_x = $"x+1"
+		if $"next_x % 4 != 0 and next_x < ScreenWidth"
 			draw_pixels<$next_x, $reflect>()
 		end
-		if: next_x % 4 == 0 and next_x < ScreenWidth
+		if $"next_x % 4 == 0 and next_x < ScreenWidth"
 			draw_four_pixels<$next_x, $reflect>()
 		end
 	end
@@ -1900,7 +1892,7 @@ end
 # Draw pixels in increments of four from $x to x2
 function draw_four_pixels<$x, $reflect>()
 	if x <= x2
-		$bit: (x/4) if x < 80 else ((19 - (x - 80)/4) if reflect else ((x-80)/4))
+		$bit = $"(x/4) if x < 80 else ((19 - (x - 80)/4) if reflect else ((x-80)/4))"
 		if PFBit[$bit]
 			/execute unless blocks 0 254 -2 3 254 -2 $x ~ 0 all run clone 0 254 -2 3 254 -2 $x ~ 0
 			PFPixel = True
@@ -1910,7 +1902,7 @@ function draw_four_pixels<$x, $reflect>()
 			PFPixel = False
 		end
 		
-		for $step in: range(4)
+		for $step in $"range(4)"
 			if x <= x2
 				draw_sprites_missiles_ball()
 				
@@ -1918,8 +1910,8 @@ function draw_four_pixels<$x, $reflect>()
 			end
 		end
 		
-		$next_x: x+4
-		if: next_x < ScreenWidth
+		$next_x = $"x+4"
+		if $"next_x < ScreenWidth"
 			draw_four_pixels<$next_x, $reflect>()
 		end
 	end
@@ -1964,32 +1956,32 @@ function draw_sprite_pixel<$player>()
 
 			if bit >= 0 and bit <= 7
 				switch bit
-					case $bit in: range(8)
+					case $bit in $"range(8)"
 						/scoreboard players operation Global On = Global GRP$playerBit$bit
 						if On
 							@Self.x = x
 							at @Self
-								$y: 252 + player
+								$y = $"252 + player"
 								/clone 0 $y -1 0 $y -1 ~ ~ ~
 							end
 							
 							PlayerPixel[$player] = True
-							if: player == 1
+							if $"player == 1"
 								if PlayerPixel[0] then CXP0P1 = True
 							end
 							if PFPixel
-								if: player == 0
+								if $"player == 0"
 									CXP0PF = True
 								end
-								if: player == 1
+								if $"player == 1"
 									CXP1PF = True
 								end
 							end
 							if BallPixel
-								if: player == 0
+								if $"player == 0"
 									CXP0BL = True
 								end
-								if: player == 1
+								if $"player == 1"
 									CXP1BL = True
 								end
 							end									
@@ -2014,44 +2006,44 @@ function draw_missile_pixel<$player>()
 			if bit >= 0 and bit < MissileSize[$player]
 				@Self.x = x
 				at @Self
-					$y: 252 + player
+					$y = $"252 + player"
 					/clone 0 $y -1 0 $y -1 ~ ~ ~
 				end
 				
 				MissilePixel[$player] = True
 				
-				if: player == 1
+				if $"player == 1"
 					if MissilePixel[0] then CXM0M1 = True
 				end
 				if PFPixel
-					if: player == 0
+					if $"player == 0"
 						CXM0PF = True
 					end
-					if: player == 1
+					if $"player == 1"
 						CXM1PF = True
 					end
 				end
 				if BallPixel
-					if: player == 0
+					if $"player == 0"
 						CXM0BL = True
 					end
-					if: player == 1
+					if $"player == 1"
 						CXM1BL = True
 					end
 				end
 				if PlayerPixel[0]
-					if: player == 0
+					if $"player == 0"
 						CXM0P0 = True
 					end
-					if: player == 1
+					if $"player == 1"
 						CXM1P0 = True
 					end
 				end
 				if PlayerPixel[1]
-					if: player == 0
+					if $"player == 0"
 						CXM0P1 = True
 					end
-					if: player == 1
+					if $"player == 1"
 						CXM1P1 = True
 					end
 				end
@@ -2067,7 +2059,7 @@ function write_to_memory()
 			hex_number(Instruction, 0, 2)
 			hex_number(PC, 2, 4)
 			mnemonic()
-			tell @a: Instruction (@mnemonic) \($(@digit0)(@digit1)\) at $(@digit2)(@digit3)(@digit4)(@digit5) tried to write without a valid address
+			tell @a "Instruction (@mnemonic) \($(@digit0)(@digit1)\) at $(@digit2)(@digit3)(@digit4)(@digit5) tried to write without a valid address"
 			clear_digits()
 			Halt = True
 		end
@@ -2105,7 +2097,7 @@ function write_addr(addr, val)
 	if Debug
 		hex_number(addr, 0, 4)
 		hex_number(val, 4, 2)
-		tell @a: \   Memory Write at Addr $(@digit0)(@digit1)(@digit2)(@digit3) -- Byte: $(@digit4)(@digit5)
+		tell @a "\   Memory Write at Addr $(@digit0)(@digit1)(@digit2)(@digit3) -- Byte: $(@digit4)(@digit5)"
 		clear_digits()
 	end
 	
@@ -2115,37 +2107,37 @@ function write_addr(addr, val)
 	end
 	
 	if addr == BreakOnWrite
-		tell @a: Wrote (val) to break point (Addr). {G[\[Continue\]](/scoreboard players set Global Halt 0) {R[\[Remove Breakpoint\]](/scoreboard players set Global BreakOnWrite -1)
+		tell @a "Wrote (val) to break point (Addr). {G[\[Continue\]](/scoreboard players set Global Halt 0) {R[\[Remove Breakpoint\]](/scoreboard players set Global BreakOnWrite -1)"
 		display_instruction()
 		Halt = True
 	end
 	
-	$write_mirrors: lambda a: [a % 0x40 + i for i in range(0, 0x80, 0x40)]
+	$write_mirrors = $"lambda a: [a % 0x40 + i for i in range(0, 0x80, 0x40)]"
 	switch addr
-		case $addr in: MemoryAddresses
+		case $addr in $"MemoryAddresses"
 			/scoreboard players operation Global Memory$addr = Global val
 		end
-		case $i in: write_mirrors(HMP0)
+		case $i in $"write_mirrors(HMP0)"
 			PV[0] = Byte / 0x10
 			if PV[0] >= 0x08 then PV[0] -= 0x10
 		end
-		case $i in: write_mirrors(HMP1)
+		case $i in $"write_mirrors(HMP1)"
 			PV[1] = Byte / 0x10
 			if PV[1] >= 0x08 then PV[1] -= 0x10
 		end
-		case $i in: write_mirrors(HMM0)
+		case $i in $"write_mirrors(HMM0)"
 			MV[0] = Byte / 0x10
 			if MV[0] >= 0x08 then MV[0] -= 0x10
 		end
-		case $i in: write_mirrors(HMM1)
+		case $i in $"write_mirrors(HMM1)"
 			MV[1] = Byte / 0x10
 			if MV[1] >= 0x08 then MV[1] -= 0x10
 		end
-		case $i in: write_mirrors(HMBL)
+		case $i in $"write_mirrors(HMBL)"
 			BLV = Byte / 0x10
 			if BLV >= 0x08 then BLV -= 0x10
 		end
-		case $i in: write_mirrors(HMOVE)
+		case $i in $"write_mirrors(HMOVE)"
 			PX[0] -= PV[0]
 			PX[1] -= PV[1]
 			MX[0] -= MV[0]
@@ -2153,14 +2145,14 @@ function write_addr(addr, val)
 			BLX -= BLV
 			BallEnd = BLX + BallSize
 		end
-		case $i in: write_mirrors(HMCLR)
+		case $i in $"write_mirrors(HMCLR)"
 			PV[0] = 0
 			PV[1] = 0
 			MV[0] = 0
 			MV[1] = 0
 			BLV = 0
 		end
-		case $i in: write_mirrors(COLUBK)
+		case $i in $"write_mirrors(COLUBK)"
 			unless Byte == COLUBK
 				COLUBK = Byte
 				
@@ -2177,7 +2169,7 @@ function write_addr(addr, val)
 				end
 			end
 		end
-		case $i in: write_mirrors(COLUPF)
+		case $i in $"write_mirrors(COLUPF)"
 			unless Byte == COLUPF
 				COLUPF = Byte
 				
@@ -2194,7 +2186,7 @@ function write_addr(addr, val)
 				end
 			end
 		end
-		case $i in: write_mirrors(COLUP0)
+		case $i in $"write_mirrors(COLUP0)"
 			unless Byte == COLUP0				
 				COLUP0 = Byte
 				
@@ -2211,7 +2203,7 @@ function write_addr(addr, val)
 				end
 			end
 		end
-		case $i in: write_mirrors(COLUP1)
+		case $i in $"write_mirrors(COLUP1)"
 			unless Byte == COLUP1				
 				COLUP1 = Byte
 				
@@ -2228,7 +2220,7 @@ function write_addr(addr, val)
 				end
 			end
 		end
-		case $i in: write_mirrors(VBLANK)
+		case $i in $"write_mirrors(VBLANK)"
 			was_vblank = VBLANK
 			VBLANK = (Byte / 2) % 2
 			if not VBLANK and was_vblank
@@ -2238,43 +2230,43 @@ function write_addr(addr, val)
 			INPT45Control = (Byte / 0x40) % 2
 			LatchedButton = Button
 		end
-		case $i in: write_mirrors(PF0)
+		case $i in $"write_mirrors(PF0)"
 			unless Byte == PF0
 				PF0 = Byte
 				
 				PFByte = PF0 / 0x10
-				for $bit in: range(4)
+				for $bit in $"range(4)"
 					PFBit[$bit] = PFByte % 2
 					PFByte /= 2
 				end
 			end
 		end
-		case $i in: write_mirrors(PF1)
+		case $i in $"write_mirrors(PF1)"
 			unless Byte == PF1
 				PF1 = Byte
 				
 				PFByte = PF1
-				for $bit in: range(8)
-					$pfbit: bit + 4
+				for $bit in $"range(8)"
+					$pfbit = $"bit + 4"
 					PFBit[$pfbit] = PFByte / 0x80
 					PFByte *= 2
 					PFByte %= 0x100
 				end
 			end
 		end
-		case $i in: write_mirrors(PF2)
+		case $i in $"write_mirrors(PF2)"
 			unless Byte == PF2
 				PF2 = Byte
 				
 				PFByte = PF2
-				for $bit in: range(8)
-					$pfbit: bit + 12
+				for $bit in $"range(8)"
+					$pfbit = $"bit + 12"
 					PFBit[$pfbit] = PFByte % 2
 					PFByte /= 2
 				end
 			end
 		end
-		case $i in: write_mirrors(GRP0)
+		case $i in $"write_mirrors(GRP0)"
 			if VDELP0
 				GRP0A = Byte
 			end
@@ -2287,7 +2279,7 @@ function write_addr(addr, val)
 				$UpdateGRPBits(0)
 			end
 		end
-		case $i in: write_mirrors(GRP1)
+		case $i in $"write_mirrors(GRP1)"
 			if VDELP1
 				GRP1A = Byte
 			end
@@ -2306,31 +2298,31 @@ function write_addr(addr, val)
 				$UpdateGRPBits(1)
 			end
 		end
-		case $i in: write_mirrors(NUSIZ0)
+		case $i in $"write_mirrors(NUSIZ0)"
 			unless Byte == NUSIZ[0]
 				NUSIZ[0] = Byte
 				$UpdateNumSize(0)
 			end
 		end
-		case $i in: write_mirrors(NUSIZ1)
+		case $i in $"write_mirrors(NUSIZ1)"
 			unless Byte == NUSIZ[1]
 				NUSIZ[1] = Byte
 				$UpdateNumSize(1)
 			end
 		end
-		case $i in: write_mirrors(REFP0)
+		case $i in $"write_mirrors(REFP0)"
 			ReflectP[0] = (Byte / 8) % 2
 		end
-		case $i in: write_mirrors(REFP1)
+		case $i in $"write_mirrors(REFP1)"
 			ReflectP[1] = (Byte / 8) % 2
 		end
-		case $i in: write_mirrors(VDELP0)
+		case $i in $"write_mirrors(VDELP0)"
 			VDELP0 = Byte % 2
 		end
-		case $i in: write_mirrors(VDELBL)
+		case $i in $"write_mirrors(VDELBL)"
 			VDELBL = Byte % 2
 		end
-		case $i in: write_mirrors(VDELP1)
+		case $i in $"write_mirrors(VDELP1)"
 			VDELP1 = Byte % 2 
 		end
 		case $TIM1T to $TIM1024T
@@ -2345,29 +2337,29 @@ function write_addr(addr, val)
 			if Addr == $TIM64T then ClockRate = 192
 			if Addr == $TIM1024T then ClockRate = 3072
 		end
-		case $i in: write_mirrors(CTRLPF)
+		case $i in $"write_mirrors(CTRLPF)"
 			ReflectPF = Byte % 2
 			
 			switch (Byte / 0x10) % 0x04
-				case $bits in: range(4)
-					$size: 2 ** bits
+				case $bits in $"range(4)"
+					$size = $"2 ** bits"
 					BallSize = $size
 				end
 			end
 			BallEnd = BLX + BallSize
 		end
-		case $i in: write_mirrors(ENAM0)
+		case $i in $"write_mirrors(ENAM0)"
 			ENAM[0] = (Byte / 2) % 2
 			
 			# Make sure missile-object collisions aren't triggered while disabled
 			MissilePixel[0] = False
 		end
-		case $i in: write_mirrors(ENAM1)
+		case $i in $"write_mirrors(ENAM1)"
 			ENAM[1] = (Byte / 2) % 2
 			# Make sure missile-object collisions aren't triggered while disabled
 			MissilePixel[1] = False	
 		end
-		case $i in: write_mirrors(ENABL)
+		case $i in $"write_mirrors(ENABL)"
 			if VDELBL
 				ENABLA = (Byte / 2) % 2
 			end
@@ -2377,34 +2369,34 @@ function write_addr(addr, val)
 				BallPixel = False
 			end
 		end
-		case $i in: write_mirrors(RESP0)
+		case $i in $"write_mirrors(RESP0)"
 			PX[0] = Scan + 5
 			if PX[0] < 0 then PX[0] = 3
 		end	
-		case $i in: write_mirrors(RESP1)
+		case $i in $"write_mirrors(RESP1)"
 			PX[1] = Scan + 5
 			if PX[1] < 0 then PX[1] = 3
 		end
-		case $i in: write_mirrors(RESM0)
+		case $i in $"write_mirrors(RESM0)"
 			MX[0] = Scan + 5
 			if MX[0] < 0 then MX[0] = 3
 		end
-		case $i in: write_mirrors(RESM1)
+		case $i in $"write_mirrors(RESM1)"
 			MX[1] = Scan + 5
 			if MX[1] < 0 then MX[1] = 3
 		end
-		case $i in: write_mirrors(RESBL)
+		case $i in $"write_mirrors(RESBL)"
 			BLX = Scan + 5
 			if BLX < 0 then BLX = 3
 			BallEnd = BLX + BallSize
 		end
-		case $i in: write_mirrors(RESMP0)
+		case $i in $"write_mirrors(RESMP0)"
 			MX[0] = PX[0]
 		end
-		case $i in: write_mirrors(RESMP1)
+		case $i in $"write_mirrors(RESMP1)"
 			MX[1] = PX[1]
 		end
-		case $i in: write_mirrors(CXCLR)
+		case $i in $"write_mirrors(CXCLR)"
 			CXM0P0 = False
 			CXM0P1 = False
 			CXM1P0 = False
@@ -2429,7 +2421,7 @@ macro $UpdateGRPBits($player)
 	PlayerPixel[$player] = False
 	
 	GRP = GRP[$player]
-	for $bit in: range(8)
+	for $bit in $"range(8)"
 		bit = GRP % 2
 		/scoreboard players operation Global GRP$playerBit$bit = Global bit
 		GRP /= 2
@@ -2483,8 +2475,8 @@ macro $UpdateNumSize($player)
 	
 	MissileSizeBits = (NUSIZ[$player] / 0x10) % 0x04
 	switch MissileSizeBits
-		case $bits in: range(4)
-			$size: 2 ** bits
+		case $bits in $"range(4)"
+			$size = $"2 ** bits"
 			MissileSize[$player] = $size
 		end
 	end
@@ -2503,8 +2495,8 @@ function hex_digit(digit, nibble_value)
 	as create @Marker
 		@s.digit = digit
 		switch nibble_value
-			case $v in: range(0x10)
-				$h: '{:01x}'.format(v).upper()
+			case $v in $"range(0x10)"
+				$h = $"'{:01x}'.format(v).upper()"
 				/data merge entity @s {"CustomName":"\"$h\""}
 			end
 		end
@@ -2522,8 +2514,8 @@ function mnemonic()
 	as create @Marker
 		@s.mnemonic = True
 		switch(Function)
-			case $f in: Mnemonics
-				$m: Mnemonics[f]
+			case $f in $"Mnemonics"
+				$m = $"Mnemonics[f]"
 				/data merge entity @s {"CustomName":"\"$m\""}
 			end
 		end

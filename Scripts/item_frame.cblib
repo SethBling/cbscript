@@ -1,9 +1,9 @@
-$FacingDown: 0
-$FacingUp: 1
-$FacingNorth: 2
-$FacingSouth: 3
-$FacingWest: 4
-$FacingEast: 5
+$FacingDown = 0
+$FacingUp = 1
+$FacingNorth = 2
+$FacingSouth = 3
+$FacingWest = 4
+$FacingEast = 5
 define @ItemFrame = @Entity[type=item_frame]
 	rotation = ItemRotation byte 1
 	face = Facing byte 1

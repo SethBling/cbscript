@@ -1,11 +1,11 @@
-dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
-desc: Runs the map grid puzzle.
+dir "C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13"
+desc "Runs the map grid puzzle."
 
 import common
 import item_frame
 
 define @Frame = @ItemFrame[tag=PuzzleFrame]
-	create: {Tags:["PuzzleFrame"], Facing:$FacingUp, Invulnerable:1b}
+	create '{Tags:["PuzzleFrame"], Facing:$FacingUp, Invulnerable:1b}'
 end
 
 reset
@@ -54,13 +54,13 @@ clock main
 					case 0
 						/clone -783 55 189 -779 57 193 ~ ~ ~
 					end
-					case $m in: range(361, 369)
+					case $m in $"range(361, 369)"
 						switch rotation % 4
-							case $r in: range(4)
-								$y: 58 + (m-361)*3
-								$yp: y+2
-								$x: -783 + 5*r
-								$xp: x+4
+							case $r in $"range(4)"
+								$y = $"58 + (m-361)*3"
+								$yp = $"y+2"
+								$x = $"-783 + 5*r"
+								$xp = $"x+4"
 								/clone $x $y 189 $xp $yp 193 ~ ~ ~
 							end
 						end

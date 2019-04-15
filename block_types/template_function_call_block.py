@@ -20,7 +20,7 @@ class template_function_call_block(object):
 			raise ValueError('Tried to call template function "{}" with {} template arguments ({} expected) at line {}'.format(function, len(template_args), len(template_params), self.line))
 			
 		if len(args) != len(params):
-			raise ValueError('Tried to call template function "{}" with {} function arguments at line {}'.format(function, len(args), self.line))
+			raise ValueError('Tried to call template function "{}" with {} function arguments ({} expected) at line {}'.format(function, len(args), len(params), self.line))
 		
 		# Get textual function name
 		func_name = function
@@ -50,8 +50,8 @@ class template_function_call_block(object):
 					new_env.set_dollarid(template_params[p], int(template_args[p]))
 				elif isNumber(template_args[p]):
 					new_env.set_dollarid(template_params[p], float(template_args[p]))
-				elif self.args[p].startswith('"') and self.args[p].endswith('"') and len(self.args[p]) >= 2:
-					new_env.set_dollarid(params[p], self.args[p][1:-1])
+				elif template_args[p].startswith('"') and template_args.endswith('"') and len(template_args[p]) >= 2:
+					new_env.set_dollarid(template_params[p], template_args[p][1:-1])
 				elif template_args[p].startswith('$') or template_args[p].startswith('-$'):
 					new_env.copy_dollarid(template_params[p], template_args[p])
 				else:

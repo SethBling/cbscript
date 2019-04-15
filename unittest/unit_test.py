@@ -511,6 +511,15 @@ class test_cbscript(unittest.TestCase):
 		self.assertTrue('test_macro_param' in func.functions['test_template_function_10'].environment.dollarid)
 		self.assertEqual(func.functions['test_template_function_10'].environment.dollarid['test_macro_param'], 10)
 		
+		func = mock_mcfunction()
+		func.template_functions['test_template_function'] = (['test_macro_param'], [], [])
+		
+		block = template_function_call_block(0, 'test_template_function', ['$test_id'], [])
+		block.compile(func)
+		
+		self.assertTrue('test_template_function_$test_id' in func.functions)
+		self.assertTrue(('test_macro_param', '$test_id') in func.functions['test_template_function_$test_id'].environment.copied_dollarids)
+		
 	def test_compile_title(self):
 		func = mock_mcfunction()
 		
@@ -2159,13 +2168,6 @@ class test_cbscript(unittest.TestCase):
 		self.assertTrue(type(p[0]) is create_block)
 		self.assertEqual(p[0].atid, 'id')
 		self.assertEqual(p[0].relcoords, ['~', '~', '~'])
-		self.assertEqual(mcfunction.get_line(p[0]), 0)
-		
-		p = mock_parsed(None, 'id', 'code') 
-		scriptparse.p_pythonassignment(p)
-		self.assertTrue(type(p[0]) is python_assignment_block)
-		self.assertEqual(p[0].id, 'id')
-		self.assertEqual(p[0].code, 'code')
 		self.assertEqual(mcfunction.get_line(p[0]), 0)
 		
 		p = mock_parsed('qualifiers', None, 'qualifier') 

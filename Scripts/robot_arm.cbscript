@@ -1,11 +1,11 @@
-dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
-desc: Robot arm.
-scale: 1000
+dir "C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13"
+desc "Robot arm."
+scale 1000
 
-$marker: "Marker:1b, Invisible:1b, NoGravity:1b, Invulnerable:1b, Silent:1b"
+$marker = $"Marker:1b, Invisible:1b, NoGravity:1b, Invulnerable:1b, Silent:1b"
 
-$NumPieces: 9
-$NumSegments: 4
+$NumPieces = $"9"
+$NumSegments = $"4"
 
 define @Entity = @e
 	x = Pos[0] double
@@ -24,11 +24,11 @@ end
 @Player = @Entity[type=player]
 
 define @Marker = @Entity[type=area_effect_cloud,name=Marker]
-	create: {"CustomName":"\"Marker\"", Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+	create '"CustomName":"\"Marker\"", Duration:-1,Age:-2147483648,WaitTime:-2147483648}'
 end
 
 define @MiniBlock = @Entity[type=armor_stand,name=MiniBlock]
-	create: {CustomName:"\"MiniBlock\"", Pose:{Head:[0.0001f,0f,0f]}, $marker}
+	create '{CustomName:"\"MiniBlock\"", Pose:{Head:[0.0001f,0f,0f]}, $marker}'
 	
 	pose_rot_x = Pose.Head[0] float
 	pose_rot_y = Pose.Head[1] float

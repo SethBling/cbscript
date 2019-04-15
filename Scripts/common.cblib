@@ -1,4 +1,4 @@
-$marker: "Marker:1b, Invisible:1b, NoGravity:1b, Invulnerable:1b, Silent:1b"
+$marker = $'"Marker:1b, Invisible:1b, NoGravity:1b, Invulnerable:1b, Silent:1b"'
 
 define @Entity = @e
 	x = Pos[0] double
@@ -20,7 +20,7 @@ define @Entity = @e
 end
 
 define @Marker = @Entity[type=area_effect_cloud,tag=Marker]
-	create: {Tags:["Marker"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+	create '{Tags:["Marker"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}'
 end
 
 define @Player = @Entity[type=player]

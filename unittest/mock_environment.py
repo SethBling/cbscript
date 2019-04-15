@@ -12,6 +12,7 @@ class mock_environment(object):
 		self.scale = 1000
 		self.cloned_environments = []
 		self.applied = []
+		self.copied_dollarids = []
 		
 	def clone(self, new_function_name=None):
 		env = mock_environment()
@@ -64,3 +65,6 @@ class mock_environment(object):
 	
 	def get_arrayconst_var(self, name, idxval):
 		return '{}{}'.format(name, idxval)
+		
+	def copy_dollarid(self, id1, id2):
+		self.copied_dollarids.append((id1, id2))

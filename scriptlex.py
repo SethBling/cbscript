@@ -18,7 +18,7 @@ tokens = keywords + (
 	 'POWER',
      'LPAREN','RPAREN','COMMA','DECIMAL','FLOAT','HEX','BINARY','ID','NEWLINE','LBRACK','RBRACK','LCURLY','RCURLY',
      'ATID', 'NOT', 'TILDEEMPTY', 'TILDE',
-     'NORMSTRING', 'PYTHON', 'COMMENT',
+     'NORMSTRING', 'COMMENT',
 )
 
 def t_None(t):
@@ -130,15 +130,10 @@ def t_NEWLINE(t):
     return t
 	
 def t_NORMSTRING(t):
-	 r'"([^"\n]|(\\"))*"'
+	 r'("([^"\n]|(\\"))*")|\'([^\'\n]|(\\\'))*\''
 	 t.value = t.value[1:-1]
 	 return t
 
-def t_PYTHON(t):
-    r'\:.+'
-    t.value = t.value[1:].strip()
-    return t
-    
 def t_COMMENT(t):
     r'\#.+'
     return t

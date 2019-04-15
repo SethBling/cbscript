@@ -1,7 +1,7 @@
 import common
 
 define @Pushable = @Entity[type=armor_stand, tag=Pushable]
-	create: {Tags:["Pushable"], Invisible:1b, Invulnerable:1b}
+	create '{Tags:["Pushable"], Invisible:1b, Invulnerable:1b}'
 	
 	function get_velocity_signs()
 		vx = @s.vx
@@ -29,13 +29,13 @@ end
 
 
 define @Physics = @Entity[type=armor_stand, tag=Physics]
-	create: {Tags:["Physics"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"shulker", NoGravity:1b, Invulnerable:1b, Invisible:1b, NoAI:1b, Silent:1b, Tags:["SolidBlock"]}]}
+	create '{Tags:["Physics"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"shulker", NoGravity:1b, Invulnerable:1b, Invisible:1b, NoAI:1b, Silent:1b, Tags:["SolidBlock"]}]}'
 end
 
 @SolidBlock = @Entity[type=shulker, tag=SolidBlock]
 
 define @Disguise = @Entity[type=armor_stand, tag=Disguise]
-	create: {Tags:["Disguise"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"falling_block", Time:1b, NoGravity:1b, BlockState:{Name:"minecraft:diamond_block"}, Tags:["FakeBlock"]}]}
+	create '{Tags:["Disguise"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"falling_block", Time:1b, NoGravity:1b, BlockState:{Name:"minecraft:diamond_block"}, Tags:["FakeBlock"]}]}'
 end
 
 define @FakeBlock = @Entity[type=falling_block, tag=FakeBlock]

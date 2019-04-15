@@ -73,7 +73,7 @@ def p_parsed_expr(p):
 	
 #### Program
 def p_program(p):
-	'''program : optcomments dir PYTHON newlines optdesc optscale optassignments sections'''
+	'''program : optcomments dir NORMSTRING newlines optdesc optscale optassignments sections'''
 	p[0] = {}
 	p[0]['dir'] = p[3]
 	p[0]['desc'] = p[5]
@@ -92,7 +92,7 @@ def p_lib(p):
 
 #### Optdesc
 def p_optdesc(p):
-	'''optdesc : desc PYTHON newlines
+	'''optdesc : desc NORMSTRING newlines
 			   | empty'''
 	if len(p) < 4:
 		p[0] = 'No Description'
@@ -102,7 +102,7 @@ def p_optdesc(p):
 	
 #### Optscale
 def p_optscale(p):
-	'''optscale : scale PYTHON newlines'''
+	'''optscale : scale integer newlines'''
 	p[0] = int(p[2])
 
 def p_optscale_none(p):
@@ -234,6 +234,11 @@ def p_id_list_empty(p):
 	'''id_list : empty'''
 	p[0] = []
 	
+#### Python codeblock
+def p_python_string(p):
+	'''python : DOLLAR NORMSTRING'''
+	p[0] = p[2]
+
 #### Optassignments
 def p_optassignments_multiple(p):
 	'''optassignments : pythonassignment newlines optassignments
@@ -312,7 +317,7 @@ def p_block_move(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_block_for(p):
-	'''codeblock : for DOLLAR ID in PYTHON newlines blocklist end'''
+	'''codeblock : for DOLLAR ID in python newlines blocklist end'''
 	p[0] = python_for_block(p.lineno(1), p[3], p[5], p[7])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -520,12 +525,12 @@ def p_comparison_global(p):
 	
 #### If python
 def p_block_if_command(p):
-	'''codeblock : if PYTHON newlines blocklist end'''
+	'''codeblock : if python newlines blocklist end'''
 	p[0] = python_if_block(p.lineno(1), p[2], p[4], None)
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_block_ifelse_command(p):
-	'''codeblock : if PYTHON newlines blocklist else newlines blocklist end'''
+	'''codeblock : if python newlines blocklist else newlines blocklist end'''
 	p[0] = python_if_block(p.lineno(1), p[2], p[4], p[7])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
@@ -576,28 +581,28 @@ def p_switch_case_range(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_switch_case_python(p):
-	'''switch_case : case DOLLAR ID in PYTHON newlines blocklist end'''
+	'''switch_case : case DOLLAR ID in python newlines blocklist end'''
 	p[0] = ('python', (p[3], p[5], p[7]))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### Tell/Title	
 def p_block_tell(p):
-	'''codeblock : tell fullselector PYTHON'''
+	'''codeblock : tell fullselector NORMSTRING'''
 	p[0] = tell_block(p.lineno(1), p[2], p[3])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_block_title(p):
-	'''codeblock : title fullselector PYTHON
-				 | subtitle fullselector PYTHON
-				 | actionbar fullselector PYTHON'''
+	'''codeblock : title fullselector NORMSTRING
+				 | subtitle fullselector NORMSTRING
+				 | actionbar fullselector NORMSTRING'''
 	p[0] = title_block(p.lineno(1), p[1], p[2], None, p[3])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 	
 def p_block_title_times(p):
-	'''codeblock : title fullselector virtualinteger virtualinteger virtualinteger PYTHON
-				 | subtitle fullselector virtualinteger virtualinteger virtualinteger PYTHON
-				 | actionbar fullselector virtualinteger virtualinteger virtualinteger PYTHON'''
+	'''codeblock : title fullselector virtualinteger virtualinteger virtualinteger NORMSTRING
+				 | subtitle fullselector virtualinteger virtualinteger virtualinteger NORMSTRING
+				 | actionbar fullselector virtualinteger virtualinteger virtualinteger NORMSTRING'''
 	p[0] = title_block(p.lineno(1), p[1], p[2], (p[3], p[4], p[5]), p[6])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -704,7 +709,7 @@ def p_selector_definition(p):
 	p[0] = [p[1]] + p[3]
 	
 def p_selector_item_tag(p):
-	'''selector_item : create PYTHON'''
+	'''selector_item : create NORMSTRING'''
 	p[0] = ('Tag', p[2])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -786,11 +791,20 @@ def p_create_nocoords(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Python Assignment
-def p_pythonassignment(p):
-	'''pythonassignment : DOLLAR ID PYTHON'''
-	p[0] = python_assignment_block(p.lineno(1), p[2], p[3])
+def p_pythonassignment_interpreted_string(p):
+	'''pythonassignment : DOLLAR ID EQUALS DOLLAR NORMSTRING'''
+	p[0] = python_assignment_block(p.lineno(1), p[2], p[5])
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
+def p_pythonassignment_string(p):
+	'''pythonassignment : DOLLAR ID EQUALS NORMSTRING'''
+	p[0] = python_assignment_block(p.lineno(1), p[2], '\'' + p[4] + '\'')
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
+def p_pythonassignment_number(p):
+	'''pythonassignment : DOLLAR ID EQUALS number'''
+	p[0] = python_assignment_block(p.lineno(1), p[2], p[4])
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### Qualifier list
 def p_qualifiers_multiple(p):
