@@ -1168,6 +1168,54 @@ def p_macro_call_param_string(p):
 	p[0] = '"' + p[1] + '"'
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
+#### Json (can't implement until COLON is an available token)
+#def p_json_object(p):
+#	'''json_object : LCURLY json_members RCURLY'''
+#	p[0] = p[1] + p[2] + p[3]
+#	
+#def p_json_members(p):
+#	'''json_members : json_pair'''
+#	p[0] = p[1]
+#	
+#def p_json_members_multi(p):
+#	'''json_members : json_pair COMMA json_members'''
+#	p[0] = p[1] + p[2] + p[3]
+#	
+#def p_json_members_empty(p):
+#	'''json_members : empty'''
+#	p[0] = ''
+#	
+#def p_json_pair(p):
+#	'''json_pair : ID COLON json_value
+#				 | NORMSTRING COLON json_value'''
+#	p[0] = '"' + p[1] + '"' + p[2] + p[3]
+#	
+#def p_json_value(p):
+#	'''json_value : number
+#				  | json_object
+#				  | json_array'''
+#	p[0] = p[1]
+#	
+#def p_json_value_string(p):
+#	'''json_value : NORMSTRING'''
+#	p[0] = '"' + p[1] + '"'
+#	
+#def p_json_array(p):
+#	'''json_array : LBRACK json_elements RBRACK'''
+#	p[0] = p[1] + p[2] + p[3]
+#	
+#def p_json_elements(p):
+#	'''json_elements : json_value'''
+#	p[0] = p[1]
+#	
+#def p_json_elements_multi(p):
+#	'''json_elements : json_value COMMA json_elements'''
+#	p[0] = p[1] + p[2] + p[3]
+#	
+#def p_json_elements_empty(p):
+#	'''json_elements : empty'''
+#	p[0] = ''
+	
 #### Empty
 def p_empty(p):
 	'''empty : '''

@@ -16,7 +16,7 @@ tokens = keywords + (
      'EQUALS','PLUS','MINUS','TIMES','DIVIDE','MOD',
 	 #'POWEREMPTY',
 	 'POWER',
-     'LPAREN','RPAREN','COMMA','DECIMAL','FLOAT','HEX','BINARY','ID','NEWLINE','LBRACK','RBRACK',
+     'LPAREN','RPAREN','COMMA','DECIMAL','FLOAT','HEX','BINARY','ID','NEWLINE','LBRACK','RBRACK','LCURLY','RCURLY',
      'ATID', 'NOT', 'TILDEEMPTY', 'TILDE',
      'NORMSTRING', 'PYTHON', 'COMMENT',
 )
@@ -119,6 +119,8 @@ t_LPAREN  = r'\('
 t_RPAREN  = r'\)'
 t_LBRACK  = r'\['
 t_RBRACK  = r'\]'
+t_LCURLY  = r'\{'
+t_RCURLY  = r'\}'
 
 t_ignore = '\r'
 
