@@ -151,12 +151,12 @@ class test_cbscript(unittest.TestCase):
 		block = python_assignment_block(0, 'test_id', interpreted_python('1+1', 0))
 		block.compile(func)
 		
-		block = python_for_block(0, 'test_id', 'range(3)', [command_block(0, 'test_command')])
+		block = python_for_block(0, 'test_id', interpreted_python('range(3)', 0), [command_block(0, 'test_command')])
 		block.compile(func)
 		
-		block = python_if_block(0, 'True', [command_block(0, 'true_command')], [command_block(0, 'false_command')])
+		block = python_if_block(0, interpreted_python('1', 0), [command_block(0, 'true_command')], [command_block(0, 'false_command')])
 		block.compile(func)
-		block = python_if_block(0, 'False', [command_block(0, 'true_command')], [command_block(0, 'false_command')])
+		block = python_if_block(0, interpreted_python('0', 0), [command_block(0, 'true_command')], [command_block(0, 'false_command')])
 		block.compile(func)
 		
 		var = ('Var', ('@s', 'test'))
@@ -174,7 +174,7 @@ class test_cbscript(unittest.TestCase):
 		
 		block = switch_block(0, ('NUM', 1), [])
 		block.compile(func)
-		case1 = ('python', ('test_id', 'range(3, 6)', [command_block(0, 'test_python')]))
+		case1 = ('python', ('test_id', interpreted_python('range(3, 6)'), [command_block(0, 'test_python')]))
 		case2 = ('range', ('1', '2', [command_block(0, 'test_range_1_2')]))
 		block = switch_block(0, num_expr(1), [case1, case2])
 		block.compile(func)
@@ -270,10 +270,10 @@ class test_cbscript(unittest.TestCase):
 	def test_compile_python_for(self):
 		func = mock_mcfunction()
 		
-		block = python_for_block(0, 'i', 'range(3)', [command_block(0, '/say $i')])
+		block = python_for_block(0, 'i', interpreted_python('range(3)', 0), [command_block(0, '/say $i')])
 		block.compile(func)
 		
-		block = python_for_block(0, 'i', '[]', [])
+		block = python_for_block(0, 'i', interpreted_python('[]', 0), [])
 		block.compile(func)
 		
 		block = python_for_block(0, 'i', '1', [])
@@ -411,28 +411,28 @@ class test_cbscript(unittest.TestCase):
 	def test_compile_python_if(self):
 		func = mock_mcfunction()
 		
-		block = python_if_block(0, 'True', [1], [2])
+		block = python_if_block(0, interpreted_python('1', 0), [1], [2])
 		block.compile(func)
 		
 		self.assertTrue([1] in func.compiled_blocks)
 		
 		func = mock_mcfunction()
 		
-		block = python_if_block(0, 'False', [1], [2])
+		block = python_if_block(0, interpreted_python('0', 0), [1], [2])
 		block.compile(func)
 		
 		self.assertTrue([2] in func.compiled_blocks)
 		
 		func = mock_mcfunction()
 		
-		block = python_if_block(0, 'True', [1], None)
+		block = python_if_block(0, interpreted_python('1', 0), [1], None)
 		block.compile(func)
 		
 		self.assertTrue([1] in func.compiled_blocks)
 		
 		func = mock_mcfunction()
 		
-		block = python_if_block(0, 'False', [1], None)
+		block = python_if_block(0, interpreted_python('0', 0), [1], None)
 		block.compile(func)
 		
 		self.assertEqual(len(func.compiled_blocks), 0)
@@ -490,7 +490,7 @@ class test_cbscript(unittest.TestCase):
 		func = mock_mcfunction()
 		
 		case1 = ('range',(1, 3, []))
-		case2 = ('python', ('test_id', 'range(4, 6)', []))
+		case2 = ('python', ('test_id', interpreted_python('range(4, 6)'), []))
 		block = switch_block(0, num_expr(2), [case1, case2])
 		block.compile(func)
 		
@@ -1674,11 +1674,12 @@ class test_cbscript(unittest.TestCase):
 		self.assertEqual(p[0].line, 0)
 		self.assertEqual(mcfunction.get_line(p[0]), 0)
 		
-		p = mock_parsed(None, None, 'id', None, 'python', None, 'lines', None)
+		p = mock_parsed(None, None, 'id', None, interpreted_python('[1]', 0), None, 'lines', None)
+		func = mock_mcfunction()
 		scriptparse.p_block_for(p)
 		self.assertTrue(type(p[0]) is python_for_block)
 		self.assertEqual(p[0].id, 'id')
-		self.assertEqual(p[0].code, 'python')
+		self.assertEqual(p[0].val.get_value(func), [1])
 		self.assertEqual(p[0].sub, 'lines')
 		self.assertEqual(p[0].line, 0)
 		self.assertEqual(mcfunction.get_line(p[0]), 0)
@@ -1901,19 +1902,21 @@ class test_cbscript(unittest.TestCase):
 		self.assertEqual(p[0], ('score', 'var'))
 		self.assertEqual(mcfunction.get_line(p[0]), 0)
 		
-		p = mock_parsed(None, 'code', None, 'lines', None)
+		p = mock_parsed(None, interpreted_python('1', 0), None, 'lines', None)
+		func = mock_mcfunction()
 		scriptparse.p_block_if_command(p)
 		self.assertTrue(type(p[0]) is python_if_block)
-		self.assertEqual(p[0].code, 'code')
+		self.assertEqual(p[0].val.get_value(func), 1)
 		self.assertEqual(p[0].sub, 'lines')
 		self.assertEqual(p[0].else_sub, None)
 		self.assertEqual(p[0].line, 0)
 		self.assertEqual(mcfunction.get_line(p[0]), 0)
 		
-		p = mock_parsed(None, 'code', None, 'lines', None, None, 'else_lines', None)
+		p = mock_parsed(None, interpreted_python('1', 0), None, 'lines', None, None, 'else_lines', None)
+		func = mock_mcfunction()
 		scriptparse.p_block_ifelse_command(p)
 		self.assertTrue(type(p[0]) is python_if_block)
-		self.assertEqual(p[0].code, 'code')
+		self.assertEqual(p[0].val.get_value(func), 1)
 		self.assertEqual(p[0].sub, 'lines')
 		self.assertEqual(p[0].else_sub, 'else_lines')
 		self.assertEqual(p[0].line, 0)
@@ -2051,42 +2054,11 @@ class test_cbscript(unittest.TestCase):
 		self.assertEqual(p[0], '-1.0')
 		
 		func = mock_mcfunction()
-		p = mock_parsed('1.0')
-		scriptparse.p_virtualnumber_literal(p)
-		self.assertEqual(p[0].get_value(func), 1.0)
-		
-		func = mock_mcfunction()
-		func.dollarid['test'] = 5
-		p = mock_parsed(None, 'test')
-		scriptparse.p_virtualnumber_symbol(p)
-		self.assertEqual(p[0].get_value(func), 5)
-		
-		func = mock_mcfunction()
-		func.dollarid['test2'] = 10
-		p = mock_parsed(None, None, 'test2')
-		scriptparse.p_virtualnumber_symbol_negative(p)
-		self.assertEqual(p[0].get_value(func), -10)
-		
-		func = mock_mcfunction()
 		func.dollarid['test3'] = 10
 		p = mock_parsed(None, '5 + test3')
-		scriptparse.p_virtualnumber_interpreted(p)
+		scriptparse.p_const_value_interpreted(p)
 		self.assertEqual(p[0].get_value(func), 15)
 
-		func = mock_mcfunction()
-		p = mock_parsed('test string')
-		scriptparse.p_virtualnumber_string(p)
-		self.assertEqual(p[0].get_value(func), 'test string')
-
-		
-		p = mock_parsed('100')
-		scriptparse.p_virtualinteger_literal(p)
-		self.assertEqual(p[0], '100')
-		
-		p = mock_parsed(None, 'test')
-		scriptparse.p_virtualinteger_symbol(p)
-		self.assertEqual(p[0], '$test')
-		
 		p = mock_parsed(None, None, 'id', None, 'blocks', None)
 		scriptparse.p_blocktag(p)
 		self.assertTrue(type(p[0]) is block_tag_block)

@@ -217,40 +217,40 @@ $BaseCycles = $'{0xA8: 2, 0xAA: 2, 0xBA: 2, 0x98: 2, 0x8A: 2, 0x9A: 2, 0xA9: 2, 
 $Pulls = $'{0x40: 3, 0x60: 2, 0x28: 1, 0x68: 1}'
 $Pushes = $'{0x00: 3, 0x20: 2, 0x08: 1, 0x48: 1}'
 
-$color_black = 			$"(0, 0, 0, 'black_concrete')"
-$color_gray1 =			$"(0, 1, 1, 'obsidian')"
-$color_gray2 =			$"(0, 2, 2, 'gray_wool')"
-$color_gray3 =			$"(0, 3, 3, 'stone')"
-$color_gray4 =			$"(0, 4, 4, 'stone')"
-$color_gray5 =			$"(0, 5, 5, 'light_gray_wool')"
-$color_gray6 =			$"(0, 6, 6, 'stone')"
-$color_white =			$"(0, 7, 7, 'white_wool')"
-$color_dark_yellow = 	$"(1, 0, 2, 'brown_terracotta')"
-$color_yellow =			$"(1, 3, 7, 'yellow_wool')"
-$color_dark_orange = 	$"(2, 0, 2, 'orange_terracotta')"
-$color_orange =			$"(2, 3, 7, 'orange_wool')"
-$color_dark_red =		$"(3, 0, 1, 'red_terracotta')"
-$color_red =			$"(3, 2, 5, 'red_concrete')"
-$color_light_red =		$"(3, 6, 7, 'orange_wool')"
-$color_dark_pink =		$"(4, 0, 2, 'pink_terracotta')"
-$color_pink =			$"(4, 3, 7, 'pink_wool')"
-$color_light_magenta =	$"(5, 0, 3, 'purple_wool')"
-$color_magenta =		$"(5, 4, 7, 'magenta_wool')"
-$color_purple =			$"(6, 0, 7, 'purple_wool')"
-$color_dark_purple =	$"(7, 0, 5, 'purple_concrete')"
-$color_light_purple =	$"(7, 6, 7, 'pink_concrete')"
-$color_blue =			$"(8, 0, 7, 'light_blue_wool')"
-$color_light_blue2 =	$"(9, 0, 1, 'blue_wool')"
-$color_light_blue1 =	$"(9, 2, 7, 'light_blue_wool')"
-$color_cyan =			$"(10, 0, 7, 'cyan_wool')"
-$color_lime =			$"(11, 0, 7, 'lime_wool')"
-$color_green2 =			$"(12, 0, 1, 'green_concrete')"
-$color_green1 =			$"(12, 2, 7, 'green_wool')"
-$color_light_green =	$"(13, 0, 7, 'lime_concrete')"
-$color_gold =			$"(14, 0, 7, 'yellow_concrete')"
-$color_brown =			$"(15, 0, 3, 'brown_concrete')"
-$color_light_brown =	$"(15, 4, 7, 'yellow_concrete')"
-$atari_colors = $'[color_black, color_gray1, color_gray2, color_gray3, color_gray4, color_gray5, color_gray6, color_white, color_dark_yellow, color_yellow, color_dark_orange, color_orange, color_dark_red, color_red, color_light_red, color_dark_pink, color_pink, color_light_magenta, color_magenta, color_purple, color_dark_purple, color_light_purple, color_blue, color_light_blue1, color_light_blue2, color_cyan, color_lime, color_green1, color_green2, color_light_green, color_gold, color_brown, color_light_brown]'
+$color_black = 			(0, 0, 0, 'black_concrete')
+$color_gray1 =			(0, 1, 1, 'obsidian')
+$color_gray2 =			(0, 2, 2, 'gray_wool')
+$color_gray3 =			(0, 3, 3, 'stone')
+$color_gray4 =			(0, 4, 4, 'stone')
+$color_gray5 =			(0, 5, 5, 'light_gray_wool')
+$color_gray6 =			(0, 6, 6, 'stone')
+$color_white =			(0, 7, 7, 'white_wool')
+$color_dark_yellow = 	(1, 0, 2, 'brown_terracotta')
+$color_yellow =			(1, 3, 7, 'yellow_wool')
+$color_dark_orange = 	(2, 0, 2, 'orange_terracotta')
+$color_orange =			(2, 3, 7, 'orange_wool')
+$color_dark_red =		(3, 0, 1, 'red_terracotta')
+$color_red =			(3, 2, 5, 'red_concrete')
+$color_light_red =		(3, 6, 7, 'orange_wool')
+$color_dark_pink =		(4, 0, 2, 'pink_terracotta')
+$color_pink =			(4, 3, 7, 'pink_wool')
+$color_light_magenta =	(5, 0, 3, 'purple_wool')
+$color_magenta =		(5, 4, 7, 'magenta_wool')
+$color_purple =			(6, 0, 7, 'purple_wool')
+$color_dark_purple =	(7, 0, 5, 'purple_concrete')
+$color_light_purple =	(7, 6, 7, 'pink_concrete')
+$color_blue =			(8, 0, 7, 'light_blue_wool')
+$color_light_blue2 =	(9, 0, 1, 'blue_wool')
+$color_light_blue1 =	(9, 2, 7, 'light_blue_wool')
+$color_cyan =			(10, 0, 7, 'cyan_wool')
+$color_lime =			(11, 0, 7, 'lime_wool')
+$color_green2 =			(12, 0, 1, 'green_concrete')
+$color_green1 =			(12, 2, 7, 'green_wool')
+$color_light_green =	(13, 0, 7, 'lime_concrete')
+$color_gold =			(14, 0, 7, 'yellow_concrete')
+$color_brown =			(15, 0, 3, 'brown_concrete')
+$color_light_brown =	(15, 4, 7, 'yellow_concrete')
+$atari_colors = [$color_black, $color_gray1, $color_gray2, $color_gray3, $color_gray4, $color_gray5, $color_gray6, $color_white, $color_dark_yellow, $color_yellow, $color_dark_orange, $color_orange, $color_dark_red, $color_red, $color_light_red, $color_dark_pink, $color_pink, $color_light_magenta, $color_magenta, $color_purple, $color_dark_purple, $color_light_purple, $color_blue, $color_light_blue1, $color_light_blue2, $color_cyan, $color_lime, $color_green1, $color_green2, $color_light_green, $color_gold, $color_brown, $color_light_brown]
 
 $PFplaceholder = 'coal_block'
 $BKplaceholder = 'smooth_quartz'
@@ -296,7 +296,7 @@ function global_reset()
 	create @Beam 0 0 0
 	create @Buffer 0 0 0
 	
-	for $addr in $"MemoryAddresses"
+	for $addr in $MemoryAddresses
 		/scoreboard objectives add Memory$addr dummy
 		/scoreboard players set Global Memory$addr 0
 	end
@@ -307,15 +307,15 @@ function global_reset()
 	end
 	
 	# Fill in the pallete from 0, 0, -8 to 3, 15, -1
-	for $color_data in $"atari_colors"
+	for $color_data in $atari_colors
 		$color = $"color_data[0]"
 		$minlum = $"color_data[1]"
 		$maxlum = $"color_data[2]"
 		$material = $"color_data[3]"
 		
-		$y = $"color"
-		$zmin = $"minlum - 8"
-		$zmax = $"maxlum - 8"
+		$y = $color
+		$zmin = $minlum - 8
+		$zmax = $maxlum - 8
 		/fill 0 $y $zmin 3 $y $zmax $material
 	end
 	
@@ -613,8 +613,8 @@ function read_3bytes_rom(addr)
 	
 	switch addr
 		case $addr in $"range(0xF000, 0xFFFD)"
-			$addr2 = $"addr+1"
-			$addr3 = $"addr+2"
+			$addr2 = $addr+1
+			$addr3 = $addr+2
 			rom1 = ROM[$addr]
 			rom2 = ROM[$addr2]
 			rom3 = ROM[$addr3]
@@ -645,7 +645,7 @@ function read_addr(addr)
 	$read_mirrors = $"lambda a: [a % 0x10 + i for i in range(0x00, 0x80, 0x10)]"
 	
 	switch addr
-		case $addr in $"MemoryAddresses"
+		case $addr in $MemoryAddresses
 			/scoreboard players operation Global ReturnValue = Global Memory$addr
 		end
 		case 0x300 to 0x0FFF
@@ -1290,7 +1290,7 @@ function run_instruction()
 			operate_memory_bus()
 			
 			Byte2 = 0
-			for $exp in $"[128, 64, 32, 16, 8, 4, 2, 1]"
+			for $exp in [128, 64, 32, 16, 8, 4, 2, 1]
 				if A >= $exp and Byte >= $exp then Byte2 += $exp
 				
 				if Byte >= $exp then Byte -= $exp
@@ -1331,7 +1331,7 @@ function run_instruction()
 			Overflow = False
 			if Byte >= 0x40 then Overflow = True
 
-			for $exp in $"[64, 32, 16, 8, 4, 2, 1]"
+			for $exp in [64, 32, 16, 8, 4, 2, 1]
 				# If there are any bits in common, Zero is cleared
 				if Byte2 >= $exp and Byte >= $exp then Zero = False
 				
@@ -1413,7 +1413,7 @@ function run_instruction()
 			operate_memory_bus()
 			
 			Byte2 = 0
-			for $exp in $"[128, 64, 32, 16, 8, 4, 2, 1]"
+			for $exp in [128, 64, 32, 16, 8, 4, 2, 1]
 				if A >= $exp and Byte < $exp then Byte2 += $exp
 				if A < $exp and Byte >= $exp then Byte2 += $exp
 				
@@ -1499,7 +1499,7 @@ function run_instruction()
 			operate_memory_bus()
 			
 			Byte2 = 0
-			for $exp in $"[128, 64, 32, 16, 8, 4, 2, 1]"
+			for $exp in [128, 64, 32, 16, 8, 4, 2, 1]
 				if A >= $exp then Byte2 += $exp
 				if A < $exp and Byte >= $exp then Byte2 += $exp
 				
@@ -1830,7 +1830,7 @@ function draw_beam()
 		
 		end_point = Scan + Pixels - 1
 		if end_point >= $ScreenWidth
-			$ScreenEnd = $"ScreenWidth - 1"
+			$ScreenEnd = $ScreenWidth - 1
 			end_point = $ScreenEnd
 		end
 		
@@ -1850,11 +1850,11 @@ end
 # Draw all pixels in the range
 function draw_range(x1, x2)
 	x = x1
-	for $reflect in $"[0, 1]"
+	for $reflect in [0, 1]
 		if ReflectPF == $reflect
 			switch x1
 				case $x in $"range(160)"
-					draw_pixels<$x, $reflect>()
+					draw_pixels{$x, $reflect}()
 				end
 			end
 		end
@@ -1862,7 +1862,7 @@ function draw_range(x1, x2)
 end
 
 # Draw pixels from $x to x2
-function draw_pixels<$x, $reflect>()
+function draw_pixels{$x, $reflect}()
 	if x <= x2
 		$bit = $"(x/4) if x < 80 else ((19 - (x - 80)/4) if reflect else ((x-80)/4))"
 		if PFBit[$bit]
@@ -1878,18 +1878,17 @@ function draw_pixels<$x, $reflect>()
 		
 		x++
 		
-		$next_x = $"x+1"
-		if $"next_x % 4 != 0 and next_x < ScreenWidth"
-			draw_pixels<$next_x, $reflect>()
+		if ($x+1) % 4 != 0 and $x+1 < $ScreenWidth
+			draw_pixels{$x+1, $reflect}()
 		end
-		if $"next_x % 4 == 0 and next_x < ScreenWidth"
-			draw_four_pixels<$next_x, $reflect>()
+		if ($x+1) % 4 == 0 and $x+1 < $ScreenWidth
+			draw_four_pixels{$x+1, $reflect}()
 		end
 	end
 end
 
 # Draw pixels in increments of four from $x to x2
-function draw_four_pixels<$x, $reflect>()
+function draw_four_pixels{$x, $reflect}()
 	if x <= x2
 		$bit = $"(x/4) if x < 80 else ((19 - (x - 80)/4) if reflect else ((x-80)/4))"
 		if PFBit[$bit]
@@ -1909,9 +1908,8 @@ function draw_four_pixels<$x, $reflect>()
 			end
 		end
 		
-		$next_x = $"x+4"
-		if $"next_x < ScreenWidth"
-			draw_four_pixels<$next_x, $reflect>()
+		if $x+4 < $ScreenWidth
+			draw_four_pixels{$x+4, $reflect}()
 		end
 	end
 end
@@ -1919,10 +1917,10 @@ end
 # Draw pixel at x for ball, sprites and missiles
 function draw_sprites_missiles_ball()
 	draw_ball_pixel()	
-	draw_sprite_pixel<0>()
-	draw_sprite_pixel<1>()
-	draw_missile_pixel<0>()
-	draw_missile_pixel<1>()
+	draw_sprite_pixel{0}()
+	draw_sprite_pixel{1}()
+	draw_missile_pixel{0}()
+	draw_missile_pixel{1}()
 end
 
 # Draw ball pixel at x
@@ -1942,7 +1940,7 @@ function draw_ball_pixel()
 end
 
 # Draw sprite pixels at x
-function draw_sprite_pixel<$player>()
+function draw_sprite_pixel{$player}()
 	if GRP[$player]
 		PlayerPixel[$player] = False
 		
@@ -1960,7 +1958,7 @@ function draw_sprite_pixel<$player>()
 						if On
 							@Self.x = x
 							at @Self
-								$y = $"252 + player"
+								$y = 252 + $player
 								/clone 0 $y -1 0 $y -1 ~ ~ ~
 							end
 							
@@ -1993,7 +1991,7 @@ function draw_sprite_pixel<$player>()
 end
 
 # Draw missile pixels at x
-function draw_missile_pixel<$player>()
+function draw_missile_pixel{$player}()
 	if ENAM[$player]
 		MissilePixel[$player] = False
 		
@@ -2005,44 +2003,44 @@ function draw_missile_pixel<$player>()
 			if bit >= 0 and bit < MissileSize[$player]
 				@Self.x = x
 				at @Self
-					$y = $"252 + player"
+					$y = 252 + $player
 					/clone 0 $y -1 0 $y -1 ~ ~ ~
 				end
 				
 				MissilePixel[$player] = True
 				
-				if $"player == 1"
+				if $player == 1
 					if MissilePixel[0] then CXM0M1 = True
 				end
 				if PFPixel
-					if $"player == 0"
+					if $player == 0
 						CXM0PF = True
 					end
-					if $"player == 1"
+					if $player == 1
 						CXM1PF = True
 					end
 				end
 				if BallPixel
-					if $"player == 0"
+					if $player == 0
 						CXM0BL = True
 					end
-					if $"player == 1"
+					if $player == 1
 						CXM1BL = True
 					end
 				end
 				if PlayerPixel[0]
-					if $"player == 0"
+					if $player == 0
 						CXM0P0 = True
 					end
-					if $"player == 1"
+					if $player == 1
 						CXM1P0 = True
 					end
 				end
 				if PlayerPixel[1]
-					if $"player == 0"
+					if $player == 0
 						CXM0P1 = True
 					end
-					if $"player == 1"
+					if $player == 1
 						CXM1P1 = True
 					end
 				end
@@ -2113,7 +2111,7 @@ function write_addr(addr, val)
 	
 	$write_mirrors = $"lambda a: [a % 0x40 + i for i in range(0, 0x80, 0x40)]"
 	switch addr
-		case $addr in $"MemoryAddresses"
+		case $addr in $MemoryAddresses
 			/scoreboard players operation Global Memory$addr = Global val
 		end
 		case $i in $"write_mirrors(HMP0)"
@@ -2246,7 +2244,7 @@ function write_addr(addr, val)
 				
 				PFByte = PF1
 				for $bit in $"range(8)"
-					$pfbit = $"bit + 4"
+					$pfbit = $bit + 4
 					PFBit[$pfbit] = PFByte / 0x80
 					PFByte *= 2
 					PFByte %= 0x100
@@ -2259,7 +2257,7 @@ function write_addr(addr, val)
 				
 				PFByte = PF2
 				for $bit in $"range(8)"
-					$pfbit = $"bit + 12"
+					$pfbit = $bit + 12
 					PFBit[$pfbit] = PFByte % 2
 					PFByte /= 2
 				end
@@ -2513,7 +2511,7 @@ function mnemonic()
 	as create @Marker
 		@s.mnemonic = True
 		switch(Function)
-			case $f in $"Mnemonics"
+			case $f in $Mnemonics
 				$m = $"Mnemonics[f]"
 				/data merge entity @s {"CustomName":"\"$m\""}
 			end

@@ -80,7 +80,7 @@ def p_parsed_expr(p):
 	
 #### Program
 def p_program(p):
-	'''program : optcomments dir NORMSTRING newlines optdesc optscale optassignments sections'''
+	'''program : optcomments dir string newlines optdesc optscale optassignments sections'''
 	p[0] = {}
 	p[0]['dir'] = p[3]
 	p[0]['desc'] = p[5]
@@ -99,7 +99,7 @@ def p_lib(p):
 
 #### Optdesc
 def p_optdesc(p):
-	'''optdesc : desc NORMSTRING newlines
+	'''optdesc : desc string newlines
 			   | empty'''
 	if len(p) < 4:
 		p[0] = 'No Description'
@@ -181,7 +181,7 @@ def p_functionsection(p):
 
 #### Template Function Section
 def p_template_function_section(p):
-	'''template_function_section : function ID LT macro_params GT LPAREN id_list RPAREN newlines blocklist end'''
+	'''template_function_section : function ID LCURLY macro_params RCURLY LPAREN id_list RPAREN newlines blocklist end'''
 	validate_mcfunction_name(p[2])
 	
 	p[0] = ('template_function', p[2], p[4], p[7], p[10])
@@ -215,6 +215,74 @@ def p_macro_params_one(p):
 def p_macro_params_empty(p):
 	'''macro_params : empty'''
 	p[0] = []
+
+#### Function call
+def p_function_call(p):
+	'''function_call : ID LPAREN exprlist RPAREN'''
+	p[0] = function_call_block(p.lineno(1), p[1], p[3])
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+
+def p_method_call(p):
+	'''method_call : fullselector DOT ID LPAREN exprlist RPAREN'''
+	p[0] = method_call_block(p.lineno(1), p[1], p[3], p[5])
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
+#### Expression list
+def p_exprlist_multiple(p):
+	'''exprlist : exprlist COMMA expr'''
+	p[0] = p[1]
+	p[0].append(p[3])
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
+def p_exprlist_single(p):
+	'''exprlist : expr'''
+	p[0] = [p[1]]
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+
+def p_exprlist_empty(p):
+	'''exprlist : empty'''
+	p[0] = []
+
+#### Template Function Call
+def p_template_function_call(p):
+	'''template_function_call : ID LCURLY macro_call_params RCURLY LPAREN exprlist RPAREN'''
+	p[0] = template_function_call_block(p.lineno(1), p[1], p[3], p[6])
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
+#### Macro call	
+def p_macro_call(p):
+	'''macro_call : DOLLAR ID macro_call_args'''
+	p[0] = macro_call_block(p.lineno(1), p[2], p[3])
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
+def p_macro_call_args(p):
+	'''macro_call_args : LPAREN macro_call_params RPAREN'''
+	p[0] = p[2]
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
+def p_macro_call_args_empty(p):
+	'''macro_call_args : empty'''
+	p[0] = []
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
+def p_macro_call_params(p):
+	'''macro_call_params : macro_call_param COMMA macro_call_params'''
+	p[0] = [p[1]] + p[3]
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+
+def p_macro_call_params_one(p):
+	'''macro_call_params : macro_call_param'''
+	p[0] = [p[1]]
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
+def p_macro_call_params_empty(p):
+	'''macro_call_params : empty'''
+	p[0] = []
+	
+def p_macro_call_param_number(p):
+	'''macro_call_param : const_value'''
+	p[0] = p[1]
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Newlines
 def p_newlines(p):
@@ -243,7 +311,7 @@ def p_id_list_empty(p):
 	
 #### Python codeblock
 def p_python_string(p):
-	'''python : DOLLAR NORMSTRING'''
+	'''python : DOLLAR string'''
 	p[0] = p[2]
 
 #### Optassignments
@@ -325,7 +393,7 @@ def p_block_move(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_block_for(p):
-	'''codeblock : for DOLLAR ID in python newlines blocklist end'''
+	'''codeblock : for DOLLAR ID in const_value newlines blocklist end'''
 	p[0] = python_for_block(p.lineno(1), p[3], p[5], p[7])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -335,7 +403,7 @@ def p_block_print(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_print_block(p):
-	'''print_block : DOLLAR print LPAREN virtualnumber RPAREN'''
+	'''print_block : DOLLAR print LPAREN const_value RPAREN'''
 	p[0] = print_block(p.lineno(1), p[4])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -450,7 +518,7 @@ def p_execute_at_vector(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_execute_at_vector_scale(p):
-	'''execute_item : at LPAREN virtualnumber RPAREN vector_expr'''
+	'''execute_item : at LPAREN const_value RPAREN vector_expr'''
 	p[0] = ('AtVector', (p[3], p[5]))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
@@ -543,12 +611,12 @@ def p_comparison_global(p):
 	
 #### If python
 def p_block_if_command(p):
-	'''codeblock : if python newlines blocklist end'''
+	'''codeblock : if const_value newlines blocklist end'''
 	p[0] = python_if_block(p.lineno(1), p[2], p[4], None)
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_block_ifelse_command(p):
-	'''codeblock : if python newlines blocklist else newlines blocklist end'''
+	'''codeblock : if const_value newlines blocklist else newlines blocklist end'''
 	p[0] = python_if_block(p.lineno(1), p[2], p[4], p[7])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
@@ -599,28 +667,28 @@ def p_switch_case_range(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_switch_case_python(p):
-	'''switch_case : case DOLLAR ID in python newlines blocklist end'''
+	'''switch_case : case DOLLAR ID in const_value newlines blocklist end'''
 	p[0] = ('python', (p[3], p[5], p[7]))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### Tell/Title	
 def p_block_tell(p):
-	'''codeblock : tell fullselector NORMSTRING'''
+	'''codeblock : tell fullselector string'''
 	p[0] = tell_block(p.lineno(1), p[2], p[3])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_block_title(p):
-	'''codeblock : title fullselector NORMSTRING
-				 | subtitle fullselector NORMSTRING
-				 | actionbar fullselector NORMSTRING'''
+	'''codeblock : title fullselector string
+				 | subtitle fullselector string
+				 | actionbar fullselector string'''
 	p[0] = title_block(p.lineno(1), p[1], p[2], None, p[3])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 	
 def p_block_title_times(p):
-	'''codeblock : title fullselector virtualinteger virtualinteger virtualinteger NORMSTRING
-				 | subtitle fullselector virtualinteger virtualinteger virtualinteger NORMSTRING
-				 | actionbar fullselector virtualinteger virtualinteger virtualinteger NORMSTRING'''
+	'''codeblock : title fullselector virtualinteger virtualinteger virtualinteger string
+				 | subtitle fullselector virtualinteger virtualinteger virtualinteger string
+				 | actionbar fullselector virtualinteger virtualinteger virtualinteger string'''
 	p[0] = title_block(p.lineno(1), p[1], p[2], (p[3], p[4], p[5]), p[6])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -644,7 +712,11 @@ def p_block_selector_assignment(p):
 	p[0] = p[1]
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
-
+#### String
+def p_string(p):
+	'''string : NORMSTRING'''
+	p[0] = p[1][1:-1]
+	
 #### Number
 def p_integer(p):
 	'''integer : DECIMAL
@@ -672,25 +744,65 @@ def p_float_val_minus(p):
 	p[0] = str(-float(p[2]))
 		
 #### Virtual number    
-def p_virtualnumber_literal(p):
-	'''virtualnumber : number'''
-	p[0] = const_number(p[1])
-	
-def p_virtualnumber_symbol(p):
-	'''virtualnumber : DOLLAR ID'''
-	p[0] = python_identifier(p[2])
-	
-def p_virtualnumber_symbol_negative(p):
-	'''virtualnumber : MINUS DOLLAR ID'''
-	p[0] = python_identifier(p[3], True)
-	
-def p_virtualnumber_interpreted(p):
-	'''virtualnumber : DOLLAR NORMSTRING'''
+def p_const_value_interpreted(p):
+	'''const_value : DOLLAR string'''
 	p[0] = interpreted_python(p[2], p.lineno(1))
+	
+def p_const_value_expr(p):
+	'''const_value : pyexpr'''
+	p[0] = interpreted_python(p[1], p.lineno(1))
+	
+def p_pyexpr_single(p):
+	'''pyexpr : number
+	          | NORMSTRING'''
+	p[0] = p[1]
+	
+def p_pyexpr_var(p):
+	'''pyexpr : DOLLAR ID'''
+	p[0] = p[2]
+	
+def p_pyexpr_binop(p):
+	'''pyexpr : pyexpr PLUS pyexpr
+	          | pyexpr MINUS pyexpr
+	          | pyexpr TIMES pyexpr
+	          | pyexpr DIVIDE pyexpr
+	          | pyexpr MOD pyexpr
+	          | pyexpr EQUALEQUAL pyexpr
+	          | pyexpr LEQ pyexpr
+	          | pyexpr GEQ pyexpr
+	          | pyexpr LT pyexpr
+	          | pyexpr GT pyexpr'''
+	p[0] = p[1] + p[2] + p[3]
+	
+def p_pyexpr_binop_double(p):
+	'''pyexpr : pyexpr NOT EQUALS pyexpr'''
+	p[0] = p[1] + p[2] + p[3] + p[4]
+	
+def p_pyexpr_binop_spaced(p):
+	'''pyexpr : pyexpr or pyexpr
+			  | pyexpr and pyexpr'''
+	p[0] = p[1] + ' ' + p[2] + ' ' + p[3]
+	
+def p_pyexpr_unary(p):
+	'''pyexpr : MINUS pyexpr'''
+	p[0] = p[1] + p[2]
+	
+def p_pyexpr_expr_list_empty(p):
+	'''pyexpr_expr_list : empty'''
+	p[0] = ''
 
-def p_virtualnumber_string(p):
-	'''virtualnumber : NORMSTRING'''
-	p[0] = const_string(p[1])
+def p_pyexpr_expr_list_one(p):
+	'''pyexpr_expr_list : pyexpr'''
+	p[0] = p[1]
+
+def p_pyexpr_expr_list_multi(p):
+	'''pyexpr_expr_list : pyexpr COMMA pyexpr_expr_list'''
+	p[0] = p[1] + p[2] + p[3]
+	
+def p_pyexpr_array(p):
+	'''pyexpr : LBRACK pyexpr_expr_list RBRACK
+	          | LPAREN pyexpr_expr_list RPAREN'''
+	p[0] = p[1] + p[2] + p[3]
 	
 #### Virtual integer
 def p_virtualinteger_literal(p):
@@ -735,12 +847,12 @@ def p_selector_definition(p):
 	p[0] = [p[1]] + p[3]
 	
 def p_selector_item_tag(p):
-	'''selector_item : create NORMSTRING'''
+	'''selector_item : create string'''
 	p[0] = ('Tag', p[2])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_selector_item_path_scale(p):
-	'''selector_item : ID EQUALS data_path data_type virtualnumber'''
+	'''selector_item : ID EQUALS data_path data_type const_value'''
 	p[0] = ('Path', (p[1], p[3], p[4], p[5]))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -750,7 +862,7 @@ def p_selector_item_path(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_selector_item_vector_path_scale(p):
-	'''selector_item : LT ID GT EQUALS data_path data_type virtualnumber'''
+	'''selector_item : LT ID GT EQUALS data_path data_type const_value'''
 	p[0] = ('VectorPath', (p[2], p[5], p[6], p[7]))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
@@ -818,7 +930,7 @@ def p_create_nocoords(p):
 	
 #### Python Assignment
 def p_pythonassignment_interpreted_string(p):
-	'''pythonassignment : DOLLAR ID EQUALS virtualnumber'''
+	'''pythonassignment : DOLLAR ID EQUALS const_value'''
 	p[0] = python_assignment_block(p.lineno(1), p[2], p[4])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
@@ -894,12 +1006,12 @@ def p_fullselector_symbol(p):
 
 #### Relative Coordinates
 def p_relcoord_number(p):
-	'''relcoord : virtualnumber'''
+	'''relcoord : const_value'''
 	p[0] = relcoord('', p[1])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_relcoord_relnumber(p):
-	'''relcoord : TILDE virtualnumber'''
+	'''relcoord : TILDE const_value'''
 	p[0] = relcoord('~', p[2])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -910,17 +1022,17 @@ def p_relcoord_relzero(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 # Optional Virtual Number
-def p_optional_virtualnumber(p):
-	'''optional_virtualnumber : virtualnumber'''
+def p_optional_const_value(p):
+	'''optional_const_value : const_value'''
 	p[0] = p[1]
 
-def p_optional_virtualnumber_empty(p):
-	'''optional_virtualnumber : empty'''
+def p_optional_const_value_empty(p):
+	'''optional_const_value : empty'''
 	p[0] = const_string('')
 
 #### Local Coordinates
 def p_localcoord_localnumber(p):
-	'''localcoord : POWER optional_virtualnumber'''
+	'''localcoord : POWER optional_const_value'''
 	p[0] = relcoord('^', p[2])
 	
 # Relcoords
@@ -1121,81 +1233,8 @@ def p_vector_expr_here(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_vector_expr_here_scale(p):
-	'''vector_expr : here LPAREN virtualnumber RPAREN'''
+	'''vector_expr : here LPAREN const_value RPAREN'''
 	p[0] = vector_here_expr(p[3])
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-	
-#### Function call
-def p_function_call(p):
-	'''function_call : ID LPAREN exprlist RPAREN'''
-	p[0] = function_call_block(p.lineno(1), p[1], p[3])
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-
-def p_method_call(p):
-	'''method_call : fullselector DOT ID LPAREN exprlist RPAREN'''
-	p[0] = method_call_block(p.lineno(1), p[1], p[3], p[5])
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-	
-#### Expression list
-def p_exprlist_multiple(p):
-	'''exprlist : exprlist COMMA expr'''
-	p[0] = p[1]
-	p[0].append(p[3])
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-	
-def p_exprlist_single(p):
-	'''exprlist : expr'''
-	p[0] = [p[1]]
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-
-def p_exprlist_empty(p):
-	'''exprlist : empty'''
-	p[0] = []
-
-#### Template Function Call
-def p_template_function_call(p):
-	'''template_function_call : ID LT macro_call_params GT LPAREN exprlist RPAREN'''
-	p[0] = template_function_call_block(p.lineno(1), p[1], p[3], p[6])
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-	
-#### Macro call	
-def p_macro_call(p):
-	'''macro_call : DOLLAR ID macro_call_args'''
-	p[0] = macro_call_block(p.lineno(1), p[2], p[3])
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-	
-def p_macro_call_args(p):
-	'''macro_call_args : LPAREN macro_call_params RPAREN'''
-	p[0] = p[2]
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-	
-def p_macro_call_args_empty(p):
-	'''macro_call_args : empty'''
-	p[0] = []
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-	
-def p_macro_call_params(p):
-	'''macro_call_params : macro_call_param COMMA macro_call_params'''
-	p[0] = [p[1]] + p[3]
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-
-def p_macro_call_params_one(p):
-	'''macro_call_params : macro_call_param'''
-	p[0] = [p[1]]
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-	
-def p_macro_call_params_empty(p):
-	'''macro_call_params : empty'''
-	p[0] = []
-	
-def p_macro_call_param_number(p):
-	'''macro_call_param : virtualnumber'''
-	p[0] = p[1]
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-	
-def p_macro_call_param_string(p):
-	'''macro_call_param : NORMSTRING'''
-	p[0] = '"' + p[1] + '"'
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Json (can't implement until COLON is an available token)
@@ -1217,7 +1256,7 @@ def p_macro_call_param_string(p):
 #	
 #def p_json_pair(p):
 #	'''json_pair : ID COLON json_value
-#				 | NORMSTRING COLON json_value'''
+#				 | string COLON json_value'''
 #	p[0] = '"' + p[1] + '"' + p[2] + p[3]
 #	
 #def p_json_value(p):
@@ -1227,7 +1266,7 @@ def p_macro_call_param_string(p):
 #	p[0] = p[1]
 #	
 #def p_json_value_string(p):
-#	'''json_value : NORMSTRING'''
+#	'''json_value : string'''
 #	p[0] = '"' + p[1] + '"'
 #	
 #def p_json_array(p):

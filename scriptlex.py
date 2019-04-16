@@ -1,7 +1,7 @@
 from ply import *
 
 keywords = (
-    'for', 'dir', 'desc', 'scale', 'in', 'end', 'not', 'and', 'to', 'by', 'import',
+    'for', 'dir', 'desc', 'scale', 'in', 'end', 'not', 'and', 'or', 'to', 'by', 'import',
     'at', 'as', 'facing', 'rotated', 'align', 'here', 'the_end', 'the_nether', 'overworld',
     'move', 'create', 'tell', 'title', 'subtitle', 'actionbar',
     'reset', 'clock', 'function', 'if', 'unless', 'then', 'do', 'else', 'switch', 'case',
@@ -131,7 +131,6 @@ def t_NEWLINE(t):
 	
 def t_NORMSTRING(t):
 	 r'("([^"\n]|(\\"))*")|\'([^\'\n]|(\\\'))*\''
-	 t.value = t.value[1:-1]
 	 return t
 
 def t_COMMENT(t):

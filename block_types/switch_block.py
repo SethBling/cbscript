@@ -27,9 +27,9 @@ class switch_block(object):
 			elif type == 'python':
 				dollarid, python, sub = content
 				try:
-					vals = eval(python, globals(), func.get_python_env())
+					vals = python.get_value(func)
 				except:
-					raise Exception('Could not evaluate "{0}" at line {1}'.format(python, line))
+					raise Exception('Could not evaluate case value at line {}'.format(line))
 				
 				if not isinstance(vals, collections.Iterable):
 					raise Exception('Python "{}" is not iterable at line {}'.format(python, line))

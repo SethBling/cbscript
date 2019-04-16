@@ -1,5 +1,5 @@
 class interpreted_python(object):
-	def __init__(self, expr, line):
+	def __init__(self, expr, line=0):
 		self.expr = expr
 		self.line = line
 		

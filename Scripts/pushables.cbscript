@@ -40,28 +40,28 @@ function create_block()
 		as create @Pushable
 			@s.physics = create @Physics
 			
-			for $block_type in $"BlockTypes"
+			for $block_type in $BlockTypes
 				if block ~ ~ ~ $block_type
 					/summon armor_stand ~ ~ ~ {Tags:["Disguise", "New"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"falling_block", Time:1b, NoGravity:1b, BlockState:{Name:"minecraft:$block_type"}, Tags:["FakeBlock"]}]}
-					if $"block_type == 'magma_block'"
+					if $block_type == 'magma_block'
 						@s.hot = True
 					end
-					if $"block_type == 'blue_ice' or block_type == 'packed_ice' or block_type == 'ice'"
+					if $block_type == 'blue_ice' or $block_type == 'packed_ice' or $block_type == 'ice'
 						@s.cold = True
 					end
-					if $"block_type == 'red_wool'"
+					if $block_type == 'red_wool'
 						@s.bishop = True
 						@s.fast = True
 					end
-					if $"block_type == 'green_wool'"
+					if $block_type == 'green_wool'
 						@s.rook = True
 						@s.fast = True
 					end
-					if $"block_type == 'yellow_wool'"
+					if $block_type == 'yellow_wool'
 						@s.queen = True
 						@s.fast = True
 					end
-					if $"block_type == 'orange_wool'"
+					if $block_type == 'orange_wool'
 						@s.knight = True
 						@s.fast = True
 					end
