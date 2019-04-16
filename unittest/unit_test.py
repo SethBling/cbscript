@@ -47,6 +47,13 @@ from block_types.vector_assignment_block import vector_assignment_block
 from block_types.vector_assignment_scalar_block import vector_assignment_scalar_block
 from block_types.while_block import while_block
 
+from data_types.const_number import const_number
+from data_types.const_string import const_string
+from data_types.python_identifier import python_identifier
+from data_types.interpreted_python import interpreted_python
+from data_types.relcoord import relcoord
+from data_types.relcoords import relcoords
+
 from scalar_expressions.arrayconst_expr import arrayconst_expr
 from scalar_expressions.arrayexpr_expr import arrayexpr_expr
 from scalar_expressions.binop_expr import binop_expr
@@ -65,6 +72,13 @@ from vector_expressions.vector_binop_vector_expr import vector_binop_vector_expr
 from vector_expressions.vector_expr import vector_expr
 from vector_expressions.vector_here_expr import vector_here_expr
 from vector_expressions.vector_var_expr import vector_var_expr
+
+def dummy_relcoords(x, y, z):
+	return relcoords((
+		relcoord('', const_number(x)),
+		relcoord('', const_number(y)),
+		relcoord('', const_number(z)),
+	))
 
 class test_cbscript(unittest.TestCase):
 	def test_is_number(self):
@@ -131,10 +145,10 @@ class test_cbscript(unittest.TestCase):
 		block = method_call_block(0, '@test_selector', 'test_method', [])
 		block.compile(func)
 		
-		block = move_block(0, '@a', ['0', '0', '0'])
+		block = move_block(0, '@a', dummy_relcoords(0, 0, 0))
 		block.compile(func)
 		
-		block = python_assignment_block(0, 'test_id', '1+1')
+		block = python_assignment_block(0, 'test_id', interpreted_python('1+1', 0))
 		block.compile(func)
 		
 		block = python_for_block(0, 'test_id', 'range(3)', [command_block(0, 'test_command')])
@@ -153,8 +167,8 @@ class test_cbscript(unittest.TestCase):
 		block.compile(func)
 		
 		tag = ('Tag', '{}')
-		path = ('Path', ('test_path', 'test', 'float', 1000))
-		vpath = ('VectorPath', ('test_vector_id', 'test_vector', 'float', 1))
+		path = ('Path', ('test_path', 'test', 'float', const_number(1000)))
+		vpath = ('VectorPath', ('test_vector_id', 'test_vector', 'float', const_number(1)))
 		block = selector_definition_block(0, 'test_id', '@a', [tag, path, vpath])
 		block.compile(func)
 		
@@ -176,7 +190,7 @@ class test_cbscript(unittest.TestCase):
 		block.compile(func)
 		
 		var = ('VAR_ID', 'test')
-		block = vector_assignment_block(0, var, '+=', vector_here_expr(1000))
+		block = vector_assignment_block(0, var, '+=', vector_here_expr(const_number(1000)))
 		block.compile(func)
 		
 		var = ('VAR_ID', 'test')
@@ -223,28 +237,32 @@ class test_cbscript(unittest.TestCase):
 		
 	def test_compile_move(self):
 		func = mock_mcfunction()
-		block = move_block(0, '@s', ('1', '1', '1'))
+		block = move_block(0, '@s', dummy_relcoords(1, 1, 1))
 		block.compile(func)
 		self.assertTrue('execute at @s run tp @s 1 1 1' in func.commands)
 
-		block = move_block(0, '@a', ('^0', '^0', '^1'))
+		block = move_block(0, '@a', relcoords((
+			relcoord('^', const_number(0)),
+			relcoord('^', const_number(0)),
+			relcoord('^', const_number(1)),
+		)))
 		block.compile(func)
 		self.assertTrue('execute as @a at @s run tp @s ^0 ^0 ^1' in func.commands)
 		
 	def test_compile_python_assignment(self):
 		func = mock_mcfunction()
 		
-		block = python_assignment_block(0, 'test', '1+1')
+		block = python_assignment_block(0, 'test', interpreted_python('1+1', 0))
 		block.compile(func)
 		self.assertTrue('test' in func.dollarid)
 		self.assertEqual(func.dollarid['test'], 2)
 		
-		block = python_assignment_block(0, 'test2', '1/0')
+		block = python_assignment_block(0, 'test2', interpreted_python('1/0', 0))
 		with self.assertRaises(Exception) as context:
 			block.compile(func)
 		self.assertEqual(len(func.dollarid), 1)
 
-		block = python_assignment_block(0, 'test3', 'math.sqrt(9)')
+		block = python_assignment_block(0, 'test3', interpreted_python('math.sqrt(9)', 0))
 		block.compile(func)
 		self.assertTrue('test3' in func.dollarid)
 		self.assertEqual(func.dollarid['test3'], 3)
@@ -371,7 +389,7 @@ class test_cbscript(unittest.TestCase):
 		macro = (['test_param'],[])
 		func.macros['test_macro'] = macro
 		
-		block = macro_call_block(0, 'test_macro', ['10'])
+		block = macro_call_block(0, 'test_macro', [const_number('10')])
 		block.compile(func)
 		
 		self.assertEqual(len(func.child_functions), 0)
@@ -448,8 +466,8 @@ class test_cbscript(unittest.TestCase):
 		
 		items = [
 			('Tag', '{}'),
-			('Path', ('test_path', 'path.to.data', 'float', 100)),
-			('VectorPath', ('test_vector_path', 'path.to.vector', 'int', 200)),
+			('Path', ('test_path', 'path.to.data', 'float', const_number(100))),
+			('VectorPath', ('test_vector_path', 'path.to.vector', 'int', const_number(200))),
 			('Method', ('function', 'test_method', [], [], [])),
 		]
 		block = selector_definition_block(0, 'test_selector', '@a', items)
@@ -500,7 +518,7 @@ class test_cbscript(unittest.TestCase):
 		func = mock_mcfunction()
 		func.template_functions['test_template_function'] = (['test_macro_param'], ['test_function_param'], [])
 		
-		block = template_function_call_block(0, 'test_template_function', ['10'], [num_expr(15)])
+		block = template_function_call_block(0, 'test_template_function', [const_number('10')], [num_expr('15')])
 		block.compile(func)
 		
 		self.assertEqual(func.commands, [
@@ -513,12 +531,13 @@ class test_cbscript(unittest.TestCase):
 		
 		func = mock_mcfunction()
 		func.template_functions['test_template_function'] = (['test_macro_param'], [], [])
+		func.dollarid['test_id'] = 5
 		
-		block = template_function_call_block(0, 'test_template_function', ['$test_id'], [])
+		block = template_function_call_block(0, 'test_template_function', [python_identifier('test_id')], [])
 		block.compile(func)
 		
-		self.assertTrue('test_template_function_$test_id' in func.functions)
-		self.assertTrue(('test_macro_param', '$test_id') in func.functions['test_template_function_$test_id'].environment.copied_dollarids)
+		self.assertTrue('test_template_function_5' in func.functions)
+		self.assertEqual(func.functions['test_template_function_5'].environment.dollarid['test_macro_param'], 5)
 		
 	def test_compile_title(self):
 		func = mock_mcfunction()
@@ -864,7 +883,7 @@ class test_cbscript(unittest.TestCase):
 	def test_vector_here_expr(self):
 		func = mock_mcfunction()
 		
-		expr = vector_here_expr(100)
+		expr = vector_here_expr(const_number(100))
 		ids = expr.compile(func, ['x', 'y', 'z'])
 		
 		self.assertEqual(ids, ['x', 'y', 'z'])
@@ -2031,13 +2050,34 @@ class test_cbscript(unittest.TestCase):
 		scriptparse.p_float_val_minus(p)
 		self.assertEqual(p[0], '-1.0')
 		
+		func = mock_mcfunction()
 		p = mock_parsed('1.0')
 		scriptparse.p_virtualnumber_literal(p)
-		self.assertEqual(p[0], '1.0')
+		self.assertEqual(p[0].get_value(func), 1.0)
 		
+		func = mock_mcfunction()
+		func.dollarid['test'] = 5
 		p = mock_parsed(None, 'test')
 		scriptparse.p_virtualnumber_symbol(p)
-		self.assertEqual(p[0], '$test')
+		self.assertEqual(p[0].get_value(func), 5)
+		
+		func = mock_mcfunction()
+		func.dollarid['test2'] = 10
+		p = mock_parsed(None, None, 'test2')
+		scriptparse.p_virtualnumber_symbol_negative(p)
+		self.assertEqual(p[0].get_value(func), -10)
+		
+		func = mock_mcfunction()
+		func.dollarid['test3'] = 10
+		p = mock_parsed(None, '5 + test3')
+		scriptparse.p_virtualnumber_interpreted(p)
+		self.assertEqual(p[0].get_value(func), 15)
+
+		func = mock_mcfunction()
+		p = mock_parsed('test string')
+		scriptparse.p_virtualnumber_string(p)
+		self.assertEqual(p[0].get_value(func), 'test string')
+
 		
 		p = mock_parsed('100')
 		scriptparse.p_virtualinteger_literal(p)
@@ -2164,10 +2204,11 @@ class test_cbscript(unittest.TestCase):
 		self.assertEqual(mcfunction.get_line(p[0]), 0)
 		
 		p = mock_parsed(None, 'id') 
+		func = mock_mcfunction()
 		scriptparse.p_create_nocoords(p)
 		self.assertTrue(type(p[0]) is create_block)
 		self.assertEqual(p[0].atid, 'id')
-		self.assertEqual(p[0].relcoords, ['~', '~', '~'])
+		self.assertEqual(p[0].relcoords.get_value(func), '~ ~ ~')
 		self.assertEqual(mcfunction.get_line(p[0]), 0)
 		
 		p = mock_parsed('qualifiers', None, 'qualifier') 
@@ -2229,28 +2270,33 @@ class test_cbscript(unittest.TestCase):
 		self.assertEqual(p[0], '@id[qualifiers]')
 		self.assertEqual(mcfunction.get_line(p[0]), 0)
 		
-		p = mock_parsed('100') 
+		p = mock_parsed(const_number('100'))
+		func = mock_mcfunction()
 		scriptparse.p_relcoord_number(p)
-		self.assertEqual(p[0], '100')
+		self.assertEqual(p[0].get_value(func), '100')
 		self.assertEqual(mcfunction.get_line(p[0]), 0)
 		
-		p = mock_parsed(None, '100') 
+		p = mock_parsed(None, const_number('100')) 
+		func = mock_mcfunction()
 		scriptparse.p_relcoord_relnumber(p)
-		self.assertEqual(p[0], '~100')
+		self.assertEqual(p[0].get_value(func), '~100')
 		self.assertEqual(mcfunction.get_line(p[0]), 0)
 		
 		p = mock_parsed(None) 
+		func = mock_mcfunction()
 		scriptparse.p_relcoord_relzero(p)
-		self.assertEqual(p[0], '~')
+		self.assertEqual(p[0].get_value(func), '~')
 		self.assertEqual(mcfunction.get_line(p[0]), 0)
 		
-		p = mock_parsed('^', '100') 
+		p = mock_parsed('^', const_number('100')) 
+		func = mock_mcfunction()
 		scriptparse.p_localcoord_localnumber(p)
-		self.assertEqual(p[0], '^100')
+		self.assertEqual(p[0].get_value(func), '^100')
 		
-		p = mock_parsed('1', '2', '3') 
+		p = mock_parsed(relcoord('', const_number('1')), relcoord('', const_number('2')), relcoord('', const_number('3')))
+		func = mock_mcfunction()
 		scriptparse.p_relcoords(p)
-		self.assertEqual(p[0], ('1', '2', '3'))
+		self.assertEqual(p[0].get_value(func), '1 2 3')
 		self.assertEqual(mcfunction.get_line(p[0]), 0)
 		
 		p = mock_parsed(None, 'expr') 
@@ -2749,8 +2795,8 @@ class test_cbscript(unittest.TestCase):
 		env.block_tags['test_block_tag'] = ['test_block1']
 		func = mcfunction.mcfunction(env)
 		
-		condition1 = 'block', (['1', '2', '3'], 'test_block_tag')
-		condition2 = 'block', (['4', '5', '6'], 'test_block2')
+		condition1 = 'block', (dummy_relcoords(1, 2, 3), 'test_block_tag')
+		condition2 = 'block', (dummy_relcoords(4, 5, 6), 'test_block2')
 		chain = func.get_if_chain([condition1, condition2])
 		
 		self.assertEqual(chain, 'if block 1 2 3 #test_namespace:test_block_tag if block 4 5 6 minecraft:test_block2 ')
@@ -2822,7 +2868,7 @@ class test_cbscript(unittest.TestCase):
 		sel.type = 'creeper'
 		env.selectors['test_id'] = sel
 		
-		item = 'AsCreate', create_block(0, 'test_id', ['1', '2', '3'])
+		item = 'AsCreate', create_block(0, 'test_id', relcoords([relcoord('', const_number('1')), relcoord('', const_number('2')), relcoord('', const_number('3'))]))
 		
 		cmd = func.get_execute_command([item], exec_func)
 		self.assertEqual(func.commands, [
@@ -2852,7 +2898,7 @@ class test_cbscript(unittest.TestCase):
 		for type, code, target, target_code, extra in [
 			('As', 'as', '@p', '@p', ''),
 			('Rotated', 'rotated as', '@p', '@p', ''),
-			('FacingCoords', 'facing', ['1', '2', '3'], '1 2 3', ''),
+			('FacingCoords', 'facing', dummy_relcoords(1, 2, 3), '1 2 3', ''),
 			('FacingEntity', 'facing entity', '@p', '@p', ' feet'),
 			('Align', 'align', 'xyz', 'xyz', ''),
 			('In', 'in', 'the_end', 'the_end', ''),
@@ -2867,7 +2913,7 @@ class test_cbscript(unittest.TestCase):
 		func = mcfunction.mcfunction(env)
 		exec_func = mock_mcfunction()
 		
-		item = 'At', ('@test_selector', ['1', '2', '3'])
+		item = 'At', ('@test_selector', dummy_relcoords(1, 2, 3))
 		
 		cmd = func.get_execute_command([item], exec_func)
 		self.assertEqual(cmd, 'execute at @test_selector positioned 1 2 3 ')
@@ -2887,7 +2933,7 @@ class test_cbscript(unittest.TestCase):
 		func = mcfunction.mcfunction(env)
 		exec_func = mock_mcfunction()
 		
-		item = 'At', (None, ['1', '2', '3'])
+		item = 'At', (None, dummy_relcoords(1, 2, 3))
 		
 		cmd = func.get_execute_command([item], exec_func)
 		self.assertEqual(cmd, 'execute positioned 1 2 3 ')
@@ -2916,7 +2962,7 @@ class test_cbscript(unittest.TestCase):
 		func = mcfunction.mcfunction(env)
 		exec_func = mock_mcfunction()
 		
-		item = 'AtVector', (200, vector_var_expr('test_vector'))
+		item = 'AtVector', (const_number(200), vector_var_expr('test_vector'))
 		
 		cmd = func.get_execute_command([item], exec_func)
 		self.assertEqual(cmd, 'execute at @e[_age == 1] ')
@@ -2935,8 +2981,8 @@ class test_cbscript(unittest.TestCase):
 		func = mcfunction.mcfunction(env)
 		exec_func = mock_mcfunction()
 		
-		item1 = 'AtVector', (200, vector_var_expr('test_vector'))
-		item2 = 'AtVector', (200, vector_var_expr('test_vector'))
+		item1 = 'AtVector', (const_number(200), vector_var_expr('test_vector'))
+		item2 = 'AtVector', (const_number(200), vector_var_expr('test_vector'))
 		
 		cmd = func.get_execute_command([item1, item2], exec_func)
 		self.assertEqual(cmd, None)

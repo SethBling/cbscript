@@ -1,3 +1,4 @@
+import math
 from mock_environment import mock_environment
 from mock_selector_definition import mock_selector_definition
 
@@ -120,7 +121,7 @@ class mock_mcfunction(object):
 		self.self_selector = selector
 		
 	def get_python_env(self):
-		return {}
+		return self.dollarid
 		
 	def clone_environment(self):
 		env = mock_environment()
@@ -132,6 +133,9 @@ class mock_mcfunction(object):
 		
 	def set_dollarid(self, id, val):
 		self.dollarid[id] = val
+
+	def get_dollarid(self, id):
+		return self.dollarid[id]
 		
 	def set_atid(self, id, fullselector):
 		self.selectors[id] = mock_selector_definition()
@@ -207,3 +211,10 @@ class mock_mcfunction(object):
 			
 	def evaluate_params(self, params):
 		return True
+
+	def eval(self, expr, line):		
+		try:
+			return eval(expr, globals(), self.get_python_env())
+		except Exception as e:
+			print(e)
+			raise ValueError('Could not evaluate "{0}" at line {1}'.format(expr, line))
