@@ -7,16 +7,16 @@ scale 1
 import common
 
 define @Beam = @Entity[type=area_effect_cloud, name=Beam, limit=1]
-	create '{"CustomName":"\"Beam\"", Duration:-1,Age:-2147483648,WaitTime:-2147483648}'
+	create {CustomName:"\"Beam\"", Duration:-1,Age:-2147483648,WaitTime:-2147483648}
 end
 
 # Temporary buffer armor stands. These should not live longer than a single tick.
 define @Buffer = @Entity[type=area_effect_cloud, tag=Buffer, limit=1]
-	create '{"CustomName":"\"Buffer\"", Duration:-1,Age:-2147483648,WaitTime:-2147483648, Tags:["Buffer"]}'
+	create {CustomName:"\"Buffer\"", Duration:-1,Age:-2147483648,WaitTime:-2147483648, Tags:["Buffer"]}
 end
 
 define @Marker = @Entity[type=area_effect_cloud]
-	create '{Duration:-1,Age:-2147483648,WaitTime:-2147483648}'
+	create {Duration:-1,Age:-2147483648,WaitTime:-2147483648}
 end
 
 define @Self = @s

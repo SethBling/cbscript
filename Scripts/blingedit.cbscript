@@ -28,16 +28,16 @@ end
 import common
 
 define @Corner = @Entity[type=magma_cube,tag=Corner]
-    create '{CustomName:"\"Corner\"", Tags:["Corner"], Glowing:1b, NoGravity:1b, NoAI:1b, Invulnerable:1b, Size:1b, Silent:1b, AbsorptionAmount:100f}'
+    create {CustomName:"\"Corner\"", Tags:["Corner"], Glowing:1b, NoGravity:1b, NoAI:1b, Invulnerable:1b, Size:1b, Silent:1b, AbsorptionAmount:100f}
     time = Time byte 1
 end
 
 define @ClickDetector = @Entity[type=slime,tag=ClickDetector]
-    create '{CustomName:"\"ClickDetector\"", Tags:["ClickDetector"], NoGravity:1b, NoAI: 1b, Invisible:1b, Silent:1b, Size:2, AbsorptionAmount: 100f}'
+    create {CustomName:"\"ClickDetector\"", Tags:["ClickDetector"], NoGravity:1b, NoAI: 1b, Invisible:1b, Silent:1b, Size:2, AbsorptionAmount: 100f}
 end
 
 define @CloneDisplay = @Entity[type=armor_stand,tag=CloneDisplay]
-    create '{CustomName:"\"CloneDisplay\"", Tags:["CloneDisplay"], Glowing:1b, NoGravity:1b, NoAI: 1b, Silent:1b, AbsorptionAmount: 100f, LeftHanded:0b, Invulnerable:1, ShowArms:1b, Pose:{LeftArm:[-90f,0f,0f],RightArm:[-90f,0f,0f]}}'
+    create {CustomName:"\"CloneDisplay\"", Tags:["CloneDisplay"], Glowing:1b, NoGravity:1b, NoAI: 1b, Silent:1b, AbsorptionAmount: 100f, LeftHanded:0b, Invulnerable:1, ShowArms:1b, Pose:{LeftArm:[-90f,0f,0f],RightArm:[-90f,0f,0f]}}
 	
 	function replace_items()
 		if @s.left_handed

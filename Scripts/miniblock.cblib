@@ -1,7 +1,7 @@
 import common
 
 define @MiniBlock = @Entity[type=armor_stand,tag=MiniBlock]
-	create '{Tags:["MiniBlock"], Pose:{Head:[0.0001f,0f,0f]}, $marker}'
+	create {Tags:["MiniBlock"], Pose:{Head:[0.0001f,0f,0f]}, Marker:1b, Invisible:1b, NoGravity:1b, Invulnerable:1b, Silent:1b}
 	
 	pose_rot_x = Pose.Head[0] float
 	pose_rot_y = Pose.Head[1] float

@@ -11,7 +11,7 @@ keywords = (
 
 tokens = keywords + (
      'COMMAND',
-     'LEQ','GEQ','GT','LT','EQUALEQUAL','DOLLAR','DOT',
+     'LEQ','GEQ','GT','LT','EQUALEQUAL','DOLLAR','DOT','COLON',
      'PLUSEQUALS','MINUSEQUALS','TIMESEQUALS','DIVIDEEQUALS','MODEQUALS','PLUSPLUS','MINUSMINUS',
      'EQUALS','PLUS','MINUS','TIMES','DIVIDE','MOD',
 	 #'POWEREMPTY',
@@ -80,6 +80,7 @@ t_TIMES			= r'\*'
 t_PLUSPLUS		= r'\+\+'
 t_MINUSMINUS	= r'--'
 t_DOT			= r'\.'
+t_COLON			= r'\:'
 t_NOT			= r'!'
 
 #def t_POWEREMPTY(t):
@@ -130,7 +131,7 @@ def t_NEWLINE(t):
     return t
 	
 def t_NORMSTRING(t):
-	 r'("([^"\n]|(\\"))*")|\'([^\'\n]|(\\\'))*\''
+	 r'("((\\.)|[^"\n])*")|(\'((\\.)|[^\'\n])*\')'
 	 return t
 
 def t_COMMENT(t):
