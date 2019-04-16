@@ -5,8 +5,8 @@ scale 1000
 import miniblock
 import pushable
 
-$NumPieces = $"9"
-$NumSegments = $"4"
+$NumPieces = 9
+$NumSegments = 4
 
 reset
 

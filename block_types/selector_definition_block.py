@@ -17,11 +17,15 @@ class selector_definition_block(object):
 				path_id, path, data_type, scale = val
 				if scale == None:
 					scale = func.scale
+				else:
+					scale = scale.get_value(func)
 				selector.paths[path_id] = (path, data_type, scale)
 			elif type == 'VectorPath':
 				vector_id, path, data_type, scale = val
 				if scale == None:
 					scale = func.scale
+				else:
+					scale = scale.get_value(func)
 				selector.vector_paths[vector_id] = (path, data_type, scale)
 			elif type == 'Method':
 				sub_env = func.clone_environment()

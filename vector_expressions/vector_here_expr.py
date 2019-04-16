@@ -6,7 +6,7 @@ class vector_here_expr(object):
 		if self.scale == None:
 			scale = func.scale
 		else:
-			scale = self.scale
+			scale = self.scale.get_value(func)
 		
 		func.register_objective('_age')
 		func.add_command('scoreboard players add @e _age 1')

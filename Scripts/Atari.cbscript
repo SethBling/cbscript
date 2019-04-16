@@ -128,7 +128,6 @@ $SWBCNT = 0x283
 
 $MemoryAddresses = $"list(range(0x80, 0x100)) + [SWACNT, SWBCNT, INSTAT]"
 
-
 # Function ID enum, sorted by instruction length
 
 # Addressing Mode Dependent

@@ -1,17 +1,17 @@
-dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\Minecraft in Minecraft
-desc: Creating a map takes a picture of the scene you're looking at.
+dir "C:\Users\Seth\AppData\Roaming\.minecraft\saves\Minecraft in Minecraft"
+desc "Creating a map takes a picture of the scene you're looking at."
 
 import block_pixels
 import common
 
-$screen_x: 128
-$screen_y: 71
-$screen_z: 12
-$width: 48
-$height: 48
-$screen_x_max: screen_x + width - 1
-$screen_y_max: screen_y + height - 1
-$screen_z_max: screen_z
+$screen_x = 128
+$screen_y = 71
+$screen_z = 12
+$width = 48
+$height = 48
+$screen_x_max = $"screen_x + width - 1"
+$screen_y_max = $"screen_y + height - 1"
+$screen_z_max = $screen_z
 
 define @Marker = @Entity[type=area_effect_cloud,name=Marker]
 	create: {"CustomName":"\"Marker\"", Duration:-1,Age:-2147483648,WaitTime:-2147483648}

@@ -25,7 +25,7 @@ class template_function_call_block(object):
 		# Get textual function name
 		func_name = function
 		for template_arg in template_args:
-			template_arg_val = func.apply_replacements(template_arg)
+			template_arg_val = template_arg.get_value(func)
 			func_name = func_name + '_{}'.format(template_arg_val)
 		
 		# Calculate function arguments
@@ -46,16 +46,7 @@ class template_function_call_block(object):
 			
 			# Bind template paramters in the function's environment
 			for p in range(len(template_args)):
-				if isInt(template_args[p]):
-					new_env.set_dollarid(template_params[p], int(template_args[p]))
-				elif isNumber(template_args[p]):
-					new_env.set_dollarid(template_params[p], float(template_args[p]))
-				elif template_args[p].startswith('"') and template_args.endswith('"') and len(template_args[p]) >= 2:
-					new_env.set_dollarid(template_params[p], template_args[p][1:-1])
-				elif template_args[p].startswith('$') or template_args[p].startswith('-$'):
-					new_env.copy_dollarid(template_params[p], template_args[p])
-				else:
-					print('Unknown macro parameter "{0}"'.format(template_args[p]))
+				new_env.set_dollarid(template_params[p], template_args[p].get_value(func))
 			
 			# Compile the new function
 			new_func = mcfunction(new_env, True, params)

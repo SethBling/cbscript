@@ -139,16 +139,19 @@ class mcfunction(object):
 				
 				if rtype == 'num':
 					rval = self.apply_replacements(rval)
-					if op == '>':						
-						test += '{3} score {0} {1} matches {2}.. '.format(lselector, lvar, str(int(rval)+1), iftype)
-					if op == '>=':						
-						test += '{3} score {0} {1} matches {2}.. '.format(lselector, lvar, rval, iftype)
-					if op == '<':						
-						test += '{3} score {0} {1} matches ..{2} '.format(lselector, lvar, str(int(rval)-1), iftype)
-					if op == '<=':						
-						test += '{3} score {0} {1} matches ..{2} '.format(lselector, lvar, rval, iftype)
-					if op == '=':						
-						test += '{3} score {0} {1} matches {2}..{2} '.format(lselector, lvar, rval, iftype)
+					try:
+						if op == '>':						
+							test += '{3} score {0} {1} matches {2}.. '.format(lselector, lvar, str(int(rval)+1), iftype)
+						if op == '>=':						
+							test += '{3} score {0} {1} matches {2}.. '.format(lselector, lvar, rval, iftype)
+						if op == '<':						
+							test += '{3} score {0} {1} matches ..{2} '.format(lselector, lvar, str(int(rval)-1), iftype)
+						if op == '<=':						
+							test += '{3} score {0} {1} matches ..{2} '.format(lselector, lvar, rval, iftype)
+						if op == '=':						
+							test += '{3} score {0} {1} matches {2}..{2} '.format(lselector, lvar, rval, iftype)
+					except Exception as e:
+						raise Exception('Unable to compute comparison "{} {}.{} {} {}"'.format(iftype, lselector, lvar, op, rval))
 				elif rtype == 'score':
 					rselector, rvar = self.get_variable(rval, initialize = True)
 					
@@ -200,7 +203,7 @@ class mcfunction(object):
 				else:
 					block = 'minecraft:{0}'.format(block)
 					
-				test += '{0} block {1} {2} '.format(iftype, ' '.join(relcoords), block)
+				test += '{0} block {1} {2} '.format(iftype, relcoords.get_value(self), block)
 			else:
 				raise ValueError('Unknown "if" type: {0}'.format(type))
 		
@@ -261,7 +264,7 @@ class mcfunction(object):
 			elif type == 'Rotated':
 				cmd += 'rotated as {0} '.format(val)
 			elif type == 'FacingCoords':
-				cmd += 'facing {0} '.format(' '.join(val))
+				cmd += 'facing {0} '.format(val.get_value(self))
 			elif type == 'FacingEntity':
 				cmd += 'facing entity {0} feet '.format(val)
 			elif type == 'Align':
@@ -271,7 +274,7 @@ class mcfunction(object):
 				if selector != None:
 					cmd += 'at {0} '.format(selector)
 				if relcoords != None:
-					cmd += 'positioned {0} '.format(' '.join(relcoords))
+					cmd += 'positioned {0} '.format(relcoords.get_value(self))
 			elif type == 'AtVector':
 				at_vector_count += 1
 				if at_vector_count >= 2:
@@ -281,6 +284,8 @@ class mcfunction(object):
 				scale, expr = val
 				if scale == None:
 					scale = self.scale
+				else:
+					scale = scale.get_value(self)
 
 				vec_vals = expr.compile(self, None)
 				self.add_command('scoreboard players add @e _age 1')
@@ -631,6 +636,9 @@ class mcfunction(object):
 	def set_dollarid(self, id, val):
 		self.environment.set_dollarid(id, val)
 		
+	def get_dollarid(self, id):
+		return self.environment.get_dollarid(id)
+		
 	def set_atid(self, id, fullselector):
 		return self.environment.set_atid(id, fullselector)
 		
@@ -655,9 +663,9 @@ class mcfunction(object):
 			return False
 			
 		if selector.tag == None:
-			self.add_command('summon {0} {1}'.format(entity_type, ' '.join(relcoords)))
+			self.add_command('summon {0} {1}'.format(entity_type, relcoords.get_value(self)))
 		else:
-			self.add_command('summon {0} {1} {2}'.format(entity_type, ' '.join(relcoords), selector.tag))
+			self.add_command('summon {0} {1} {2}'.format(entity_type, relcoords.get_value(self), selector.tag))
 			
 		return True
 		
@@ -706,3 +714,9 @@ class mcfunction(object):
 				
 			compile_section(section, self.environment)
 			
+	def eval(self, expr, line):
+		try:
+			return eval(expr, globals(), self.get_python_env())
+		except Exception as e:
+			print(e)
+			raise ValueError('Could not evaluate "{0}" at line {1}'.format(expr, line))

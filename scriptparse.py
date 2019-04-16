@@ -14,6 +14,7 @@ from block_types.import_block import import_block
 from block_types.macro_call_block import macro_call_block
 from block_types.method_call_block import method_call_block
 from block_types.move_block import move_block
+from block_types.print_block import print_block
 from block_types.python_assignment_block import python_assignment_block
 from block_types.python_for_block import python_for_block
 from block_types.python_if_block import python_if_block
@@ -27,6 +28,12 @@ from block_types.title_block import title_block
 from block_types.vector_assignment_block import vector_assignment_block
 from block_types.vector_assignment_scalar_block import vector_assignment_scalar_block
 from block_types.while_block import while_block
+from data_types.const_number import const_number
+from data_types.const_string import const_string
+from data_types.python_identifier import python_identifier
+from data_types.interpreted_python import interpreted_python
+from data_types.relcoord import relcoord
+from data_types.relcoords import relcoords
 from scalar_expressions.arrayconst_expr import arrayconst_expr
 from scalar_expressions.arrayexpr_expr import arrayexpr_expr
 from scalar_expressions.binop_expr import binop_expr
@@ -246,7 +253,8 @@ def p_optassignments_multiple(p):
 					  | selector_define_block newlines optassignments
 					  | blocktag newlines optassignments
 					  | array_definition newlines optassignments
-					  | import_statement newlines optassignments'''
+					  | import_statement newlines optassignments
+					  | print_block newlines optassignments'''
 	p[0] = [p[1]] + p[3]
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -319,6 +327,16 @@ def p_block_move(p):
 def p_block_for(p):
 	'''codeblock : for DOLLAR ID in python newlines blocklist end'''
 	p[0] = python_for_block(p.lineno(1), p[3], p[5], p[7])
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
+def p_block_print(p):
+	'''codeblock : print_block'''
+	p[0] = p[1]
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
+def p_print_block(p):
+	'''print_block : DOLLAR print LPAREN virtualnumber RPAREN'''
+	p[0] = print_block(p.lineno(1), p[4])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Execute
@@ -656,15 +674,23 @@ def p_float_val_minus(p):
 #### Virtual number    
 def p_virtualnumber_literal(p):
 	'''virtualnumber : number'''
-	p[0] = p[1]
+	p[0] = const_number(p[1])
 	
 def p_virtualnumber_symbol(p):
 	'''virtualnumber : DOLLAR ID'''
-	p[0] = '$' + p[2]
+	p[0] = python_identifier(p[2])
 	
 def p_virtualnumber_symbol_negative(p):
 	'''virtualnumber : MINUS DOLLAR ID'''
-	p[0] = '-$' + p[3]
+	p[0] = python_identifier(p[3], True)
+	
+def p_virtualnumber_interpreted(p):
+	'''virtualnumber : DOLLAR NORMSTRING'''
+	p[0] = interpreted_python(p[2], p.lineno(1))
+
+def p_virtualnumber_string(p):
+	'''virtualnumber : NORMSTRING'''
+	p[0] = const_string(p[1])
 	
 #### Virtual integer
 def p_virtualinteger_literal(p):
@@ -787,22 +813,12 @@ def p_create(p):
 	
 def p_create_nocoords(p):
 	'''create_block : create ATID'''
-	p[0] = create_block(p.lineno(1), p[2], ['~','~','~'])
+	p[0] = create_block(p.lineno(1), p[2], relcoords())
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Python Assignment
 def p_pythonassignment_interpreted_string(p):
-	'''pythonassignment : DOLLAR ID EQUALS DOLLAR NORMSTRING'''
-	p[0] = python_assignment_block(p.lineno(1), p[2], p[5])
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-	
-def p_pythonassignment_string(p):
-	'''pythonassignment : DOLLAR ID EQUALS NORMSTRING'''
-	p[0] = python_assignment_block(p.lineno(1), p[2], '\'' + p[4] + '\'')
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-
-def p_pythonassignment_number(p):
-	'''pythonassignment : DOLLAR ID EQUALS number'''
+	'''pythonassignment : DOLLAR ID EQUALS virtualnumber'''
 	p[0] = python_assignment_block(p.lineno(1), p[2], p[4])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
@@ -879,18 +895,18 @@ def p_fullselector_symbol(p):
 #### Relative Coordinates
 def p_relcoord_number(p):
 	'''relcoord : virtualnumber'''
-	p[0] = p[1]
+	p[0] = relcoord('', p[1])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_relcoord_relnumber(p):
 	'''relcoord : TILDE virtualnumber'''
-	p[0] = '~' + p[2]
+	p[0] = relcoord('~', p[2])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_relcoord_relzero(p):
 	'''relcoord : TILDE
 	            | TILDEEMPTY'''
-	p[0] = '~'
+	p[0] = relcoord('~', const_string(''))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 # Optional Virtual Number
@@ -900,18 +916,18 @@ def p_optional_virtualnumber(p):
 
 def p_optional_virtualnumber_empty(p):
 	'''optional_virtualnumber : empty'''
-	p[0] = ''
+	p[0] = const_string('')
 
 #### Local Coordinates
 def p_localcoord_localnumber(p):
 	'''localcoord : POWER optional_virtualnumber'''
-	p[0] = p[1] + p[2]
+	p[0] = relcoord('^', p[2])
 	
 # Relcoords
 def p_relcoords(p):
 	'''relcoords : relcoord relcoord relcoord
 				 | localcoord localcoord localcoord'''
-	p[0] = (p[1], p[2], p[3])
+	p[0] = relcoords((p[1], p[2], p[3]))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### Assignment

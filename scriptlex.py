@@ -6,7 +6,7 @@ keywords = (
     'move', 'create', 'tell', 'title', 'subtitle', 'actionbar',
     'reset', 'clock', 'function', 'if', 'unless', 'then', 'do', 'else', 'switch', 'case',
     'return', 'while', 'macro', 'block', 'define', 'array',
-    'byte', 'double', 'float', 'int', 'long', 'short',
+    'byte', 'double', 'float', 'int', 'long', 'short', 'print',
 )
 
 tokens = keywords + (

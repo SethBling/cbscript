@@ -19,9 +19,13 @@ def isNumber(s):
 		
 def isInt(s):
 	try:
-		if s == str(int(s)):
+		if isinstance(s, basestring):
+			if s == str(int(s)):
+				return True
+			return False
+		else:
+			int(s)
 			return True
-		return False
 	except Exception:
 		return False
 		
@@ -69,7 +73,10 @@ class environment(object):
 			elif isNumber(self.dollarid[identifier]):
 				text = str(text).replace('-$' + identifier, str(-float(self.dollarid[identifier])))
 			text = str(text).replace('$' + identifier, str(self.dollarid[identifier]))	
-				
+			
+		if text == None:
+			raise Exception('Applying replacements to "{}" returned None.'.format(text))
+			
 		return text
 	
 	def set_dollarid(self, id, val):
@@ -80,6 +87,15 @@ class environment(object):
 			id = id[1:]
 			
 		self.dollarid[id] = val
+		
+	def get_dollarid(self, id):
+		if len(id) == 0:
+			raise Exception('Dollar ID is empty string.')
+		
+		if id[0] == '$':
+			id = id[1:]
+			
+		return self.dollarid[id]
 		
 	def copy_dollarid(self, id, copyid):
 		negate = False
