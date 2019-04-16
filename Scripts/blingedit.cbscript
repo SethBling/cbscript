@@ -1349,13 +1349,13 @@ clock main
     end
 	
     as @Entity[type=item] at @s
-        /scoreboard players set @s[nbt={Item:{tag:{display:{Name:"{\"text\":\"BlingEdit\"}"}}}}] edit 1
+        @s[nbt={Item:{tag:{display:{Name:"{\"text\":\"BlingEdit\"}"}}}}].edit = True
         if @s.edit
             found_player = False
             at @s as @Player[sort=nearest,limit=1,distance=..5]
                 if @s.edit
                     @s.holding_item = True
-                    /execute unless entity @s[nbt={SelectedItem:{}}] run scoreboard players set @s holding_item 0
+					unless @s[nbt={SelectedItem:{}}] do @s.holding_item = False
                     unless @s.holding_item	
                         if @s.carrot_on_stick
                             /replaceitem entity @s weapon.mainhand carrot_on_a_stick{display:{Name:"{\"text\":\"BlingEdit\"}"},Enchantments:[{lvl:5s,id:"minecraft:sharpness"}]} 1
@@ -1397,9 +1397,9 @@ clock main
             unless @s.edit do @s.edit = False
             @s.prev_edit = @s.edit
             @s.edit = False
-            /scoreboard players set @s[nbt={"SelectedItem":{tag:{display:{Name:"{\"text\":\"BlingEdit\"}"}}}}] edit 1
+            @s[nbt={"SelectedItem":{tag:{display:{Name:"{\"text\":\"BlingEdit\"}"}}}}].edit = True
             @s.carrot_on_stick = False
-            /scoreboard players set @s[nbt={"SelectedItem":{id:"minecraft:carrot_on_a_stick"}}] carrot_on_stick 1
+            @s[nbt={"SelectedItem":{id:"minecraft:carrot_on_a_stick"}}].carrot_on_stick = True
 
             click = False
             

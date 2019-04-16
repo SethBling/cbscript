@@ -963,7 +963,8 @@ def p_qualifier_binop(p):
 				 | ID GEQ virtualinteger
 				 | ID LEQ virtualinteger
 				 | ID GT virtualinteger
-				 | ID LT virtualinteger'''
+				 | ID LT virtualinteger
+				 | ID EQUALS json_object'''
 	p[0] = p[1] + p[2] + p[3]
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	

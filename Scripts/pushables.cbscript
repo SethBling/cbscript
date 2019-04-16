@@ -102,7 +102,7 @@ clock main
 		end
 		
 		@s.holding_wand = False
-		/scoreboard players set @s[nbt={SelectedItem:{id:"minecraft:carrot_on_a_stick"}}] holding_wand 1
+		@s[nbt={SelectedItem:{id:"minecraft:carrot_on_a_stick"}}].holding_wand = True
 		
 		if not @s.holding_wand
 			@s.wand_active = False
