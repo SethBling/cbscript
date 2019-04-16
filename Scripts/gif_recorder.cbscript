@@ -26,9 +26,9 @@ define @Player = @Player
 	map_id = SelectedItem.tag.map int 1
 end
 
-$Pixels = $"128"
-$Radius = $"10"
-$Diameter = $"2 * Radius"
+$Pixels = 128
+$Radius = 10
+$Diameter = 2 * $Radius
 $PixelMove = $"float(Diameter) / Pixels"
 
 $map_x = $"-64"
@@ -55,10 +55,10 @@ end
 
 function fill_ceiling()
 	tell @a "Filling ceiling..."
-	$xmin = $"map_x-16"
-	$xmax = $"map_x+128+16"
-	$zmin = $"map_z-16"
-	$zmax = $"map_z+128+16"
+	$xmin = $map_x-16
+	$xmax = $map_x+128+16
+	$zmin = $map_z-16
+	$zmax = $map_z+128+16
 	/fill $xmin 254 $zmin $xmax 254 $zmax redstone_lamp
 	/fill $xmin 255 $zmin $xmax 255 $zmax redstone_lamp
 	tell @a "Ceiling done."
@@ -69,13 +69,13 @@ function setup()
 	
 	/bossbar set progress players @s
     for $x in $"range(map_x-8, map_x+128+8, 8)"
-		$dx = $"x - map_x"
-		if $"dx >= 0"
+		$dx = $x - $map_x
+		if $dx >= 0
 			/bossbar set progress value $dx
 		end
 		for $z in $"range(map_z-8, map_z+128+8, 8)"
-			$xp = $"x+7"
-			$zp = $"z+7"
+			$xp = $x+7
+			$zp = $z+7
 			/fill $x 0 $z $xp 253 $zp air
 		end
 	end
@@ -215,10 +215,10 @@ end
 
 macro $clone_overlay($val, $Y)
 	if @s.holding == $val
-		$OverlayXmin = $"-64"
-		$OverlayZmin = $"192"
-		$OverlayXmax = $"OverlayXmin+127"
-		$OverlayZmax = $"OverlayZmin+127"
+		$OverlayXmin = -64
+		$OverlayZmin = 192
+		$OverlayXmax = $OverlayXmin+127
+		$OverlayZmax = $OverlayZmin+127
 		/clone $OverlayXmin $Y $OverlayZmin $OverlayXmax $Y $OverlayZmax $map_x 254 $map_z
 	end
 end
@@ -233,8 +233,7 @@ function take_picture()
 	end
 	
 	move @Scan ^$Radius ^$Radius ^10
-	$x_start = $"map_x-1"
-	at $x_start 128 $map_z
+	at $map_x-1 128 $map_z
 		col = 0
 		while col < 128 at ~1 128 ~
 			# Recursively capture column pixels
@@ -291,7 +290,7 @@ function take_picture_col()
 end
 
 function ray_trace_step()
-	$Step = $"0.2"
+	$Step = 0.2
 	handled = False
 	if block ~ ~ ~ none and step < 800
 		step++
@@ -314,15 +313,14 @@ macro $get_texture($block_type, $y)
 end
 
 macro $set_texture($y)
-	$scaled_y = $"y*1000"
-	@Texture.<pos> = <22000 + u * 16, $scaled_y, 100000 + (999-v) * 16>
+	@Texture.<pos> = <22000 + u * 16, $y*1000, 100000 + (999-v) * 16>
 	at @Texture
 		/clone ~ ~ ~ ~ ~ ~ 0 1 0
 	end
 end
 
 function ray_trace_fine_step()
-	$FineStep = $"0.02"
+	$FineStep = 0.02
 	
 	handled = False
 	if block ~ ~ ~ none and fine_step < 11

@@ -1,23 +1,23 @@
-dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
-desc: GUI for performing Minecraft world editing operations.
+dir "C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13"
+desc "GUI for performing Minecraft world editing operations."
 
-$marker: "\"Marker\":1b, \"Invisible\":1b, \"NoGravity\":1b, \"Invulnerable\":1b"
+# Player edit state constants
+$Closed = 0
+$Pick1 = 1
+$EditSource = 3
+$EditingSource = 4
+$FillWait = 5
+$ReplaceWait1 = 6
+$ReplaceWait2 = 7
+$EditDest = 8
+$MovingDest = 9
+$ReplaceWaitRandom = 10
+$CloneBrush = 11
+$PluginClick = 12
 
-$Closed: 0
-$Pick1: 1
-$EditSource: 3
-$EditingSource: 4
-$FillWait: 5
-$ReplaceWait1: 6
-$ReplaceWait2: 7
-$EditDest: 8
-$MovingDest: 9
-$ReplaceWaitRandom: 10
-$CloneBrush: 11
-$PluginClick: 12
-
-$Type_Source: 1
-$Type_Dest: 2
+# Corner type constants
+$Type_Source = 1
+$Type_Dest = 2
 
 define block cursor_continue
     air
@@ -28,16 +28,16 @@ end
 import common
 
 define @Corner = @Entity[type=magma_cube,tag=Corner]
-    create: {CustomName:"\"Corner\"", Tags:["Corner"], Glowing:1b, NoGravity:1b, NoAI:1b, Invulnerable:1b, Size:1b, Silent:1b, AbsorptionAmount:100f}
+    create '{CustomName:"\"Corner\"", Tags:["Corner"], Glowing:1b, NoGravity:1b, NoAI:1b, Invulnerable:1b, Size:1b, Silent:1b, AbsorptionAmount:100f}'
     time = Time byte 1
 end
 
 define @ClickDetector = @Entity[type=slime,tag=ClickDetector]
-    create: {CustomName:"\"ClickDetector\"", Tags:["ClickDetector"], NoGravity:1b, NoAI: 1b, Invisible:1b, Silent:1b, Size:2, AbsorptionAmount: 100f}
+    create '{CustomName:"\"ClickDetector\"", Tags:["ClickDetector"], NoGravity:1b, NoAI: 1b, Invisible:1b, Silent:1b, Size:2, AbsorptionAmount: 100f}'
 end
 
 define @CloneDisplay = @Entity[type=armor_stand,tag=CloneDisplay]
-    create: {CustomName:"\"CloneDisplay\"", Tags:["CloneDisplay"], Glowing:1b, NoGravity:1b, NoAI: 1b, Silent:1b, AbsorptionAmount: 100f, LeftHanded:0b, Invulnerable:1, ShowArms:1b, Pose:{LeftArm:[-90f,0f,0f],RightArm:[-90f,0f,0f]}}
+    create '{CustomName:"\"CloneDisplay\"", Tags:["CloneDisplay"], Glowing:1b, NoGravity:1b, NoAI: 1b, Silent:1b, AbsorptionAmount: 100f, LeftHanded:0b, Invulnerable:1, ShowArms:1b, Pose:{LeftArm:[-90f,0f,0f],RightArm:[-90f,0f,0f]}}'
 	
 	function replace_items()
 		if @s.left_handed
@@ -73,27 +73,27 @@ define @Player = @Entity[type=player]
     selected = SelectedItemSlot int 1
     
     function tell_actions()
-        tell @s: 
-        tell @s: BlingEdit: {C[\[Options\]](/function blingedit:options) {B[\[Help\]](https://docs.google.com/document/d/13jC-XnCvyyaTaVWAqNc3Gyqu6JEOWAa-xGfhFC8AU50/edit?usp=sharing)
-        tell @s: Move {RBox{w: {C[\[Up\]](/function blingedit:move_up) [\[Down\]](/function blingedit:move_down) [\[Left\]](/function blingedit:move_left) [\[Right\]](/function blingedit:move_right) [\[Forward\]](/function blingedit:move_forward) [\[Backward\]](/function blingedit:move_backward)
-        tell @s: Actions: {G[\[Clone\]](/function blingedit:clone) {y[\[Fill\]](/function blingedit:fill) {Y[\[Replace\]](/function blingedit:replace) {C[\[Random\]](/function blingedit:randomize_menu) {M[\[Plugin\]](/function blingedit:list_plugins)   {R[\[Delete\]](/function blingedit:delete)
+        tell @s ''
+        tell @s 'BlingEdit: {C[\[Options\]](/function blingedit:options) {B[\[Help\]](https://docs.google.com/document/d/13jC-XnCvyyaTaVWAqNc3Gyqu6JEOWAa-xGfhFC8AU50/edit?usp=sharing)'
+        tell @s 'Move {RBox{w: {C[\[Up\]](/function blingedit:move_up) [\[Down\]](/function blingedit:move_down) [\[Left\]](/function blingedit:move_left) [\[Right\]](/function blingedit:move_right) [\[Forward\]](/function blingedit:move_forward) [\[Backward\]](/function blingedit:move_backward)'
+        tell @s 'Actions: {G[\[Clone\]](/function blingedit:clone) {y[\[Fill\]](/function blingedit:fill) {Y[\[Replace\]](/function blingedit:replace) {C[\[Random\]](/function blingedit:randomize_menu) {M[\[Plugin\]](/function blingedit:list_plugins)   {R[\[Delete\]](/function blingedit:delete)'
     end
 
     function options()
-        tell @s: 
-        tell @s: BlingEdit Options:
-        tell @s: Region Particle Outline: {G[\[On\]](/function blingedit:particles_on) {R[\[Off\]](/function blingedit:particles_off)
+        tell @s ''
+        tell @s 'BlingEdit Options:'
+        tell @s 'Region Particle Outline: {G[\[On\]](/function blingedit:particles_on) {R[\[Off\]](/function blingedit:particles_off)'
         /gamerule sendCommandFeedback false
     end
     
     function particles_on()
-        tell @s: Region Outline Particles {Genabled{-.
+        tell @s 'Region Outline Particles {Genabled{-.'
         @s.particles = True
         /gamerule sendCommandFeedback false
     end
     
     function particles_off()
-        tell @s: Region Outline Particles {Rdisabled{-
+        tell @s 'Region Outline Particles {Rdisabled{-'
         @s.particles = False
         /gamerule sendCommandFeedback false
     end
@@ -179,37 +179,37 @@ define @Player = @Entity[type=player]
     
     function cursor_range_5()
         @s.cursor_range = 5
-        tell @s: Set cursor range to {G5
+        tell @s 'Set cursor range to {G5'
         /gamerule sendCommandFeedback false
     end
     
     function cursor_range_10()
         @s.cursor_range = 10
-        tell @s: Set cursor range to {G10
+        tell @s 'Set cursor range to {G10'
         /gamerule sendCommandFeedback false
     end
     
     function cursor_range_15()
         @s.cursor_range = 15
-        tell @s: Set cursor range to {G15
+        tell @s 'Set cursor range to {G15'
         /gamerule sendCommandFeedback false
     end
     
     function cursor_range_20()
         @s.cursor_range = 20
-        tell @s: Set cursor range to {G20
+        tell @s 'Set cursor range to {G20'
         /gamerule sendCommandFeedback false
     end
     
     function cursor_inside()
         @s.cursor_inside = True
-        tell @s: Set cursor raycast to stop {GInside Blocks
+        tell @s 'Set cursor raycast to stop {GInside Blocks'
         /gamerule sendCommandFeedback false
     end
     
     function cursor_before()
         @s.cursor_inside = False
-        tell @s: Set cursor raycast to stop just {GBefore Blocks
+        tell @s 'Set cursor raycast to stop just {GBefore Blocks'
         /gamerule sendCommandFeedback false
     end
     
@@ -296,14 +296,14 @@ define @Player = @Entity[type=player]
 
     function clone_air()
         @s.clone_air = True
-        tell @s: Clone air: {GEnabled
+        tell @s 'Clone air: {GEnabled'
     
         /gamerule sendCommandFeedback false
     end
     
     function dont_clone_air()
         @s.clone_air = False
-        tell @s: Clone air: {RDisabled
+        tell @s' Clone air: {RDisabled'
     
         /gamerule sendCommandFeedback false
     end
@@ -312,11 +312,13 @@ define @Player = @Entity[type=player]
 		enabled = @s.clone_in_place
 		if enabled
 			@s.clone_in_place = False
-			tell @s: Clone In Place: {RDisabled
+			@s.cancel()
+			@s.clone()
 		end
 		unless enabled
 			@s.clone_in_place = True
-			tell @s: Clone In Place: {GEnabled
+			@s.cancel()
+			@s.clone()
 		end
 		
 		/gamerule sendCommandFeedback false
@@ -480,23 +482,23 @@ define @Player = @Entity[type=player]
     end
     
     function randomize_menu()
-        tell @s: 
-        tell @s: {cRandomization Options:
-        tell @s: {C[\[Store Selected Region as Random Block Pool\]](/function blingedit:store_random)
-        tell @s: {C[\[Fill Selected Region from Random Block Pool\]](/function blingedit:fill_random)
-        tell @s: {C[\[Replace in Selected Region from Random Block Pool\]](/function blingedit:replace_random)
+        tell @s ''
+        tell @s '{cRandomization Options:'
+        tell @s '{C[\[Store Selected Region as Random Block Pool\]](/function blingedit:store_random)'
+        tell @s '{C[\[Fill Selected Region from Random Block Pool\]](/function blingedit:fill_random)'
+        tell @s '{C[\[Replace in Selected Region from Random Block Pool\]](/function blingedit:replace_random)'
         
         /gamerule sendCommandFeedback false
     end
     
     function store_random()
         unless @s.state == $EditSource
-            tell @s: You can't store a region right now.
+            tell @s "You can't store a region right now."
         end
         if @s.state == $EditSource
             @s.get_minmax()
             unless has_box
-                tell @s: You don't currently have a region selected.
+                tell @s "You don't currently have a region selected."
             end
             if has_box
                 @s.<rand_min> = <min> / scale
@@ -505,7 +507,7 @@ define @Player = @Entity[type=player]
                 
                 <rx1, ry1, rz1> = @s.<rand_min>
                 <rx2, ry2, rz2> = @s.<rand_max>
-                tell @s: Random Block Pool region stored as \((rx1), (ry1), (rz1)\) to \((rx2), (ry2), (rz2)\)
+                tell @s 'Random Block Pool region stored as \((rx1), (ry1), (rz1)\) to \((rx2), (ry2), (rz2)\)'
             end
         end
         
@@ -514,11 +516,11 @@ define @Player = @Entity[type=player]
     
     function fill_random()
         unless @s.state == $EditSource
-            tell @s: You can't store a region right now.
+            tell @s "You can't store a region right now."
         end
         if @s.state == $EditSource
             unless @s.has_rand
-                tell @s: You haven't selected a region for a random block pool yet.
+                tell @s "You haven't selected a region for a random block pool yet."
             end
             if @s.has_rand
                 check_loaded()
@@ -606,8 +608,8 @@ define @Player = @Entity[type=player]
     
     function replace_random()
         @s.state = $ReplaceWaitRandom
-        tell @s: Use {w[/setblock ~ ~ ~ <block>](//setblock ~ ~ ~ minecraft:){- to pick the blocks to replace.
-        tell @s: Or replace {C[\[air\]](/function blingedit:replace_random_air)
+        tell @s 'Use {w[/setblock ~ ~ ~ <block>](//setblock ~ ~ ~ minecraft:){- to pick the blocks to replace.'
+        tell @s 'Or replace {C[\[air\]](/function blingedit:replace_random_air)'
     
         /gamerule sendCommandFeedback false
     end
@@ -626,18 +628,18 @@ define @Player = @Entity[type=player]
         @s.fill_random()
 
         @s.random_replace = False
-        tell @s: Replaced (replaced_blocks) blocks.
+        tell @s 'Replaced (replaced_blocks) blocks.'
     end
     
     function clone()
         unless @s.state == $EditSource
-            tell @s: You can't clone a box right now.
+            tell @s "You can't clone a box right now."
         end
         if @s.state == $EditSource
             @s.get_minmax()
 
             unless has_box
-                tell @s: You don't currently have a region selected.
+                tell @s "You don't currently have a region selected."
             end
             if has_box
                 <dx, dy, dz> = <max> - <min>
@@ -700,14 +702,14 @@ define @Player = @Entity[type=player]
 				@s.clone_flip_x = False
 				@s.clone_flip_z = False
                 
-                tell @s: 
-                tell @s: Move {BDest{w: {C[\[Up\]](/function blingedit:move_up) [\[Down\]](/function blingedit:move_down) [\[Left\]](/function blingedit:move_left) [\[Right\]](/function blingedit:move_right) [\[Forward\]](/function blingedit:move_forward) [\[Backward\]](/function blingedit:move_backward)
-                tell @s: Clone Options: {g[\[Do Clone Air\]](/function blingedit:clone_air) [\[Don't Clone Air\]](/function blingedit:dont_clone_air)
-				if @s.clone_in_place do tell @s: Clone In Place: {G[\[Enabled\]](/function blingedit:toggle_clone_in_place)
-				unless @s.clone_in_place do tell @s: Clone In Place: {R[\[Disabled\]](/function blingedit:toggle_clone_in_place)
-                tell @s: Flip: {g[\[Flip Left/Right\]](/function blingedit:clone_flip_leftright) [\[Flip Front/Back\]](/function blingedit:clone_flip_frontback)
-                tell @s: Rotate: {g[\[Rotate Left\]](/function blingedit:clone_rotate_left) [\[Rotate Right\]](/function blingedit:clone_rotate_right)
-                tell @s: Actions: {G[\[Confirm Clone\]](/function blingedit:confirm_clone) [\[Clone&Repeat\]](/function blingedit:clone_and_repeat) [\[Clone Brush\]](/function blingedit:clone_brush) [\[Cancel\]](/function blingedit:cancel)
+                tell @s ''
+                tell @s 'Move {BDest{w: {C[\[Up\]](/function blingedit:move_up) [\[Down\]](/function blingedit:move_down) [\[Left\]](/function blingedit:move_left) [\[Right\]](/function blingedit:move_right) [\[Forward\]](/function blingedit:move_forward) [\[Backward\]](/function blingedit:move_backward)'
+                tell @s "Clone Options: {g[\[Do Clone Air\]](/function blingedit:clone_air) [\[Don't Clone Air\]](/function blingedit:dont_clone_air)"
+				if @s.clone_in_place do tell @s "Clone In Place: {G[\[Enabled\]](/function blingedit:toggle_clone_in_place)"
+				unless @s.clone_in_place do tell @s "Clone In Place: {R[\[Disabled\]](/function blingedit:toggle_clone_in_place)"
+                tell @s 'Flip: {g[\[Flip Left/Right\]](/function blingedit:clone_flip_leftright) [\[Flip Front/Back\]](/function blingedit:clone_flip_frontback)'
+                tell @s 'Rotate: {g[\[Rotate Left\]](/function blingedit:clone_rotate_left) [\[Rotate Right\]](/function blingedit:clone_rotate_right)'
+                tell @s 'Actions: {G[\[Confirm Clone\]](/function blingedit:confirm_clone) [\[Clone&Repeat\]](/function blingedit:clone_and_repeat) [\[Clone Brush\]](/function blingedit:clone_brush) [\[Cancel\]](/function blingedit:cancel)'
             end
         end
         
@@ -716,7 +718,7 @@ define @Player = @Entity[type=player]
     
     function confirm_clone()
         unless @s.state == $EditDest
-            tell @s: You can't confirm a clone right now.
+            tell @s "You can't confirm a clone right now."
         end
         if @s.state == $EditDest
             @s.perform_clone()
@@ -744,7 +746,7 @@ define @Player = @Entity[type=player]
     
     function clone_and_repeat()
         unless @s.state == $EditDest
-            tell @s: You can't confirm a clone right now.
+            tell @s "You can't confirm a clone right now."
         end
         if @s.state == $EditDest
 			okay_rotation = True
@@ -761,7 +763,7 @@ define @Player = @Entity[type=player]
 				end
 			end
 			unless okay_rotation
-				tell @s: {GClone and Repeat{- is not implemented for perpendicular selections.
+				tell @s '{GClone and Repeat{- is not implemented for perpendicular selections.'
 			end
         end
     
@@ -774,7 +776,7 @@ define @Player = @Entity[type=player]
         if @s.state == $MovingDest then can_do = True
         
         unless can_do
-            tell @s: You can't confirm a clone right now.
+            tell @s "You can't confirm a clone right now."
         end
         
         if can_do
@@ -784,7 +786,7 @@ define @Player = @Entity[type=player]
                 moving = @s
             end
             @s.moving = moving
-            tell @s: Clone Brush activated. Click to paste at destination.
+            tell @s 'Clone Brush activated. Click to paste at destination.'
         end
         
         /gamerule sendCommandFeedback false
@@ -800,13 +802,13 @@ define @Player = @Entity[type=player]
         /execute store success score Global loaded run setblock 0 1 0 sandstone
         
         unless loaded
-            tell @s: Chunk 0,0 wasn't loaded. Try again \(or use {C/forceload add 0 0{W\)
+            tell @s "Chunk 0,0 wasn't loaded. Try again \(or use {C/forceload add 0 0{W\)"
         end
         if loaded
             @s.get_minmax()
             
             unless has_box
-                tell @s: You don't currently have a region selected.
+                tell @s "You don't currently have a region selected."
             end
             if has_box
                 @s.get_dest_minmax()
@@ -944,7 +946,7 @@ define @Player = @Entity[type=player]
         end
         
         if not handled
-            tell @s: You can't cancel right now.
+            tell @s "You can't cancel right now."
         end
         
         /gamerule sendCommandFeedback false
@@ -954,7 +956,7 @@ define @Player = @Entity[type=player]
         @s.get_minmax()
         
         if has_box
-            tell @s: Deleting (box_xmin), (box_ymin), (box_zmin) to (box_xmax), (box_ymax), (box_zmax)
+            tell @s 'Deleting (box_xmin), (box_ymin), (box_zmin) to (box_xmax), (box_ymax), (box_zmax)'
             /bossbar set progress players @s
             store_tile_drops()
             as create @Marker
@@ -976,21 +978,21 @@ define @Player = @Entity[type=player]
         end
         
         unless has_box
-            tell @s: You must select a region first.
+            tell @s 'You must select a region first.'
         end
         
         /gamerule sendCommandFeedback false
     end
 
     function fill()
-        tell @s: Use {w[/setblock ~ ~ ~ <block>](//setblock ~ ~ ~ minecraft:){- to pick the filler block.
+        tell @s 'Use {w[/setblock ~ ~ ~ <block>](//setblock ~ ~ ~ minecraft:){- to pick the filler block.'
         @s.state = $FillWait
         /gamerule sendCommandFeedback false
     end
     
     function replace()
-        tell @s: Use {w[/setblock ~ ~ ~ <block>](//setblock ~ ~ ~ minecraft:){- to pick the block to be replaced.
-        tell @s: Or pick {C[\[air\]](/function blingedit:replace1_air){-
+        tell @s 'Use {w[/setblock ~ ~ ~ <block>](//setblock ~ ~ ~ minecraft:){- to pick the block to be replaced.'
+        tell @s 'Or pick {C[\[air\]](/function blingedit:replace1_air){-'
         @s.state = $ReplaceWait1
         /gamerule sendCommandFeedback false
     end
@@ -1008,11 +1010,11 @@ define @Player = @Entity[type=player]
             /clone ~ ~ ~ ~ ~ ~ 0 2 0
             @s.state = $ReplaceWait2
             /setblock ~ ~ ~ air
-            tell @s: Use {w[/setblock ~ ~ ~ <block>](//setblock ~ ~ ~ minecraft:){- to pick the block they should be replaced with.
-            tell @s: Or pick {C[\[air\]](/function blingedit:replace2_air){-
+            tell @s 'Use {w[/setblock ~ ~ ~ <block>](//setblock ~ ~ ~ minecraft:){- to pick the block they should be replaced with.'
+            tell @s 'Or pick {C[\[air\]](/function blingedit:replace2_air){-'
         end
         unless loaded
-            tell @s: Chunk 0,0 wasn't loaded. Try again \(or use {C/forceload add 0 0{W\)
+            tell @s "Chunk 0,0 wasn't loaded. Try again \(or use {C/forceload add 0 0{W\)"
         end
     end
     
@@ -1031,7 +1033,7 @@ define @Player = @Entity[type=player]
             @s.get_minmax()
             
             if has_box
-                tell @s: Replacing (box_xmin), (box_ymin), (box_zmin) to (box_xmax), (box_ymax), (box_zmax)
+                tell @s 'Replacing (box_xmin), (box_ymin), (box_zmin) to (box_xmax), (box_ymax), (box_zmax)'
                 
                 /bossbar set progress players @s
                 store_tile_drops()
@@ -1058,13 +1060,13 @@ define @Player = @Entity[type=player]
                 end
                 restore_tile_drops()
                 
-                tell @s: Replaced (count) blocks.
+                tell @s 'Replaced (count) blocks.'
                 @s.state = $EditSource
             end
             /setblock ~ ~ ~ air
             
             unless has_box
-                tell @s: You must select a box first.
+                tell @s 'You must select a box first.'
             end
         end
     end
@@ -1260,13 +1262,13 @@ function check_loaded()
     /execute store success score Global loaded run setblock 0 1 0 sandstone
     
     unless loaded
-        tell @s: Chunk 0,0 wasn't loaded. Try again \(or use {C{U[/forceload add 0 0](//forceload add 0 0){u{W\)
+        tell @s "Chunk 0,0 wasn't loaded. Try again \(or use {C{U[/forceload add 0 0](//forceload add 0 0){u{W\)"
     end
 end
 
 function draw_particle_box()
     as create @Marker
-        $particle: "fishing"
+        $particle = "fishing"
         for x = p_xmin to p_xmax by 200
             @s.<pos> = <x, p_ymin, p_zmin>
             at @s
@@ -1367,13 +1369,13 @@ clock main
                         if @s.raycast_select
                             @s.raycast_select = False
                             handled = True
-                            tell @s: Changed selection to: {YFloating Cursor
-                            tell @s: Options: {y[\[Range 5\]](/function blingedit:cursor_range_5) [\[Range 10\]](/function blingedit:cursor_range_10) [\[Range 15\]](/function blingedit:cursor_range_15) [\[Range 20\]](/function blingedit:cursor_range_20) 
+                            tell @s 'Changed selection to: {YFloating Cursor'
+                            tell @s 'Options: {y[\[Range 5\]](/function blingedit:cursor_range_5) [\[Range 10\]](/function blingedit:cursor_range_10) [\[Range 15\]](/function blingedit:cursor_range_15) [\[Range 20\]](/function blingedit:cursor_range_20)'
                         end
                         if not handled
                             @s.raycast_select = True
-                            tell @s: Changed selection to: {YRaycast Cursor
-                            tell @s: Options: {y[\[Select Inside Blocks\]](/function blingedit:cursor_inside) [\[Select Before Blocks\]](/function blingedit:cursor_before)
+                            tell @s 'Changed selection to: {YRaycast Cursor'
+                            tell @s 'Options: {y[\[Select Inside Blocks\]](/function blingedit:cursor_inside) [\[Select Before Blocks\]](/function blingedit:cursor_before)'
                         end
                     end
                 end
@@ -1420,7 +1422,7 @@ clock main
             if @s.prime_plugins
                 @s.prime_plugins = False
                 @s.disp_plugins = True
-                tell @s: {cPlugins:
+                tell @s '{cPlugins:'
             end
             
             if @s.edit unless @s.prev_edit
@@ -1491,7 +1493,7 @@ clock main
                 end
                 
                 if not corner_exists
-                    tell @s: BlingEdit doesn't work in peaceful mode.
+                    tell @s "BlingEdit doesn't work in peaceful mode."
                     @s.state = $Closed
                 end
             end
@@ -1499,7 +1501,7 @@ clock main
             @s.get_minmax()
             if has_box
                 vol = box_size_x * box_size_y * box_size_z
-                actionbar @s: Size: {y{D(box_size_x){-x{y{D(box_size_y){-x{y{D(box_size_z){- Volume: {y{D(vol){-
+                actionbar @s "Size: {y{D(box_size_x){-x{y{D(box_size_y){-x{y{D(box_size_z){- Volume: {y{D(vol){-"
             end
             
             @s.get_dest_minmax()
@@ -1553,7 +1555,7 @@ clock main
                             @player.moving = None
                             if @player.tell_actions
                                 <tx, ty, tz> = <x, y, z> / scale
-                                tell @player: 2nd corner at {R(tx), (ty), (tz)
+                                tell @player '2nd corner at {R(tx), (ty), (tz)'
                                 @player.tell_actions()
                                 @player.tell_actions = False							
                             end
@@ -1633,7 +1635,7 @@ clock main
                             @s.get_minmax()
                             
                             if has_box
-                                tell @s: Filling (box_xmin), (box_ymin), (box_zmin) to (box_xmax), (box_ymax), (box_zmax)
+                                tell @s 'Filling (box_xmin), (box_ymin), (box_zmin) to (box_xmax), (box_ymax), (box_zmax)'
                                 
                                 /bossbar set progress players @s
                                 store_tile_drops()
@@ -1659,7 +1661,7 @@ clock main
                             /setblock ~ ~ ~ air
                             
                             unless has_box
-                                tell @s: You must select a box first.
+                                tell @s 'You must select a box first.'
                             end
                         end
                     end
@@ -1699,7 +1701,7 @@ clock main
                     if @s.state == $Pick1
                         as @s.pick1(@Corner)
                             <x, y, z> = @s.<pos> / scale
-                            tell @player: 1st corner at {R(x), (y), (z)
+                            tell @player '1st corner at {R(x), (y), (z)'
                         end
                         @s.state = $EditingSource
                         @s.tell_actions = True
