@@ -217,6 +217,11 @@ def p_macro_params_empty(p):
 	p[0] = []
 
 #### Function call
+def p_function_call_namespace(p):
+	'''function_call : ID COLON ID LPAREN exprlist RPAREN'''
+	p[0] = function_call_block(p.lineno(1), p[1]+p[2]+p[3], p[5])
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+
 def p_function_call(p):
 	'''function_call : ID LPAREN exprlist RPAREN'''
 	p[0] = function_call_block(p.lineno(1), p[1], p[3])
@@ -766,10 +771,6 @@ def p_pyexpr_single(p):
 	          | NORMSTRING'''
 	p[0] = p[1]
 	
-def p_pyexpr_var(p):
-	'''pyexpr : DOLLAR ID'''
-	p[0] = p[2]
-	
 def p_pyexpr_binop(p):
 	'''pyexpr : pyexpr PLUS pyexpr
 	          | pyexpr MINUS pyexpr
@@ -784,7 +785,8 @@ def p_pyexpr_binop(p):
 	p[0] = p[1] + p[2] + p[3]
 	
 def p_pyexpr_binop_double(p):
-	'''pyexpr : pyexpr NOT EQUALS pyexpr'''
+	'''pyexpr : pyexpr NOT EQUALS pyexpr
+	          | pyexpr TIMES TIMES pyexpr'''
 	p[0] = p[1] + p[2] + p[3] + p[4]
 	
 def p_pyexpr_binop_spaced(p):
@@ -814,12 +816,25 @@ def p_pyexpr_array(p):
 	p[0] = p[1] + p[2] + p[3]
 	
 def p_pyexpr_function_call(p):
-	'''pyexpr : DOLLAR ID LPAREN pyexpr_expr_list RPAREN'''
-	p[0] = p[2] + p[3] + p[4] + p[5]
+	'''pyexpr : pyid LPAREN pyexpr_expr_list RPAREN'''
+	p[0] = p[1] + p[2] + p[3] + p[4]
 
 def p_pyexpr_array_lookup(p):
-	'''pyexpr : DOLLAR ID LBRACK pyexpr RBRACK'''
-	p[0] = p[2] + p[3] + p[4] + p[5]
+	'''pyexpr : pyid LBRACK pyexpr RBRACK'''
+	p[0] = p[1] + p[2] + p[3] + p[4]
+	
+def p_pyexpr_pyid(p):
+	'''pyid : DOLLAR ID'''
+	p[0] = p[2]
+	
+def p_pyexpr_pyid_member(p):
+	'''pyid : pyid DOT ID'''
+	p[0] = p[1] + p[2] + p[3]
+
+def p_pyexpr_var(p):
+	'''pyexpr : pyid'''
+	p[0] = p[1]
+	
 
 	
 #### Virtual integer
@@ -910,12 +925,9 @@ def p_data_path_multi(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_data_type(p):
-	'''data_type : byte
-				 | double
-				 | float
-				 | int
-				 | long
-				 | short'''
+	'''data_type : ID'''
+	if p[1] not in ['byte', 'double', 'float', 'int', 'long', 'short']:
+		raise SyntaxError('Syntax Error: Invalid path type "{}" at line {}.'.format(p.lineno(1)))
 	p[0] = p[1]
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	

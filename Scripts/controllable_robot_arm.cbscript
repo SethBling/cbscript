@@ -9,13 +9,13 @@ $NumPieces = 9
 $NumSegments = 4
 
 reset
-
+	tell @Player[gamemode=creative] "{G[\[Reload Control Blocks\]](/function controllable_robot_arm:refresh)"
 end
 
 macro $create_control_block($x, $y, $z, $idx, $block_type)
 	at $x $y $z
 		/setblock ~ ~ ~ $block_type
-		/function pushables:create_block
+		pushables:create_block()
 		@Pushable[distance=..1].arm_control = $idx
 		@Pushable[distance=..1].lock_x = True
 	end
@@ -25,7 +25,7 @@ function refresh()
 	/kill @MiniBlock
 	/kill @Marker
 	at @Pushable[arm_control]
-		/function pushables:remove_here
+		pushables:remove_here()
 	end
 
 	$create_control_block(-796, 56, 89, 1, "diamond_block")
@@ -194,6 +194,5 @@ clock main
 		@s.drop = False
 		/data merge entity @s {NoGravity:0b}
 	end
-	
 end
 

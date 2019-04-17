@@ -7,19 +7,19 @@ import map_blocks
 import item_frame
 
 define @Scan = @Entity[type=area_effect_cloud,tag=Scan,limit=1]
-	create '{Tags:["Scan"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}'
+	create {Tags:["Scan"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
 end
 
 define @Position = @Entity[type=area_effect_cloud,tag=Position,limit=1]
-	create '{Tags:["Position"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}'
+	create {Tags:["Position"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
 end
 
 define @Texture = @Entity[type=area_effect_cloud,tag=Texture,limit=1]
-	create '{Tags:["Texture"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}'
+	create {Tags:["Texture"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
 end
 
 define @Frame = @Entity[type=area_effect_cloud,tag=Frame]
-	create '{Tags:["Frame"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}'
+	create {Tags:["Frame"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
 end
 
 define @Player = @Player
@@ -29,10 +29,10 @@ end
 $Pixels = 128
 $Radius = 10
 $Diameter = 2 * $Radius
-$PixelMove = $"float(Diameter) / Pixels"
+$PixelMove = $float($Diameter) / $Pixels
 
-$map_x = $"-64"
-$map_z = $"-64"
+$map_x = -64
+$map_z = -64
 
 reset
 	/gamerule maxCommandChainLength 1000000000
@@ -68,12 +68,12 @@ function setup()
 	fill_ceiling()
 	
 	/bossbar set progress players @s
-    for $x in $"range(map_x-8, map_x+128+8, 8)"
+    for $x in $range($map_x-8, $map_x+128+8, 8)
 		$dx = $x - $map_x
 		if $dx >= 0
 			/bossbar set progress value $dx
 		end
-		for $z in $"range(map_z-8, map_z+128+8, 8)"
+		for $z in $range($map_z-8, $map_z+128+8, 8)
 			$xp = $x+7
 			$zp = $z+7
 			/fill $x 0 $z $xp 253 $zp air

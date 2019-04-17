@@ -126,7 +126,7 @@ $SWACNT = 0x281
 $SWCHB = 0x282
 $SWBCNT = 0x283
 
-$MemoryAddresses = $"list(range(0x80, 0x100)) + [SWACNT, SWBCNT, INSTAT]"
+$MemoryAddresses = $list($range(0x80, 0x100)) + [$SWACNT, $SWBCNT, $INSTAT]
 
 # Function ID enum, sorted by instruction length
 
@@ -587,7 +587,7 @@ function read_whole_rom()
 				# Read Byte
 				val = 0
 				for $bit in $range(8)
-					$exp = $"2 ** bit"
+					$exp = 2 ** $bit
 					at @s if block ~ ~$bit ~ stone do val += $exp
 				end	
 				
@@ -791,7 +791,7 @@ function read_instruction()
 	end
 	
 	switch Instruction
-		case $op in $"OpCodes.keys()"
+		case $op in $OpCodes
 			$func = $OpCodes[$op]
 			Function = $func
 		end
@@ -823,7 +823,7 @@ end
 function get_base_cycles()
 	Cycles = 0
 	switch Instruction
-		case $op in $"BaseCycles.keys()"
+		case $op in $BaseCycles
 			$cycles = $BaseCycles[$op]
 			Cycles = $cycles
 		end
@@ -843,15 +843,15 @@ function get_addressing_mode()
 	
 	# Get Non-Standard Addressing Modes
 	switch Instruction
-		case $op in $"AddrModes.keys()"
+		case $op in $AddrModes
 			$mode = $AddrModes[$op]
 			AddrMode = $mode
 		end
-		case $op in $"Pushes.keys()"
+		case $op in $Pushes
 			$push = $Pushes[$op]
 			Push = $push
 		end
-		case $op in $"Pulls.keys()"
+		case $op in $Pulls
 			$pull = $Pulls[$op]
 			Pull = $pull
 		end
@@ -2337,7 +2337,7 @@ function write_addr(addr, val)
 			
 			switch (Byte / 0x10) % 0x04
 				case $bits in $range(4)
-					$size = $"2 ** bits"
+					$size = 2 ** $bits
 					BallSize = $size
 				end
 			end
@@ -2471,7 +2471,7 @@ macro $UpdateNumSize($player)
 	MissileSizeBits = (NUSIZ[$player] / 0x10) % 0x04
 	switch MissileSizeBits
 		case $bits in $range(4)
-			$size = $"2 ** bits"
+			$size = 2 ** $bits
 			MissileSize[$player] = $size
 		end
 	end
