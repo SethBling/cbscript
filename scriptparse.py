@@ -813,6 +813,15 @@ def p_pyexpr_array(p):
 	          | LPAREN pyexpr_expr_list RPAREN'''
 	p[0] = p[1] + p[2] + p[3]
 	
+def p_pyexpr_function_call(p):
+	'''pyexpr : DOLLAR ID LPAREN pyexpr_expr_list RPAREN'''
+	p[0] = p[2] + p[3] + p[4] + p[5]
+
+def p_pyexpr_array_lookup(p):
+	'''pyexpr : DOLLAR ID LBRACK pyexpr RBRACK'''
+	p[0] = p[2] + p[3] + p[4] + p[5]
+
+	
 #### Virtual integer
 def p_virtualinteger_literal(p):
 	'''virtualinteger : integer'''
