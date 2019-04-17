@@ -350,7 +350,7 @@ def p_variable_global(p):
 	p[0] = ('Var', ('Global', p[1]))
 	
 def p_variable_array_const(p):
-	'''variable : ID LBRACK virtualinteger RBRACK'''
+	'''variable : ID LBRACK const_value RBRACK'''
 	p[0] = ('ArrayConst', (p[1], p[3]))
 	
 def p_variable_array_expr(p):
@@ -580,12 +580,12 @@ def p_condition_vector_equality(p):
 
 def p_condition_bool(p):
 	'''condition : variable'''
-	p[0] = ('score', (p[1], '>', ('num', '0')))
+	p[0] = ('score', (p[1], '>', ('num', const_number(0))))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_condition_not_bool(p):
 	'''condition : not variable'''
-	p[0] = ('score', (p[2], '<=', ('num', '0')))
+	p[0] = ('score', (p[2], '<=', ('num', const_number(0))))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_condition_block(p):
@@ -601,7 +601,16 @@ def p_condition_block_virtual(p):
 # Condition Comparisons
 def p_comparison_num(p):
 	'''comparison : virtualinteger'''
-	p[0] = ('num', p[1])
+	val = p[1]
+	if val.startswith('$'):
+		val = val[1:]
+	p[0] = ('num', interpreted_python(val, p.lineno(1)))
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+
+# Condition Comparisons
+def p_comparison_expr(p):
+	'''comparison : LPAREN const_value RPAREN'''
+	p[0] = ('num', p[2])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_comparison_global(p):
@@ -657,12 +666,12 @@ def p_cases_multiple(p):
 	p[0] = [p[1]] + p[3]
 	
 def p_switch_case_single(p):
-	'''switch_case : case virtualinteger newlines blocklist end'''
+	'''switch_case : case const_value newlines blocklist end'''
 	p[0] = ('range', (p[2], p[2], p[4]))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_switch_case_range(p):
-	'''switch_case : case virtualinteger to virtualinteger newlines blocklist end'''
+	'''switch_case : case const_value to const_value newlines blocklist end'''
 	p[0] = ('range', (p[2], p[4], p[6]))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -686,9 +695,9 @@ def p_block_title(p):
 	
 	
 def p_block_title_times(p):
-	'''codeblock : title fullselector virtualinteger virtualinteger virtualinteger string
-				 | subtitle fullselector virtualinteger virtualinteger virtualinteger string
-				 | actionbar fullselector virtualinteger virtualinteger virtualinteger string'''
+	'''codeblock : title fullselector const_value const_value const_value string
+				 | subtitle fullselector const_value const_value const_value string
+				 | actionbar fullselector const_value const_value const_value string'''
 	p[0] = title_block(p.lineno(1), p[1], p[2], (p[3], p[4], p[5]), p[6])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -903,12 +912,12 @@ def p_data_type(p):
 	
 #### Array
 def p_array_definition(p):
-	'''array_definition : array ID LBRACK virtualinteger RBRACK'''
-	p[0] = array_definition_block(p.lineno(1), p[2], '0', p[4])
+	'''array_definition : array ID LBRACK const_value RBRACK'''
+	p[0] = array_definition_block(p.lineno(1), p[2], const_number(0), p[4])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_array_definition_range(p):
-	'''array_definition : array ID LBRACK virtualinteger to virtualinteger RBRACK'''
+	'''array_definition : array ID LBRACK const_value to const_value RBRACK'''
 	p[0] = array_definition_block(p.lineno(1), p[2], p[4], p[6])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -952,7 +961,7 @@ def p_qualifiers(p):
 	
 #### Qualifier
 def p_qualifier_integer(p):
-	'''qualifier : virtualinteger'''
+	'''qualifier : const_value'''
 	p[0] = p[1]
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -1268,7 +1277,7 @@ def p_json_value(p):
 	
 def p_json_value_typed_number(p):
 	'''json_value : number ID'''
-	if p[2] not in ['b', 'f', 's']:
+	if p[2].lower() not in ['b', 'f', 's', 'd', 'l']:
 		raise SyntaxError('Invalid type "{}" for number "{}" at line {}'.format(p[2], p[1], p.lineno(1)))
 		
 	p[0] = p[1] + p[2]

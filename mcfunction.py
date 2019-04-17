@@ -84,7 +84,7 @@ class mcfunction(object):
 		if type == 'ArrayConst':
 			name, idxval = content
 			
-			array_var = self.get_arrayconst_var(name, idxval)
+			array_var = self.get_arrayconst_var(name, idxval.get_value(self))
 			
 			return 'Global', array_var
 			
@@ -138,7 +138,7 @@ class mcfunction(object):
 				lselector, lvar = self.get_variable(var, initialize = True)
 				
 				if rtype == 'num':
-					rval = self.apply_replacements(rval)
+					rval = rval.get_value(self)
 					try:
 						if op == '>':						
 							test += '{3} score {0} {1} matches {2}.. '.format(lselector, lvar, str(int(rval)+1), iftype)

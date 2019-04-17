@@ -67,4 +67,7 @@ class mock_environment(object):
 		return '{}{}'.format(name, idxval)
 		
 	def copy_dollarid(self, id1, id2):
-		self.copied_dollarids.append((id1, id2))
+		self.dollarid[id1] = self.dollarid[id2]
+		
+	def get_python_env(self):
+		return self.dollarid

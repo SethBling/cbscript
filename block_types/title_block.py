@@ -10,7 +10,7 @@ class title_block(object):
 		
 	def compile(self, func):
 		if self.times != None:
-			func.add_command('/title {} times {}'.format(self.selector, ' '.join(self.times)))
+			func.add_command('/title {} times {}'.format(self.selector, ' '.join([str(t.get_value(func)) for t in self.times])))
 		
 		text = tellraw.formatJsonText(func, self.unformatted)
 		command = '/title {} {} {}'.format(self.selector, self.subtype, text)

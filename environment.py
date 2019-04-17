@@ -293,7 +293,10 @@ class environment(object):
 				
 		from_val, to_val = self.arrays[name]
 		
-		index = int(self.apply_replacements(idxval))
+		try:
+			index = int(self.apply_replacements(idxval))
+		except Exception:
+			raise Exception('Array index "{}" for "{}" is not an integer value.'.format(idxval, name))
 		
 		if index < from_val or index >= to_val:
 			if from_val == 0:

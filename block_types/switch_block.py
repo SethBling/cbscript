@@ -21,8 +21,13 @@ class switch_block(object):
 			line = get_line(case)
 			if type == 'range':
 				vmin, vmax, sub = content
-				vmin = int(func.apply_replacements(vmin))
-				vmax = int(func.apply_replacements(vmax))
+				try:
+					vmin = int(vmin.get_value(func))
+					vmax = int(vmax.get_value(func))
+				except Exception as e:
+					print(e)
+					raise Exception('Unable to get values of range for case at line {}'.format(self.line))
+					
 				cases.append((vmin, vmax, sub, line, None))
 			elif type == 'python':
 				dollarid, python, sub = content

@@ -111,7 +111,7 @@ class test_cbscript(unittest.TestCase):
 		block = array_assignment_block(0, 'test', 'Const', 1, num_expr(1))
 		block.compile(func)
 		
-		block = array_definition_block(0, 'test', '0', '5')
+		block = array_definition_block(0, 'test', const_number('0'), const_number('5'))
 		block.compile(func)
 		
 		block = block_tag_block(0, 'test', ['test_block'])
@@ -175,7 +175,7 @@ class test_cbscript(unittest.TestCase):
 		block = switch_block(0, ('NUM', 1), [])
 		block.compile(func)
 		case1 = ('python', ('test_id', interpreted_python('range(3, 6)'), [command_block(0, 'test_python')]))
-		case2 = ('range', ('1', '2', [command_block(0, 'test_range_1_2')]))
+		case2 = ('range', (const_number('1'), const_number('2'), [command_block(0, 'test_range_1_2')]))
 		block = switch_block(0, num_expr(1), [case1, case2])
 		block.compile(func)
 		
@@ -186,7 +186,7 @@ class test_cbscript(unittest.TestCase):
 		block = template_function_call_block(0, 'test_template_function', [], [])
 		block.compile(func)
 		
-		block = title_block(0, 'subtitle', '@a', ['1', '2', '3'], '{rtest')
+		block = title_block(0, 'subtitle', '@a', [const_number('1'), const_number('2'), const_number('3')], '{rtest')
 		block.compile(func)
 		
 		var = ('VAR_ID', 'test')
@@ -310,7 +310,7 @@ class test_cbscript(unittest.TestCase):
 	def test_compile_array_definition(self):
 		func = mock_mcfunction()
 		
-		block = array_definition_block(0, 'test_array', 0, 5)
+		block = array_definition_block(0, 'test_array', const_number(0), const_number(5))
 		block.compile(func)
 		
 		self.assertTrue('test_array' in func.arrays)
@@ -489,7 +489,7 @@ class test_cbscript(unittest.TestCase):
 	def test_compile_switch(self):
 		func = mock_mcfunction()
 		
-		case1 = ('range',(1, 3, []))
+		case1 = ('range',(const_number(1), const_number(3), []))
 		case2 = ('python', ('test_id', interpreted_python('range(4, 6)'), []))
 		block = switch_block(0, num_expr(2), [case1, case2])
 		block.compile(func)
@@ -542,7 +542,7 @@ class test_cbscript(unittest.TestCase):
 	def test_compile_title(self):
 		func = mock_mcfunction()
 		
-		block = title_block(0, 'subtitle', '@a', ['0', '1', '2'], '{rtest')
+		block = title_block(0, 'subtitle', '@a', [const_number('0'), const_number('1'), const_number('2')], '{rtest')
 		block.compile(func)
 		
 		self.assertEqual(func.commands, [
@@ -1878,13 +1878,23 @@ class test_cbscript(unittest.TestCase):
 		self.assertEqual(mcfunction.get_line(p[0]), 0)
 		
 		p = mock_parsed('var')
+		func = mock_mcfunction()
 		scriptparse.p_condition_bool(p)
-		self.assertEqual(p[0], ('score', ('var', '>', ('num', '0'))))
+		self.assertEqual(p[0][0], 'score')
+		self.assertEqual(p[0][1][0], 'var')
+		self.assertEqual(p[0][1][1], '>')
+		self.assertEqual(p[0][1][2][0], 'num')
+		self.assertEqual(p[0][1][2][1].get_value(func), 0)
 		self.assertEqual(mcfunction.get_line(p[0]), 0)
 		
 		p = mock_parsed(None, 'var')
+		func = mock_mcfunction()
 		scriptparse.p_condition_not_bool(p)
-		self.assertEqual(p[0], ('score', ('var', '<=', ('num', '0'))))
+		self.assertEqual(p[0][0], 'score')
+		self.assertEqual(p[0][1][0], 'var')
+		self.assertEqual(p[0][1][1], '<=')
+		self.assertEqual(p[0][1][2][0], 'num')
+		self.assertEqual(p[0][1][2][1].get_value(func), 0)
 		self.assertEqual(mcfunction.get_line(p[0]), 0)
 		
 		p = mock_parsed(None, 'relcoords', 'id')
@@ -1893,8 +1903,16 @@ class test_cbscript(unittest.TestCase):
 		self.assertEqual(mcfunction.get_line(p[0]), 0)
 		
 		p = mock_parsed('100')
+		func = mock_mcfunction()
 		scriptparse.p_comparison_num(p)
-		self.assertEqual(p[0], ('num', '100'))
+		self.assertEqual(p[0][0], 'num')
+		self.assertEqual(p[0][1].get_value(func), 100)
+		self.assertEqual(mcfunction.get_line(p[0]), 0)
+		
+		p = mock_parsed(None, const_number('100'), None)
+		scriptparse.p_comparison_expr(p)
+		self.assertEqual(p[0][0], 'num')
+		self.assertEqual(p[0][1].get_value(func), 100)
 		self.assertEqual(mcfunction.get_line(p[0]), 0)
 		
 		p = mock_parsed('var')
@@ -2147,12 +2165,13 @@ class test_cbscript(unittest.TestCase):
 		self.assertEqual(p[0], 'byte')
 		self.assertEqual(mcfunction.get_line(p[0]), 0)
 		
-		p = mock_parsed(None, 'id', None, '1', None) 
+		p = mock_parsed(None, 'id', None, const_number('1'), None) 
+		func = mock_mcfunction()
 		scriptparse.p_array_definition(p)
 		self.assertTrue(type(p[0]) is array_definition_block)
 		self.assertEqual(p[0].name, 'id')
-		self.assertEqual(p[0].from_val, '0')
-		self.assertEqual(p[0].to_val, '1')
+		self.assertEqual(p[0].from_val.get_value(func), 0)
+		self.assertEqual(p[0].to_val.get_value(func), 1)
 		self.assertEqual(mcfunction.get_line(p[0]), 0)
 		
 		p = mock_parsed(None, 'id', None, '1', None, '2', None) 
@@ -2624,7 +2643,7 @@ class test_cbscript(unittest.TestCase):
 		env = mock_environment()
 		func = mcfunction.mcfunction(env)
 		
-		var = 'ArrayConst', ('test_array', '1')
+		var = 'ArrayConst', ('test_array', interpreted_python('1'))
 		var_ret = func.get_variable(var, True)
 		
 		self.assertEqual(var_ret, ('Global', 'test_array1'))
@@ -2696,7 +2715,7 @@ class test_cbscript(unittest.TestCase):
 			('<=', '..1'),
 			('=', '1..1'),
 		]:				
-			condition = 'score', (('Var', ('@test_selector', 'test_var')), op, ('num', 1))
+			condition = 'score', (('Var', ('@test_selector', 'test_var')), op, ('num', interpreted_python('1')))
 			chain = func.get_if_chain([condition])
 		
 			self.assertEqual(chain, 'if score @test_selector test_var matches {} '.format(match))

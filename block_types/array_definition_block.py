@@ -8,8 +8,12 @@ class array_definition_block(object):
 		self.to_val = to_val
 		
 	def compile(self, func):
-		from_val = int(func.apply_replacements(self.from_val))
-		to_val = int(func.apply_replacements(self.to_val))
+		try:
+			from_val = int(self.from_val.get_value(func))
+			to_val = int(self.to_val.get_value(func))
+		except Exception:
+			raise Exception('Unable to get array range for "{}" at line {}'.format(self.name, self.line))
+			
 		name = self.name
 
 		vals = list(range(from_val, to_val))
