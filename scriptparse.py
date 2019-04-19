@@ -14,6 +14,7 @@ from block_types.import_block import import_block
 from block_types.macro_call_block import macro_call_block
 from block_types.method_call_block import method_call_block
 from block_types.move_block import move_block
+from block_types.pointer_decl_block import pointer_decl_block
 from block_types.print_block import print_block
 from block_types.python_assignment_block import python_assignment_block
 from block_types.python_for_block import python_for_block
@@ -327,7 +328,8 @@ def p_optassignments_multiple(p):
 					  | blocktag newlines optassignments
 					  | array_definition newlines optassignments
 					  | import_statement newlines optassignments
-					  | print_block newlines optassignments'''
+					  | print_block newlines optassignments
+					  | pointer_decl newlines optassignments'''
 	p[0] = [p[1]] + p[3]
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -860,6 +862,12 @@ def p_block_list_one(p):
 	'''block_list : ID newlines'''
 	p[0] = [p[1]]
 
+#### Pointer Declaration
+def p_pointer_decl(p):
+	'''pointer_decl : ID COLON fullselector'''
+	p[0] = pointer_decl_block(p.lineno(0), p[1], p[3])
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
 #### Selector Assignment
 def p_selector_assignment(p):
 	'''selector_assignment : ATID EQUALS fullselector'''

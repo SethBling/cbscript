@@ -13,6 +13,7 @@ class mock_environment(object):
 		self.cloned_environments = []
 		self.applied = []
 		self.copied_dollarids = []
+		self.pointers = {}
 		
 	def clone(self, new_function_name=None):
 		env = mock_environment()
@@ -71,3 +72,6 @@ class mock_environment(object):
 		
 	def get_python_env(self):
 		return self.dollarid
+	
+	def add_pointer(self, id, selector):
+		self.pointers[id] = selector

@@ -29,7 +29,7 @@ import common
 
 define @Corner = @Entity[type=magma_cube,tag=Corner]
     create {CustomName:"\"Corner\"", Tags:["Corner"], Glowing:1b, NoGravity:1b, NoAI:1b, Invulnerable:1b, Size:1b, Silent:1b, AbsorptionAmount:100f}
-    time = Time byte 1
+    time: Time byte 1
 end
 
 define @ClickDetector = @Entity[type=slime,tag=ClickDetector]
@@ -70,7 +70,7 @@ define @CloneDisplay = @Entity[type=armor_stand,tag=CloneDisplay]
 end
 
 define @Player = @Entity[type=player]
-    selected = SelectedItemSlot int 1
+    selected: SelectedItemSlot int 1
 	click: @ClickDetector
 	pick1: @Corner
 	pick2: @Corner

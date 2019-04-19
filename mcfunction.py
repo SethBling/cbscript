@@ -13,6 +13,12 @@ def get_line(parsed):
 			
 	return 'Unknown'
 
+def get_undecorated_selector_name(selector):
+	if selector.startswith('@'):
+		selector = selector[1:]
+	selector = selector.split('[')[0]
+	
+	return selector
 
 def compile_section(section, environment):
 	type, name, template_params, params, lines = section
@@ -242,6 +248,9 @@ class mcfunction(object):
 						psel = self.environment.self_selector.pointers[id]
 					elif id in seldef.pointers:
 						psel = seldef.pointers[id]
+				elif selector == 'Global':
+					if id in self.environment.pointers:
+						psel = self.environment.pointers[id]
 				
 				self.register_objective('_id')
 				self.register_objective(id)
@@ -252,6 +261,8 @@ class mcfunction(object):
 				
 				if attype != None:
 					exec_func.update_self_selector('@' + attype)
+				elif psel != '@e':
+					exec_func.update_self_selector('@' + get_undecorated_selector_name(psel))
 				else:
 					exec_func.update_self_selector('@s')
 			elif type == 'AsCreate':
@@ -728,3 +739,6 @@ class mcfunction(object):
 		except Exception as e:
 			print(e)
 			raise ValueError('Could not evaluate "{0}" at line {1}'.format(expr, line))
+			
+	def add_pointer(self, id, selector):
+		self.environment.add_pointer(id, selector)

@@ -38,12 +38,16 @@ class environment(object):
 		self.locals = []
 		self.selectors = {}
 		self.self_selector = None
+		self.pointers = {}
 		
 	def clone(self, new_function_name = None):
 		new_env = environment(self.global_context)
 		
 		for id in self.selectors:
 			new_env.selectors[id] = self.selectors[id]
+			
+		for id in self.pointers:
+			new_env.pointers[id] = self.pointers[id]
 		
 		new_env.dollarid = copy.deepcopy(self.dollarid)
 		if new_function_name == None:
@@ -315,3 +319,6 @@ class environment(object):
 
 	def register_dependency(self, filename):
 		self.global_context.register_dependency(filename)
+		
+	def add_pointer(self, id, selector):
+		self.pointers[id] = selector
