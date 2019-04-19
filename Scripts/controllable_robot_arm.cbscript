@@ -9,7 +9,7 @@ $NumPieces = 9
 $NumSegments = 4
 
 reset
-	tell @Player[gamemode=creative] "{G[\[Reload Control Blocks\]](/function controllable_robot_arm:refresh)"
+	tell @Player[gamemode=creative] "{G[\[Reload Control Blocks\]](call refresh)"
 end
 
 macro $create_control_block($x, $y, $z, $idx, $block_type)

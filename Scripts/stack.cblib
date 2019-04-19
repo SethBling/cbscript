@@ -1,0 +1,32 @@
+import common
+
+define @StackFrame = @Entity[type=area_effect_cloud,tag=StackFrame]
+	create {Tags:["StackFrame"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+define @Stack = @StackFrame[depth == 0, limit=1]
+	function push()
+		@StackFrame.depth++
+		unless @Stack
+			as create @StackFrame
+				@s.depth = 0
+			end
+		end
+	end
+	
+	function pop()
+		@StackFrame.depth--
+		unless @Stack
+			as create @StackFrame
+				@s.depth = 0
+			end
+		end
+	end
+end
+
+function stack_init()
+	/kill @StackFrame
+	as create @StackFrame
+		@s.depth = 0
+	end
+end

@@ -12,12 +12,9 @@ define @Position = @Entity[type=area_effect_cloud,tag=Position,limit=1]
 end
 
 reset
-	at @Branch
-		/setblock ~ ~ ~ air
-	end
 	/kill @Branch
 	
-	tell @a "{G[\[Create Tree\]](/function bifurcation:create_tree)"
+	tell @a "{G[\[Create Tree\]](call create_tree)"
 end
 
 function create_tree()
@@ -25,30 +22,24 @@ function create_tree()
 		as create @Branch
 			@s.root = True
 			@s.<growth> = <0, 1000, 0>
+			@s.radius = 200
 			@s.leaf = True
 		end
 	end
 end
 
 clock main
-	as @Branch at @s
-		/setblock ~ ~ ~ oak_wood
-		unless @Position do create @Position
-		@Position.<pos> = @s.<pos> + @s.<growth>
-		if @s.leaf
-			at @Position
-				/setblock ~ ~ ~ oak_leaves
-			end
-		end
-	end
-	
 	growth_clock++
 	if growth_clock >= 20
 		growth_clock = 0
 		
+		as @Branch
+			@s.radius += 200
+		end
+		
 		as @Branch[leaf]
 			@s.leaf = False
-			<growth> = @s.<growth>
+			<growth> = (@s.<growth> + <0, 100, 0>) * 9 / 10
 			at @s unless @Position do create @Position
 			@Position.<pos> = @s.<pos> + @s.<growth>
 			at @Position
@@ -56,9 +47,34 @@ clock main
 					as create @Branch
 						@s.<growth> = <growth> + <rand(-500, 500), rand(-500, 500), rand(-500, 500)>
 						@s.leaf = True
+						@s.radius = 200
 					end
 				end
 			end
 		end
+		
+		as @Branch at @s
+			unless @Position do create @Position
+			for dx = -@s.radius to @s.radius by 200
+				for dz = -@s.radius to @s.radius by 200
+					dsq = dx*dx + dz*dz
+					radsq = @s.radius*@s.radius
+					if dsq <= radsq
+						@Position.<pos> = @s.<pos> + <dx, 0, dz>
+						at @Position
+							/setblock ~ ~ ~ oak_wood
+						end
+					end
+				end
+			end
+
+			if @s.leaf
+				@Position.<pos> = @s.<pos> + @s.<growth>
+				at @Position
+					/setblock ~ ~ ~ oak_leaves
+				end
+			end
+		end
+		
 	end
 end

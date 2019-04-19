@@ -65,6 +65,9 @@ def formatJsonText(func, text):
 				elif command.startswith('//'):
 					action = 'suggest_command'
 					command = command[1:]
+				elif command.startswith('call '):
+					action = 'run_command'
+					command = '/function {}:{}'.format(func.namespace, command[len('call '):])
 				else:
 					action = 'run_command'
 				formatted = formatted + ',{{"text":"{0}","clickEvent":{{"action":"{1}","value":"{2}"}}{3}}}'.format(unformatted.replace('"', '\\"'), action, command, getPropertiesText(properties))
