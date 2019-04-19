@@ -71,6 +71,9 @@ end
 
 define @Player = @Entity[type=player]
     selected = SelectedItemSlot int 1
+	click: @ClickDetector
+	pick1: @Corner
+	pick2: @Corner
     
     function tell_actions()
         tell @s ''
@@ -99,7 +102,7 @@ define @Player = @Entity[type=player]
     end
     
     function create_click()
-        as @s.click(@ClickDetector)
+        as @s.click
             /tp @s ~ -200 ~
             /kill @s
         end
@@ -107,7 +110,7 @@ define @Player = @Entity[type=player]
         at @s ~ ~50 ~
             @s.click = create @ClickDetector
             at @s ~ ~1.6 ~ at ^ ^ ^2 at ~ ~-0.6 ~
-                as @s.click(@ClickDetector)
+                as @s.click
                     /tp @s ~ ~ ~
                     @s.absorption = 100
                     /team join no_collision
@@ -216,11 +219,11 @@ define @Player = @Entity[type=player]
     function get_minmax()
         has_box = -1
         
-        as @s.pick1(@Corner)
+        as @s.pick1
             <x1, y1, z1> = @s.<pos>
             has_box++
         end
-        as @s.pick2(@Corner)
+        as @s.pick2
             <x2, y2, z2> = @s.<pos>
             has_box++
         end
@@ -1404,7 +1407,7 @@ clock main
             click = False
             
             at @s ~ ~1.6 ~ at ^ ^ ^1.5 at ~ ~-0.6 ~
-                as @s.click(@ClickDetector)
+                as @s.click
                     /tp @s ~ ~ ~ ~ ~
                     if @s.absorption < 99
                         click = True
@@ -1429,7 +1432,7 @@ clock main
                 @s.state = $Pick1
                 at @s ~ ~200 ~
                     @s.pick1 = create @Corner
-                    as @s.pick1(@Corner)
+                    as @s.pick1
                         @s.player = @player
                         /team join source
                         @s.type = $Type_Source
@@ -1440,7 +1443,7 @@ clock main
                 end
                 at @s ~ ~200 ~
                     @s.click = create @ClickDetector
-                    as @s.click(@ClickDetector)
+                    as @s.click
                         /team join no_collision
                     end
                 end
@@ -1485,7 +1488,7 @@ clock main
             if @s.state == $Pick1
                 @s.get_cursor_position()
                 corner_exists = False
-                as @s.pick1(@Corner)
+                as @s.pick1
                     corner_exists = True
                     at <cursor>
                         /tp @s ~ ~ ~
@@ -1699,7 +1702,7 @@ clock main
             if @s.edit at <cursor>
                 if click
                     if @s.state == $Pick1
-                        as @s.pick1(@Corner)
+                        as @s.pick1
                             <x, y, z> = @s.<pos> / scale
                             tell @player '1st corner at {R(x), (y), (z)'
                         end
@@ -1707,7 +1710,7 @@ clock main
                         @s.tell_actions = True
                         
                         @s.pick2 = create @Corner
-                        as @s.pick2(@Corner)
+                        as @s.pick2
                             @s.player = @player
                             @s.type = $Type_Source
                             /team join moving

@@ -25,6 +25,7 @@ class selector_definition(object):
 		self.tag = None
 		self.paths = {}
 		self.vector_paths = {}
+		self.pointers = {}
 		
 		selector = env.apply_replacements(selector)
 		
@@ -55,6 +56,9 @@ class selector_definition(object):
 
 			for var in base_selector.vector_paths:
 				self.vector_paths[var] = base_selector.vector_paths[var]
+				
+			for var in base_selector.pointers:
+				self.pointers[var] = base_selector.pointers[var]
 				
 			self.tag = base_selector.tag
 		else:

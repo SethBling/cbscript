@@ -867,7 +867,8 @@ def p_selector_assignment(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_selector_define(p):
-	'''selector_define_block : define ATID EQUALS fullselector newlines selector_definition end'''
+	'''selector_define_block : define ATID EQUALS fullselector newlines selector_definition end
+	                         | define ATID COLON  fullselector newlines selector_definition end'''
 	p[0] = selector_definition_block(p.lineno(1), p[2], p[4], p[6])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -885,22 +886,26 @@ def p_selector_item_tag(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_selector_item_path_scale(p):
-	'''selector_item : ID EQUALS data_path data_type const_value'''
+	'''selector_item : ID EQUALS data_path data_type const_value
+	                 | ID COLON  data_path data_type const_value'''
 	p[0] = ('Path', (p[1], p[3], p[4], p[5]))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_selector_item_path(p):
-	'''selector_item : ID EQUALS data_path data_type'''
+	'''selector_item : ID EQUALS data_path data_type
+					 | ID COLON  data_path data_type'''
 	p[0] = ('Path', (p[1], p[3], p[4], None))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_selector_item_vector_path_scale(p):
-	'''selector_item : LT ID GT EQUALS data_path data_type const_value'''
+	'''selector_item : LT ID GT EQUALS data_path data_type const_value
+					 | LT ID GT COLON  data_path data_type const_value'''
 	p[0] = ('VectorPath', (p[2], p[5], p[6], p[7]))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_selector_item_vector_path(p):
-	'''selector_item : LT ID GT EQUALS data_path data_type'''
+	'''selector_item : LT ID GT EQUALS data_path data_type
+					 | LT ID GT COLON data_path data_type'''
 	p[0] = ('VectorPath', (p[2], p[5], p[6], None))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -908,6 +913,11 @@ def p_selector_item_method(p):
 	'''selector_item : functionsection'''
 	p[0] = ('Method', p[1])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
+def p_selector_pointer(p):
+	'''selector_item : ID EQUALS fullselector
+					 | ID COLON  fullselector'''
+	p[0] = ('Pointer', (p[1], p[3]))
 	
 def p_data_path_id(p):
 	'''data_path : ID'''

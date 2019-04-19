@@ -31,5 +31,8 @@ class selector_definition_block(object):
 				sub_env = func.clone_environment()
 				sub_env.update_self_selector('@'+self.id)
 				compile_section(val, sub_env)
+			elif type == 'Pointer':
+				pointer_id, pointer_selector = val
+				selector.pointers[pointer_id] = pointer_selector
 			else:
 				raise ValueError('Unknown selector item type "{0}" in selector definition at line {1}'.format(type, get_line(line)))

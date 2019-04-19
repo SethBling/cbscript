@@ -235,12 +235,20 @@ class mcfunction(object):
 				
 				selector, id = self.get_variable(var, initialize = True)
 				
+				psel = '@e'
+				if selector[0] == '@':
+					seldef = selector_definition(selector, self.environment)
+					if seldef.base_name == 's' and self.environment.self_selector != None and id in self.environment.self_selector.pointers:
+						psel = self.environment.self_selector.pointers[id]
+					elif id in seldef.pointers:
+						psel = seldef.pointers[id]
+				
 				self.register_objective('_id')
 				self.register_objective(id)
 				
 				self.add_command('scoreboard players operation Global _id = {0} {1}'.format(selector, id))
 									
-				cmd += 'as @e if score @s _id = Global _id '.format(selector, id)
+				cmd += 'as {} if score @s _id = Global _id '.format(psel)
 				
 				if attype != None:
 					exec_func.update_self_selector('@' + attype)

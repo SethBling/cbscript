@@ -163,12 +163,10 @@ clock main
 	end
 	
 	as @Pushable at @s
-		disguise = @s.disguise
-		as @Disguise[distance=..2] if @s._id == disguise
+		as @s.disguise
 			/tp @s ~ ~ ~
 		end
-		physics = @s.physics
-		as @Physics[distance=..2] if @s._id == physics
+		as @s.physics
 			/tp @s ~ ~ ~
 		end
 	
