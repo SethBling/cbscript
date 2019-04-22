@@ -1,6 +1,6 @@
 # Script Atari 2600 Emulator
 
-dir "C:\Users\Seth\AppData\Roaming\.minecraft\saves\Atari 2600 1-13"
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\Atari 2600 1-13"
 desc "Atari 2600 Emulator"
 scale 1
 

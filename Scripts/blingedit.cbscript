@@ -1,4 +1,4 @@
-dir "C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13"
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
 desc "GUI for performing Minecraft world editing operations."
 
 # Player edit state constants

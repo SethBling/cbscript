@@ -1,6 +1,6 @@
-dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
-desc: Experience Zero-G
-scale: 1000
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Experience Zero-G"
+scale 1000
 
 import common
 
