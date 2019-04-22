@@ -6,7 +6,9 @@ $BlockTypes = $"['stone', 'granite', 'polished_granite', 'diorite', 'polished_di
 import common
 import pushable
 
-@Player = @Entity[type=player, gamemode=!spectator]
+define @Player: @Entity[type=player, gamemode=!spectator]
+	controlling: @Pushable[distance=..10]
+end
 
 reset
 	/scoreboard objectives add sneak_time minecraft.custom:minecraft.sneak_time
@@ -131,7 +133,7 @@ clock main
 		if @s.wand_active
 			at @s ~ ~1 ~ at ^ ^ ^3
 				<target> = here
-				as @s.controlling(@Pushable)
+				as @s.controlling
 					<delta> = <target> - @s.<pos>
 					@s.<vel> = <delta> / 4
 					if @player[distance=5..]
