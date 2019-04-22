@@ -194,5 +194,13 @@ clock main
 		@s.drop = False
 		/data merge entity @s {NoGravity:0b}
 	end
+	
+	if False
+		at -778 57 73
+			@e[type=item_frame,sort=nearest,limit=1,distance=..5].{Item} = @e[type=item,distance=..10,limit=1,sort=nearest].Item
+			remove [].Items[0]
+			[].[Items] += {id:"minecraft:stone",Slot:0,Count:1}
+			[].{Items[0]} = @e[type=item,distance=..10,limit=1,sort=nearest].Item
+		end
+	end
 end
-

@@ -14,6 +14,8 @@ from block_types.import_block import import_block
 from block_types.macro_call_block import macro_call_block
 from block_types.method_call_block import method_call_block
 from block_types.move_block import move_block
+from block_types.nbt_data_block import nbt_data_block
+from block_types.nbt_remove_block import nbt_remove_block
 from block_types.pointer_decl_block import pointer_decl_block
 from block_types.print_block import print_block
 from block_types.python_assignment_block import python_assignment_block
@@ -35,6 +37,9 @@ from data_types.python_identifier import python_identifier
 from data_types.interpreted_python import interpreted_python
 from data_types.relcoord import relcoord
 from data_types.relcoords import relcoords
+from nbt_types.nbt_json import nbt_json
+from nbt_types.entity_nbt_path import entity_nbt_path
+from nbt_types.block_nbt_path import block_nbt_path
 from scalar_expressions.arrayconst_expr import arrayconst_expr
 from scalar_expressions.arrayexpr_expr import arrayexpr_expr
 from scalar_expressions.binop_expr import binop_expr
@@ -1091,6 +1096,71 @@ def p_relcoords(p):
 	p[0] = relcoords((p[1], p[2], p[3]))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
+#### NBT Assignment
+def p_nbt_assignment(p):
+	'''codeblock : nbt_list EQUALS nbt_source
+	             | nbt_object EQUALS nbt_source'''
+	p[0] = nbt_data_block(p.lineno(1), p[1], 'set', p[3])
+	
+def p_nbt_merge(p):
+	'''codeblock : nbt_object PLUSEQUALS nbt_source'''
+	p[0] = nbt_data_block(p.lineno(1), p[1], 'merge', p[3])
+	
+def p_nbt_append(p):
+	'''codeblock : nbt_list PLUSEQUALS nbt_source'''
+	p[0] = nbt_data_block(p.lineno(1), p[1], 'append', p[3])
+	
+def p_nbt_list_entity(p):
+	'''nbt_list : fullselector DOT LBRACK data_path RBRACK'''
+	p[0] = entity_nbt_path(p[1], p[4])
+	
+def p_nbt_list_block(p):
+	'''nbt_list : block_coords DOT LBRACK data_path RBRACK'''
+	p[0] = block_nbt_path(p[1], p[4])
+	
+def p_nbt_object_entity(p):
+	'''nbt_object : fullselector DOT LCURLY data_path RCURLY'''
+	p[0] = entity_nbt_path(p[1], p[4])
+	
+def p_nbt_object_block(p):
+	'''nbt_object : block_coords DOT LCURLY data_path RCURLY'''
+	p[0] = block_nbt_path(p[1], p[4])
+	
+def p_nbt_source_path_entity(p):
+	'''nbt_path : fullselector DOT data_path'''
+	p[0] = entity_nbt_path(p[1], p[3])
+	
+def p_nbt_source_path_block(p):
+	'''nbt_path : block_coords DOT data_path'''
+	p[0] = block_nbt_path(p[1], p[3])
+	
+def p_nbt_path(p):
+	'''nbt_path : nbt_object
+				| nbt_list'''
+	p[0] = p[1]
+	
+def p_nbt_source_object(p):
+	'''nbt_source : nbt_path'''
+	p[0] = p[1]
+	
+def p_nbt_source_json(p):
+	'''nbt_source : json_object'''
+	p[0] = nbt_json(p[1])
+
+	
+def p_block_coords(p):
+	'''block_coords : LBRACK relcoords RBRACK'''
+	p[0] = p[2]
+	
+def p_block_coords_empty(p):
+	'''block_coords : LBRACK RBRACK'''
+	p[0] = relcoords()
+	
+def p_nbt_remove(p):
+	'''codeblock : remove nbt_path'''
+	p[0] = nbt_remove_block(p.lineno(1), p[2])
+
+	
 #### Assignment
 def p_return_expression(p):
 	'''assignment : return expr'''
@@ -1346,7 +1416,10 @@ def p_empty(p):
 	'''empty : '''
 
 def p_error(p):
-	raise SyntaxError('Syntax error at line {} column {}. Unexpected {} symbol "{}" in state {}.'.format(p.lineno, scriptlex.find_column(bparser.data, p), p.type, p.value.replace('\n', '\\n'), bparser.state))
+	if p == None:
+		raise SyntaxError('Syntax error: unexpected End of File')
+	else:
+		raise SyntaxError('Syntax error at line {} column {}. Unexpected {} symbol "{}" in state {}.'.format(p.lineno, scriptlex.find_column(bparser.data, p), p.type, p.value.replace('\n', '\\n'), bparser.state))
 
 bparser = yacc.yacc()
 
