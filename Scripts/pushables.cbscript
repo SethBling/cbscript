@@ -75,7 +75,7 @@ function create_block()
 				/setblock ~ ~ ~ air
 			end
 			if handled
-				@s.disguise = @Disguise[tag=New, limit=1]
+				@s.disguise = &@Disguise[tag=New, limit=1]
 			end
 			/tag @Disguise[tag=New] remove New
 			
@@ -122,7 +122,7 @@ clock main
 				at @s ~ ~1 ~ at ^ ^ ^3
 					as @Pushable[distance = ..2,limit=1,sort=nearest]
 						@player.wand_active = True
-						@player.controlling = @s
+						@player.controlling = &@s
 					end
 				end
 			end

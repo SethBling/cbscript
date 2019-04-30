@@ -1,3 +1,5 @@
+from variable_types.scoreboard_var import scoreboard_var
+
 class vector_here_expr(object):
 	def __init__(self, scale):
 		self.scale = scale
@@ -16,11 +18,11 @@ class vector_here_expr(object):
 		return_components = []
 		for i in range(3):
 			if assignto == None:
-				return_components.append(func.get_scratch())
+				return_components.append(scoreboard_var('Global', func.get_scratch()))
 			else:
-				return_components.append(assignto[i])
+				return_components.append(scoreboard_var('Global', assignto[i]))
 		
-			func.add_command('execute store result score Global {0} run data get entity @e[_age==1,limit=1] Pos[{1}] {2}'.format(return_components[i], i, scale))
+			func.add_command('execute store result score Global {0} run data get entity @e[_age==1,limit=1] Pos[{1}] {2}'.format(return_components[i].objective, i, scale))
 		
 		func.add_command('/kill @e[_age==1]')
 		

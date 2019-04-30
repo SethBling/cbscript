@@ -13,10 +13,10 @@ tokens = keywords + (
      'COMMAND',
      'LEQ','GEQ','GT','LT','EQUALEQUAL','DOLLAR','DOT','COLON',
      'PLUSEQUALS','MINUSEQUALS','TIMESEQUALS','DIVIDEEQUALS','MODEQUALS','PLUSPLUS','MINUSMINUS',
-     'EQUALS','PLUS','MINUS','TIMES','DIVIDE','MOD',
+     'EQUALS','PLUS','MINUS','TIMES','DIVIDE','MOD','REF',
 	 #'POWEREMPTY',
 	 'POWER',
-     'LPAREN','RPAREN','COMMA','DECIMAL','FLOAT','HEX','BINARY','ID','NEWLINE','LBRACK','RBRACK','LCURLY','RCURLY',
+     'LPAREN','RPAREN','COMMA','DECIMAL','FLOAT','HEX','BINARY','FUNCTIONID','ID','NEWLINE','LBRACK','RBRACK','LCURLY','RCURLY',
      'ATID', 'NOT', 'TILDEEMPTY', 'TILDE',
      'NORMSTRING', 'COMMENT',
 )
@@ -42,6 +42,11 @@ def t_True(t):
         
     return t
 
+def t_FUNCTIONID(t):
+	r'[A-Za-z_][A-Za-z0-9_]*\('
+	t.value = t.value[:-1]
+	return t
+	
 def t_ID(t):
     r'[A-Za-z_][A-Za-z0-9_]*'
     if t.value in keywords:
@@ -82,6 +87,7 @@ t_MINUSMINUS	= r'--'
 t_DOT			= r'\.'
 t_COLON			= r'\:'
 t_NOT			= r'!'
+t_REF			= r'&'
 
 #def t_POWEREMPTY(t):
 #    r'\^[ \t]'

@@ -1,4 +1,5 @@
 from vector_binop_base import vector_binop_base
+from variable_types.scoreboard_var import scoreboard_var
 
 class vector_binop_vector_expr(vector_binop_base):
 	def calc_op(self, func, return_components):
@@ -8,5 +9,6 @@ class vector_binop_vector_expr(vector_binop_base):
 			return None
 			
 		for i in range(3):
-			func.add_command('scoreboard players operation Global {0} {1}= Global {2}'.format(return_components[i], self.op, right_component_vars[i]))
-			func.free_scratch(right_component_vars[i])
+			right_var = right_component_vars[i].get_scoreboard_var(func)
+			func.add_command('scoreboard players operation {} {} {}= {} {}'.format(return_components[i].selector, return_components[i].objective, self.op, right_var.selector, right_var.objective))
+			right_component_vars[i].free_scratch(func)

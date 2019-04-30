@@ -264,7 +264,7 @@ define @Player = @Entity[type=player]
     end
     
     function get_dest_minmax()
-        player = @s
+        player = &@s
         has_dest_box = False
                 
         first = True
@@ -362,7 +362,7 @@ define @Player = @Entity[type=player]
 			unless fz do @s.clone_flip_z = True
 		end
 	
-        as @s.to_display(@CloneDisplay)
+        as @s.to_display (@CloneDisplay)
 			@s.clone_flip_horizontal()
         end
         /gamerule sendCommandFeedback false
@@ -403,7 +403,7 @@ define @Player = @Entity[type=player]
 			unless fz do @s.clone_flip_z = True
 		end
 		
-        as @s.to_display(@CloneDisplay)
+        as @s.to_display (@CloneDisplay)
 			@s.clone_flip_horizontal()
         end
         /gamerule sendCommandFeedback false
@@ -415,7 +415,7 @@ define @Player = @Entity[type=player]
 		if @s.clone_rotation < 0
 			@s.clone_rotation += 360
 		end
-        as @s.to_display(@CloneDisplay)
+        as @s.to_display (@CloneDisplay)
             @s.ry -= 90
         end
 		@s.rotate_dest_horizontal()
@@ -428,7 +428,7 @@ define @Player = @Entity[type=player]
 		if @s.clone_rotation >= 360
 			@s.clone_rotation -= 360
 		end
-        as @s.to_display(@CloneDisplay)
+        as @s.to_display (@CloneDisplay)
             @s.ry += 90
         end
 		@s.rotate_dest_horizontal()
@@ -458,7 +458,7 @@ define @Player = @Entity[type=player]
 		end
 
 		
-		player = @s
+		player = &@s
 		as @Corner if @s.player == player and @s.type == $Type_Dest
 			dx = cx - @s.x
 			dz = cz - @s.z
@@ -649,7 +649,7 @@ define @Player = @Entity[type=player]
                 <center> = (<max> + <min>) / 2
                 <center> -= <center> % scale + <scale/2, 0, scale/2>
                 
-                player = @s
+                player = &@s
                 @s.get_cursor_position()
 				if @s.clone_in_place
 					<cursor> = <center>
@@ -668,7 +668,7 @@ define @Player = @Entity[type=player]
                         /team join dest
                         @s.player = player
                         if bottom_center
-                            moving = @s
+                            moving = &@s
                             @s.bottom_center = True
                         end
                     end
@@ -687,14 +687,14 @@ define @Player = @Entity[type=player]
 				end
                 
                 @s.from_display = create @CloneDisplay
-                as @s.from_display(@CloneDisplay)
+                as @s.from_display (@CloneDisplay)
                     /replaceitem entity @s weapon.mainhand diamond_sword
                     /replaceitem entity @s weapon.offhand shield
                     /replaceitem entity @s armor.head player_head{SkullOwner:"SethBling"}
                     /team join source
                 end
                 @s.to_display = create @CloneDisplay
-                as @s.to_display(@CloneDisplay)
+                as @s.to_display (@CloneDisplay)
                     /replaceitem entity @s weapon.mainhand diamond_sword
                     /replaceitem entity @s weapon.offhand shield
                     /replaceitem entity @s armor.head player_head{SkullOwner:"SethBling"}
@@ -786,7 +786,7 @@ define @Player = @Entity[type=player]
             @s.state = $CloneBrush
             @s.create_click()
             as @Corner if @s.player == player if @s.type == $Type_Dest if @s.bottom_center
-                moving = @s
+                moving = &@s
             end
             @s.moving = moving
             tell @s 'Clone Brush activated. Click to paste at destination.'
@@ -938,7 +938,7 @@ define @Player = @Entity[type=player]
         if @s.state == $MovingDest then can_cancel = True
         if @s.state == $CloneBrush then can_cancel = True
         if can_cancel
-            player = @s
+            player = &@s
             as @Corner if @s.player == player and @s.type == $Type_Dest
                 @s.player = None
             end
@@ -1082,7 +1082,7 @@ define @Player = @Entity[type=player]
         if @s.state == $EditDest
             type = $Type_Dest
         end
-        player = @s
+        player = &@s
         as @Corner if @s.player == player and @s.type == type
             move @s ~ ~1 ~
         end
@@ -1096,7 +1096,7 @@ define @Player = @Entity[type=player]
         if @s.state == $EditDest
             type = $Type_Dest
         end
-        player = @s
+        player = &@s
         as @Corner if @s.player == player and @s.type == type
             move @s ~ ~-1 ~
         end
@@ -1111,7 +1111,7 @@ define @Player = @Entity[type=player]
         if @s.state == $EditDest
             type = $Type_Dest
         end
-        player = @s
+        player = &@s
         ry = (@s.ry % 360 + 360) % 360
         
         move_dir()
@@ -1127,7 +1127,7 @@ define @Player = @Entity[type=player]
         if @s.state == $EditDest
             type = $Type_Dest
         end
-        player = @s
+        player = &@s
         ry = ((@s.ry + 180) % 360 + 360) % 360
         
         move_dir()
@@ -1143,7 +1143,7 @@ define @Player = @Entity[type=player]
         if @s.state == $EditDest
             type = $Type_Dest
         end
-        player = @s
+        player = &@s
         ry = ((@s.ry - 90) % 360 + 360) % 360
         
         move_dir()
@@ -1159,7 +1159,7 @@ define @Player = @Entity[type=player]
         if @s.state == $EditDest
             type = $Type_Dest
         end
-        player = @s
+        player = &@s
         ry = ((@s.ry + 90) % 360 + 360) % 360
         
         move_dir()
@@ -1168,7 +1168,7 @@ define @Player = @Entity[type=player]
     end
     
     function corner_target(type)
-        player = @s
+        player = &@s
         
         at @s ~ ~1.6 ~
 			<start_pos> = here
@@ -1433,7 +1433,7 @@ clock main
                 at @s ~ ~200 ~
                     @s.pick1 = create @Corner
                     as @s.pick1
-                        @s.player = @player
+                        @s.player = &@player
                         /team join source
                         @s.type = $Type_Source
                         @s.edit_xmin = True
@@ -1459,7 +1459,7 @@ clock main
                 @s.moving = None
                 @s.state = $Closed
                 as @Corner
-					if @s.player == @player
+					if @s.player == &@player
 						@s.player = None
 					end
                 end
@@ -1510,12 +1510,12 @@ clock main
             @s.get_dest_minmax()
             if has_dest_box
                 at @s ^7 ^6 ^10
-                    as @s.from_display(@CloneDisplay)
+                    as @s.from_display (@CloneDisplay)
                         /tp @s ~ ~ ~
                     end
                 end
                 at @s ^5 ^6 ^10
-                    as @s.to_display(@CloneDisplay)
+                    as @s.to_display (@CloneDisplay)
                         /tp @s ~ ~ ~
                     end
                 end
@@ -1529,9 +1529,9 @@ clock main
                 @s.corner_target($Type_Source)
                 if click
                     click = False
-                    as @Corner if @s.player == @player and @s.type == $Type_Source and @s.highlighted
+                    as @Corner if @s.player == &@player and @s.type == $Type_Source and @s.highlighted
                         /team join moving
-                        @player.moving = @s
+                        @player.moving = &@s
                         @player.state = $EditingSource
                         @player.create_click()
                     end
@@ -1541,7 +1541,7 @@ clock main
             if @s.state == $EditingSource
                 @s.get_cursor_position()
                 at <cursor>
-                    as @s.moving(@Corner)
+                    as @s.moving (@Corner)
                         /tp @s ~ ~ ~
                         <x, y, z> = @s.<pos>
                         <edit_xmin, edit_ymin, edit_zmin> = <False, False, False>
@@ -1566,7 +1566,7 @@ clock main
                     end
                 end
                 as @Corner
-                    if @s.player == @player
+                    if @s.player == &@player
                         if edit_xmin and @s.edit_xmin then @s.x = x
                         if edit_ymin and @s.edit_ymin then @s.y = y
                         if edit_zmin and @s.edit_zmin then @s.z = z
@@ -1577,7 +1577,7 @@ clock main
                 end
                 @s.get_minmax()
                 as @Corner
-                    if @s.player == @player
+                    if @s.player == &@player
                         if @s.center_x then @s.x = (xmin + xmax) / 2
                         if @s.center_y then @s.y = (ymin + ymax) / 2
                         if @s.center_z then @s.z = (zmin + zmax) / 2
@@ -1589,9 +1589,9 @@ clock main
                 @s.corner_target($Type_Dest)
                 if click
                     click = False
-                    as @Corner if @s.player == @player and @s.type == $Type_Dest and @s.highlighted
+                    as @Corner if @s.player == &@player and @s.type == $Type_Dest and @s.highlighted
                         /team join moving
-                        @player.moving = @s
+                        @player.moving = &@s
                         @player.state = $MovingDest
                         @player.create_click()
                     end
@@ -1605,18 +1605,18 @@ clock main
             if move_dest
                 @s.get_cursor_position()
                 at <cursor>
-                    as @s.moving(@Corner)
+                    as @s.moving (@Corner)
                         <moving_pos> = @s.<pos>
                     end
                     <movement> = here - <moving_pos>
                     <movement> -= <movement> % 1000
-                    as @Corner if @s.player == @player and @s.type == $Type_Dest
+                    as @Corner if @s.player == &@player and @s.type == $Type_Dest
                         @s.<pos> += <movement>
                     end
                 end
                 if click
                     if @s.state == $MovingDest
-                        as @s.moving(@Corner)
+                        as @s.moving (@Corner)
                             /team join dest
                         end
                         @s.moving = None
@@ -1711,7 +1711,7 @@ clock main
                         
                         @s.pick2 = create @Corner
                         as @s.pick2
-                            @s.player = @player
+                            @s.player = &@player
                             @s.type = $Type_Source
                             /team join moving
                             @s.edit_xmax = True
@@ -1733,7 +1733,7 @@ clock main
                                     
                                     if not skip
                                         as create @Corner
-                                            @s.player = @player
+                                            @s.player = &@player
                                             @s.type = $Type_Source
                                             /team join source
                                             if ex == -1 then @s.edit_xmin = True
@@ -1799,7 +1799,7 @@ function collect_garbage()
             as @s.click
                 @s.kill = False
             end
-            as @Corner if @s.player == @player
+            as @Corner if @s.player == &@player
                 @s.kill = False
             end
             as @s.from_display

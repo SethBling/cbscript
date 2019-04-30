@@ -1,3 +1,5 @@
+import traceback
+
 class execute_base(object):
 	# Override to force the creation of a sub function, even for a single command
 	def force_sub_function(self):
@@ -17,7 +19,7 @@ class execute_base(object):
 		try:
 			exec_func.compile_blocks(self.sub)
 		except Exception as e:
-			print(e.message)
+			print(traceback.format_exc())
 			raise Exception('Unable to compile {} block contents at line {}'.format(self.display_name(), self.line))
 
 		single = exec_func.single_command()

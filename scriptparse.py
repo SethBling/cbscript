@@ -1,7 +1,7 @@
 from ply import *
 import scriptlex
-from block_types.array_assignment_block import array_assignment_block
 from block_types.array_definition_block import array_definition_block
+from block_types.block_definition_block import block_definition_block
 from block_types.block_tag_block import block_tag_block
 from block_types.command_block import command_block
 from block_types.comment_block import comment_block
@@ -33,6 +33,7 @@ from block_types.vector_assignment_scalar_block import vector_assignment_scalar_
 from block_types.while_block import while_block
 from data_types.const_number import const_number
 from data_types.const_string import const_string
+from data_types.number_macro_path import number_macro_path
 from data_types.python_identifier import python_identifier
 from data_types.interpreted_python import interpreted_python
 from data_types.relcoord import relcoord
@@ -40,17 +41,18 @@ from data_types.relcoords import relcoords
 from nbt_types.nbt_json import nbt_json
 from nbt_types.entity_nbt_path import entity_nbt_path
 from nbt_types.block_nbt_path import block_nbt_path
-from scalar_expressions.arrayconst_expr import arrayconst_expr
-from scalar_expressions.arrayexpr_expr import arrayexpr_expr
 from scalar_expressions.binop_expr import binop_expr
 from scalar_expressions.create_expr import create_expr
 from scalar_expressions.dot_expr import dot_expr
 from scalar_expressions.func_expr import func_expr
-from scalar_expressions.num_expr import num_expr
-from scalar_expressions.scale_expr import scale_expr
-from scalar_expressions.selector_expr import selector_expr
-from scalar_expressions.selvar_expr import selvar_expr
 from scalar_expressions.unary_expr import unary_expr
+from variable_types.array_const_var import array_const_var
+from variable_types.array_expr_var import array_expr_var
+from variable_types.block_path_var import block_path_var
+from variable_types.scale_var import scale_var
+from variable_types.scoreboard_var import scoreboard_var
+from variable_types.selector_id_var import selector_id_var
+from variable_types.virtualint_var import virtualint_var
 from vector_expressions.sel_vector_var_expr import sel_vector_var_expr
 from vector_expressions.vector_binop_scalar_expr import vector_binop_scalar_expr
 from vector_expressions.vector_binop_vector_expr import vector_binop_vector_expr
@@ -179,10 +181,10 @@ def p_clocksection(p):
 	
 #### Function Section
 def p_functionsection(p):
-	'''functionsection : function ID LPAREN id_list RPAREN newlines blocklist end'''
+	'''functionsection : function FUNCTIONID id_list RPAREN newlines blocklist end'''
 	validate_mcfunction_name(p[2])
 
-	p[0] = ('function', p[2], [], p[4], p[7])
+	p[0] = ('function', p[2], [], p[3], p[6])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### Template Function Section
@@ -195,13 +197,13 @@ def p_template_function_section(p):
 
 #### Macro section
 def p_macrosection(p):
-	'''macrosection : macro DOLLAR ID macro_args newlines blocklist end'''
+	'''macrosection : macro DOLLAR FUNCTIONID macro_args newlines blocklist end'''
 	p[0] = ('macro', p[3], [], p[4], p[6])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_macro_args(p):
-	'''macro_args : LPAREN macro_params RPAREN'''
-	p[0] = p[2]
+	'''macro_args : macro_params RPAREN'''
+	p[0] = p[1]
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_macro_args_empty(p):
@@ -224,18 +226,18 @@ def p_macro_params_empty(p):
 
 #### Function call
 def p_function_call_namespace(p):
-	'''function_call : ID COLON ID LPAREN exprlist RPAREN'''
-	p[0] = function_call_block(p.lineno(1), p[1]+p[2]+p[3], p[5])
+	'''function_call : ID COLON FUNCTIONID exprlist RPAREN'''
+	p[0] = function_call_block(p.lineno(1), p[1]+p[2]+p[3], p[4])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_function_call(p):
-	'''function_call : ID LPAREN exprlist RPAREN'''
-	p[0] = function_call_block(p.lineno(1), p[1], p[3])
+	'''function_call : FUNCTIONID exprlist RPAREN'''
+	p[0] = function_call_block(p.lineno(1), p[1], p[2])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_method_call(p):
-	'''method_call : fullselector DOT ID LPAREN exprlist RPAREN'''
-	p[0] = method_call_block(p.lineno(1), p[1], p[3], p[5])
+	'''method_call : fullselector DOT FUNCTIONID exprlist RPAREN'''
+	p[0] = method_call_block(p.lineno(1), p[1], p[3], p[4])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Expression list
@@ -262,13 +264,13 @@ def p_template_function_call(p):
 	
 #### Macro call	
 def p_macro_call(p):
-	'''macro_call : DOLLAR ID macro_call_args'''
+	'''macro_call : DOLLAR FUNCTIONID macro_call_args'''
 	p[0] = macro_call_block(p.lineno(1), p[2], p[3])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_macro_call_args(p):
-	'''macro_call_args : LPAREN macro_call_params RPAREN'''
-	p[0] = p[2]
+	'''macro_call_args : macro_call_params RPAREN'''
+	p[0] = p[1]
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_macro_call_args_empty(p):
@@ -320,16 +322,12 @@ def p_id_list_empty(p):
 	'''id_list : empty'''
 	p[0] = []
 	
-#### Python codeblock
-def p_python_string(p):
-	'''python : DOLLAR string'''
-	p[0] = p[2]
-
 #### Optassignments
 def p_optassignments_multiple(p):
 	'''optassignments : pythonassignment newlines optassignments
 					  | selector_assignment newlines optassignments
 					  | selector_define_block newlines optassignments
+					  | block_define_block newlines optassignments
 					  | blocktag newlines optassignments
 					  | array_definition newlines optassignments
 					  | import_statement newlines optassignments
@@ -355,19 +353,47 @@ def p_import_statement(p):
 #### Variable
 def p_variable_selector(p):
 	'''variable : fullselector DOT ID'''
-	p[0] = ('Var', (p[1], p[3]))
+	p[0] = scoreboard_var(p[1], p[3])
 	
 def p_variable_global(p):
 	'''variable : ID'''
-	p[0] = ('Var', ('Global', p[1]))
+	p[0] = scoreboard_var('Global', p[1])
 	
 def p_variable_array_const(p):
 	'''variable : ID LBRACK const_value RBRACK'''
-	p[0] = ('ArrayConst', (p[1], p[3]))
+	p[0] = array_const_var(p[1], p[3])
 	
 def p_variable_array_expr(p):
 	'''variable : ID LBRACK expr RBRACK'''
-	p[0] = ('ArrayExpr', (p[1], p[3]))
+	p[0] = array_expr_var(p[1], p[3])
+	
+def p_variable_block_path_nocoords(p):
+	'''variable : LBRACK ID RBRACK DOT ID'''
+	p[0] = block_path_var(p[2], p[5], None, [])
+
+def p_variable_block_path_coords(p):
+	'''variable : LBRACK ID at relcoords RBRACK DOT ID'''
+	p[0] = block_path_var(p[2], p[7], p[4], [])
+
+def p_variable_block_macro_path_nocoords(p):
+	'''variable : LBRACK ID RBRACK DOT ID LBRACK macro_call_params RBRACK'''
+	p[0] = block_path_var(p[2], p[5], None, p[7])
+
+def p_variable_block_macro_path_coords(p):
+	'''variable : LBRACK ID at relcoords RBRACK DOT ID LBRACK macro_call_params RBRACK'''
+	p[0] = block_path_var(p[2], p[7], p[4], p[9])
+	
+def p_variable_virtualint(p):
+	'''variable : virtualinteger'''
+	p[0] = virtualint_var(p[1])
+	
+def p_variable_scale(p):
+	'''variable : scale'''
+	p[0] = scale_var()
+	
+def p_variable_selector_ref(p):
+	'''variable : REF fullselector'''
+	p[0] = selector_id_var(p[2])
 	
 #### Blocklist
 def p_optcomment(p):
@@ -558,27 +584,17 @@ def p_conditions(p):
 	p[0] = [p[1]] + p[3]
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
-def p_condition_pointer(p):
-	'''condition : variable EQUALEQUAL fullselector'''
-	p[0] = ('pointer', (p[1], p[3]))
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-
-def p_condition_pointer_reversed(p):
-	'''condition : fullselector EQUALEQUAL variable'''
-	p[0] = ('pointer', (p[3], p[1]))
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-	
 def p_condition_fullselector(p):
 	'''condition : fullselector'''
 	p[0] = ('selector', p[1])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_condition_score(p):
-	'''condition : variable LT comparison
-				 | variable LEQ comparison
-				 | variable EQUALEQUAL comparison
-				 | variable GT comparison
-				 | variable GEQ comparison'''
+	'''condition : variable LT variable
+				 | variable LEQ variable
+				 | variable EQUALEQUAL variable
+				 | variable GT variable
+				 | variable GEQ variable'''
 	op = p[2]
 	if op == '==':
 		op = '='
@@ -592,12 +608,12 @@ def p_condition_vector_equality(p):
 
 def p_condition_bool(p):
 	'''condition : variable'''
-	p[0] = ('score', (p[1], '>', ('num', const_number(0))))
+	p[0] = ('score', (p[1], '>', virtualint_var('0')))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_condition_not_bool(p):
 	'''condition : not variable'''
-	p[0] = ('score', (p[2], '<=', ('num', const_number(0))))
+	p[0] = ('score', (p[2], '<=', virtualint_var(0)))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_condition_block(p):
@@ -608,26 +624,6 @@ def p_condition_block(p):
 def p_condition_block_virtual(p):
 	'''condition : block relcoords DOLLAR ID'''
 	p[0] = ('block', (p[2], p[3]+p[4])) 
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-	
-# Condition Comparisons
-def p_comparison_num(p):
-	'''comparison : virtualinteger'''
-	val = p[1]
-	if val.startswith('$'):
-		val = val[1:]
-	p[0] = ('num', interpreted_python(val, p.lineno(1)))
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-
-# Condition Comparisons
-def p_comparison_expr(p):
-	'''comparison : LPAREN const_value RPAREN'''
-	p[0] = ('num', p[2])
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-	
-def p_comparison_global(p):
-	'''comparison : variable'''
-	p[0] = ('score', p[1])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### If python
@@ -654,12 +650,12 @@ def p_block_while_execute(p):
 
 #### For	
 def p_block_for_index_by(p):
-	'''codeblock : for ID EQUALS expr to expr by expr newlines blocklist end'''
+	'''codeblock : for variable EQUALS expr to expr by expr newlines blocklist end'''
 	p[0] = for_index_block(p.lineno(1), p[2], p[4], p[6], p[8], p[10])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_block_for_index(p):
-	'''codeblock : for ID EQUALS expr to expr newlines blocklist end'''
+	'''codeblock : for variable EQUALS expr to expr newlines blocklist end'''
 	p[0] = for_index_block(p.lineno(1), p[2], p[4], p[6], None, p[8])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -713,23 +709,18 @@ def p_block_title_times(p):
 	p[0] = title_block(p.lineno(1), p[1], p[2], (p[3], p[4], p[5]), p[6])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
+def p_block_selector_assignment(p):
+	'''codeblock : selector_assignment
+				 | selector_define_block'''
+	p[0] = p[1]
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
 def p_block_function_call(p):
 	'''codeblock : function_call
 				 | method_call
 				 | macro_call
 				 | template_function_call
 				 | pythonassignment'''
-	p[0] = p[1]
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-	
-def p_block_math(p):
-	'''codeblock : assignment'''
-	p[0] = scoreboard_assignment_block(p.lineno(1), p[1])
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-	
-def p_block_selector_assignment(p):
-	'''codeblock : selector_assignment
-				 | selector_define_block'''
 	p[0] = p[1]
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -823,9 +814,9 @@ def p_pyexpr_array(p):
 	p[0] = p[1] + p[2] + p[3]
 	
 def p_pyexpr_function_call(p):
-	'''pyexpr : pyid LPAREN pyexpr_expr_list RPAREN'''
-	p[0] = p[1] + p[2] + p[3] + p[4]
-
+	'''pyexpr : DOLLAR FUNCTIONID pyexpr_expr_list RPAREN'''
+	p[0] = p[2] + '(' + p[3] + p[4]
+	
 def p_pyexpr_array_lookup(p):
 	'''pyexpr : pyid LBRACK pyexpr RBRACK'''
 	p[0] = p[1] + p[2] + p[3] + p[4]
@@ -872,6 +863,39 @@ def p_pointer_decl(p):
 	'''pointer_decl : ID COLON fullselector'''
 	p[0] = pointer_decl_block(p.lineno(0), p[1], p[3])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+
+#### Block definition
+def p_block_define_block(p):
+	'''block_define_block : define LBRACK ID RBRACK newlines block_definition end'''
+	p[0] = block_definition_block(p.lineno(1), p[3], p[6], relcoords())
+	
+def p_block_define_block_coords(p):
+	'''block_define_block : define LBRACK ID RBRACK at relcoords newlines block_definition end'''
+	p[0] = block_definition_block(p.lineno(1), p[3], p[8], p[6])
+	
+def p_block_definition_empty(p):
+	'''block_definition : empty'''
+	p[0] = []
+	
+def p_block_definition(p):
+	'''block_definition : block_item newlines block_definition'''
+	p[0] = [p[1]] + p[3]
+	
+def p_block_item_path_noscale(p):
+	'''block_item : ID COLON data_path data_type'''
+	p[0] = number_macro_path(p[1], [], p[3], p[4])
+	
+def p_block_item_path_scale(p):
+	'''block_item : ID COLON data_path data_type const_value'''
+	p[0] = number_macro_path(p[1], [], p[3], p[4], p[5])
+	
+def p_block_item_macro_path_noscale(p):
+	'''block_item : ID LBRACK macro_params RBRACK COLON data_path data_type'''
+	p[0] = number_macro_path(p[1], p[3], p[6], p[7])
+
+def p_block_item_macro_path_scale(p):
+	'''block_item : ID LBRACK macro_params RBRACK COLON data_path data_type const_value'''
+	p[0] = number_macro_path(p[1], p[3], p[6], p[7], p[8])
 	
 #### Selector Assignment
 def p_selector_assignment(p):
@@ -1163,54 +1187,48 @@ def p_nbt_remove(p):
 	
 #### Assignment
 def p_return_expression(p):
-	'''assignment : return expr'''
-	p[0] = (('Var', ('Global', 'ReturnValue')), '=', p[2])
+	'''codeblock : return expr'''
+	p[0] = scoreboard_assignment_block(p.lineno(1), scoreboard_var('Global', 'ReturnValue'), '=', p[2])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_assignment(p):
-	'''assignment : variable EQUALS expr
-				  | variable PLUSEQUALS expr
-				  | variable MINUSEQUALS expr
-				  | variable TIMESEQUALS expr
-				  | variable DIVIDEEQUALS expr
-				  | variable MODEQUALS expr'''
-	p[0] = (p[1], p[2], p[3])
+	'''codeblock : variable EQUALS expr
+				 | variable PLUSEQUALS expr
+				 | variable MINUSEQUALS expr
+				 | variable TIMESEQUALS expr
+				 | variable DIVIDEEQUALS expr
+				 | variable MODEQUALS expr'''
+	p[0] = scoreboard_assignment_block(p.lineno(1), p[1], p[2], p[3])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_assignment_unary_default(p):
-	'''assignment : variable PLUSPLUS
-				  | variable MINUSMINUS'''
+	'''codeblock : variable PLUSPLUS
+				 | variable MINUSMINUS'''
 	op = p[2][0]+'='
-	operand = num_expr(1)
-	p[0] = (p[1], op, operand)
+	operand = virtualint_var('1')
+	p[0] = scoreboard_assignment_block(p.lineno(1), p[1], op, operand)
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
-def p_assignment_selector_global(p):
-	'''assignment : variable EQUALS fullselector'''
-	p[0] = (p[1], p[2], selector_expr(p[3]))
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-
-	
 def p_assignment_create(p):
-	'''assignment : variable EQUALS create_block'''
-	p[0] = (p[1], p[2], create_expr(p[3]))
+	'''codeblock : variable EQUALS create_block'''
+	p[0] = scoreboard_assignment_block(p.lineno(1), p[1], p[2], create_expr(p[3]))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Vector assignment
 def p_vector_assignment_vector(p):
 	'''codeblock : vector_var EQUALS vector_expr
-							   | vector_var PLUSEQUALS vector_expr
-							   | vector_var MINUSEQUALS vector_expr'''
+				 | vector_var PLUSEQUALS vector_expr
+				 | vector_var MINUSEQUALS vector_expr'''
 	p[0] = vector_assignment_block(p.lineno(1), p[1], p[2], p[3])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_vector_assignment_scalar(p):
 	'''codeblock : vector_var EQUALS expr
-									  | vector_var PLUSEQUALS expr
-									  | vector_var MINUSEQUALS expr
-									  | vector_var TIMESEQUALS expr
-									  | vector_var DIVIDEEQUALS expr
-									  | vector_var MODEQUALS expr'''
+				 | vector_var PLUSEQUALS expr
+				 | vector_var MINUSEQUALS expr
+				 | vector_var TIMESEQUALS expr
+				 | vector_var DIVIDEEQUALS expr
+				 | vector_var MODEQUALS expr'''
 	p[0] = vector_assignment_scalar_block(p.lineno(1), p[1], p[2], p[3])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -1230,8 +1248,10 @@ def p_vector_var_components(p):
 	p[0] = ('VAR_COMPONENTS', [p[2], p[4], p[6]])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
-
 #### Arithmetic expressions
+def p_expr_var(p):
+	'''expr : variable'''
+	p[0] = p[1]
 
 def p_expr_binary(p):
 	'''expr : expr PLUS expr
@@ -1249,36 +1269,6 @@ def p_expr_dot(p):
 	p[0] = dot_expr(p[1], p[3])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
-def p_expr_number(p):
-	'''expr : virtualinteger'''
-	p[0] = num_expr(p[1])
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-	
-def p_expr_scale(p):
-	'''expr : scale'''
-	p[0] = scale_expr()
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-
-def p_expr_variable(p):
-	'''expr : ID'''
-	p[0] = selvar_expr('Global', p[1])
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-	
-def p_expr_array_const(p):
-	'''expr : ID LBRACK virtualinteger RBRACK'''
-	p[0] = arrayconst_expr(p[1], p[3])
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-	
-def p_expr_array_expr(p):
-	'''expr : ID LBRACK expr RBRACK'''
-	p[0] = arrayexpr_expr(p[1], p[3])
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-	
-def p_expr_selector_variable(p):
-	'''expr : fullselector DOT ID'''
-	p[0] = selvar_expr(p[1], p[3])
-	mcfunction.line_numbers.append((p[0], p.lineno(1)))
-
 def p_expr_function(p):
 	'''expr : function_call'''
 	p[0] = func_expr(p[1])
@@ -1291,11 +1281,7 @@ def p_expr_group(p):
 
 def p_expr_unary(p):
 	'''expr : MINUS expr %prec UMINUS'''
-	cv = p[2].const_value()
-	if cv == None:
-		p[0] = unary_expr('-', p[2])
-	else:
-		p[0] = num_expr(str(-int(cv)))
+	p[0] = unary_expr('-', p[2])
 	
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	

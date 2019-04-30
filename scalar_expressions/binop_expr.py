@@ -4,66 +4,44 @@ class binop_expr(scalar_expression_base):
 		self.lhs = lhs
 		self.op = op
 		self.rhs = rhs
-		
-	def compile(self, func, assignto):
-		if len(self.op) == 1 and self.op in "+-*/%":
-			if self.op in "+*" and self.lhs.const_value(func) != None and self.rhs.const_value(func) == None:
-				# Commutative operation which is more efficient with the constant operand on the rhs
-				left = self.rhs
-				right = self.lhs
-			else:
-				left = self.lhs
-				right = self.rhs
-		
-			id1 = left.compile(func, assignto)
-			if id1 == None:
-				print "Unable to compile LHS of binop {0}".format(self.op)
-				return None
+
+	def compile(self, func, assignto=None):
+		if len(self.op) == 1 and self.op in ['+', '-', '*', '/', '%']:
+			left_var = self.lhs.compile(func, assignto)
+			temp_var = left_var.get_modifiable_var(func, assignto)
 			
-			id1 = func.get_modifiable_id(id1, assignto)
+			right_var = self.rhs.compile(func, None)
+			right_const = right_var.get_const_value(func)
+			
+			# TODO: handle case where both variables have constant values, return constant result
+			
+			if right_const and self.op in ['+','-']:
+				op = self.op
 				
-			const = right.const_value(func)
-			if const != None:
-				operand2 = int(const)
+				if right_const < 0:
+					right_const = -right_const
+					op = {'+':'-', '-':'+'}[self.op]
 					
-				if self.op == '+':
-					if operand2 >= 0:
-						func.add_command('scoreboard players add Global {0} {1}'.format(id1, operand2))
-					else:
-						func.add_command('scoreboard players remove Global {0} {1}'.format(id1, -operand2))
-				elif self.op == '-':
-					if operand2 >= 0:
-						func.add_command('scoreboard players remove Global {0} {1}'.format(id1, operand2))
-					else:
-						func.add_command('scoreboard players add Global {0} {1}'.format(id1, -operand2))
-				else:
-					id2 = func.add_constant(operand2)
-					func.add_command('scoreboard players operation Global {0} {1}= {2} Constant'.format(id1, self.op, id2))
+				func.add_command('scoreboard players {} {} {} {}'.format({'+':'add', '-':'remove'}[op], temp_var.selector, temp_var.objective, right_const))
 			else:
-				id2 = right.compile(func, None)
-				if id2 == None:
-					print "Unable to compile RHS of binop {0}".format(self.op)
-					return None
+				right_var = right_var.get_scoreboard_var(func)
+				func.add_command('scoreboard players operation {} {} {}= {} {}'.format(temp_var.selector, temp_var.objective, self.op, right_var.selector, right_var.objective))
 				
-				func.add_operation('Global', id1, self.op+'=', id2)
-				func.free_scratch(id2)
+			right_var.free_scratch(func)
 			
-			return id1
+			return temp_var
 			
 		if self.op == "^":
-			target = self.lhs.compile(func, assignto)
+			left_var = lhs.compile(func, assignto)
+			temp_var = left_var.get_modifiable_var(func, assignto)
 			
-			if target == None:
-				print 'Unable to compile exponent for ^'
-				return None
+			right_var = rhs.compile(func)
+			right_const = right_var.get_const_value(func)
 			
-			right_const = self.rhs.const_value(func)
 			if right_const == None:
 				print('Exponentiation must have constant operand.')
 				return None
 				
-			power = int(right_const)
-			
 			if power < 1:
 				print "Powers less than 1 are not supported"
 				return None
@@ -71,13 +49,16 @@ class binop_expr(scalar_expression_base):
 			if power == 1:
 				return target
 			
-			newId = func.get_scratch()
-			func.add_operation('Global', newId, '=', target)
+			multiplier_obj = func.get_scratch()
+			func.add_command('scoreboard players operation Global {} = {} {}'.format(multiplier_obj, temp_var.selector, temp_var.objective))
 			
 			for i in xrange(power-1):
-				func.add_operation('Global', newId, '*=', target)
+				func.add_command('scoreboard players operation {} {} *= Global {}'.format(temp_var.selector, temp_var.objective, multiplier_obj))
 				
-			return newId
+			func.free_scratch(multiplier_obj)
+				
+			return temp_var
 			
-		print "Binary operation '{0}' isn't implemented".format(self.op)
-		return None
+		else:	
+			print "Binary operation '{0}' isn't implemented".format(self.op)
+			return None

@@ -1,4 +1,5 @@
 from command_block import command_block
+from variable_types.scoreboard_var import scoreboard_var
 
 class array_definition_block(object):
 	def __init__(self, line, name, from_val, to_val):
@@ -24,8 +25,7 @@ class array_definition_block(object):
 		valvar = '{}Val'.format(name)
 		func.register_objective(valvar)
 		
-		indexvar = '{}Idx'.format(name)
-		func.register_objective(indexvar)
+		indexvar = scoreboard_var('Global', '{}Idx'.format(name))
 		
 		get_func = func.create_child_function()
 		get_func_name = 'array_{}_get'.format(name.lower())

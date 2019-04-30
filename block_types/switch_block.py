@@ -11,7 +11,7 @@ class switch_block(object):
 		if len(self.cases_raw) == 0:
 			return
 	
-		result = self.expr.compile(func, None)
+		result = self.expr.compile(func, None).get_scoreboard_var(func)
 		if result == None:
 			raise Exception('Unable to compute switch expression at line {}'.format(self.line))
 
@@ -69,4 +69,4 @@ class switch_block(object):
 		if not func.switch_cases(result, cases):
 			raise Exception('Unable to compile switch block at line {}'.format(line))
 				
-		func.free_scratch(result)
+		result.free_scratch(func)

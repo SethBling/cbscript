@@ -70,6 +70,12 @@ class global_context(object):
 		return self.functions['reset']
 		
 	def add_constant(self, c):
+		try:
+			c = int(c)
+		except:
+			print(e)
+			raise Exception('Unable to create constant integer value for "{}"'.format(c))
+			
 		if c not in self.constants:
 			self.constants.append(c)
 	

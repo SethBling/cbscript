@@ -1,6 +1,6 @@
 # Script Atari 2600 Emulator
 
-dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\Atari 2600 1-13"
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\Atari 2600 1-14"
 desc "Atari 2600 Emulator"
 scale 1
 
@@ -584,12 +584,14 @@ function read_whole_rom()
 			for z = 0 to 0x0F
 				@s.z = ROMZ + z
 
-				# Read Byte
-				val = 0
-				for $bit in $range(8)
-					$exp = 2 ** $bit
-					at @s if block ~ ~$bit ~ stone do val += $exp
-				end	
+				at @s 
+					# Read Byte
+					val = 0
+					for $bit in $range(8)
+						$exp = 2 ** $bit
+						if block ~ ~$bit ~ stone do val += $exp
+					end	
+				end
 				
 				ROM[(z+0xF0)*0x100 + x] = val
 			end
@@ -2508,7 +2510,7 @@ end
 function mnemonic()
 	as create @Marker
 		@s.mnemonic = True
-		switch(Function)
+		switch Function
 			case $f in $Mnemonics
 				$m = $Mnemonics[$f]
 				/data merge entity @s {"CustomName":"\"$m\""}

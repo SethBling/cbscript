@@ -39,12 +39,16 @@ class environment(object):
 		self.selectors = {}
 		self.self_selector = None
 		self.pointers = {}
+		self.block_definitions = {}
 		
 	def clone(self, new_function_name = None):
 		new_env = environment(self.global_context)
 		
 		for id in self.selectors:
 			new_env.selectors[id] = self.selectors[id]
+			
+		for id in self.block_definitions:
+			new_env.block_definitions[id] = self.block_definitions[id]
 			
 		for id in self.pointers:
 			new_env.pointers[id] = self.pointers[id]
@@ -70,13 +74,20 @@ class environment(object):
 		
 		return text
 		
-	def apply_replacements(self, text):
-		for identifier in reversed(sorted(self.dollarid.keys())):
-			if isInt(self.dollarid[identifier]):
-				text = str(text).replace('-$' + identifier, str(-int(self.dollarid[identifier])))
-			elif isNumber(self.dollarid[identifier]):
-				text = str(text).replace('-$' + identifier, str(-float(self.dollarid[identifier])))
-			text = str(text).replace('$' + identifier, str(self.dollarid[identifier]))	
+	def apply_replacements(self, text, overrides = {}):
+		replacements = {}
+		for k in self.dollarid:
+			replacements[k] = self.dollarid[k]
+		
+		for k in overrides:
+			replacements[k] = overrides[k]
+	
+		for identifier in reversed(sorted(replacements.keys())):
+			if isInt(replacements[identifier]):
+				text = str(text).replace('-$' + identifier, str(-int(replacements[identifier])))
+			elif isNumber(replacements[identifier]):
+				text = str(text).replace('-$' + identifier, str(-float(replacements[identifier])))
+			text = str(text).replace('$' + identifier, str(replacements[identifier]))	
 			
 		if text == None:
 			raise Exception('Applying replacements to "{}" returned None.'.format(text))
@@ -311,7 +322,10 @@ class environment(object):
 		return '{}{}'.format(name, index)
 		
 	def get_selector_definition(self, selector_text):
-		return selector_definition(selector_text, self)
+		if selector_text.startswith('@'):
+			return selector_definition(selector_text, self)
+		else:
+			return None
 		
 	@property
 	def parser(self):
@@ -322,3 +336,27 @@ class environment(object):
 		
 	def add_pointer(self, id, selector):
 		self.pointers[id] = selector
+		
+	def add_block_definition(self, id, definition):
+		self.block_definitions[id] = definition
+		
+	def get_block_definition(self, block_id):
+		if id not in self.block_definitions:
+			raise Exception('Tried to use undefined block id "{}"'.format(block_id))
+			
+		return self.block_definitions[id]
+		
+	def get_block_path(self, func, block_id, path_id, coords, macro_args, initialize):
+		if block_id not in self.block_definitions:
+			raise ValueError('"[{}]" is not defined.'.format(block_id))
+		
+		if initialize:
+			self.block_definitions[block_id].get_path(func, path_id, coords, macro_args)
+		
+		return 'Global', path_id
+		
+	def set_block_path(self, func, block_id, path_id, coords, macro_args, initialize):
+		if block_id not in self.block_definitions:
+			raise ValueError('"[{}]" is not defined.'.format(block_id))
+		
+		self.block_definitions[block_id].set_path(func, path_id, coords, macro_args)

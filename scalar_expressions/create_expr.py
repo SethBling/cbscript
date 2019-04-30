@@ -1,28 +1,23 @@
 from scalar_expression_base import scalar_expression_base
+from variable_types.selector_id_var import selector_id_var
 
 class create_expr(scalar_expression_base):
 	def __init__(self, create_block):
 		self.create_block = create_block
 		
-	def compile(self, func, assignto):
+	def compile(self, func, assignto=None):
 		func.register_objective('_age')
 		func.register_objective('_unique')
 		func.register_objective('_id')
 		
-		func.add_command('scoreboard players add @e _age 1')
+		func.add_command('scoreboard players set @{} _age 1'.format(self.create_block.atid))
 		
 		try:
 			self.create_block.compile(func)
 		except Exception as e:
 			print(e)
-			print('Could not run create operation.')
-			return None
+			raise Exception('Could not run create operation.')
 		
-		func.add_command('scoreboard players add @e _age 1')
-		func.add_command('scoreboard players add Global _unique 1')
-		func.add_command('scoreboard players operation @{0}[_age==1] _id = Global _unique'.format(self.create_block.atid))
-		if assignto == None:
-			assignto = func.get_scratch()
-		func.add_command('scoreboard players operation Global {} = Global _unique'.format(assignto))
+		func.add_command('scoreboard players add @{} _age 1'.format(self.create_block.atid))
 		
-		return assignto
+		return selector_id_var('@{}[_age==1,limit=1]'.format(self.create_block.atid))

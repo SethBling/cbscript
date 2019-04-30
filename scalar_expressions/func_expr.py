@@ -1,5 +1,6 @@
 from scalar_expression_base import scalar_expression_base
-from num_expr import num_expr
+from variable_types.scoreboard_var import scoreboard_var
+from environment import isInt
 import math
 
 def factor(n):
@@ -19,7 +20,7 @@ class func_expr(scalar_expression_base):
 	def __init__(self, function_call):
 		self.function_call = function_call
 	
-	def compile(self, func, assignto):
+	def compile(self, func, assignto=None):
 		import scriptparse
 		
 		efunc = self.function_call.dest
@@ -50,67 +51,43 @@ class func_expr(scalar_expression_base):
 					print 'Unable to compile guess iteration for sqrt algorithm'
 					return None
 			
-			return guess
+			return scoreboard_var('Global', guess)
 
 		elif efunc == 'abs':
 			if len(args) <> 1:
 				print "abs takes exactly 1 argument, received: {}".format(len(args))
 				return None
 
-			id = args[0].compile(func, assignto)
-			if id == None:
-				print 'Unable to compile argument for abs function'
-				return None
+			var = args[0].compile(func, assignto).get_modifiable_var(func, assignto)
 			
-			id = func.get_modifiable_id(id, assignto)
-		
-			func.add_constant(-1)
-			func.add_command("execute if score Global {0} matches ..-1 run scoreboard players operation Global {0} *= minus Constant".format(id))
+			minus = func.add_constant(-1)
+			func.add_command("execute if score {0} {1} matches ..-1 run scoreboard players operation {0} {1} *= {2} Constant".format(var.selector, var.objective, minus))
 			
-			return id
+			return var
 			
 		elif efunc == 'rand':
 			if len(args) == 1:
 				min = 0
-				max = args[0].const_value()
-				
-				if max == None:
-					if not isNumber(max):
-						print('The argument to rand is not an integer.')
-						return None
-				
-				try:
-					max = int(max)
-				except:
-					print('Argument "{}" to rand is not a number.'.format(max))
+				max = args[0].get_const_value(func)
 				
 			elif len(args) == 2:
-				min = args[0].const_value()
-				if min == None:
-					print('The first argument to rand is not an integer.')
-					return None
-				try:
-					min = int(min)
-				except:
-					print('Argument "{}" to rand is not a number.'.format(min))
+				min = args[0].get_const_value(func)
+				max = args[1].get_const_value(func)
 				
-				max = args[1].const_value()
-				if max == None:
-					print('The second argument to rand is not an integer.')
-					return None
-				try:
-					max = int(max)
-				except:
-					print('Argument "{}" to rand is not a number.'.format(max))
 			else:
-				print('rand takes 1 or 2 arguments, received: {}'.format(args))
+				raise ValueError('rand takes 1 or 2 arguments, received: {}'.format(args))
 				return None
+				
+			if min == None or not isInt(min) or max == None or not isInt(max):
+				raise TypeError('Arguments to rand() must be integers.')
+				
+			min = int(min)
+			max = int(max)
 				
 			span = max - min
 			
 			if span <= 0:
-				print("rand must have a range greater than 0. Provided {0} to {1}.".format(min, max))
-				return None
+				raise ValueError('rand() must have a range greater than 0. Provided {0} to {1}.'.format(min, max))
 
 			id = func.get_scratch()
 			func.add_command("scoreboard players set Global {0} 0".format(id))
@@ -134,12 +111,15 @@ class func_expr(scalar_expression_base):
 			if min < 0:
 				func.add_command("scoreboard players remove Global {0} {1}".format(id, -min))
 				
-			return id
+			return scoreboard_var('Global', id)
 
 		elif efunc == 'sin' or efunc == 'cos':
 			if len(args) <> 1:
 				print "{0} takes exactly 1 argument, received: {}".format(efunc, len(args))
 				return None
+			
+			raise NotImplementedError()
+			# TODO: Treat args as variables
 			
 			id = args[0].compile(func, None)
 			if id == None:
@@ -178,11 +158,11 @@ class func_expr(scalar_expression_base):
 			func.free_temp_var(modId)
 			func.free_temp_var(moddedId2)
 			
-			return retId
+			return scoreboard_var('Global', retId)
 		
 		else:
 			self.function_call.compile(func)
 			
-			return "ReturnValue"
+			return scoreboard_var('Global', 'ReturnValue')
 		
 		return None
