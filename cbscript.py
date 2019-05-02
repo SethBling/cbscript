@@ -4,6 +4,7 @@ from environment import environment
 from mcfunction import mcfunction, get_line, compile_section
 from selector_definition import selector_definition
 from source_file import source_file
+from CompileError import CompileError
 import tellraw
 import traceback
 import math
@@ -42,6 +43,8 @@ class cbscript(object):
 			else:
 				self.log("Script had compile error(s).\a")
 		except SyntaxError as e:
+			self.log(str(e) + '\a')
+		except CompileError as e:
 			self.log(str(e) + '\a')
 		except Exception as e:
 			self.log("Compiler encountered unexpected error during compilation:\a")
@@ -92,6 +95,9 @@ class cbscript(object):
 				
 			try:
 				compile_section(section, global_environment)
+			except CompileError as e:
+				print(e)
+				return False
 			except:
 				self.log_traceback()
 				return False

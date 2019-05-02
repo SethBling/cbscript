@@ -27,7 +27,8 @@ class scoreboard_var(var_base):
 			if assignto == None:
 				assignto = func.get_scratch()
 				
-			func.add_command('execute store result score Global {} run {}'.format(assignto, self.get_command(func)))
+			ret = scoreboard_var('Global', assignto)
+			ret.copy_from(func, self)
 				
 			return scoreboard_var('Global', assignto)
 		else:

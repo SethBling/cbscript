@@ -2,6 +2,7 @@ from selector_definition import selector_definition
 from environment import isNumber
 from source_file import source_file
 from variable_types.scoreboard_var import scoreboard_var
+from CompileError import CompileError
 import math
 import traceback
 
@@ -120,19 +121,16 @@ class mcfunction(object):
 						sbvar = lvar.get_scoreboard_var(self)
 						const = rconst
 						
-					try:
-						if op == '>':						
-							test += '{3} score {0} {1} matches {2}.. '.format(sbvar.selector, sbvar.objective, int(const)+1, iftype)
-						if op == '>=':						
-							test += '{3} score {0} {1} matches {2}.. '.format(sbvar.selector, sbvar.objective, const, iftype)
-						if op == '<':						
-							test += '{3} score {0} {1} matches ..{2} '.format(sbvar.selector, sbvar.objective, int(const)-1, iftype)
-						if op == '<=':						
-							test += '{3} score {0} {1} matches ..{2} '.format(sbvar.selector, sbvar.objective, const, iftype)
-						if op == '=':						
-							test += '{3} score {0} {1} matches {2}..{2} '.format(sbvar.selector, sbvar.objective, const, iftype)
-					except Exception as e:
-						raise Exception('Unable to compute comparison "{} {}.{} {} {}"'.format(iftype, sbvar.selector, sbvar.objective, op, const))
+					if op == '>':						
+						test += '{3} score {0} {1} matches {2}.. '.format(sbvar.selector, sbvar.objective, int(const)+1, iftype)
+					if op == '>=':						
+						test += '{3} score {0} {1} matches {2}.. '.format(sbvar.selector, sbvar.objective, const, iftype)
+					if op == '<':						
+						test += '{3} score {0} {1} matches ..{2} '.format(sbvar.selector, sbvar.objective, int(const)-1, iftype)
+					if op == '<=':						
+						test += '{3} score {0} {1} matches ..{2} '.format(sbvar.selector, sbvar.objective, const, iftype)
+					if op == '=':						
+						test += '{3} score {0} {1} matches {2}..{2} '.format(sbvar.selector, sbvar.objective, const, iftype)
 					
 				else:
 					# Continue if chain comparing two score values
@@ -143,7 +141,7 @@ class mcfunction(object):
 				
 			elif type == 'vector_equality':
 				if iftype == 'unless':
-					raise ValueError('Vector equality may not  be used with "unless"')
+					raise CompileError('Vector equality may not be used with "unless"')
 				
 				(type1, var1), (type2, var2) = val
 				
@@ -440,7 +438,7 @@ class mcfunction(object):
 				scale = self.scale
 			
 			if not self.check_single_entity(selector):
-				raise Exception('Tried to get data "{0}" from selector "{1}" which is not limited to a single entity.'.format(var, selector))
+				raise CompileError('Tried to get data "{0}" from selector "{1}" which is not limited to a single entity.'.format(var, selector))
 				
 			self.add_command('execute store result score {0} {1} run data get entity {0} {2} {3}'.format(selector, var, path, scale))
 				
@@ -464,7 +462,7 @@ class mcfunction(object):
 				scale = self.scale
 
 			if not self.check_single_entity(selector):
-				raise Exception('Tried to set data "{0}" for selector "{1}" which is not limited to a single entity.'.format(var, selector))
+				raise CompileError('Tried to set data "{0}" for selector "{1}" which is not limited to a single entity.'.format(var, selector))
 				
 			self.add_command('execute store result entity {0} {2} {3} {4} run scoreboard players get {0} {1}'.format(selector, var, path, data_type, 1/float(scale)))
 
@@ -488,7 +486,7 @@ class mcfunction(object):
 				scale = self.scale
 
 			if not self.check_single_entity(selector):
-				raise Exception('Tried to get vector data "{0}" from selector "{1}" which is not limited to a single entity.'.format(var, selector))
+				raise CompileError('Tried to get vector data "{0}" from selector "{1}" which is not limited to a single entity.'.format(var, selector))
 				
 			for i in range(3):
 				self.add_command('execute store result score {0} _{1}_{2} run data get entity {0} {3}[{2}] {4}'.format(selector, var, i, path, scale))
@@ -517,7 +515,7 @@ class mcfunction(object):
 				scale = self.scale
 
 			if not self.check_single_entity(selector):
-				raise Exception('Tried to set vector data "{0}" for selector "{1}" which is not limited to a single entity.'.format(var, selector))
+				raise CompileError('Tried to set vector data "{0}" for selector "{1}" which is not limited to a single entity.'.format(var, selector))
 				
 			for i in range(3):
 				val_var = values[i].get_scoreboard_var(self)
@@ -697,7 +695,7 @@ class mcfunction(object):
 		
 		type, parsed = result
 		if type != 'lib':
-			raise Exception('Unable to import non-lib-file "{}"'.format(filename))
+			raise CompileError('Unable to import non-lib-file "{}"'.format(filename))
 			
 		self.compile_blocks(parsed['assignments'])
 		
@@ -719,7 +717,7 @@ class mcfunction(object):
 			return eval(expr, globals(), self.get_python_env())
 		except Exception as e:
 			print(e)
-			raise ValueError('Could not evaluate "{0}" at line {1}'.format(expr, line))
+			raise CompileError('Could not evaluate python expression "{0}" at line {1}'.format(expr, line))
 			
 	def add_pointer(self, id, selector):
 		self.environment.add_pointer(id, selector)

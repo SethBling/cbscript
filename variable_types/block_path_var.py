@@ -17,7 +17,7 @@ class block_path_var(var_base):
 		if assignto == None:
 			assignto = func.get_scratch()
 			
-		func.add_command('execute store result Global {} run {}'.format(assignto, self.get_command(func)))
+		func.add_command('execute store result score Global {} run {}'.format(assignto, self.get_command(func)))
 			
 		return scoreboard_var('Global', assignto)
 	
@@ -28,15 +28,6 @@ class block_path_var(var_base):
 	
 	# Gets a constant integer value for this variable if there is one, otherwise returns None.
 	def get_const_value(self, func):
-		return None
-		
-	# Returns true if this variable is a scoreboard_var with the specified selector and objective,
-	# to reduce extranious copies.
-	def is_objective(self, func, selector, objective):
-		return False
-			
-	# Gets an assignto value for this variable if there is one.
-	def get_assignto(self, func):
 		return None
 		
 	# Copies the value from a target variable to this variable

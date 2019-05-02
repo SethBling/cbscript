@@ -2,6 +2,7 @@ import copy
 import math
 from scratch_tracker import scratch_tracker
 from selector_definition import selector_definition
+from CompileError import CompileError
 
 def isNumber(s):
 	try:
@@ -134,7 +135,7 @@ class environment(object):
 			elif isNumber(self.dollarid[id]):
 				self.dollarid[id] = str(-float(self.dollarid[id]))
 			else:
-				raise ValueError('Unable to negate value of ${} when copying to ${}, it has non-numeric value "{}"'.format(copyid, id, self.dollarid[id]))
+				raise CompileError('Unable to negate value of ${} when copying to ${}, it has non-numeric value "{}"'.format(copyid, id, self.dollarid[id]))
 		
 	def set_atid(self, id, fullselector):
 		self.selectors[id] = selector_definition(fullselector, self)
@@ -178,7 +179,7 @@ class environment(object):
 		
 	def register_objective(self, objective):
 		if len(objective) > 16:
-			raise Exception('Objective name "{0}" is {1} characters long, max is 16.'.format(objective, len(objective)))
+			raise CompileError('Objective name "{0}" is {1} characters long, max is 16.'.format(objective, len(objective)))
 		self.global_context.register_objective(objective)
 		
 	def split_selectors(self, line):
@@ -311,7 +312,7 @@ class environment(object):
 		try:
 			index = int(self.apply_replacements(idxval))
 		except Exception:
-			raise Exception('Array index "{}" for "{}" is not an integer value.'.format(idxval, name))
+			raise CompileError('Array index "{}" for "{}" is not an integer value.'.format(idxval, name))
 		
 		if index < from_val or index >= to_val:
 			if from_val == 0:
@@ -334,21 +335,21 @@ class environment(object):
 	def register_dependency(self, filename):
 		self.global_context.register_dependency(filename)
 		
-	def add_pointer(self, id, selector):
-		self.pointers[id] = selector
+	def add_pointer(self, block_id, selector):
+		self.pointers[block_id] = selector
 		
-	def add_block_definition(self, id, definition):
-		self.block_definitions[id] = definition
+	def add_block_definition(self, block_id, definition):
+		self.block_definitions[block_id] = definition
 		
 	def get_block_definition(self, block_id):
-		if id not in self.block_definitions:
-			raise Exception('Tried to use undefined block id "{}"'.format(block_id))
-			
-		return self.block_definitions[id]
+		if block_id not in self.block_definitions:
+			raise CompileError('[{}] is not defined.'.format(block_id))
+		
+		return self.block_definitions[block_id]
 		
 	def get_block_path(self, func, block_id, path_id, coords, macro_args, initialize):
 		if block_id not in self.block_definitions:
-			raise ValueError('"[{}]" is not defined.'.format(block_id))
+			raise CompileError('[{}] is not defined.'.format(block_id))
 		
 		if initialize:
 			self.block_definitions[block_id].get_path(func, path_id, coords, macro_args)
@@ -357,6 +358,6 @@ class environment(object):
 		
 	def set_block_path(self, func, block_id, path_id, coords, macro_args, initialize):
 		if block_id not in self.block_definitions:
-			raise ValueError('"[{}]" is not defined.'.format(block_id))
+			raise CompileError('[{}] is not defined.'.format(block_id))
 		
 		self.block_definitions[block_id].set_path(func, path_id, coords, macro_args)

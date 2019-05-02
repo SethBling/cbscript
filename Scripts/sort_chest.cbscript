@@ -2,47 +2,16 @@ dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
 desc "Sort a chest."
 
 import common
-import stack
 
-define [Chest] at ~ ~ ~
-	qty[$i]: Items[$i].Count byte 1
-	slot[$i]: Items[$i].Slot byte 1
-end
-
-define @ItemHolder: @Entity[type=armor_stand,tag=ItemHolder,limit=1]
+define @ItemHolder: @Entity[type=armor_stand,tag=ItemHolder]
 	create {Tags:["ItemHolder"], Marker:1b, Invisible:1b, NoGravity:1b, Invulnerable:1b, Silent:1b}
 	
 	item_count: HandItems[0].Count byte 1
-	item_slot: HandItems[0].Slot byte 1
 end
 
-reset
-	at -774 56 75
-		
-	end
-	
-	initialize_stack()
-	
-	@Stack.pivot = 13
-	
-		
-	at -778 57 73
-		unless @ItemHolder do create @ItemHolder
-		
-		qty = get_qty(0)
-		tell @a '(qty)'
-		
-		@ItemHolder.{HandItems[0]} = [].Items[0]
-		@ItemHolder.item_count = 10
-		[].[Items] += {id:"minecraft:stone",Slot:10,Count:1}
-		[].{Items[-1]} += @ItemHolder.{HandItems[0]}
-		count = @ItemHolder.item_count
-		
-		tell @a '(count)'
-		
-		/kill @ItemHolder
-	end
-	
+define [Chest]
+	qty[$i]: Items[$i].Count byte 1
+	slot[$i]: Items[$i].Slot byte 1
 end
 
 function get_qty(idx)
@@ -53,5 +22,32 @@ function get_qty(idx)
 	end
 end
 
-function sort()
+function sort_container()
+	slot = 27
+	while [Chest].qty[-1]
+		slot--
+		as create @ItemHolder
+			qty = [Chest].qty[-1]
+			@s.y += qty * 100 + slot
+			@s.{HandItems[0]} = [].Items[-1]
+			remove [].Items[-1]
+		end
+	end
+	for $slot in $range(27)
+		as @ItemHolder[sort=nearest,limit=1]
+			[].[Items] += {id:"minecraft:stone",Slot:$slot,Count:1}
+			[].{Items[-1]} += @s.{HandItems[0]}
+			/kill @s
+		end
+	end
+end
+
+reset
+
+end
+
+clock main
+	at -778 57 73
+		sort_container()
+	end
 end

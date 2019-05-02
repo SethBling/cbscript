@@ -1370,6 +1370,10 @@ def p_json_value(p):
 				  | json_array'''
 	p[0] = p[1]
 	
+def p_json_value_dollar_id(p):
+	'''json_value : DOLLAR ID'''
+	p[0] = p[1] + p[2]
+	
 def p_json_value_typed_number(p):
 	'''json_value : number ID'''
 	if p[2].lower() not in ['b', 'f', 's', 'd', 'l']:

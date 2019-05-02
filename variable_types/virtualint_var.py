@@ -1,5 +1,6 @@
 from variable_types.var_base import var_base
 from variable_types.scoreboard_var import scoreboard_var
+from CompileError import CompileError
 
 class virtualint_var(var_base):
 	def __init__(self, val):
@@ -24,7 +25,7 @@ class virtualint_var(var_base):
 		
 	# Copies the value from a target variable to this variable
 	def copy_from(self, func, var):
-		raise TypeError('Cannot set the value of a constant.')
+		raise CompileError('Cannot set the value of a constant.')
 		
 	# Returns a scoreboard_var which can be modified as needed without side effects
 	def get_modifiable_var(self, func, assignto):

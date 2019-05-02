@@ -1,3 +1,5 @@
+from CompileError import CompileError
+
 class number_macro_path(object):
 	def __init__(self, id, params, path, type, scale=None):
 		self.id = id
@@ -16,7 +18,7 @@ class number_macro_path(object):
 		
 	def get_path(self, func, macro_args):
 		if len(macro_args) != len(self.params):
-			raise Exception('"[{}].{}" expects {} macro arguments, received {}.'.format(self.id, self.path, len(self.params), len(macro_args)))
+			raise CompileError('"[{}].{}" expects {} macro arguments, received {}.'.format(self.id, self.path, len(self.params), len(macro_args)))
 	
 		overrides = {}
 		for i in range(len(macro_args)):

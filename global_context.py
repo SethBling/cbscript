@@ -1,4 +1,5 @@
 from mcfunction import mcfunction
+from CompileError import CompileError
 
 def get_friendly_name(namespace):
 	name = "CB" + namespace[:14]
@@ -53,17 +54,17 @@ class global_context(object):
 		
 	def register_function(self, name, func):
 		if name in self.functions:
-			raise Exception('Function "{}" is defined multiple times.'.format(name))
+			raise CompileError('Function "{}" is defined multiple times.'.format(name))
 		self.functions[name] = func
 		
 	def register_array(self, name, from_val, to_val):
 		if name in self.arrays:
-			raise Exception('Array "{}" is defined multiple times.'.format(name))
+			raise CompileError('Array "{}" is defined multiple times.'.format(name))
 		self.arrays[name] = (from_val, to_val)
 		
 	def register_objective(self, objective):
 		if len(objective) > 16:
-			raise Exception('Cannot create objective "{0}", name is {1} characters (max is 16)'.format(objective, len(objective)))
+			raise CompileError('Cannot create objective "{0}", name is {1} characters (max is 16)'.format(objective, len(objective)))
 		self.objectives[objective] = True
 	
 	def get_reset_function(self):
