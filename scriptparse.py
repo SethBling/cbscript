@@ -441,8 +441,8 @@ def p_block_print(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_print_block(p):
-	'''print_block : DOLLAR print LPAREN const_value RPAREN'''
-	p[0] = print_block(p.lineno(1), p[4])
+	'''print_block : PRINT const_value RPAREN'''
+	p[0] = print_block(p.lineno(1), p[2])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Execute
@@ -805,17 +805,17 @@ def p_pyexpr_expr_list_one(p):
 	p[0] = p[1]
 
 def p_pyexpr_expr_list_multi(p):
-	'''pyexpr_expr_list : pyexpr COMMA pyexpr_expr_list'''
-	p[0] = p[1] + p[2] + p[3]
+	'''pyexpr_expr_list : pyexpr COMMA optnewlines pyexpr_expr_list'''
+	p[0] = p[1] + p[2] + p[4]
 	
 def p_pyexpr_array(p):
-	'''pyexpr : LBRACK pyexpr_expr_list RBRACK
-	          | LPAREN pyexpr_expr_list RPAREN'''
-	p[0] = p[1] + p[2] + p[3]
+	'''pyexpr : LBRACK optnewlines pyexpr_expr_list optnewlines RBRACK
+	          | LPAREN optnewlines pyexpr_expr_list optnewlines RPAREN'''
+	p[0] = p[1] + p[3] + p[5]
 	
 def p_pyexpr_function_call(p):
-	'''pyexpr : DOLLAR FUNCTIONID pyexpr_expr_list RPAREN'''
-	p[0] = p[2] + '(' + p[3] + p[4]
+	'''pyexpr : DOLLAR FUNCTIONID optnewlines pyexpr_expr_list optnewlines RPAREN'''
+	p[0] = p[2] + '(' + p[4] + p[6]
 	
 def p_pyexpr_array_lookup(p):
 	'''pyexpr : pyid LBRACK pyexpr RBRACK'''
@@ -832,6 +832,27 @@ def p_pyexpr_pyid_member(p):
 def p_pyexpr_var(p):
 	'''pyexpr : pyid'''
 	p[0] = p[1]
+	
+def p_pymap_pair(p):
+	'''pymap_pair : pyexpr COLON optnewlines pyexpr'''
+	p[0] = p[1] + p[2] + p[4]
+	
+def p_pymap_pair_list_empty(p):
+	'''pymap_pair_list : empty'''
+	p[0] = ''
+	
+def p_pymap_pair_list_one(p):
+	'''pymap_pair_list : pymap_pair'''
+	p[0] = p[1]
+
+def p_pymap_pair_list(p):
+	'''pymap_pair_list : pymap_pair COMMA optnewlines pymap_pair_list'''
+	p[0] = p[1] + p[2] + p[4]
+	
+def p_pyexpr_map(p):
+	'''pyexpr : LCURLY optnewlines pymap_pair_list optnewlines RCURLY'''
+	p[0] = p[1] + p[3] + p[5]
+
 	
 
 	

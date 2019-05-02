@@ -202,7 +202,122 @@ $JMP = 55
 $JSR = 56
 $LENGTH3HIGH = 56
 
-$Mnemonics = $'{1: "ADC", 2: "AND", 3: "ASL", 4: "BIT", 5: "CMP", 6: "CPX", 7: "CPY", 8: "DEC", 9: "EOR", 10: "INC", 11: "LDA", 12: "LDX", 13: "LDY", 14: "LSR", 15: "ORA", 16: "ROL", 17: "ROR", 18: "SBC", 19: "STA", 20: "STX", 21: "STY", 22: "CLC", 23: "CLD", 24: "CLI", 25: "CLV", 26: "DEX", 27: "DEY", 28: "INX", 29: "INY", 30: "NOP", 31: "PHA", 32: "PHP", 33: "PLA", 34: "PLP", 35: "RTI", 36: "RTS", 37: "SEC", 38: "SED", 39: "SEI", 40: "TAX", 41: "TAY", 42: "TSX", 43: "TXA", 44: "TXS", 45: "TYA", 46: "BCC", 47: "BCS", 48: "BEQ", 49: "BMI", 50: "BNE", 51: "BPL", 52: "BRK", 53: "BVC", 54: "BVS", 55: "JMP", 56: "JSR"}'
+# Display names for each instruction type
+$Mnemonics = {
+	$ADC: "ADC",
+	$AND: "AND",
+	$ASL: "ASL",
+	$BIT: "BIT",
+	$CMP: "CMP",
+	$CPX: "CPX",
+	$CPY: "CPY",
+	$DEC: "DEC",
+	$EOR: "EOR",
+	$INC: "INC",
+	$LDA: "LDA",
+	$LDX: "LDX",
+	$LDY: "LDY",
+	$LSR: "LSR",
+	$ORA: "ORA",
+	$ROL: "ROL",
+	$ROR: "ROR",
+	$SBC: "SBC",
+	$STA: "STA",
+	$STX: "STX",
+	$STY: "STY",
+	$CLC: "CLC",
+	$CLD: "CLD",
+	$CLI: "CLI",
+	$CLV: "CLV",
+	$DEX: "DEX",
+	$DEY: "DEY",
+	$INX: "INX",
+	$INY: "INY",
+	$NOP: "NOP",
+	$PHA: "PHA",
+	$PHP: "PHP",
+	$PLA: "PLA",
+	$PLP: "PLP",
+	$RTI: "RTI",
+	$RTS: "RTS",
+	$SEC: "SEC",
+	$SED: "SED",
+	$SEI: "SEI",
+	$TAX: "TAX",
+	$TAY: "TAY",
+	$TSX: "TSX",
+	$TXA: "TXA",
+	$TXS: "TXS",
+	$TYA: "TYA",
+	$BCC: "BCC",
+	$BCS: "BCS",
+	$BEQ: "BEQ",
+	$BMI: "BMI",
+	$BNE: "BNE",
+	$BPL: "BPL",
+	$BRK: "BRK",
+	$BVC: "BVC",
+	$BVS: "BVS",
+	$JMP: "JMP",
+	$JSR: "JSR"
+}
+
+# Special case op codes
+$OpCodes = {
+	0x00: $BRK,
+	0x08: $PHP,
+	0x10: $BPL,
+	0x18: $CLC,
+	0x20: $JSR,
+	0x24: $BIT,
+	0x28: $PLP,
+	0x0C: $BIT,
+	0x30: $BMI,
+	0x38: $SEC,
+	0x40: $RTI,
+	0x48: $PHA,
+	0x4C: $JMP,
+	0x50: $BVC,
+	0x58: $CLI,
+	0x60: $RTS,
+	0x68: $PLA,
+	0x6C: $JMP,
+	0x70: $BVS,
+	0x78: $SEI,
+	0x84: $STY,
+	0x88: $DEY,
+	0x8A: $TXA,
+	0x8C: $STY,
+	0x90: $BCC,
+	0x94: $STY,
+	0x98: $TYA,
+	0x9A: $TXS,
+	0xA0: $LDY,
+	0xA2: $LDX,
+	0xA4: $LDY,
+	0xA8: $TAY,
+	0xAA: $TAX,
+	0xAC: $LDY,
+	0xB0: $BCS,
+	0xB4: $LDY,
+	0xB8: $CLV,
+	0xBA: $TSX,
+	0xBC: $LDY,
+	0xC0: $CPY,
+	0xC4: $CPY,
+	0xC8: $INY,
+	0xCA: $DEX,
+	0xCC: $CPY,
+	0xD0: $BNE,
+	0xD8: $CLD,
+	0xE0: $CPX,
+	0xE4: $CPX,
+	0xE8: $INX,
+	0xEA: $NOP,
+	0xEC: $CPX,
+	0xF0: $BEQ,
+	0xF8: $SED
+}
 
 # Addressing modes
 $CONST = 0x09
@@ -211,11 +326,87 @@ $ZPGX = 0x15
 $ABS = 0x0D
 $ABSX = 0x1D
 
-$OpCodes = $'{0x00: BRK, 0x08: PHP, 0x10: BPL, 0x18: CLC, 0x20: JSR, 0x24: BIT, 0x28: PLP, 0x0C: BIT, 0x30: BMI, 0x38: SEC, 0x40: RTI, 0x48: PHA, 0x4C: JMP, 0x50: BVC, 0x58: CLI, 0x60: RTS, 0x68: PLA, 0x6C: JMP, 0x70: BVS, 0x78: SEI, 0x84: STY, 0x88: DEY, 0x8A: TXA, 0x8C: STY, 0x90: BCC, 0x94: STY, 0x98: TYA, 0x9A: TXS, 0xA0: LDY, 0xA2: LDX, 0xA4: LDY, 0xA8: TAY, 0xAA: TAX, 0xAC: LDY, 0xB0: BCS, 0xB4: LDY, 0xB8: CLV, 0xBA: TSX, 0xBC: LDY, 0xC0: CPY, 0xC4: CPY, 0xC8: INY, 0xCA: DEX, 0xCC: CPY, 0xD0: BNE, 0xD8: CLD, 0xE0: CPX, 0xE4: CPX, 0xE8: INX, 0xEA: NOP, 0xEC: CPX, 0xF0: BEQ, 0xF8: SED}'
-$AddrModes = $'{0xA0: CONST, 0xC0: CONST, 0xE0: CONST, 0xA2: CONST, 0x24: ZPG, 0x84: ZPG, 0x94: ZPGX, 0xA4: ZPG, 0xB4: ZPGX, 0xC4: ZPG, 0xE4: ZPG, 0x2C: ABS, 0x4C: ABS, 0x8C: ABS, 0xAC: ABS, 0xBC: ABSX, 0xCC: ABS, 0xEC: ABS, 0x6C: ABS}'
-$BaseCycles = $'{0xA8: 2, 0xAA: 2, 0xBA: 2, 0x98: 2, 0x8A: 2, 0x9A: 2, 0xA9: 2, 0xA2: 2, 0xA0: 2, 0x48: 3, 0x08: 3, 0x68: 4, 0x28: 4, 0x4C: 3, 0x6C: 5, 0x20: 6, 0x40: 6, 0x60: 6, 0x10: 2, 0x30: 2, 0x50: 2, 0x70: 2, 0x90: 2, 0xB0: 2, 0xD0: 2, 0xF0: 2, 0x00: 7, 0x18: 2, 0x58: 2, 0xD8: 2, 0xB8: 2, 0x38: 2, 0x78: 2, 0xF8: 2, 0xEA: 2, 0xCA: 2, 0x88: 2, 0xE8: 2, 0xC8: 2}'
-$Pulls = $'{0x40: 3, 0x60: 2, 0x28: 1, 0x68: 1}'
-$Pushes = $'{0x00: 3, 0x20: 2, 0x08: 1, 0x48: 1}'
+# Special case Address Modes
+$AddrModes = {
+	0xA0: $CONST,
+	0xC0: $CONST,
+	0xE0: $CONST,
+	0xA2: $CONST,
+	0x24: $ZPG,
+	0x84: $ZPG,
+	0x94: $ZPGX,
+	0xA4: $ZPG,
+	0xB4: $ZPGX,
+	0xC4: $ZPG,
+	0xE4: $ZPG,
+	0x2C: $ABS,
+	0x4C: $ABS,
+	0x8C: $ABS,
+	0xAC: $ABS,
+	0xBC: $ABSX,
+	0xCC: $ABS,
+	0xEC: $ABS,
+	0x6C: $ABS
+}
+
+# Special Case Base Clock Cycles
+$BaseCycles = {
+	0xA8: 2,
+	0xAA: 2,
+	0xBA: 2,
+	0x98: 2,
+	0x8A: 2,
+	0x9A: 2,
+	0xA9: 2,
+	0xA2: 2,
+	0xA0: 2,
+	0x48: 3,
+	0x08: 3,
+	0x68: 4,
+	0x28: 4,
+	0x4C: 3,
+	0x6C: 5,
+	0x20: 6,
+	0x40: 6,
+	0x60: 6,
+	0x10: 2,
+	0x30: 2,
+	0x50: 2,
+	0x70: 2,
+	0x90: 2,
+	0xB0: 2,
+	0xD0: 2,
+	0xF0: 2,
+	0x00: 7,
+	0x18: 2,
+	0x58: 2,
+	0xD8: 2,
+	0xB8: 2,
+	0x38: 2,
+	0x78: 2, 
+	0xF8: 2, 
+	0xEA: 2, 
+	0xCA: 2, 
+	0x88: 2, 
+	0xE8: 2, 
+	0xC8: 2
+}
+
+# Op codes that pull N bytes from the stack
+$Pulls = {
+	0x40: 3,
+	0x60: 2,
+	0x28: 1,
+	0x68: 1
+}
+
+# Op codes that push N bytes to the stack
+$Pushes = {
+	0x00: 3,
+	0x20: 2,
+	0x08: 1,
+	0x48: 1
+}
 
 $color_black = 			(0, 0, 0, 'black_concrete')
 $color_gray1 =			(0, 1, 1, 'obsidian')
@@ -250,7 +441,41 @@ $color_light_green =	(13, 0, 7, 'lime_concrete')
 $color_gold =			(14, 0, 7, 'yellow_concrete')
 $color_brown =			(15, 0, 3, 'brown_concrete')
 $color_light_brown =	(15, 4, 7, 'yellow_concrete')
-$atari_colors = [$color_black, $color_gray1, $color_gray2, $color_gray3, $color_gray4, $color_gray5, $color_gray6, $color_white, $color_dark_yellow, $color_yellow, $color_dark_orange, $color_orange, $color_dark_red, $color_red, $color_light_red, $color_dark_pink, $color_pink, $color_light_magenta, $color_magenta, $color_purple, $color_dark_purple, $color_light_purple, $color_blue, $color_light_blue1, $color_light_blue2, $color_cyan, $color_lime, $color_green1, $color_green2, $color_light_green, $color_gold, $color_brown, $color_light_brown]
+$atari_colors = [
+	$color_black,
+	$color_gray1,
+	$color_gray2,
+	$color_gray3,
+	$color_gray4,
+	$color_gray5,
+	$color_gray6,
+	$color_white,
+	$color_dark_yellow,
+	$color_yellow,
+	$color_dark_orange,
+	$color_orange,
+	$color_dark_red,
+	$color_red,
+	$color_light_red,
+	$color_dark_pink,
+	$color_pink,
+	$color_light_magenta,
+	$color_magenta,
+	$color_purple,
+	$color_dark_purple,
+	$color_light_purple,
+	$color_blue,
+	$color_light_blue1,
+	$color_light_blue2,
+	$color_cyan,
+	$color_lime,
+	$color_green1,
+	$color_green2,
+	$color_light_green,
+	$color_gold,
+	$color_brown,
+	$color_light_brown
+]
 
 $PFplaceholder = 'coal_block'
 $BKplaceholder = 'smooth_quartz'

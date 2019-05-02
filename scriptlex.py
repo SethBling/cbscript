@@ -6,7 +6,6 @@ keywords = (
     'move', 'create', 'tell', 'title', 'subtitle', 'actionbar',
     'reset', 'clock', 'function', 'if', 'unless', 'then', 'do', 'else', 'switch', 'case',
     'return', 'while', 'macro', 'block', 'define', 'array', 'remove',
-    'print',
 )
 
 tokens = keywords + (
@@ -18,7 +17,7 @@ tokens = keywords + (
 	 'POWER',
      'LPAREN','RPAREN','COMMA','DECIMAL','FLOAT','HEX','BINARY','FUNCTIONID','ID','NEWLINE','LBRACK','RBRACK','LCURLY','RCURLY',
      'ATID', 'NOT', 'TILDEEMPTY', 'TILDE',
-     'NORMSTRING', 'COMMENT',
+     'NORMSTRING', 'COMMENT', 'PRINT'
 )
 
 def t_None(t):
@@ -66,7 +65,8 @@ def t_ATID(t):
     r'@[A-Za-z_][A-Za-z0-9_]*'
     t.value = t.value[1:]
     return t
-    
+
+t_PRINT			= r'\$print\('	
 t_EQUALEQUAL	= r'=='
 t_LEQ			= r'<='
 t_GEQ			= r'>='

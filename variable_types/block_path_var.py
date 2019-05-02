@@ -25,10 +25,6 @@ class block_path_var(var_base):
 	def get_command(self, func):
 		block_def = func.get_block_definition(self.block_id)
 		return block_def.get_command(func, self.path_name, self.coords, self.macro_args)
-	
-	# Gets a constant integer value for this variable if there is one, otherwise returns None.
-	def get_const_value(self, func):
-		return None
 		
 	# Copies the value from a target variable to this variable
 	def copy_from(self, func, var):

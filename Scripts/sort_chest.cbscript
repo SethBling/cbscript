@@ -9,6 +9,14 @@ define @ItemHolder: @Entity[type=armor_stand,tag=ItemHolder]
 	item_count: HandItems[0].Count byte 1
 end
 
+define @Position = @Entity[type=area_effect_cloud,tag=Position,limit=1]
+	create {Tags:["Position"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+define @ChestUI = @Entity[type=egg,tag=ChestUI]
+	create {Tags:["ChestUI"], Glowing:1b, NoGravity:1b, Invulnerable:1b}
+end
+
 define [Chest]
 	qty[$i]: Items[$i].Count byte 1
 	slot[$i]: Items[$i].Slot byte 1
@@ -43,11 +51,66 @@ function sort_container()
 end
 
 reset
-
+	/team add highlight
+	/team modify highlight color blue
+	/team modify highlight collisionRule never
+	
+	/bossbar add sort_chest "Sort"
+    /bossbar set sort_chest max 20
 end
 
 clock main
 	at -778 57 73
 		sort_container()
 	end
+	
+	@ChestUI.live = False
+	
+	for @player in @Player
+		at @s ~ ~1.7 ~
+			unless @Position do create @Position
+			as @Position
+				/tp @s ~ ~ ~ ~ ~
+				
+				rx = @s.rx
+				ry = @s.ry
+				
+				for step = 0 to 12
+					move @s ^ ^ ^0.5
+					at @s align xyz at ~0.5 ~0.3 ~0.5 if block ~ ~ ~ chest 
+						step = 100
+						unless @ChestUI[distance=0] do create @ChestUI
+						
+						as @ChestUI[distance=0]
+							@s.live = True
+							at @player ~ ~1.7 ~ facing @s
+								/tp @Position ~ ~ ~ ~ ~
+								drx = @Position.rx - rx
+								dry = @Position.ry - ry
+							end
+							handled = False
+							if dry > -2000 and dry < 2000 and drx > 0 and drx < 4500
+								handled = True
+								@s.counter++
+								if @s.counter == 20
+									/particle minecraft:dragon_breath ~ ~ ~ 0.25 0.25 0.25 0.1 20 normal @a
+									/playsound minecraft:entity.experience_orb.pickup block @a
+								end
+								/execute store result bossbar sort_chest value run scoreboard players get @s counter
+								/bossbar set sort_chest players @player
+								/team join highlight @s
+							end
+							unless handled
+								@s.counter = 0
+								/team leave @s
+								/bossbar set sort_chest players
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+	
+	/kill @ChestUI[not live]
 end
