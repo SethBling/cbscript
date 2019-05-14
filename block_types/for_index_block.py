@@ -1,3 +1,5 @@
+import traceback
+
 class for_index_block(object):
 	def __init__(self, line, var, fr, to, by, sub):
 		self.line = line
@@ -32,9 +34,12 @@ class for_index_block(object):
 		
 		try:
 			loop_func.compile_blocks(sub)
+		except CompileError as e:
+			print(e)
+			raise CompileError('Unable to compile for block contents at line {}'.format(self.line))
 		except Exception as e:
-			print(e.message)
-			raise Exception('Unable to compile for block contents at line {}'.format(self.line))
+			print(traceback.print_exc())
+			raise CompileError('Unable to compile for block contents at line {}'.format(self.line))
 		
 		if by == None:
 			# Use a temporary version of the counting var to work with the scoreboard

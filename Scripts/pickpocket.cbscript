@@ -1,0 +1,148 @@
+dir "C:\Minecraft Server\1.14\SethBling's World\SethBling's World 1.14"
+desc "Pickpocket other players."
+
+import common
+import tinyblock
+
+define @Position = @Entity[type=area_effect_cloud,tag=Position,limit=1]
+	create {Tags:["Position"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+define @StealItem: @TinyBlock[tag=StealItem]
+	create {Tags:["TinyBlock", "StealItem"], Pose:{RightArm:[-15f,-45f,0f]}, ShowArms:1b, Marker:1b, Invisible:1b, NoGravity:1b, Invulnerable:1b, Silent:1b}
+end
+
+define @Player: @Player
+	stealing: @StealItem
+	array slots[27]
+end
+
+define @Item : @Entity[type=item]
+	create {Item:{id:"minecraft:stone",Count:1b},PickupDelay:20s}
+	count: Item.Count byte 1
+end
+
+reset
+	/scoreboard objectives add pickpocket minecraft.custom:minecraft.sneak_time
+	/bossbar add pickpocket "Pickpocketing..."
+    /bossbar set pickpocket max 20
+end
+
+clock main
+	@StealItem.live = False
+	
+	@Player.pickpocketing = False
+	
+	for @player in @Player
+		at @s
+			pickpocketed = False
+			at ^ ^ ^-2.5 as @Player[pickpocket,distance=..2,limit=1]
+				pickpocketed = True
+				@s.pickpocketing = True
+			end
+			if @s.always_show then pickpocketed = True
+			
+			if pickpocketed
+				for $slot in $range(27)
+					handled = False
+					as @s.slots[$slot] (@StealItem)
+						@s.live = True
+						handled = True
+						at ~ ~1.3 ~ at ^1.6 ^0.4 ^-1
+							@s.update_tiny()
+							$inv_slot = $slot + 9
+							unless @player.{Inventory[{Slot:$inv_slotb}]}
+								/replaceitem entity @s weapon.mainhand air
+								@s.has_item = False
+							end
+							if @player.{Inventory[{Slot:$inv_slotb}]}
+								@s.{HandItems[0]} += @player.Inventory[{Slot:$inv_slotb}]
+								@s.has_item = True
+							end
+							row = $slot / 9
+							col = $slot % 9
+							for i = 1 to row
+								move @s ^ ^-0.4 ^
+							end
+							for i = 1 to col
+								move @s ^-0.4 ^ ^
+							end
+							@s.slot = $slot
+							@s.player = &@player
+						end
+					end
+					unless handled do @s.slots[$slot] = create @StealItem
+				end
+			end
+		end
+	end
+	
+	for @player in @Player[pickpocketing]
+		@s.was_stealing = @s.stealing
+		@s.stealing = None
+		at @s
+			unless @Position do create @Position
+			at ^ ^ ^1 facing @player
+				/tp @Position ~ ~ ~ ~ ~
+				rx = @Position.rx
+				ry = @Position.ry
+			end
+			
+			at ~ ~1.7 ~ at ^ ^ ^3 as @StealItem[distance=..3, has_item]
+				at @s ^-0.0625 ^0.5 ^0.375 at ~ ~-1 ~ facing @player
+					/tp @Position ~ ~ ~ ~ ~
+					drx = @Position.rx - rx
+					dry = @Position.ry - ry
+				end
+				if drx > -4000 and drx < 4000 and dry > -4000 and dry < 4000
+					@player.stealing = &@s
+				end
+			end
+		end
+		
+		handled = False
+		if @s.stealing and @s.stealing == @s.was_stealing
+			handled = True
+			@s.steal_progress++
+			/execute store result bossbar pickpocket value run scoreboard players get @s steal_progress
+			/bossbar set pickpocket players @s
+			if @s.steal_progress == 20
+				@Player.target = False
+				as @s.stealing
+					slot = @s.slot
+					as @s.player (@Player)
+						@s.target = True
+					end
+				end
+				@Item.new = False
+				switch slot
+					case $slot in $range(27)
+						$inv_slot = $slot + 9
+						at @s ~ ~1.5 ~ at ^ ^ ^0.5
+							as create @Item
+								@s.new = True
+								@s.{Item} += @Player[target,limit=1].Inventory[{Slot:$inv_slotb}]
+								count = @s.count
+							end
+						end
+						/replaceitem entity @Player[target,limit=1] inventory.$slot air
+					end
+				end
+				tell @s 'Stole (count)x(@Item[new]) from (@Player[target,limit=1])'
+			end
+		end
+		
+		if @s.was_stealing and not @s.stealing
+			/bossbar set pickpocket players
+		end
+		
+		if not handled then @s.steal_progress = 0
+		
+	end
+	as @Player[not pickpocketing]
+		@s.destroy_click()
+	end
+	
+	/kill @StealItem[not live]
+	@a.pickpocket = 0
+end

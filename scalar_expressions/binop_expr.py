@@ -32,13 +32,13 @@ class binop_expr(scalar_expression_base):
 			return temp_var
 			
 		if self.op == "^":
-			left_var = lhs.compile(func, assignto)
+			left_var = self.lhs.compile(func, assignto)
 			temp_var = left_var.get_modifiable_var(func, assignto)
 			
-			right_var = rhs.compile(func)
-			right_const = right_var.get_const_value(func)
+			right_var = self.rhs.compile(func)
+			power = int(right_var.get_const_value(func))
 			
-			if right_const == None:
+			if power == None:
 				print('Exponentiation must have constant operand.')
 				return None
 				

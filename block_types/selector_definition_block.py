@@ -34,5 +34,8 @@ class selector_definition_block(object):
 			elif type == 'Pointer':
 				pointer_id, pointer_selector = val
 				selector.pointers[pointer_id] = pointer_selector
+			elif type == 'Array':
+				def_block = val
+				def_block.compile(func)
 			else:
 				raise ValueError('Unknown selector item type "{0}" in selector definition at line {1}'.format(type, get_line(line)))

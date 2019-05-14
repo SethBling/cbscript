@@ -1,3 +1,6 @@
+from CompileError import CompileError
+import traceback
+
 class for_selector_block(object):
 	def __init__(self, line, id, selector, sub):
 		self.line = line
@@ -21,9 +24,12 @@ class for_selector_block(object):
 		
 		try:
 			exec_func.compile_blocks(self.sub)
-		except Exception as e:
-			print(e.message)
-			raise Exception('Unable to compile for block contents at line {}'.format(self.line))
+		except CompileError as e:
+			print(e)
+			raise CompileError('Unable to compile for block contents at line {}'.format(self.line))
+		except:
+			print(traceback.format_exc())
+			raise CompileError('Unable to compile for block contents at line {}'.format(self.line))
 			
 		exec_func.add_command('scoreboard players set @s {0} 0'.format(scratch_id))
 		

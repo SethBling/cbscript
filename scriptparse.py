@@ -361,11 +361,19 @@ def p_variable_global(p):
 	
 def p_variable_array_const(p):
 	'''variable : ID LBRACK const_value RBRACK'''
-	p[0] = array_const_var(p[1], p[3])
+	p[0] = array_const_var('Global', p[1], p[3])
+
+def p_variable_array_const_selector(p):
+	'''variable : fullselector DOT ID LBRACK const_value RBRACK'''
+	p[0] = array_const_var(p[1], p[3], p[5])
 	
 def p_variable_array_expr(p):
 	'''variable : ID LBRACK expr RBRACK'''
-	p[0] = array_expr_var(p[1], p[3])
+	p[0] = array_expr_var('Global', p[1], p[3])
+
+def p_variable_array_expr(p):
+	'''variable : fullselector DOT ID LBRACK expr RBRACK'''
+	p[0] = array_expr_var(p[1], p[3], p[5])
 	
 def p_variable_block_path_nocoords(p):
 	'''variable : LBRACK ID RBRACK DOT ID'''
@@ -625,6 +633,11 @@ def p_condition_block_virtual(p):
 	'''condition : block relcoords DOLLAR ID'''
 	p[0] = ('block', (p[2], p[3]+p[4])) 
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
+def p_condition_nbt_path(p):
+	'''condition : nbt_object
+	             | nbt_list'''
+	p[0] = ('nbt_path', p[1])
 	
 #### If python
 def p_block_if_command(p):
@@ -977,6 +990,11 @@ def p_selector_pointer(p):
 					 | ID COLON  fullselector'''
 	p[0] = ('Pointer', (p[1], p[3]))
 	
+def p_selector_array(p):
+	'''selector_item : array_definition'''
+	p[1].selector_based = True
+	p[0] = ('Array', p[1])
+	
 def p_data_path_id(p):
 	'''data_path : ID'''
 	p[0] = p[1]
@@ -985,6 +1003,11 @@ def p_data_path_id(p):
 def p_data_path_array(p):
 	'''data_path : ID LBRACK virtualinteger RBRACK'''
 	p[0] = '{0}[{1}]'.format(p[1], p[3])
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
+def p_data_path_array_match(p):
+	'''data_path : ID LBRACK json_object RBRACK'''
+	p[0] = p[1] + p[2] + p[3] + p[4]
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_data_path_multi(p):
@@ -1002,12 +1025,12 @@ def p_data_type(p):
 #### Array
 def p_array_definition(p):
 	'''array_definition : array ID LBRACK const_value RBRACK'''
-	p[0] = array_definition_block(p.lineno(1), p[2], const_number(0), p[4])
+	p[0] = array_definition_block(p.lineno(1), p[2], const_number(0), p[4], False)
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_array_definition_range(p):
 	'''array_definition : array ID LBRACK const_value to const_value RBRACK'''
-	p[0] = array_definition_block(p.lineno(1), p[2], p[4], p[6])
+	p[0] = array_definition_block(p.lineno(1), p[2], p[4], p[6], False)
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Create
@@ -1279,10 +1302,14 @@ def p_expr_binary(p):
 			| expr MINUS expr
 			| expr TIMES expr
 			| expr DIVIDE expr
-			| expr MOD expr
-			| expr POWER integer'''
+			| expr MOD expr'''
 
 	p[0] = binop_expr(p[1], p[2], p[3])
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
+def p_expr_power(p):
+	'''expr : expr POWER integer'''
+	p[0] = binop_expr(p[1], p[2], virtualint_var(p[3]))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_expr_dot(p):
@@ -1294,6 +1321,7 @@ def p_expr_function(p):
 	'''expr : function_call'''
 	p[0] = func_expr(p[1])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+
 	
 def p_expr_group(p):
 	'''expr : LPAREN expr RPAREN'''

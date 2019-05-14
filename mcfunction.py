@@ -175,6 +175,8 @@ class mcfunction(object):
 					block = 'minecraft:{0}'.format(block)
 					
 				test += '{0} block {1} {2} '.format(iftype, relcoords.get_value(self), block)
+			elif type == 'nbt_path':
+				test += '{} data {} '.format(iftype, val.get_dest_path(self))
 			else:
 				raise ValueError('Unknown "if" type: {0}'.format(type))
 		
@@ -207,7 +209,10 @@ class mcfunction(object):
 				sbvar = var.get_scoreboard_var(self)
 				selector, id = sbvar.selector, sbvar.objective
 				
-				psel = '@e'
+				if attype == None:
+					psel = '@e'
+				else:
+					psel = '@{}'.format(attype)
 				if selector[0] == '@':
 					seldef = selector_definition(selector, self.environment)
 					if seldef.base_name == 's' and self.environment.self_selector != None and id in self.environment.self_selector.pointers:
@@ -307,10 +312,11 @@ class mcfunction(object):
 					case_func.set_dollarid(dollarid, vmin)
 				try:
 					case_func.compile_blocks(sub)
-				except Exception as e:
-					print(e.message)
-					print('Unable to compile case at line {}'.format(line))
-					return False
+				except CompileError as e:
+					print(e)
+					raise Exception('Unable to compile case at line {}'.format(line))
+				except Exception:
+					raise
 					
 				single_command = case_func.single_command()
 				if single_command != None:
@@ -528,8 +534,8 @@ class mcfunction(object):
 	def register_objective(self, objective):
 		self.environment.register_objective(objective)
 		
-	def register_array(self, name, from_val, to_val):
-		self.environment.register_array(name, from_val, to_val)
+	def register_array(self, name, from_val, to_val, selector_based):
+		self.environment.register_array(name, from_val, to_val, selector_based)
 		
 	def apply_replacements(self, text, overrides = {}):
 		return self.environment.apply_replacements(text, overrides)
@@ -673,12 +679,12 @@ class mcfunction(object):
 		for block in lines:
 			try:
 				block.compile(self)
+			except CompileError as e:
+				print(e)
+				raise CompileError('Error compiling block at line {}'.format(block.line))
 			except:
-				try:
-					print('Error compiling block at line {}'.format(block.line))
-				except Exception as e:
-					print('Block "{}" has no line attribute.'.format(block))
-				raise
+				print(traceback.format_exc())
+				raise CompileError('Error compiling block at line {}'.format(block.line))
 					
 	@property
 	def parser(self):

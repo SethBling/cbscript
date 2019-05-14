@@ -7,29 +7,18 @@ define @MiniBlock: @Entity[type=armor_stand,tag=MiniBlock]
 	pose_rot_y: Pose.Head[1] float
 	
 	function update()
-		@s.<pos> = here - <0, 1700, 0>
+		at ~ ~-1.7 ~
+			/tp @s ~ ~ ~
+		end
 		
 		/data merge entity @s {Pose:{Head:[0.0001f,0.0001f,0.0001f]}}
 		@s.pose_rot_x = @s.rot_x
 		@s.pose_rot_y = @s.rot_y
 		
-		my_rx = @s.rot_x
-		my_ry = @s.rot_y
-		
-		as create @Marker
-			<base> = @s.<pos>
-
-			move @s ^ ^-0.287 ^
-			@s.rx = my_rx
-			@s.ry = my_ry
-			move @s ^ ^0.287 ^
-			
-			<delta> = <base> - @s.<pos>
-			
-			/kill @s
-		end
-		
-		@s.<pos> += <delta>
+		move @s ^ ^0.287 ^
+		@s.rx = @s.rot_x
+		@s.ry = @s.rot_y
+		move @s ^ ^-0.287 ^
 		
 		/data merge entity @s {Fire:32767s}	
 		

@@ -1,4 +1,5 @@
 import traceback
+from CompileError import CompileError
 
 class import_block(object):
 	def __init__(self, line, filename):
@@ -8,6 +9,12 @@ class import_block(object):
 	def compile(self, func):
 		try:
 			func.import_file(self.filename + '.cblib')
+		except SyntaxError as e:
+			print(e)
+			raise CompileError('Importing file "{}" failed at line {}:\n{}'.format(self.filename, self.line, e))
+		except CompileError as e:
+			print(e)
+			raise CompileError('Importing file "{}" failed at line {}:\n{}'.format(self.filename, self.line, e))
 		except Exception as e:
 			print(traceback.format_exc())
-			raise Exception('Importing file "{}" failed at line {}:\n{}'.format(self.filename, self.line, e))
+			raise CompileError('Importing file "{}" failed at line {}:\n{}'.format(self.filename, self.line, e))

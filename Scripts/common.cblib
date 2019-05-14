@@ -17,6 +17,7 @@ define @Entity: @e
     absorption: AbsorptionAmount float 1
 	invulnerable: Invulnerable byte 1
 	silent: Silent byte 1
+	glowing: Glowing byte 1
 end
 
 define @Marker: @Entity[type=area_effect_cloud,tag=Marker]
@@ -25,4 +26,8 @@ end
 
 define @Player: @Entity[type=player]
 	selected_slot: SelectedItemSlot int 1
+end
+
+define @Position = @Entity[type=area_effect_cloud,tag=Position,limit=1]
+	create {Tags:["Position"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
 end

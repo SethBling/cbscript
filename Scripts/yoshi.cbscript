@@ -1,20 +1,7 @@
-dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
-desc: Ride Yoshi.
+dir "C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13"
+desc "Ride Yoshi."
 
-$marker: "\"Marker\":1b, \"Invisible\":1b, \"NoGravity\":1b, \"Invulnerable\":1b, Silent:1b"
-
-define @Entity = @e
-	x = Pos[0] double 1000
-	y = Pos[1] double 1000
-	z = Pos[2] double 1000
-	vx = Motion[0] double 1000
-	vy = Motion[1] double 1000
-	vz = Motion[2] double 1000
-	ry = Rotation[0] float 1
-	rx = Rotation[1] float 1
-	on_ground = OnGround byte 1
-	no_gravity = NoGravity byte 1
-end
+import common
 
 $block1: (-0.75, -0.25, 0.5, 'red_wool')
 $block2: (0.75, -0.25, 0.5, 'red_wool')

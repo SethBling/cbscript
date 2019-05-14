@@ -1,0 +1,283 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Sanic the Hedgehog"
+
+import common
+import miniblock
+import tinyblock
+
+# Material, Super Material, Relative Coords, (dx, dy, dz)
+$SanicMiniblocks = [
+	('blue_wool', 'yellow_wool', True, (0, 1, 0)),
+	('blue_wool', 'yellow_wool', False, (0.25, 0.25, 0)),
+	('blue_wool', 'yellow_wool', False, (-0.25, 0.25, 0)),
+]
+
+# Material, Super Material, (dx, dy, dz)
+$SanicTinyblocks = [
+	('sandstone', 'sandstone', (0, 0.6, 0.2)),
+	('blue_wool', 'yellow_wool', (0, 0.65, -0.4)),
+	('blue_wool', 'yellow_wool', (0, 1.4, -0.3))
+]
+
+$RobuttnikMiniblocks = [
+	('black_wool', (-0.3, 0, -0.3)),
+	('black_wool', (0.3, 0, -0.3)),
+	('black_wool', (-0.3, 0, 0.3)),
+	('black_wool', (0.3, 0, 0.3)),
+	('light_gray_wool', (-0.3, 0.6, 0.9)),
+	('light_gray_wool', (0.3, 0.6, 0.9)),
+	('light_gray_wool', (-0.3, 0.6, -0.9)),
+	('light_gray_wool', (0.3, 0.6, -0.9)),
+	('light_gray_wool', (0.9, 0.6, -0.3)),
+	('light_gray_wool', (0.9, 0.6, 0.3)),
+	('light_gray_wool', (-0.9, 0.6, -0.3)),
+	('light_gray_wool', (-0.9, 0.6, 0.3)),
+	('light_gray_wool', (-0.3, 1.2, 0.9)),
+	('light_gray_wool', (0.3, 1.2, 0.9)),
+	('light_gray_wool', (-0.3, 1.2, -0.9)),
+	('light_gray_wool', (0.3, 1.2, -0.9)),
+	('light_gray_wool', (0.9, 1.2, -0.3)),
+	('light_gray_wool', (0.9, 1.2, 0.3)),
+	('light_gray_wool', (-0.9, 1.2, -0.3)),
+	('light_gray_wool', (-0.9, 1.2, 0.3)),
+	('gold_block', (0, 0.9, 1.0)),
+	('blue_wool', (-0.3, 1.6, -0.4)),
+	('blue_wool', (0.3, 1.6, -0.4)),
+	('red_wool', (-0.2, 1.7, 0.2)),
+	('red_wool', (0.2, 1.7, 0.2)),
+	('red_wool', (-0.2, 1.7, 0)),
+	('red_wool', (0.2, 1.7, 0)),
+	('player_head{SkullOwner:"NewMindcracker"}', (0, 2.3, 0.1)),
+	('glass', (-0.3, 1.8, 0.8)),
+	('glass', (0.3, 1.8, 0.8)),
+]
+
+define @Sanic: @Entity[type=zombie, tag=Sanic]
+	create {Tags:["Sanic"], Silent:1b, PersistenceRequired:1b, Attributes:[{Name:"generic.FollowRange",Base:100.0d}]}
+	array mini_blocks[$len($SanicMiniblocks)]
+	array tiny_blocks[$len($SanicTinyblocks)]
+end
+
+define @Robuttnik: @Entity[type=ghast, tag=Robuttnik]
+	create {Tags:["Robuttnik"], Silent:1b, PersistenceRequired:1b}
+	array rmini_blocks[$len($RobuttnikMiniblocks)]
+end
+
+define @AITarget: @Entity[type=villager, tag=AITarget]
+	create {Tags:["AITarget"], NoAI: 1b, Silent:1b}
+end
+
+@Ring = @Entity[type=item,nbt={Item:{id:"minecraft:gold_nugget"}, OnGround:1b}]
+@Emerald = @Entity[type=item,nbt={Item:{id:"minecraft:emerald"}}]
+	
+reset
+	tell @a '{B[\[Summon Sanic\]](call sanic) {G[\[Summon Robuttnik\]](call robuttnik) {R[\[Kill All Sanics\]](call kill_sanics)'
+	
+	/team add super
+    /team modify super color yellow
+    /team modify super collisionRule never
+    
+end
+
+function sanic()
+	at @s
+		as create @Sanic
+			/replaceitem entity @s armor.head minecraft:player_head{display:{Name:"{\"text\":\"Sanic\"}"},SkullOwner:{Id:"2dc5887d-f254-43ac-a8d0-b71b40aef7c9",Properties:{textures:[{Value:"eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmNkMGFjMzllYWRkNTJlNDkyNjRhOGFhYjU0OWMzNGFmMzUzYjg4YjgzZjQ5YjQyNzY0NWM4ZjU0YWE5NyJ9fX0="}]}}} 1
+			for $i in $range($len($SanicMiniblocks))
+				as create @MiniBlock
+					$miniblock = $SanicMiniblocks[$i]
+					$material = $miniblock[0]
+					/replaceitem entity @s armor.head $material
+					id = &@s
+				end
+				@s.mini_blocks[$i] = id
+			end
+			for $i in $range($len($SanicTinyblocks))
+				as create @TinyBlock
+					$tinyblock = $SanicTinyblocks[$i]
+					$material = $tinyblock[0]
+					/replaceitem entity @s weapon.mainhand $material
+					id = &@s
+				end
+				@s.tiny_blocks[$i] = id
+			end
+		end
+	end
+end
+
+function robuttnik()
+	 at @s
+		as create @Robuttnik
+			for $i in $range($len($RobuttnikMiniblocks))
+				as create @MiniBlock
+					$miniblock = $RobuttnikMiniblocks[$i]
+					$material = $miniblock[0]
+					/replaceitem entity @s armor.head $material
+					id = &@s
+				end
+				@s.rmini_blocks[$i] = id
+			end
+		end
+	 end
+end
+
+function kill_sanics()
+	as @Sanic
+		for $i in $range($len($SanicMiniblocks))
+			as @s.mini_blocks[$i]
+				/kill @s
+			end
+		end
+		for $i in $range($len($SanicTinyblocks))
+			as @s.tiny_blocks[$i]
+				/kill @s
+			end
+		end
+	end
+	as @Robuttnik
+		for $i in $range($len($RobuttnikMiniblocks))
+			as @s.rmini_blocks[$i]
+				/kill @s
+			end
+		end	
+	end
+	/kill @Sanic
+	/kill @Robuttnik
+end
+
+clock main
+	for @sanic in @Sanic
+		at @s
+			/effect give @s speed 1 8 true
+			/effect give @s invisibility 1 1 true
+			@s.fire = 0
+			@s.foot_angle += 50000
+			
+			for $i in $range($len($SanicMiniblocks))
+				as @s.mini_blocks[$i] (@MiniBlock)
+					if $i == 0
+						@s.rot_x = 0
+					end
+					if $i == 1
+						@s.rot_x = @sanic.foot_angle + 180000
+					end
+					if $i == 2
+						@s.rot_x = @sanic.foot_angle
+					end
+					@s.rot_y = @sanic.ry
+					$miniblock = $SanicMiniblocks[$i]
+					$relative = $miniblock[2]
+					$delta = $miniblock[3]
+					$dx = $delta[0]
+					$dy = $delta[1]
+					$dz = $delta[2]
+					if $relative
+						at ~$dx ~$dy ~$dz
+							@s.update()
+						end
+					else
+						at ^$dx ^$dy ^$dz
+							@s.update()
+						end
+					end
+				end
+			end
+			
+			for $i in $range($len($SanicTinyblocks))
+				as @s.tiny_blocks[$i] (@TinyBlock)
+					$tinyblock = $SanicTinyblocks[$i]
+					$delta = $tinyblock[2]
+					$dx = $delta[0]
+					$dy = $delta[1]
+					$dz = $delta[2]
+					at ~ ~$dy ~ at ^$dx ^ ^$dz
+						@s.update_tiny()
+					end
+				end
+			end
+
+			/kill @Ring[distance=..2]
+			
+			if @Emerald[distance=..2]
+				@s.vy = 2000
+				/kill @Emerald[distance=..2]
+				@s.pre_super = True
+				/playsound minecraft:entity.firework_rocket.launch neutral @a
+			end
+			if @s.pre_super and @s.vy <= 0
+				@s.pre_super = false
+				/particle flash ~ ~ ~ 0 0 0 0 1 force
+				
+				for $i in $range($len($SanicMiniblocks))
+					as @s.mini_blocks[$i] (@MiniBlock)
+						$miniblock = $SanicMiniblocks[$i]
+						$material = $miniblock[1]
+						/replaceitem entity @s armor.head minecraft:$material
+						@s.glowing = True
+						/team join super @s
+					end
+				end
+				
+				for $i in $range($len($SanicTinyblocks))
+					as @s.tiny_blocks[$i] (@TinyBlock)
+						$tinyblock = $SanicTinyblocks[$i]
+						$material = $tinyblock[1]
+						/replaceitem entity @s armor.head minecraft:$material
+						@s.glowing = True
+						/team join super @s
+					end
+				end
+
+				@s.super = True
+				@s.glowing = True
+				/team join super @s
+			end
+			if @s.super
+				@s.invulnerable = True
+				@s.vx += rand(-500, 500)
+				@s.vy += rand(-500, 500)
+				@s.vz += rand(-500, 500)
+				@s.ry += rand(-20000, 20000)
+				/particle flash ~ ~ ~ 0 0 0 0 1 force
+			end
+		end
+	end
+	
+	for @robuttnik in @Robuttnik
+		at @s
+			/effect give @s invisibility 1 1 true
+			@s.fire = 0
+			
+			for $i in $range($len($RobuttnikMiniblocks))
+				as @s.rmini_blocks[$i] (@MiniBlock)
+					@s.rot_x = 0
+					@s.rot_y = @robuttnik.ry
+					$miniblock = $RobuttnikMiniblocks[$i]
+					$delta = $miniblock[1]
+					$dx = $delta[0]
+					$dy = $delta[1]
+					$dz = $delta[2]
+					at ^$dx ^$dy ^$dz
+						@s.update()
+					end
+				end
+			end
+			/particle minecraft:flame ^ ^0.8 ^-1.4 0.1 0.1 0.1 0.05 5 force @a
+		end
+	end
+	
+	as @AITarget at @s
+		unless @Ring[distance=..4]
+			move @s ~ -100 ~
+			/kill @s
+		end
+	end
+	
+	as @Ring at @s
+		unless @AITarget[distance=..4]
+			as create @AITarget ~ ~100 ~
+				/tp @s ~ ~-2 ~
+			end
+		end
+	end
+end

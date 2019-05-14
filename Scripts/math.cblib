@@ -1,0 +1,23 @@
+function sqrt(n)
+	guess = 20
+	for guess_iter = 1 to 15
+		val = (n / guess + guess) / 2
+		guess = val
+	end
+	
+	return guess
+end
+
+function abs(n)
+	if n < 0
+		return -n
+	end
+	if n >= 0
+		return n
+	end
+end
+
+function sin(n)
+	sin_angle = (n % 360 + 360) % 360
+	return 4000*sin_angle*(180-sin_angle)/(40500-sin_angle*(180-sin_angle))
+end

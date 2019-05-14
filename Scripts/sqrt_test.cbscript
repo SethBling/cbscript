@@ -1,0 +1,13 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Test sqrt function"
+
+import common
+import math
+
+reset
+	for $v in [0, 9, 1000, 1000000]
+		v = $v
+		s = sqrt(v)
+		tell @a 'sqrt\((v)\) = (s)'
+	end
+end

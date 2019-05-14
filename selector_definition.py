@@ -1,3 +1,5 @@
+from CompileError import CompileError
+
 def split_qualifier(qualifier):
 	for op in ['==', '<=', '>=', '<', '>']:
 		if op in qualifier:
@@ -63,7 +65,7 @@ class selector_definition(object):
 			self.tag = base_selector.tag
 		else:
 			if len(base_name) != 1:
-				raise ValueError('Tried to create selector with base name @{0}'.format(base_name))
+				raise CompileError('Tried to create selector with base name @{0}'.format(base_name))
 				
 			self.base_name = base_name
 				

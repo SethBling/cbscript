@@ -1,0 +1,76 @@
+import common
+
+define @ClickDetector = @Entity[type=slime,tag=ClickDetector]
+    create {CustomName:"\"ClickDetector\"", Tags:["ClickDetector"], NoGravity:1b, NoAI: 1b, Invisible:1b, Silent:1b, Size:2, AbsorptionAmount: 100f}
+end
+
+function click_detector_reset()
+    /team add no_collision
+    /team modify no_collision collisionRule never
+end
+
+function click_detector_tick()
+    as @ClickDetector
+        @s.absorption = 100
+        @s.<vel> = 0
+        /effect give @s invisibility 1000000 0 true
+        /effect give @s water_breathing 1000000 4 true
+        /effect give @s minecraft:fire_resistance 1000000 4 true
+        @s.fire = 0
+        move @s ~ ~ ~
+    end
+	
+	@ClickDetector.kill = True
+    for @player in @Player
+		as @s.click
+			@s.kill = False
+		end
+	end
+
+	as @ClickDetector[kill] at @s
+        move @s ~ -100 ~
+        /kill @s
+    end
+end
+
+# Run as an entity to create a click detector for that entity
+function create_click()
+	@s.destroy_click()
+	
+	at @s ~ ~50 ~
+		@s.click = create @ClickDetector
+		at @s ~ ~1.6 ~ at ^ ^ ^2 at ~ ~-0.6 ~
+			as @s.click (@ClickDetector)
+				/tp @s ~ ~ ~
+				@s.absorption = 100
+				/team join no_collision
+			end
+		end
+	end
+end
+
+function destroy_click()
+	as @s.click
+		at @s
+			/tp @s ~ -200 ~
+			/kill @s
+		end
+	end
+	@s.click = None
+end
+
+function check_clicked()
+	click = False
+	
+	at @s ~ ~1.6 ~ at ^ ^ ^1.5 at ~ ~-0.6 ~
+		as @s.click (@ClickDetector)
+			/tp @s ~ ~ ~ ~ ~
+			if @s.absorption < 99
+				click = True
+			end
+		end
+		if click then create_click()
+	end
+	
+	return click
+end

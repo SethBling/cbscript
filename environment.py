@@ -225,8 +225,8 @@ class environment(object):
 	def register_objective(self, objective):
 		self.global_context.register_objective(objective)
 		
-	def register_array(self, name, from_val, to_val):
-		self.global_context.register_array(name, from_val, to_val)
+	def register_array(self, name, from_val, to_val, selector_based):
+		self.global_context.register_array(name, from_val, to_val, selector_based)
 		
 	def register_block_tag(self, name, blocks):
 		self.global_context.register_block_tag(name, blocks)
@@ -301,26 +301,6 @@ class environment(object):
 		
 	def register_clock(self, name):
 		self.global_context.register_clock(name)
-		
-	def get_arrayconst_var(self, name, idxval):
-		if name not in self.arrays:
-			print('Tried to use undefined array "{}"'.format(name))
-			return None
-				
-		from_val, to_val = self.arrays[name]
-		
-		try:
-			index = int(self.apply_replacements(idxval))
-		except Exception:
-			raise CompileError('Array index "{}" for "{}" is not an integer value.'.format(idxval, name))
-		
-		if index < from_val or index >= to_val:
-			if from_val == 0:
-				print('Tried to index {} outside of array {}[{}]'.format(index, name, to_val))
-			else:
-				print('Tried to index {} outside of array {}[{} to {}]'.format(index, name, from_val, to_val))
-
-		return '{}{}'.format(name, index)
 		
 	def get_selector_definition(self, selector_text):
 		if selector_text.startswith('@'):

@@ -26,53 +26,14 @@ class func_expr(scalar_expression_base):
 		efunc = self.function_call.dest
 		args = self.function_call.args
 		
-		if efunc == 'sqrt':
-			if len(args) <> 1:
-				print "sqrt takes exactly 1 argument, received: {}".format(len(args))
-				return None
-			
-			id = args[0].compile(func, None)
-			if id == None:
-				print 'Unable to compile argument for sqrt'
-				return None
-			
-			guess = num_expr(20).compile(func, None)
-			
-			if guess == None:
-				print 'Unable to compile initial guess for sqrt algorithm'
-				return None
-				
-			for iteration in xrange(15):
-				newId = func.get_scratch()
-				func.add_command('scoreboard players operation Global {0} = Global {1}'.format(newId, id))
-				expr = scriptparse.parse("({0}/{1}+{1})/2".format(newId, guess))[1]
-				guess = expr.compile(func, None)
-				if guess == None:
-					print 'Unable to compile guess iteration for sqrt algorithm'
-					return None
-			
-			return scoreboard_var('Global', guess)
-
-		elif efunc == 'abs':
-			if len(args) <> 1:
-				print "abs takes exactly 1 argument, received: {}".format(len(args))
-				return None
-
-			var = args[0].compile(func, assignto).get_modifiable_var(func, assignto)
-			
-			minus = func.add_constant(-1)
-			func.add_command("execute if score {0} {1} matches ..-1 run scoreboard players operation {0} {1} *= {2} Constant".format(var.selector, var.objective, minus))
-			
-			return var
-			
-		elif efunc == 'rand':
+		if efunc == 'rand':
 			if len(args) == 1:
 				min = 0
-				max = args[0].get_const_value(func)
+				max = args[0].compile(func, None).get_const_value(func)
 				
 			elif len(args) == 2:
-				min = args[0].get_const_value(func)
-				max = args[1].get_const_value(func)
+				min = args[0].compile(func, None).get_const_value(func)
+				max = args[1].compile(func, None).get_const_value(func)
 				
 			else:
 				raise ValueError('rand takes 1 or 2 arguments, received: {}'.format(args))

@@ -1,0 +1,183 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Evolve some zombies"
+
+import common
+import math
+
+$GeneMax = 1000
+
+$FeetR = 0
+$FeetG = 1
+$FeetB = 2
+$LegsR = 3
+$LegsG = 4
+$LegsB = 5
+$ChestR = 6
+$ChestG = 7
+$ChestB = 8
+$HeadR = 9
+$HeadG = 10
+$HeadB = 11
+$WanderVZ = 12
+$WanderVY = 13
+$WanderCooldown = 14
+$Fuse = 15
+$WanderDRY = 16
+
+$NumGenes = 17
+
+$SlotNames = [
+	'feet',
+	'legs',
+	'chest',
+	'head'
+]
+$ArmorNames = [
+	'leather_boots',
+	'leather_leggings',
+	'leather_chestplate',
+	'leather_helmet'
+]
+
+define @Body : @Entity[type=zombie, tag=Body]
+	create {Tags:["Body"],Invulnerable:1, PersistenceRequired:1}
+	array genes[$NumGenes]
+end
+
+define @TNTPhysics : @Entity[type=armor_stand, tag=TNTPhysics]
+	create {Tags:["TNTPhysics"], Invisible:1b, Invulnerable:1b}
+	carrier: @TNTCarrier
+end
+
+define @TNTCarrier : @Entity[type=armor_stand, tag=TNTCarrier]
+	create {Tags:["TNTCarrier"], Invisible:1b, Invulnerable:1b, Marker:1b, Passengers:[{id:"minecraft:tnt", Fuse:40s, Tags:["DummyTNT"]}]}
+	fuse: Passengers[0].Fuse short 1
+end
+
+define @DummyTNT : @Entity[type=tnt, tag=DummyTNT]
+	create {Tags:["DummyTNT", "NewDummyTNT"], Fuse:40s}
+	fuse: Fuse short 1
+end
+
+function create_body()
+	as create @Body
+		for gene = 1 to $NumGenes
+			@s.genes[gene] = rand($GeneMax)
+		end
+		
+		for $slot in $range(4)
+			$slot_name = $SlotNames[$slot]
+			$armor_name = $ArmorNames[$slot]
+			/replaceitem entity @s armor.$slot_name $armor_name
+			color = 0
+			for $c in $range(3)
+				color *= 256
+				color += @s.genes[$slot * 3 + $c] / 4
+			end
+			/execute store result entity @s ArmorItems[$slot].tag.display.color int 1 run scoreboard players get Global color
+		end
+		
+		@s.cooldown = 20
+		@s.rot_y = rand(0, 360000)
+	end
+end
+
+function kill_all_bodies()
+	/kill @Body
+end
+
+
+reset
+	tell @a '{G[\[Create Body\]](call create_body) {R[\[Kill Bodies\]](call kill_all_bodies)'
+end
+
+clock main
+	as @Body
+		@s.fire = 0
+		/effect give @s minecraft:slowness 1 10
+		
+		
+		@s.wander = True
+		if @s.wander
+			@s.ry = @s.rot_y
+			@s.rot_y += rand(-30, 30) * @s.genes[$WanderDRY]
+			@s.rx = 0
+		end
+		
+		@s[cooldown > 0].cooldown--
+		if @s.cooldown == 0 at @s
+			if @s.wander
+				up = @s.genes[$WanderVY]
+				backward = @s.genes[$WanderVZ]
+				fuse = @s.genes[$Fuse]
+			
+				unless @Position do create @Position
+				as @Position
+					/tp @s ~ ~ ~ ~ ~
+					<start> = @s.<pos>
+					/tp @s ^ ^ ^1
+					<forward> = @s.<pos> - <start>
+					/tp @s ~ ~ ~ ~ ~
+					/tp @s ^ ^1 ^
+					<up> = @s.<pos> - <start>
+				end
+				at ~ ~1 ~
+					as create @TNTCarrier
+						/tp @s ~ ~ ~ ~ ~
+						@s.fuse = fuse * 80 / $GeneMax
+						id = &@s
+					end
+					
+					as create @TNTPhysics
+						/tp @s ~ ~ ~ ~ ~
+						@s.<vel> = <up> * (up - $GeneMax / 2) / $GeneMax
+						@s.<vel> -= <forward> * backward / $GeneMax
+						/playsound minecraft:entity.tnt.primed hostile @a
+						@s.carrier = id
+					end
+					
+					as @DummyTNT unless @s.initialized
+						@s.fuse = fuse * 80 / $GeneMax + 1
+						v = @s.fuse
+						/tag @Entity[tag=NewDummyTNT] remove NewDummyTNT
+						@s.initialized = True
+					end
+				end
+				
+				@s.cooldown = @s.genes[$WanderCooldown] * 40 / $GeneMax
+			end
+		end
+	end
+	
+	as @DummyTNT at @s
+		if @s.fuse == 1
+			/particle minecraft:explosion ~ ~ ~ 2 2 2 0 10
+			/playsound minecraft:entity.generic.explode hostile @a
+			<pos> = @s.<pos>
+			<x1, y2, z1> = <pos>
+			as @Body[distance=..5]
+				<x2, y2, z2> = @s.<pos> + <0, scale, 0>
+				distsq = ((x1-x2)^2 + (y1-y2)^2 + (z1-z2)^2) / scale
+			
+				@s.<vel> += ((@s.<pos> + <0, scale, 0>) - <pos>) * scale * 30 / distsq
+			end
+			/kill @s
+		end
+	end
+	
+	as @TNTPhysics at @s
+		live = False
+		as @s.carrier
+			/tp @s ~ ~ ~ ~ ~
+			if @s.fuse > 0
+				live = True
+			end
+			unless live
+				/kill @s				
+			end
+		end
+		unless live
+			/kill @s
+		end
+	end
+end

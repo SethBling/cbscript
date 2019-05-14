@@ -57,10 +57,10 @@ class global_context(object):
 			raise CompileError('Function "{}" is defined multiple times.'.format(name))
 		self.functions[name] = func
 		
-	def register_array(self, name, from_val, to_val):
+	def register_array(self, name, from_val, to_val, selector_based):
 		if name in self.arrays:
 			raise CompileError('Array "{}" is defined multiple times.'.format(name))
-		self.arrays[name] = (from_val, to_val)
+		self.arrays[name] = (from_val, to_val, selector_based)
 		
 	def register_objective(self, objective):
 		if len(objective) > 16:

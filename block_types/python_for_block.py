@@ -1,4 +1,5 @@
 import math
+from CompileError import CompileError
 
 class python_for_block(object):
 	def __init__(self, line, id, val, sub):
@@ -19,6 +20,9 @@ class python_for_block(object):
 			func.set_dollarid(self.id, v)
 			try:
 				func.compile_blocks(self.sub)
-			except Exception as e:
-				print(e.message)
-				raise Exception('Unable to compile python for block contents at line {}'.format(self.line))
+			except CompileError as e:
+				print(e)
+				raise CompileError('Unable to compile python for block contents at line {}'.format(self.line))
+			except:
+				print(traceback.format_exc())
+				raise CompileError('Unable to compile python for block contents at line {}'.format(self.line))

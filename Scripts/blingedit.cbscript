@@ -26,14 +26,11 @@ define block cursor_continue
 end
 
 import common
+import click_detector
 
 define @Corner = @Entity[type=magma_cube,tag=Corner]
     create {CustomName:"\"Corner\"", Tags:["Corner"], Glowing:1b, NoGravity:1b, NoAI:1b, Invulnerable:1b, Size:1b, Silent:1b, AbsorptionAmount:100f}
     time: Time byte 1
-end
-
-define @ClickDetector = @Entity[type=slime,tag=ClickDetector]
-    create {CustomName:"\"ClickDetector\"", Tags:["ClickDetector"], NoGravity:1b, NoAI: 1b, Invisible:1b, Silent:1b, Size:2, AbsorptionAmount: 100f}
 end
 
 define @CloneDisplay = @Entity[type=armor_stand,tag=CloneDisplay]
@@ -99,24 +96,6 @@ define @Player = @Entity[type=player]
         tell @s 'Region Outline Particles {Rdisabled{-'
         @s.particles = False
         /gamerule sendCommandFeedback false
-    end
-    
-    function create_click()
-        as @s.click
-            /tp @s ~ -200 ~
-            /kill @s
-        end
-    
-        at @s ~ ~50 ~
-            @s.click = create @ClickDetector
-            at @s ~ ~1.6 ~ at ^ ^ ^2 at ~ ~-0.6 ~
-                as @s.click
-                    /tp @s ~ ~ ~
-                    @s.absorption = 100
-                    /team join no_collision
-                end
-            end
-        end
     end
     
     function get_cursor_position()
@@ -1229,13 +1208,12 @@ function move_dir()
 end
 
 reset
+	click_detector_reset()
+	
     /team add source
     /team modify source color red
     /team modify source collisionRule never
-    
-    /team add no_collision
-    /team modify no_collision collisionRule never
-    
+		
     /team add moving
     /team modify moving color yellow
     /team modify moving collisionRule never
@@ -1404,19 +1382,7 @@ clock main
             @s.carrot_on_stick = False
             @s[nbt={"SelectedItem":{id:"minecraft:carrot_on_a_stick"}}].carrot_on_stick = True
 
-            click = False
-            
-            at @s ~ ~1.6 ~ at ^ ^ ^1.5 at ~ ~-0.6 ~
-                as @s.click
-                    /tp @s ~ ~ ~ ~ ~
-                    if @s.absorption < 99
-                        click = True
-                        /tp @s ~ -200 ~
-                        /kill @s
-                        @player.create_click()
-                    end
-                end
-            end
+			click = check_clicked()
 
             if @s.right_click then click = True
             
@@ -1441,21 +1407,13 @@ clock main
                         @s.edit_zmin = True
                     end
                 end
-                at @s ~ ~200 ~
-                    @s.click = create @ClickDetector
-                    as @s.click
-                        /team join no_collision
-                    end
-                end
-                as @s.pick1
-
-                end
+				create_click()
             end
             
             if @s.prev_edit unless @s.edit
                 @s.pick1 = None
                 @s.pick2 = None
-                @s.click = None
+                @s.destroy_click()
                 @s.moving = None
                 @s.state = $Closed
                 as @Corner
@@ -1766,17 +1724,9 @@ function collect_garbage()
     /bossbar set progress players
     /execute store result bossbar progress value run scoreboard players set Global percent 0
     @a.right_click = False
-    
-    as @ClickDetector
-        @s.absorption = 100
-        @s.<vel> = 0
-        /effect give @s invisibility 1000000 0 true
-        /effect give @s water_breathing 1000000 4 true
-        /effect give @s minecraft:fire_resistance 1000000 4 true
-        @s.fire = 0
-        move @s ~ ~ ~
-    end
 
+	click_detector_tick()
+	
     as @Corner
         @s.absorption = 100
         @s.<vel> = 0
@@ -1792,13 +1742,9 @@ function collect_garbage()
     end
     
     @Corner.kill = True
-    @ClickDetector.kill = True
     @CloneDisplay.kill = True
     for @player in @Player
         at @s
-            as @s.click
-                @s.kill = False
-            end
             as @Corner if @s.player == &@player
                 @s.kill = False
             end
