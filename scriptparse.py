@@ -454,18 +454,26 @@ def p_print_block(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 #### Execute
+def p_opt_else(p):
+	'''opt_else : else newlines blocklist'''
+	p[0] = p[3]
+	
+def p_opt_else_none(p):
+	'''opt_else : empty'''
+	p[0] = None
+
 def p_execute_as_id_global(p):
-	'''codeblock : as variable newlines blocklist end'''
-	p[0] = execute_block(p.lineno(1), [('AsId', (p[2], None))], p[4])
+	'''codeblock : as variable newlines blocklist opt_else end'''
+	p[0] = execute_block(p.lineno(1), [('AsId', (p[2], None))], p[4], p[5])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_execute_as_id_type_global(p):
-	'''codeblock : as variable LPAREN ATID RPAREN newlines blocklist end'''
-	p[0] = execute_block(p.lineno(1), [('AsId', (p[2], p[4]))], p[7])
+	'''codeblock : as variable LPAREN ATID RPAREN newlines blocklist opt_else end'''
+	p[0] = execute_block(p.lineno(1), [('AsId', (p[2], p[4]))], p[7], p[8])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_execute_as_id_do_global(p):
-	'''codeblock : as variable do codeblock'''
+	'''codeblock : as variable do codeblock opt_else'''
 	p[0] = execute_block(p.lineno(1), [('AsId', (p[2], None))], [p[4]])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
@@ -475,7 +483,7 @@ def p_execute_as_id_do_type_global(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_execute_as_create(p):
-	'''codeblock : as create_block newlines blocklist end'''
+	'''codeblock : as create_block newlines blocklist opt_else end'''
 	p[0] = execute_block(p.lineno(1), [('AsCreate', p[2])], p[4])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
@@ -485,8 +493,8 @@ def p_execute_as_create_do(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_execute_chain(p):
-	'''codeblock : execute_items newlines blocklist end'''
-	p[0] = execute_block(p.lineno(1), p[1], p[3])
+	'''codeblock : execute_items newlines blocklist opt_else end'''
+	p[0] = execute_block(p.lineno(1), p[1], p[3], p[4])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_execute_chain_inline(p):
@@ -539,23 +547,34 @@ def p_execute_facing_entity(p):
 def p_execute_align(p):
 	'''execute_item : align ID'''
 	if p[2] not in ['x','y','z','xy','xz','yz','xyz']:
-		raise SyntaxError('Must align to a combination of x, y, and z axes')
+		raise SyntaxError('Must align to a combination of x, y, and z axes, not "{}", at line {}'.format(p[2], p.lineno(2)))
 	p[0] = ('Align', p[2])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
+def p_opt_anchor(p):
+	'''opt_anchor : ID'''
+	if p[1] not in ['eyes', 'feet']:
+		raise SyntaxError('Invalid anchor location "{}" at line {}'.format(p[1], p.lineno(1)))
+		
+	p[0] = p[1]
+	
+def p_opt_anchor_empty(p):
+	'''opt_anchor : empty'''
+	p[0] = None
+	
 def p_execute_at_selector(p):
 	'''execute_item : at fullselector'''
-	p[0] = ('At', (p[2], None))
+	p[0] = ('At', (p[2], None, None))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_execute_at_relcoords(p):
-	'''execute_item : at relcoords'''
-	p[0] = ('At', (None, p[2]))
+	'''execute_item : at opt_anchor relcoords'''
+	p[0] = ('At', (None, p[3], p[2]))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_execute_at_selector_relcoords(p):
-	'''execute_item : at fullselector relcoords'''
-	p[0] = ('At', (p[2], p[3]))
+	'''execute_item : at fullselector opt_anchor relcoords'''
+	p[0] = ('At', (p[2], p[4], p[3]))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_execute_at_vector(p):
@@ -1215,6 +1234,9 @@ def p_nbt_source_json(p):
 	'''nbt_source : json_object'''
 	p[0] = nbt_json(p[1])
 
+def p_nbt_source_string(p):
+	'''nbt_source : NORMSTRING'''
+	p[0] = nbt_json(p[1])
 	
 def p_block_coords(p):
 	'''block_coords : LBRACK relcoords RBRACK'''

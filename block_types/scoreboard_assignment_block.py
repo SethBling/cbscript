@@ -6,9 +6,14 @@ class scoreboard_assignment_block(object):
 		self.line = line
 		
 	def compile(self, func):
-		assignto = self.var.get_assignto(func)
-		expr_var = self.expr.compile(func, assignto)
 		op = self.op
+		
+		if op == '=':
+			assignto = self.var.get_assignto(func)
+		else:
+			assignto = None
+			
+		expr_var = self.expr.compile(func, assignto)
 		
 		if op == '=':
 			self.var.copy_from(func, expr_var)

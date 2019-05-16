@@ -6,6 +6,8 @@ class binop_expr(scalar_expression_base):
 		self.rhs = rhs
 
 	def compile(self, func, assignto=None):
+		# TODO: Handle case where both variables are constant, and return constant
+	
 		if len(self.op) == 1 and self.op in ['+', '-', '*', '/', '%']:
 			left_var = self.lhs.compile(func, assignto)
 			temp_var = left_var.get_modifiable_var(func, assignto)
@@ -36,11 +38,13 @@ class binop_expr(scalar_expression_base):
 			temp_var = left_var.get_modifiable_var(func, assignto)
 			
 			right_var = self.rhs.compile(func)
-			power = int(right_var.get_const_value(func))
+			power = right_var.get_const_value(func)
 			
 			if power == None:
 				print('Exponentiation must have constant operand.')
 				return None
+				
+			power = int(power)
 				
 			if power < 1:
 				print "Powers less than 1 are not supported"

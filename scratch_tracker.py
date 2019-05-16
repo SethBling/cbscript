@@ -48,15 +48,19 @@ class scratch_tracker(object):
 	def get_scratch_vector(self):
 		return [self.get_scratch() for i in range(3)]
 
+	def get_prefix(self):
+		return '{0}_scratch'.format(self.prefix)
+	
 	def is_scratch(self, id):
-		scratch_prefix = '{0}_scratch'.format(self.prefix)
-		return len(id) >= len(scratch_prefix) and id[:len(scratch_prefix)] == scratch_prefix
+		scratch_prefix = self.get_prefix()
+		
+		return id.startswith(scratch_prefix)
 		
 	def free_scratch(self, id):
 		if not self.is_scratch(id):
 			return
 
-		scratch_prefix = '{0}_scratch'.format(self.prefix)
+		scratch_prefix = self.get_prefix()
 		num = int(id[len(scratch_prefix):])
 		
 		self.scratch[num] = False

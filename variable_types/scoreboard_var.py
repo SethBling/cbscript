@@ -118,6 +118,7 @@ class scoreboard_var(var_base):
 			else:
 				modifiable_var = scoreboard_var('Global', func.get_scratch())
 				modifiable_var.copy_from(func, self)
+				func.is_scratch(self.objective)
 				return modifiable_var
 				
 	# If this is a scratch variable, free it up

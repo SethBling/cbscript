@@ -55,6 +55,6 @@ class array_const_var(var_base):
 			
 	# Returns a scoreboard_var which can be modified as needed without side effects
 	def get_modifiable_var(self, func, assignto):
-		scratch_var = scoreboard_var(self.selector, func.get_scratch())
+		scratch_var = scoreboard_var('Global', func.get_scratch())
 		scratch_var.copy_from(func, self)
 		return scratch_var

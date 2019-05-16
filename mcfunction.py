@@ -260,9 +260,11 @@ class mcfunction(object):
 			elif type == 'Align':
 				cmd += 'align {0} '.format(val)
 			elif type == 'At':
-				selector, relcoords = val
+				selector, relcoords, anchor = val
 				if selector != None:
 					cmd += 'at {0} '.format(selector)
+				if anchor != None:
+					cmd += 'anchored {} '.format(anchor)
 				if relcoords != None:
 					cmd += 'positioned {0} '.format(relcoords.get_value(self))
 			elif type == 'AtVector':
