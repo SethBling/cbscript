@@ -41,7 +41,7 @@ class execute_block(execute_base):
 			print(traceback.format_exc())
 			raise CompileError('Unable to compile else block contents at line {}'.format(self.display_name(), self.line))
 			
-		prefix = 'execute if score Global {} matches 1..'.format(self.scratch)
+		prefix = 'execute if score Global {} matches 1.. '.format(self.scratch)
 
 		single = exec_func.single_command()
 		if single == None:
@@ -49,7 +49,7 @@ class execute_block(execute_base):
 			func_name = 'else{0:03}_ln{1}'.format(unique, self.line)
 			func.register_function(func_name, exec_func)
 			
-			func.add_command('{} run function {}:{}'.format(prefix, func.namespace, func_name))
+			func.add_command('{}run function {}:{}'.format(prefix, func.namespace, func_name))
 		else:
 			if single.startswith('/'):
 				single = single[1:]

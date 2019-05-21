@@ -243,12 +243,12 @@ class mcfunction(object):
 				create_operation = val
 					
 				self.register_objective('_age')
-				self.add_command('scoreboard players add @e _age 1')
+				self.add_command('scoreboard players set @{} _age 1'.format(create_operation.atid))
 				
 				create_operation.compile(self)
 					
-				self.add_command('scoreboard players add @e _age 1')
-				cmd += 'as @e[_age==1] '
+				self.add_command('scoreboard players add @{} _age 1'.format(create_operation.atid))
+				cmd += 'as @{}[_age==1,limit=1] '.format(create_operation.atid)
 				
 				exec_func.update_self_selector('@'+create_operation.atid)
 			elif type == 'Rotated':

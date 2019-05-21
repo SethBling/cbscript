@@ -563,8 +563,8 @@ def p_opt_anchor_empty(p):
 	p[0] = None
 	
 def p_execute_at_selector(p):
-	'''execute_item : at fullselector'''
-	p[0] = ('At', (p[2], None, None))
+	'''execute_item : at fullselector opt_anchor'''
+	p[0] = ('At', (p[2], None, p[3]))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_execute_at_relcoords(p):
