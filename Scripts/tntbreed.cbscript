@@ -1,0 +1,49 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Use gunpowder to breed TNT"
+
+import common
+
+define @TNT: @Entity[type=tnt]
+	create {Fuse:80s}
+	fuse: Fuse short 1
+end
+
+@Gunpowder = @Entity[type=item,nbt={Item:{id:"minecraft:gunpowder"}}]
+	
+reset
+
+end
+
+clock main
+	for @player in @Player
+		if @s[nbt={SelectedItem:{id:"minecraft:gunpowder"}}]
+			at @s as @TNT[distance=..16]
+				at @s facing @player
+					/tp @s ~ ~ ~ ~ ~
+				end
+				
+				if @s.hop_timer > 0
+					@s.hop_timer--
+				else
+					if @s.on_ground
+						@s.<vel> = (@player.<pos> - @s.<pos>) / 100
+						@s.vy = 350
+						@s.hop_timer = 50
+					end
+				end
+				
+				if @s.fuse < 32
+					@s.fuse += 16
+				end
+			end
+		end
+	end
+	
+	as @TNT at @s
+		if @Gunpowder[distance=..1]
+			/kill @Gunpowder[distance=..1]
+			/say ready
+			@s.ready = 400
+		end
+	end
+end

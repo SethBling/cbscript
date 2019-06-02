@@ -49,6 +49,7 @@ from scalar_expressions.unary_expr import unary_expr
 from variable_types.array_const_var import array_const_var
 from variable_types.array_expr_var import array_expr_var
 from variable_types.block_path_var import block_path_var
+from variable_types.command_var import command_var
 from variable_types.scale_var import scale_var
 from variable_types.scoreboard_var import scoreboard_var
 from variable_types.selector_id_var import selector_id_var
@@ -402,6 +403,11 @@ def p_variable_scale(p):
 def p_variable_selector_ref(p):
 	'''variable : REF fullselector'''
 	p[0] = selector_id_var(p[2])
+	
+def p_variable_command(p):
+	'''variable : success NEWLINE COMMAND
+	            | result NEWLINE COMMAND'''
+	p[0] = command_var(p[1], p[3])
 	
 #### Blocklist
 def p_optcomment(p):

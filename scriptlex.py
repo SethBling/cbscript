@@ -5,7 +5,7 @@ keywords = (
     'at', 'as', 'facing', 'rotated', 'align', 'here', 'the_end', 'the_nether', 'overworld',
     'move', 'create', 'tell', 'title', 'subtitle', 'actionbar',
     'reset', 'clock', 'function', 'if', 'unless', 'then', 'do', 'else', 'switch', 'case',
-    'return', 'while', 'macro', 'block', 'define', 'array', 'remove',
+    'return', 'while', 'macro', 'block', 'define', 'array', 'remove', 'success', 'result',
 )
 
 tokens = keywords + (
