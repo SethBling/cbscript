@@ -24,7 +24,7 @@ class mcworld(object):
 			text = func.get_utf8_text()
 			self.zip.writestr(filename, text)
 				
-	def write_tags(self, clocks, block_tags):
+	def write_tags(self, clocks, block_tags, item_tags):
 		tag_dir = 'data/minecraft/tags/functions/'
 		
 		tick_tag_file = os.path.join(tag_dir, 'tick.json')
@@ -34,14 +34,27 @@ class mcworld(object):
 		load_tag_file = os.path.join(tag_dir, 'load.json')
 		self.zip.writestr(load_tag_file, json.dumps({'values':['{0}:reset'.format(self.namespace)]}, indent=4))
 			
-		if len(block_tags) > 0:
-			block_tag_dir = 'data/{}/tags/blocks/'.format(self.namespace)
-			
-			for tag in block_tags:
-				blocks = block_tags[tag]
+		for name, list in [('blocks', block_tags),('items', item_tags)]:
+			if len(list) > 0:
+				tag_dir = 'data/{}/tags/{}/'.format(self.namespace, name)
 				
-				tag_filename = os.path.join(block_tag_dir, '{0}.json'.format(tag))
-				self.zip.writestr(tag_filename, json.dumps({'values':['minecraft:{0}'.format(block) for block in blocks]}, indent=4))
+				for tag in list:
+					items = list[tag]
+					
+					tag_filename = os.path.join(tag_dir, '{0}.json'.format(tag))
+					self.zip.writestr(tag_filename, json.dumps({'values':['minecraft:{0}'.format(item) for item in items]}, indent=4))
+				
+	def write_recipes(self, recipes):
+		if len(recipes) > 0:
+			recipe_dir = 'data/{}/recipes/'.format(self.namespace)
+			
+			id = 0
+			for recipe in recipes:
+				id += 1
+				recipe_file = os.path.join(recipe_dir, '{}{}.json'.format(recipe.get_type(), id))
+				recipe_struct = recipe.get_json_struct()
+				
+				self.zip.writestr(recipe_file, json.dumps(recipe_struct, indent=4))
 		
 	def write_mcmeta(self, desc):
 		mcmeta_file = 'pack.mcmeta'

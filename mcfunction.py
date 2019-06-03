@@ -545,6 +545,9 @@ class mcfunction(object):
 	def register_block_tag(self, name, blocks):
 		self.environment.register_block_tag(name, blocks)
 		
+	def register_item_tag(self, name, items):
+		self.environment.register_item_tag(name, items)
+		
 	def get_scale(self):
 		return self.environment.scale
 		
@@ -560,6 +563,10 @@ class mcfunction(object):
 	@property
 	def block_tags(self):
 		return self.environment.block_tags
+
+	@property
+	def item_tags(self):
+		return self.environment.item_tags
 
 	@property
 	def namespace(self):
@@ -739,4 +746,5 @@ class mcfunction(object):
 	def get_selector_definition(self, selector):
 		return self.environment.get_selector_definition(selector)
 		
-	
+	def add_recipe(self, recipe):
+		self.environment.add_recipe(recipe)

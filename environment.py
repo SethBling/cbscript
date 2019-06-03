@@ -230,6 +230,9 @@ class environment(object):
 		
 	def register_block_tag(self, name, blocks):
 		self.global_context.register_block_tag(name, blocks)
+	
+	def register_item_tag(self, name, items):
+		self.global_context.register_item_tag(name, items)
 		
 	def get_scale(self):
 		return self.global_context.scale
@@ -246,6 +249,10 @@ class environment(object):
 	@property
 	def block_tags(self):
 		return self.global_context.block_tags
+
+	@property
+	def item_tags(self):
+		return self.global_context.item_tags
 	
 	@property
 	def namespace(self):
@@ -341,3 +348,6 @@ class environment(object):
 			raise CompileError('[{}] is not defined.'.format(block_id))
 		
 		self.block_definitions[block_id].set_path(func, path_id, coords, macro_args)
+		
+	def add_recipe(self, recipe):
+		self.global_context.add_recipe(recipe)

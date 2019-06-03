@@ -37,13 +37,18 @@ class global_context(object):
 		self.unique = 0
 		self.friendly_name = get_friendly_name(namespace)
 		self.block_tags = {}
+		self.item_tags = {}
 		self.scratch_prefixes = {}
 		self.namespace = namespace
 		self.parser = None
 		self.dependencies = []
+		self.recipes = []
 
 	def register_block_tag(self, name, blocks):
 		self.block_tags[name] = blocks
+		
+	def register_item_tag(self, name, items):
+		self.item_tags[name] = items
 		
 	def get_unique_id(self):
 		self.unique += 1
@@ -128,3 +133,6 @@ class global_context(object):
 		
 	def register_dependency(self, filename):
 		self.dependencies.append(filename)
+		
+	def add_recipe(self, recipe):
+		self.recipes.append(recipe)

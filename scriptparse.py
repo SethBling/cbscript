@@ -1,4 +1,5 @@
 from ply import *
+import traceback
 import scriptlex
 from block_types.array_definition_block import array_definition_block
 from block_types.block_definition_block import block_definition_block
@@ -11,6 +12,7 @@ from block_types.for_index_block import for_index_block
 from block_types.for_selector_block import for_selector_block
 from block_types.function_call_block import function_call_block
 from block_types.import_block import import_block
+from block_types.item_tag_block import item_tag_block
 from block_types.macro_call_block import macro_call_block
 from block_types.method_call_block import method_call_block
 from block_types.move_block import move_block
@@ -24,6 +26,7 @@ from block_types.python_if_block import python_if_block
 from block_types.scoreboard_assignment_block import scoreboard_assignment_block
 from block_types.selector_assignment_block import selector_assignment_block
 from block_types.selector_definition_block import selector_definition_block
+from block_types.shaped_recipe_block import shaped_recipe_block
 from block_types.switch_block import switch_block
 from block_types.tell_block import tell_block
 from block_types.template_function_call_block import template_function_call_block
@@ -330,10 +333,12 @@ def p_optassignments_multiple(p):
 					  | selector_define_block newlines optassignments
 					  | block_define_block newlines optassignments
 					  | blocktag newlines optassignments
+					  | itemtag newlines optassignments
 					  | array_definition newlines optassignments
 					  | import_statement newlines optassignments
 					  | print_block newlines optassignments
-					  | pointer_decl newlines optassignments'''
+					  | pointer_decl newlines optassignments
+					  | shaped_recipe newlines optassignments'''
 	p[0] = [p[1]] + p[3]
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -905,7 +910,7 @@ def p_virtualinteger_symbol(p):
 
 #### Block tags
 def p_blocktag(p):
-	'''blocktag : define block ID newlines block_list end'''
+	'''blocktag : define block_tag ID newlines block_list end'''
 	p[0] = block_tag_block(p.lineno(1), p[3], p[5])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -915,6 +920,20 @@ def p_block_list(p):
 	
 def p_block_list_one(p):
 	'''block_list : ID newlines'''
+	p[0] = [p[1]]
+	
+#### Item tags
+def p_itemtag(p):
+	'''itemtag : define item_tag ID newlines item_list end'''
+	p[0] = item_tag_block(p.lineno(1), p[3], p[5])
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
+def p_item_list(p):
+	'''item_list : ID newlines item_list'''
+	p[0] = [p[1]] + p[3]
+	
+def p_item_list_one(p):
+	'''item_list : ID newlines'''
 	p[0] = [p[1]]
 
 #### Pointer Declaration
@@ -1478,6 +1497,37 @@ def p_json_elements_empty(p):
 	'''json_elements : empty'''
 	p[0] = ''
 	
+#### Crafting recipes
+def p_shaped_recipe(p):
+	'''shaped_recipe : shaped recipe newlines recipe_lines keys newlines recipe_key_list end newlines result COLON const_value ID newlines end'''
+	p[0] = shaped_recipe_block(p.lineno(1), p[4], p[7], p[12], p[13])
+	
+def p_recipe_lines(p):
+	'''recipe_lines : string newlines recipe_lines'''
+	p[0] = [p[1]] + p[3]
+	
+def p_recipe_lines_empty(p):
+	'''recipe_lines : empty'''
+	p[0] = []
+
+def p_recipe_key_item(p):
+	'''recipe_key_item : ID EQUALS ID COLON ID'''
+	if len(p[1]) != 1:
+		raise SyntaxError('Recipe key "{}" at line {} is not a single character.'.format(p[1], p.lineno(1)))
+		
+	if p[3] not in ['item', 'tag']:
+		raise SyntaxError('Recipe key type "{}" at line {} must be "block" or "tag".'.format(p[3], p.lineno(1)))
+	
+	p[0] = (p[1], p[3], p[5])
+	
+def p_recipe_key_list(p):
+	'''recipe_key_list : recipe_key_item newlines recipe_key_list'''
+	p[0] = [p[1]] + p[3]
+	
+def p_recipe_key_list_empty(p):
+	'''recipe_key_list : empty'''
+	p[0] = []
+	
 #### Empty
 def p_empty(p):
 	'''empty : '''
@@ -1494,6 +1544,10 @@ def parse(data,debug=0):
 	scriptlex.lexer.lineno = 1
 	bparser.error = 0
 	bparser.data = data
-	p = bparser.parse(data,debug=debug,tracking=True)
-	return p
-
+	try:
+		p = bparser.parse(data,debug=debug,tracking=True)
+		return p
+	except SyntaxError as e:
+		print(e)
+	except Exception as e:
+		print(traceback.format_exc())

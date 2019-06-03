@@ -1,0 +1,24 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Evolve some zombies"
+
+import common
+
+define item_tag custom
+	podzol
+	grass_block
+end
+
+shaped recipe
+	'WWW'
+	'WBW'
+	'WWW'
+	keys
+		W = tag:custom
+		B = item:slime_ball
+	end
+	result: 7 cocoa_beans
+end
+
+reset
+
+end
