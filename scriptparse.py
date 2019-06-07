@@ -628,11 +628,11 @@ def p_condition_fullselector(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_condition_score(p):
-	'''condition : variable LT variable
-				 | variable LEQ variable
-				 | variable EQUALEQUAL variable
-				 | variable GT variable
-				 | variable GEQ variable'''
+	'''condition : expr LT expr
+				 | expr LEQ expr
+				 | expr EQUALEQUAL expr
+				 | expr GT expr
+				 | expr GEQ expr'''
 	op = p[2]
 	if op == '==':
 		op = '='
@@ -645,12 +645,12 @@ def p_condition_vector_equality(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_condition_bool(p):
-	'''condition : variable'''
+	'''condition : expr'''
 	p[0] = ('score', (p[1], '>', virtualint_var('0')))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_condition_not_bool(p):
-	'''condition : not variable'''
+	'''condition : not expr'''
 	p[0] = ('score', (p[2], '<=', virtualint_var(0)))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	

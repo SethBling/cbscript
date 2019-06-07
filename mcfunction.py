@@ -87,7 +87,11 @@ class mcfunction(object):
 			if type == 'selector':
 				test += '{0} entity {1} '.format(iftype, val)
 			elif type == 'score':
-				lvar, op, rvar = val
+				lexpr, op, rexpr = val
+				
+				lvar = lexpr.compile(self)
+				rvar = rexpr.compile(self)
+				
 				lconst = lvar.get_const_value(self)
 				rconst = rvar.get_const_value(self)
 				

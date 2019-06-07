@@ -23,11 +23,7 @@ define @Marker: @Marker
 				$dy = $direction[1]
 				$dz = $direction[2]
 				at ~$dx ~$dy ~$dz
-					good = False
-					pipe = is_pipe()
-					if pipe then good = True
-					
-					if good
+					if is_pipe()
 						options++
 						dirs[$i] = True
 					else
@@ -37,8 +33,7 @@ define @Marker: @Marker
 			end
 
 			if options > 0
-				pipe = is_pipe()
-				if options == 1 and not @s.initialize and not pipe
+				if options == 1 and not @s.initialize unless is_pipe()
 					@s.done = True
 				else
 					@s.initialize = False
@@ -132,9 +127,7 @@ function is_entry()
 		end
 	end
 	
-	start = start_xy + start_xz + start_yz
-	
-	if start
+	if start_xy + start_xz + start_yz > 0
 		return True
 	else
 		return False
@@ -172,9 +165,7 @@ clock main
 					/tp @player @s
 
 					at @s
-						pipe = is_pipe()
-						
-						if not pipe
+						unless is_pipe()
 							if not @s.exit_junction
 								@s.exit_junction = True
 								@s.pick_dir()
@@ -206,8 +197,7 @@ clock main
 			end
 		else
 			at @s align xyz at ~0.5 ~ ~0.5
-				start = is_entry()
-				if start
+				if is_entry()
 					unless @s.force_exit
 						@player.pipe_sound = 15
 						@s.travel = create @Marker
