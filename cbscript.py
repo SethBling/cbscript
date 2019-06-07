@@ -9,6 +9,7 @@ import tellraw
 import traceback
 import math
 import collections
+import time
 
 class cbscript(object):
 	def __init__(self, source_file, parse_func):
@@ -39,7 +40,7 @@ class cbscript(object):
 			self.log('Compiling {0}...'.format(self.namespace))
 			success = self.compile_all()
 			if success:
-				self.log("Script successfully applied.")
+				self.log("Script successfully applied at {}.".format(time.ctime()))
 			else:
 				self.log("Script had compile error(s).\a")
 		except SyntaxError as e:

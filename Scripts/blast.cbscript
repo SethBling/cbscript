@@ -1,0 +1,36 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Lightning"
+
+import common
+
+define @Dozer: @Entity[type=minecart,tag=Dozer]
+	create {Tags:["Dozer"],Invulnerable:1b}
+	
+	looky: Passengers[0].Rotation[0] float
+	lookx: Passengers[0].Rotation[1] float
+end
+
+reset
+	tell @a '{G[\[Create Dozer\]](call create_dozer)'
+end
+
+function create_dozer()
+	create @Dozer
+end
+
+clock main
+	unless @Position do create @Position
+
+	for @dozer in @Dozer
+		at @s if @s.{Passengers[0]}
+			/say occupied
+			@Position.ry = @s.looky
+			@Position.rx = @s.lookx
+			<pos> = @Position.<pos>
+			move @Position ^ ^ ^1
+			<look> = @Position.<pos> - <pos>
+			
+			@s.<vel> += <look> / 5
+		end	
+	end
+end

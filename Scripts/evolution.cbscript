@@ -1,11 +1,11 @@
-dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\Genetic Evolution"
 desc "Evolve some zombies"
 
 import common
 import math
 
-$CenterX = 500
-$CenterZ = 500
+$CenterX = 0
+$CenterZ = 0
 
 $GeneMax = 1000
 
@@ -30,6 +30,30 @@ $TargetVY = 17
 $TargetCooldown = 18
 $TargetFuse = 19
 $NumGenes = 20
+
+$GeneNames = [
+	'Wander AI: Horizontal TNT Velocity',
+	'Wander AI: Vertical TNT Velocity',
+	'Wander AI: TNT Cooldown',
+	'Wander AI: TNT Fuse',
+	'Wander AI: Random Rotation Speed',
+	'Mating Energy Threshold',
+	'Baby Energy Transfer',
+	'Anti-Gravity',
+	'Boredome Time Threshold',
+	'Boredom Wander Time',
+	'Jitter Magnitude',
+	'Blocked AI: Rotation Bias',
+	'Blocked AI: Horizontal TNT Velocity',
+	'Blocked AI: Vertical TNT Velocity',
+	'Blocked AI: TNT Cooldown',
+	'Blocked AI: TNT Fuse',
+	'Target AI: Horizontal TNT Velocity',
+	'Target AI: Vertical TNT Velocity',
+	'Target AI: TNT Cooldown',
+	'Target AI: TNT Fuse',
+]
+	
 
 $SlotNames = [
 	'feet',
@@ -149,7 +173,7 @@ end
 
 function create_body()
 	as create @Body
-		for gene = 1 to $NumGenes
+		for gene = 0 to $NumGenes-1
 			@s.genes[gene] = rand($GeneMax)
 		end
 		
@@ -178,9 +202,15 @@ function populate40()
 	 end
 end
 
+function walls()
+	/fill -100 54 -100 100 100 -101 stone_bricks
+	/fill -100 54 100 100 100 101 stone_bricks
+	/fill -100 54 -100 -101 100 100 stone_bricks
+	/fill 100 54 -100 101 100 100 stone_bricks	
+end
 
 reset
-	tell @a '{G[\[Create Body\]](call create_body) {R[\[Kill Bodies\]](call kill_all_bodies) {B[\[Populate 40\]](call populate40)'
+	tell @a '{G[\[Create Body\]](call create_body) {R[\[Kill Bodies\]](call kill_all_bodies) {B[\[Populate 40\]](call populate40) {W[\[Create Walls\]](call walls)'
 	as @Body do @s.custom_name_visible = True
 	
 	$NewGenes = []
@@ -394,7 +424,7 @@ clock main
 				@s.boredom = 0
 			end
 		
-			if @s.energy == 0
+			if @s.energy <= 0
 				/kill @s
 			end
 			
@@ -445,8 +475,33 @@ clock main
 end
 
 clock hover
-	as @Player
+	@Body.hover = False
+	as @Player at @s eyes ^ ^ ^5
+		@Body[distance=..2].hover = True
+	end
+	as @Body
+		if @s.hover
+			@s.hover_timer++
+			@s.glowing = True
+		else
+			@s.hover_timer = 0
+			@s.glowing = False
+		end
+	end
+	
+	as @Body[hover_timer == 10]
+		for $gene in $range($NumGenes)
+			val = @s.genes[$gene]
+			$gene_name = $GeneNames[$gene]
+			tell @a '(val) - $gene_name'
+		end
 		
+		age = @s.age / 1200
+		tell @a 'Age: (age) minutes'
+		generation = @s.generation
+		tell @a 'Generation: (generation)'
+		children = @s.children
+		tell @a 'Children: (children)'
 	end
 end
 

@@ -1,0 +1,279 @@
+dir "C:\Minecraft Server\1.14\SethBling's World\SethBling's World 1.14"
+desc "Glass Pipes from Super Mario 3D World"
+
+import common
+
+array dirs[6]
+$Directions = [
+	(1, 0, 0),
+	(-1, 0, 0),
+	(0, 1, 0),
+	(0, -1, 0),
+	(0, 0, 1),
+	(0, 0, -1),
+]
+
+define @Marker: @Marker
+	function pick_dir()
+		at @s
+			options = 0
+			for $i in $range(6)
+				$direction = $Directions[$i]
+				$dx = $direction[0]
+				$dy = $direction[1]
+				$dz = $direction[2]
+				at ~$dx ~$dy ~$dz
+					good = False
+					pipe = is_pipe()
+					if pipe then good = True
+					
+					if good
+						options++
+						dirs[$i] = True
+					else
+						dirs[$i] = False
+					end
+				end
+			end
+
+			if options > 0
+				pipe = is_pipe()
+				if options == 1 and not @s.initialize and not pipe
+					@s.done = True
+				else
+					@s.initialize = False
+					
+					<x, y, z> = @s.<moving>
+					<fx, fy, fz> = -@s.<moving>
+					
+					searching = True
+					while searching
+						r = rand(0, 6)
+
+						switch r
+							case $i in $range(6)
+								if dirs[$i]
+									$direction = $Directions[$i]
+									$dx = $direction[0]
+									$dy = $direction[1]
+									$dz = $direction[2]
+									
+									if options > 1 and fx == $dx and fy == $dy and fz == $dz
+										# Don't go back where we came from, there are other options
+									else
+										@s.<moving> = <$dx, $dy, $dz>
+										searching = False
+									end
+								end
+							end
+						end
+					end
+				end
+			else
+				@s.done = True
+			end
+		end
+	end
+end
+
+define @Player: @Player
+	marker: @Marker
+end
+
+reset
+	/scoreboard objectives add pipe_slow minecraft.custom:minecraft.sneak_time
+end
+
+function is_pipe()
+	if block ~1 ~ ~ glass and block ~-1 ~ ~ glass
+		glass_x = 1
+	else
+		glass_x = 0
+	end
+	
+	if block ~ ~1 ~ glass and block ~ ~-1 ~ glass
+		glass_y = 1
+	else
+		glass_y = 0
+	end
+	
+	if block ~ ~ ~1 glass and block ~ ~ ~-1 glass
+		glass_z = 1
+	else
+		glass_z = 0
+	end
+	
+	glass = glass_x + glass_y + glass_z
+	
+	if glass == 2 and block ~ ~ ~ air
+		return True
+	else
+		return False
+	end
+end
+
+function is_entry()
+	start_xy = 1
+	start_xz = 1
+	start_yz = 1
+	for $d in [-1, 0, 1]
+		for $d2 in [-2, 2]
+			unless block ~$d ~$d2 ~ glass do start_xy = 0
+			unless block ~$d2 ~$d ~ glass do start_xy = 0
+			unless block ~$d ~ ~$d2 glass do start_xz = 0
+			unless block ~$d2 ~ ~$d glass do start_xz = 0
+			unless block ~ ~$d2 ~$d glass do start_yz = 0
+			unless block ~ ~$d ~$d2 glass do start_yz = 0
+		end
+		for $d3 in [-1, 0, 1]
+			unless block ~$d ~$d3 ~ air do start_xy = 0
+			unless block ~$d ~ ~$d3 air do start_xz = 0
+			unless block ~ ~$d ~$d3 air do start_yz = 0
+		end
+	end
+	
+	start = start_xy + start_xz + start_yz
+	
+	if start
+		return True
+	else
+		return False
+	end
+end
+
+clock main
+	for @player in @Player
+		as @s.travel
+			at @s
+				unless @Position do create @Position
+				/tp @Position ~ ~ ~ ~ ~
+				@Position.<pos> += @s.<moving> * 750
+				
+				at @Position if block ~ ~ ~ air
+					if @player.pipe_slow
+						@s.<pos> += @s.<moving> * 250
+					else
+						@s.<pos> += @s.<moving> * 500
+					end
+					<mx, my, mz> = @s.<moving>
+					if mx == 0
+						@s.x = @s.x / 1000 * 1000 + 500
+					end
+					if my == 0
+						@s.y = @s.y / 1000 * 1000 
+					end
+					if mz == 0
+						@s.z = @s.z / 1000 * 1000 + 500
+					end
+					
+					@s.ry = @player.ry
+					@s.rx = @player.rx
+					
+					/tp @player @s
+
+					at @s
+						pipe = is_pipe()
+						
+						if not pipe
+							if not @s.exit_junction
+								@s.exit_junction = True
+								@s.pick_dir()
+								if @s.done
+									@s.x = @s.x / 1000 * 1000 + 500
+									@s.y = @s.y / 1000 * 1000
+									@s.z = @s.z / 1000 * 1000 + 500
+									/tp @player @s
+								
+									/kill @s
+									@player.travel = None
+									@player.force_exit = True
+									@player.pipe_sound = 15
+								end
+							end
+						else
+							@s.exit_junction = False
+						end
+					end				
+				else
+					@s.pick_dir()
+					if @s.done
+						/kill @s
+						@player.travel = None
+						@player.force_exit = True
+						@player.pipe_sound = 15
+					end
+				end
+			end
+		else
+			at @s align xyz at ~0.5 ~ ~0.5
+				start = is_entry()
+				if start
+					unless @s.force_exit
+						@player.pipe_sound = 15
+						@s.travel = create @Marker
+						as @s.travel
+							@s.initialize = True
+							@s.pick_dir()
+							if @s.done
+								/kill @s
+								@player.travel = None
+								@player.force_exit = True
+							end
+						end
+					end
+				else
+					@s.force_exit = False
+				end
+			end
+		end
+		
+		if @s.pipe_sound > 0 at @s
+			switch @s.pipe_sound
+				case 15
+					/playsound minecraft:block.note_block.bit block @a ~ ~ ~ 1 2
+					/playsound minecraft:block.note_block.didgeridoo block @a ~ ~ ~ 1 2
+				end
+				case 14
+					/playsound minecraft:block.note_block.bit block @a ~ ~ ~ 1 1.6
+					/playsound minecraft:block.note_block.didgeridoo block @a ~ ~ ~ 1 1.6
+				end
+				case 13
+					/playsound minecraft:block.note_block.bit block @a ~ ~ ~ 1 1.2
+					/playsound minecraft:block.note_block.didgeridoo block @a ~ ~ ~ 1 1.2
+				end
+				case 10
+					/playsound minecraft:block.note_block.bit block @a ~ ~ ~ 1 2
+					/playsound minecraft:block.note_block.didgeridoo block @a ~ ~ ~ 1 2
+				end
+				case 9
+					/playsound minecraft:block.note_block.bit block @a ~ ~ ~ 1 1.6
+					/playsound minecraft:block.note_block.didgeridoo block @a ~ ~ ~ 1 1.6
+				end
+				case 8
+					/playsound minecraft:block.note_block.bit block @a ~ ~ ~ 1 1.2
+					/playsound minecraft:block.note_block.didgeridoo block @a ~ ~ ~ 1 1.2
+				end
+				case 5
+					/playsound minecraft:block.note_block.bit block @a ~ ~ ~ 1 2
+					/playsound minecraft:block.note_block.didgeridoo block @a ~ ~ ~ 1 2
+				end
+				case 4
+					/playsound minecraft:block.note_block.bit block @a ~ ~ ~ 1 1.6
+					/playsound minecraft:block.note_block.didgeridoo block @a ~ ~ ~ 1 1.6
+				end
+				case 3
+					/playsound minecraft:block.note_block.bit block @a ~ ~ ~ 1 1.2
+					/playsound minecraft:block.note_block.didgeridoo block @a ~ ~ ~ 1 1.2
+				end
+			end
+			@s.pipe_sound--
+		end
+		@s.pipe_slow = 0
+	end
+end
+
+function play_pipe_sound()
+	/playsound minecraft:block.note_block.bit block @a ~ ~ ~ 1 1
+	/playsound minecraft:block.note_block.bit block @a ~ ~ ~ 1 1.5
+	/playsound minecraft:block.note_block.bit block @a ~ ~ ~ 1 2
+end

@@ -1,0 +1,172 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Adds watermills"
+
+import miniblock
+import math
+
+define @Watermill: @Entity[type=area_effect_cloud, tag=Watermill]
+	create {Tags:["Watermill"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+define @Spoke: @MiniBlock[spoke]
+	mill: @Watermill
+end
+
+@SpawnMill = @Entity[type=sheep,tag=SpawnMill]
+
+shaped recipe
+	'BBB'
+	'BFB'
+	'BBB'
+	keys
+		B = item: white_banner
+		F = item: furnace
+	end
+	result: 1 sheep_spawn_egg
+end
+
+reset
+	/scoreboard objectives add placed_mill minecraft.used:minecraft.sheep_spawn_egg
+	/scoreboard objectives add crafted_mill minecraft.crafted:minecraft.sheep_spawn_egg
+end
+
+function give_spawner()
+	/give @s sheep_spawn_egg{mill:1b, EntityTag:{Tags:["SpawnMill"]}, display:{Name:"{\"text\":\"Watermill\"}"}} 1
+end
+
+function remove_watermills()
+	/kill @Watermill
+	/kill @Spoke
+end
+
+function get_water_level()
+	level = -1
+	for $level in $range(8)
+		/execute if block ~ ~ ~ water[level=$level] run scoreboard players set Global level $level
+	end
+	
+	return level
+end
+
+clock main
+	unless @Position do create @Position
+
+	if tick_timer > 0
+		tick_timer--
+	else
+		tick_timer = 10
+		as @Watermill at @s
+			if block ^ ^ ^1 air and block ^ ^ ^-1 air and block ^ ^1 ^1 air and block ^ ^1 ^ air and block ^ ^1 ^-1 air
+				at ^ ^-1 ^1 do forward_level = get_water_level()
+				at ^ ^-1 ^ do here_level = get_water_level()
+				at ^ ^-1 ^-1 do backward_level = get_water_level()
+				
+				id = &@s
+				if forward_level >= 0 and here_level >= 0 and backward_level >= 0 and forward_level > here_level and here_level > backward_level						
+					@s.spin_vel += 1000
+					as @Spoke if @s.mill == id
+						@s.spin_vel += 1000
+					end
+				end
+			end
+		end
+	end
+	
+	as @Spoke at @s
+		@s.spin_vel *= 98
+		@s.spin_vel /= 100
+		@s.rot_x -= @s.spin_vel
+		@s.rot_x %= 360000
+		@Position.<pos> = @s.<location>
+		at @Position
+			@s.update()	
+		end
+	end
+	as @Watermill at @s
+		if block ~ ~ ~ furnace
+			/setblock ~ ~ ~ furnace
+			@s.spin_vel *= 98
+			@s.spin_vel /= 100
+			out = abs(@s.spin_vel) / 240
+			switch out
+				case 0
+					for $slot in $range(3)
+						/replaceitem block ~ ~ ~ container.$slot air
+					end
+				end
+				case $i in $range(1, 16)
+					$items = $i * 4
+					for $slot in $range(3)
+						/replaceitem block ~ ~ ~ container.$slot oak_wood{tag:"dummy"} $items
+					end
+				end
+				case 16 to 1000000
+					for $slot in $range(3)
+						/replaceitem block ~ ~ ~ container.$slot oak_wood{tag:"dummy"} 64
+					end
+				end
+			end
+		else
+			/summon item ~ ~ ~ {Item:{id:"minecraft:sheep_spawn_egg", Count:1b, PickupDelay: 20, tag:{mill:1b, EntityTag:{Tags:["SpawnMill"]}, display:{Name:"{\"text\":\"Watermill\"}"}}}}
+			/kill @e[type=item,nbt={Item:{tag:{tag:"dummy"}}},distance=..1]
+			/kill @e[type=item,nbt={Item:{id:"minecraft:furnace", Count:1b}},distance=..1]
+			# TODO: drop a spawn egg
+			id = &@s
+			as @Spoke if @s.mill == id
+				/kill @s
+			end
+			/kill @s
+		end
+	end
+	as @SpawnMill at @s ~ ~1.5 ~
+		as @Player[distance=..8,placed_mill]
+			ry = @s.ry
+		end
+		
+		as create @Watermill
+			@s.ry = ry
+			id = &@s
+		end
+		/setblock ~ ~ ~ furnace{Lock:"dummy"}
+		for spoke = 0 to 359 by 40
+			as create @MiniBlock
+				/replaceitem entity @s armor.head white_banner
+				@s.rot_x = spoke * scale
+				@s.rot_y = (ry + 45000) / 90000 * 90000
+				@s.spoke = True
+				@s.<location> = @s.<pos>
+				@s.update()
+				@s.mill = id
+			end
+		end
+		
+		/tp @s ~ -200 ~
+		/kill @s
+	end
+	
+	@Player.placed_mill = False
+	
+	as @Player[crafted_mill]
+		while @s.crafted_mill
+			mill_eggs = result
+			/clear @s sheep_spawn_egg{mill:1b}
+			normal_eggs = result
+			/clear @s sheep_spawn_egg
+			
+			while mill_eggs > 0
+				/give @s sheep_spawn_egg{mill:1b, EntityTag:{Tags:["SpawnMill"]}, display:{Name:"{\"text\":\"Watermill\"}"}} 1
+				mill_eggs--
+			end
+			while normal_eggs > 0 and @s.crafted_mill > 0
+				/give @s sheep_spawn_egg{mill:1b, EntityTag:{Tags:["SpawnMill"]}, display:{Name:"{\"text\":\"Watermill\"}"}} 1
+				normal_eggs--
+				@s.crafted_mill--
+			end
+			while normal_eggs > 0
+				/give @s sheep_spawn_egg 1
+				normal_eggs--
+			end
+		end
+	end
+	# TODO: Add nbt to sheep_spawn_egg for @Player[crafted_mill]
+end

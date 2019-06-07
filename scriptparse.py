@@ -1425,7 +1425,7 @@ def p_vector_expr_binop_scalar_reversed(p):
 	
 def p_vector_expr_negative(p):
 	'''vector_expr : MINUS vector_expr'''
-	p[0] = vector_binop_scalar_expr(p[2], '*', num_expr(-1))
+	p[0] = vector_binop_scalar_expr(p[2], '*', virtualint_var(-1))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_vector_expr_here(p):

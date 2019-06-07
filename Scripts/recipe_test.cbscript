@@ -1,19 +1,20 @@
 dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
-desc "Evolve some zombies"
+desc "Test for shaped crafting recipes"
 
 import common
 
-define item_tag custom
+define item_tag grasslike
 	podzol
 	grass_block
+	mycelium
 end
 
 shaped recipe
-	'WWW'
-	'WBW'
-	'WWW'
+	'GGG'
+	'GBG'
+	'GGG'
 	keys
-		W = tag:custom
+		G = tag:grasslike
 		B = item:slime_ball
 	end
 	result: 7 cocoa_beans

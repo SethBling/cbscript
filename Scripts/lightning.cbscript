@@ -1,0 +1,20 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Lightning"
+
+import common
+
+define @Lightning: @Entity[type=lightning_bolt]
+
+end
+
+reset
+
+end
+
+clock main
+	as @Lightning
+		<x, y, z> = @s.<pos>
+		
+		tell @a '(x) (y) (z)'
+	end
+end

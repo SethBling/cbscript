@@ -1,5 +1,5 @@
-dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
-desc: Improves flight
+dir "C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13"
+desc 'Improves flight'
 
 define @Entity = @e
 	x = Pos[0] double
@@ -34,7 +34,7 @@ clock main
 			speedsq = vx^2 + vy^2 + vz^2
 			
 			at @s if speedsq < 90000
-				/tp @player ~ ~ ~
+				/say stop
 			end
 			
 			/kill @s

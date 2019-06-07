@@ -1,0 +1,137 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Noclip for creative mode"
+
+import common
+import math
+
+define @Player = @Player
+	marker: @Marker
+end
+
+reset
+	/scoreboard objectives add FlightSettings trigger
+end
+
+clock main
+	@Player.check = False
+	@Player[gamemode=creative].check = True
+	@Player[gamemode=spectator].check = True
+
+	for @player in @Player[check]
+		unless @s.FlightSettings == 0
+			switch @s.FlightSettings
+				case 2
+					@s.noclip = False
+				end
+				case 3
+					@s.noclip = True
+				end
+				case 4
+					@s.vflight = False
+				end
+				case 5
+					@s.vflight = True
+				end
+			end
+
+			tell @s '{C == Flight Settings (datapack by SethBling) =='
+			if @s.noclip
+				tell @s '{GNoclip Enabled. {R[\[Disable\]](/trigger FlightSettings set 2)'
+			else
+				tell @s '{RNoclip Disabled. {G[\[Enable\]](/trigger FlightSettings set 3)'
+			end
+			if @s.vflight
+				tell @s '{GVertical Flying Enabled. {R[\[Disable\]](/trigger FlightSettings set 4)'
+			else
+				tell @s '{RVertical Flying Disabled. {G[\[Enable\]](/trigger FlightSettings set 5)'
+			end
+			tell @s 'Type {w[/trigger FlightSettings](//trigger FlightSettings){- at any time to bring up this menu.'
+		
+			display_flight_settings()
+			@s.FlightSettings = 0
+			/scoreboard players enable @s FlightSettings
+		end
+	
+		<pos1> = @s.<pos>
+		as @s.marker
+			<pos2> = @s.<pos>
+		else
+			at @s
+				@s.marker = create @Marker
+			end
+		end
+			
+		if <pos1> == <pos2>
+			@s.stop_count++
+		else
+			
+			<dx, dy, dz> = <pos1> - <pos2>
+			speedsq = dx^2 + dy^2 + dz^2
+			
+			/gamerule sendCommandFeedback false
+			/gamemode spectator @s[gamemode=creative, noclip]
+			/gamerule sendCommandFeedback true
+	
+			oldspeedsq = @s.speedsq * 9 / 10
+			if speedsq < oldspeedsq
+				@s.stop_count++
+			else
+				@s[stop_count > 0].stop_count--
+			end
+			
+			@s.speedsq = speedsq
+			
+			if @s.vflight			
+				unless @Position do create @Position
+				at @s
+					/tp @Position ~ ~ ~ 0 ~
+				end
+				<start> = @Position.<pos>
+				move @Position ^ ^ ^1
+				<fx, fy, fz> = @Position.<pos> - <start>
+				slope = fy * 1000 / fz
+				
+				at @s
+					/tp @Position ~ ~ ~ ~ 0
+				end
+				<start> = @Position.<pos>
+				move @Position ^ ^ ^1
+				<fx, fy, fz> = @Position.<pos> - <start>
+				
+				hmag = dx^2+dz^2
+				hspeed = sqrt(hmag)
+				nx = dx * 1000 / hspeed
+				nz = dz * 1000 / hspeed
+				
+				mult = (nx*fx + nz*fz) / 1000
+				
+				vmove = hspeed * slope / 1000 * mult / 1000
+				
+				for $exp in [512, 256, 128, 64, 32, 16, 8, 4, 2, 1]
+					$scaled = $float($exp) / 1000
+					$nexp = -$exp
+					if vmove > $exp
+						move @s ~ ~$scaled ~
+						vmove -= $exp
+					end
+					if vmove < $nexp
+						move @s ~ ~-$scaled ~
+						vmove += $exp
+					end
+				end
+			end
+			
+			as @s.marker
+				@s.<pos> = @player.<pos>
+			end
+		end
+		if @s.stop_count >= 6
+			@s.stop_count = 0
+			@s.speedsq = 0
+			/tp @s[gamemode=spectator] @s
+			/gamerule sendCommandFeedback false
+			/gamemode creative @s[gamemode=spectator]
+			/gamerule sendCommandFeedback true
+		end
+	end
+end
