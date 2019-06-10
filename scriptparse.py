@@ -64,6 +64,7 @@ from vector_expressions.vector_binop_scalar_expr import vector_binop_scalar_expr
 from vector_expressions.vector_binop_vector_expr import vector_binop_vector_expr
 from vector_expressions.vector_expr import vector_expr
 from vector_expressions.vector_here_expr import vector_here_expr
+from vector_expressions.vector_var_const_vector import vector_var_const_vector
 from vector_expressions.vector_var_expr import vector_var_expr
 import mcfunction
 
@@ -1365,6 +1366,11 @@ def p_vector_var_components(p):
 	'''vector_var : LT variable COMMA variable COMMA variable GT'''
 	p[0] = ('VAR_COMPONENTS', [p[2], p[4], p[6]])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
+def p_vector_var_const_vector(p):
+	'''vector_var : const_vector'''
+	p[0] = ('VAR_CONST', p[1])
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### Arithmetic expressions
 def p_expr_var(p):
@@ -1413,7 +1419,7 @@ def p_expr_unary(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 ### Vector expressions
-def p_vector_expr_paren(p):
+def p_vector_expr_group(p):
 	'''vector_expr : LPAREN vector_expr RPAREN'''
 	p[0] = p[2]
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
@@ -1426,6 +1432,11 @@ def p_vector_expr_vector_triplet(p):
 def p_vector_expr_vector_unit(p):
 	'''vector_expr : LT ID GT'''
 	p[0] = vector_var_expr(p[2])
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
+def p_vector_expr_const_vector(p):
+	'''vector_expr : const_vector'''
+	p[0] = vector_var_const_vector(p[1])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_vector_expr_selector_vector(p):

@@ -35,7 +35,7 @@ define @Marker: @Marker
 					@s.initialize = False
 					
 					<x, y, z> = @s.<moving>
-					<fx, fy, fz> = -@s.<moving>
+					<was_moving> = -@s.<moving>
 					
 					searching = True
 					first = True
@@ -51,15 +51,10 @@ define @Marker: @Marker
 						switch r
 							case $i in $range(6)
 								if dirs[$i]
-									$direction = $Directions[$i]
-									$dx = $Directions[$i][0]
-									$dy = $Directions[$i][1]
-									$dz = $Directions[$i][2]
-									
-									if options > 1 and fx == $dx and fy == $dy and fz == $dz
+									if options > 1 and <was_moving> == <$Directions[$i]>
 										# Don't go back where we came from, there are other options
 									else
-										@s.<moving> = <$dx, $dy, $dz>
+										@s.<moving> = <$Directions[$i]>
 										searching = False
 									end
 								end

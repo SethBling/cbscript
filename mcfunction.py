@@ -149,25 +149,56 @@ class mcfunction(object):
 				
 				(type1, var1), (type2, var2) = val
 				
-				for i in range(3):
-					if type1 == 'VAR_ID':
-						sel1 = 'Global'
-						sco1 = '_{}_{}'.format(var1, i)
-					elif type1 == 'SEL_VAR_ID':
-						sel1, selvar1 = var1
-						sco1 = '_{}_{}'.format(selvar1, i)
-					elif type1 == 'VAR_COMPONENTS':
-						sel1, sco1 = var1[i]
+				if type1 == 'VAR_CONST' and type2 == 'VAR_CONST':
+					val1 = var1.get_value(self)
+					val2 = var2.get_value(self)
+					if val1 != val2:
+						# Test fails, clobber entire chain
+						return 'if score Global unique matches -1 '
+					else:
+						# Test succeeds, continue with the chain
+						continue
+				else:
+					if type1 == 'VAR_CONST':
+						# Swap vars so that the constant var is always second
+						temp_type = type1
+						temp_var = var1
+						type1 = type2
+						var1 = var2
+						type2 = temp_type
+						var2 = temp_var
 						
-					if type2 == 'VAR_ID':
-						sel2 = 'Global'
-						sco2 = '_{}_{}'.format(var2, i)
-					elif type2 == 'SEL_VAR_ID':
-						sel2, selvar2 = var2
-						sco2 = '_{}_{}'.format(selvar2, i)
-					elif type2 == 'VAR_COMPONENTS':
-						sel2, sco2 = var2[i]
-					test += 'if score {} {} = {} {} '.format(sel1, sco1, sel2, sco2)
+					const_vals = []
+					if type2 == 'VAR_CONST':
+						components = var2.get_value(self)
+						try:
+							const_vals = [int(components[i]) for i in range(3)]
+						except Exception as e:
+							print(e)
+							raise CompileError('Unable to get three components for constant vector.')
+						
+					for i in range(3):
+						if type1 == 'VAR_ID':
+							sel1 = 'Global'
+							sco1 = '_{}_{}'.format(var1, i)
+						elif type1 == 'SEL_VAR_ID':
+							sel1, selvar1 = var1
+							sco1 = '_{}_{}'.format(selvar1, i)
+						elif type1 == 'VAR_COMPONENTS':
+							sel1, sco1 = var1[i]
+						
+						if type2 == 'VAR_CONST':
+							test += 'if score {} {} matches {} '.format(sel1, sco1, const_vals[i])
+						else:
+							if type2 == 'VAR_ID':
+								sel2 = 'Global'
+								sco2 = '_{}_{}'.format(var2, i)
+							elif type2 == 'SEL_VAR_ID':
+								sel2, selvar2 = var2
+								sco2 = '_{}_{}'.format(selvar2, i)
+							elif type2 == 'VAR_COMPONENTS':
+								sel2, sco2 = var2[i]
+							test += 'if score {} {} = {} {} '.format(sel1, sco1, sel2, sco2)
 					
 			elif type == 'block':
 				relcoords, block = val
