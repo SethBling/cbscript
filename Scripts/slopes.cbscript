@@ -1,0 +1,121 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Create 45 degree slopes"
+
+import common
+import miniblock
+
+$offsets = [
+	(0.187, 0.121, -0.03),
+	(-0.187, 0.12, -0.03),
+	(-0.187, 0.561, -0.47),
+	(0.187, 0.56, -0.47),
+	(-0.1871, -0.321, 0.41),
+	(0.1871, -0.32, 0.41),
+	(-0.1871, -0.19, -0.6),
+	(0.1871, -0.19, -0.6)
+]
+
+define @Slope : @Marker[tag=Slope]
+	array blocks[$len($offsets)]
+end
+
+define @Physics: @Entity[type=armor_stand, tag=Physics]
+	create {Tags:["Physics"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"shulker", NoGravity:1b, Invulnerable:1b, Invisible:1b, NoAI:1b, Silent:1b, Tags:["SolidBlock"]}]}
+end
+
+@SolidBlock = @Entity[type=shulker, tag=SolidBlock]
+
+reset
+	/scoreboard objectives add slide minecraft.custom:minecraft.sneak_time
+end
+
+function create_slope()
+	align xyz at ~0.5 ~ ~0.5
+		as create @Marker
+			/tag @s add Slope
+			if block ~1 ~ ~ air unless block ~-1 ~ ~ air
+				ry = 270000
+			else if block ~-1 ~ ~ air unless block ~1 ~ ~ air
+				ry = 90000
+			else if block ~ ~ ~1 air unless block ~ ~ ~-1 air
+				ry = 0
+			else
+				ry = 180000
+			end
+			@s.ry = ry
+			@Marker.current = False
+			@s.current = True
+			
+			for $i in $range($len($offsets))
+				$offset = $offsets[$i]
+				$ox = $offset[0]
+				$oy = $offset[1]
+				$oz = $offset[2]
+				rotated @s at ^$ox ^$oy ^$oz
+					@s.blocks[$i] = create @MiniBlock
+					as @s.blocks[$i] (@MiniBlock)
+						@s.slope = True
+						at @Marker[current,limit=1]
+							/loot replace entity @s armor.head mine ~ ~ ~ minecraft:diamond_pickaxe
+						end
+						@s.rot_x = 45000
+						@s.rot_y = ry
+						@s.update()
+					end
+				end
+			end
+			/setblock ~ ~ ~ air
+			
+			as create @Physics
+				@s.ry = ry
+				move @s ^ ^-0.5 ^-0.5
+			end
+		end
+	end
+end
+
+function kill_slopes()
+	/kill @Slope
+	/kill @MiniBlock[slope]
+	/kill @SolidBlock
+	/kill @Physics
+end
+
+clock main
+	as @SolidBlock
+		/effect give @s invisibility 100 1 true
+	end
+	
+	as @Player
+		if @s.slide at @s if @Slope[distance=..1,limit=1]
+			@s.slide_count++
+		else
+			@s.slide_count = 0
+		end
+		
+		at @s[slide_count] rotated @Slope[distance=..1,limit=1]
+			switch @s.slide_count
+				case $i in $range(50)
+					$dist = $float($i) * 0.01
+					$vdist = -$dist
+					/tp @s ^ ^$vdist ^$dist
+				end
+				case 50 to 100000	
+					$dist = $float(50) * 0.01
+					$vdist = -$dist
+					/tp @s ^ ^$vdist ^$dist
+				end
+			end
+			for i = 1 to 20
+				at @s unless block ~ ~ ~ air
+					/tp @s ~ ~0.1 ~
+				end
+			end
+		end
+	end
+	
+	as @Player[slide] at @s rotated @Slope[distance=..1,limit=1]
+		/tp @s ^ ^ ^0.1
+	end
+	@Player.slide = 0
+end

@@ -186,8 +186,8 @@ class mcfunction(object):
 		
 		return test
 		
-	def get_execute_command(self, exec_items, exec_func):	
-		cmd = 'execute '
+	def get_execute_items(self, exec_items, exec_func):	
+		cmd = ''
 		as_count = 0
 		for type, _ in exec_items:
 			if type[:2] == 'As':

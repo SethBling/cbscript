@@ -16,7 +16,7 @@ class while_block(execute_base):
 	# Adds the recursive continuation execute command to the end of the sub function
 	def add_continuation_command(self, func, func_name, exec_func):
 		dummy_func = exec_func.create_child_function()
-		sub_cmd = exec_func.get_execute_command(self.exec_items, dummy_func)
+		sub_cmd = 'execute ' + exec_func.get_execute_items(self.exec_items, dummy_func)
 		if sub_cmd == None:
 			raise Exception('Unable to compile continuation command for while block at line {}'.format(self.line))
 

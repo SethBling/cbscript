@@ -17,7 +17,7 @@ class execute_base(object):
 		self.prepare_scratch(func)
 		exec_func = func.create_child_function()
 		
-		cmd = func.get_execute_command(self.exec_items, exec_func)
+		cmd = 'execute ' + func.get_execute_items(self.exec_items, exec_func)
 		if cmd == None:
 			raise CompileError('Unable to compile {0} block at line {1}'.format(self.display_name(), self.line))
 		

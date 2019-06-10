@@ -1,4 +1,4 @@
-dir "C:\Minecraft Server\1.14\SethBling's World\SethBling's World 1.14"
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
 desc "Glass Pipes from Super Mario 3D World"
 
 import common
@@ -18,11 +18,7 @@ define @Marker: @Marker
 		at @s
 			options = 0
 			for $i in $range(6)
-				$direction = $Directions[$i]
-				$dx = $direction[0]
-				$dy = $direction[1]
-				$dz = $direction[2]
-				at ~$dx ~$dy ~$dz
+				at ~<$Directions[$i]>
 					if is_pipe()
 						options++
 						dirs[$i] = True
@@ -42,16 +38,23 @@ define @Marker: @Marker
 					<fx, fy, fz> = -@s.<moving>
 					
 					searching = True
+					first = True
 					while searching
-						r = rand(0, 6)
+						if first
+							first = False
+							r = facing_dir
+						else
+							r = rand(0, 6)
+						end
+						
 
 						switch r
 							case $i in $range(6)
 								if dirs[$i]
 									$direction = $Directions[$i]
-									$dx = $direction[0]
-									$dy = $direction[1]
-									$dz = $direction[2]
+									$dx = $Directions[$i][0]
+									$dy = $Directions[$i][1]
+									$dz = $Directions[$i][2]
 									
 									if options > 1 and fx == $dx and fy == $dy and fz == $dz
 										# Don't go back where we came from, there are other options
@@ -73,6 +76,24 @@ end
 
 define @Player: @Player
 	marker: @Marker
+	
+	function get_facing_dir()
+		rx = @s.rx
+		ry = @s.ry % 360000
+		if rx < -45000
+			return 2
+		else if rx >= 45000
+			return 3
+		else if ry >= 45000 and ry < 135000
+			return 1
+		else if ry >= 135000 and ry < 225000
+			return 5
+		else if ry >= 225000 and ry < 315000
+			return 0
+		else
+			return 4
+		end
+	end
 end
 
 reset
@@ -136,6 +157,7 @@ end
 
 clock main
 	for @player in @Player
+		facing_dir = @s.get_facing_dir()
 		as @s.travel
 			at @s
 				unless @Position do create @Position
@@ -170,9 +192,7 @@ clock main
 								@s.exit_junction = True
 								@s.pick_dir()
 								if @s.done
-									@s.x = @s.x / 1000 * 1000 + 500
-									@s.y = @s.y / 1000 * 1000
-									@s.z = @s.z / 1000 * 1000 + 500
+									@s.<pos> = @s.<pos> / 1000 * 1000 + <500, 0, 500>
 									/tp @player @s
 								
 									/kill @s
