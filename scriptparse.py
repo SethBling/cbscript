@@ -23,6 +23,7 @@ from block_types.print_block import print_block
 from block_types.python_assignment_block import python_assignment_block
 from block_types.python_for_block import python_for_block
 from block_types.python_if_block import python_if_block
+from block_types.python_tuple_assignment_block import python_tuple_assignment_block
 from block_types.scoreboard_assignment_block import scoreboard_assignment_block
 from block_types.selector_assignment_block import selector_assignment_block
 from block_types.selector_definition_block import selector_definition_block
@@ -334,6 +335,7 @@ def p_id_list_empty(p):
 #### Optassignments
 def p_optassignments_multiple(p):
 	'''optassignments : pythonassignment newlines optassignments
+					  | python_tuple_assignment newlines optassignments
 					  | selector_assignment newlines optassignments
 					  | selector_define_block newlines optassignments
 					  | block_define_block newlines optassignments
@@ -456,8 +458,12 @@ def p_block_move(p):
 
 def p_block_for(p):
 	'''codeblock : for DOLLAR ID in const_value newlines blocklist end'''
-	p[0] = python_for_block(p.lineno(1), p[3], p[5], p[7])
+	p[0] = python_for_block(p.lineno(1), [p[3]], p[5], p[7])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
+def p_block_for_tuple(p):
+	'''codeblock : for python_tuple in const_value newlines blocklist end'''
+	p[0] = python_for_block(p.lineno(1), p[2], p[4], p[6])
 	
 def p_block_print(p):
 	'''codeblock : print_block'''
@@ -779,7 +785,8 @@ def p_block_function_call(p):
 				 | method_call
 				 | macro_call
 				 | template_function_call
-				 | pythonassignment'''
+				 | pythonassignment
+				 | python_tuple_assignment'''
 	p[0] = p[1]
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -1243,6 +1250,20 @@ def p_create_nocoords(p):
 def p_pythonassignment_interpreted_string(p):
 	'''pythonassignment : DOLLAR ID EQUALS const_value'''
 	p[0] = python_assignment_block(p.lineno(1), p[2], p[4])
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
+#### Python Tuple Assignment
+def p_python_tuple_two(p):
+	'''python_tuple : DOLLAR ID COMMA DOLLAR ID'''
+	p[0] = [p[2], p[5]]
+	
+def p_python_tuple_multi(p):
+	'''python_tuple : DOLLAR ID COMMA python_tuple'''
+	p[0] = [p[2]] + p[4]
+	
+def p_python_tuple_assignment(p):
+	'''python_tuple_assignment : python_tuple EQUALS const_value'''
+	p[0] = python_tuple_assignment_block(p.lineno(1), p[1], p[3])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 #### NBT Assignment

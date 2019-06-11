@@ -64,10 +64,8 @@ function create_slope()
 				@s.current = True
 				
 				for $i in $range($len($offsets))
-					$offset = $offsets[$i]
-					$ox = $offset[0]
-					$oy = $offset[1]
-					$oz = $offset[2]
+					$ox, $oy, $oz = $offsets[$i]
+					
 					rotated @s at ^$ox ^$oy ^$oz
 						@s.blocks[$i] = create @MiniBlock ^ ^-1.6 ^-0.22
 						as @s.blocks[$i] (@MiniBlock)
@@ -111,6 +109,9 @@ function create_slope()
 end
 
 function kill_slopes()
+	at @Slope if block ~ ~ ~ tripwire
+		/setblock ~ ~ ~ air
+	end
 	/kill @Slope
 	/kill @MiniBlock[slope]
 	/kill @SolidBlock

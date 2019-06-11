@@ -52,8 +52,7 @@ end
 clock main
 	for @player in @Player
 		for $i in $range($len($Blocks))
-			$block_type = $Blocks[$i][0]
-			$breed_item = $Blocks[$i][1]
+			$block_type, $breed_item, $particle = $Blocks[$i]
 			if @s[nbt={SelectedItem:{id:"minecraft:$breed_item"}}]
 				steps = 0
 				at @s ~ ~1.6 ~
@@ -123,8 +122,7 @@ clock main
 						@pushable.willing = 0
 						breed_type = @s.breed_type
 						as create @BabyBlock ~ 300 ~
-							$block_type = $Blocks[$i][0]
-							$particle = $Blocks[$i][2]
+							$block_type, $breed_item, $particle = $Blocks[$i]
 							
 							@s.breed_type = $i
 							
