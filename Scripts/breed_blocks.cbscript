@@ -1,0 +1,243 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Breed blocks with each other"
+
+import common
+import tinyblock
+import pushable
+import music
+
+$Blocks = [
+	('command_block', 'redstone', 'enchant'),
+	('note_block', 'bell', 'note'),
+]
+$CommandBlock = 0
+$NoteBlock = 1
+
+$Mario = [
+	(0, 12),
+	(4, 12),
+	(12, 12), 
+	(20, 8),
+	(24, 12),
+	(32, 15),
+	(48, 3),
+]
+
+$Cucaracha = [
+	(0, 0),
+	(4, 0),
+	(8, 0),
+	(12, 4),
+	(24, 7),
+	(32, 0),
+	(36, 0),
+	(40, 0),
+	(44, 4),
+	(56, 7),
+]
+
+$Songs = [
+	$Mario,
+	$Cucaracha,
+]
+
+define @BabyBlock: @Entity[type=slime,tag=BabyBlock]
+	create {Tags:["BabyBlock"],Size:0}
+end
+
+reset
+
+end
+
+clock main
+	for @player in @Player
+		for $i in $range($len($Blocks))
+			$block_type = $Blocks[$i][0]
+			$breed_item = $Blocks[$i][1]
+			if @s[nbt={SelectedItem:{id:"minecraft:$breed_item"}}]
+				steps = 0
+				at @s ~ ~1.6 ~
+					while block ^ ^ ^ air and steps < 100 at ^ ^ ^0.1
+						steps++
+						if block ~ ~ ~ $block_type
+							@Pushable.old = True
+							pushables:create_block()
+							as @Pushable unless @s.old
+								@s.breed_type = $i
+								@s.solidify = 0
+							end
+							steps = 1000
+						end
+					end
+				end
+			end
+		end
+	end
+	
+	for $i in $range($len($Blocks))
+		$breed_item = $Blocks[$i][1]
+		
+		for @pushable in @Pushable[breed_type == $i]
+			at @s
+				if @s.hop_cooldown > 0
+					@s.hop_cooldown--
+				else if @s.on_ground
+					if @s.willing facing @Pushable[distance=1..8,willing,limit=1,sort=nearest]
+						@s.solidify = 0
+						/tp @s ~ ~ ~ ~ ~
+						unless @Position do create @Position
+						/tp @Position ~ ~ ~ ~ ~
+						<pos1> = @Position.<pos>
+						move @Position ^ ^ ^1
+						<dx,dy,dz> = @Position.<pos> - <pos1>
+						@s.<vel> = <dx, 1700, dz> / 3
+						@s.hop_cooldown = rand(30, 50)
+						/playsound minecraft:entity.slime.jump neutral @a
+					else facing @Player[distance=..8,nbt={SelectedItem:{id:"minecraft:$breed_item"}},limit=1,sort=nearest]
+						@s.solidify = 0
+						/tp @s ~ ~ ~ ~ ~
+						unless @Position do create @Position
+						/tp @Position ~ ~ ~ ~ ~
+						<pos1> = @Position.<pos>
+						move @Position ^ ^ ^1
+						<dx,dy,dz> = @Position.<pos> - <pos1>
+						@s.<vel> = <dx, 1700, dz> / 3
+						@s.hop_cooldown = rand(30, 50)
+						/playsound minecraft:entity.slime.jump neutral @a
+					end
+				end
+				
+				
+				if @s.willing
+					at ~ ~1 ~
+						if heart_cooldown > 0
+							heart_cooldown--
+						else
+							/particle minecraft:heart ~ ~ ~ 0.2 0.2 0.2 0.2 1 force
+							heart_cooldown = 10
+						end
+						@s.willing--
+					end
+					as @Pushable[willing, distance=0.1..1.2, breed_type == $i]
+						@s.willing = 0
+						@pushable.willing = 0
+						breed_type = @s.breed_type
+						as create @BabyBlock ~ 300 ~
+							$block_type = $Blocks[$i][0]
+							$particle = $Blocks[$i][2]
+							
+							@s.breed_type = $i
+							
+							/tp @s ~ ~ ~
+							
+							id = &@s
+							@s.tinyblock = create @TinyBlock
+							as @s.tinyblock
+								@s.babyblock = id
+								/replaceitem entity @s weapon.mainhand $block_type
+							end
+							
+							/particle minecraft:$particle ~ ~ ~ 0.5 0.5 0.5 0.5 10 normal
+							/summon experience_orb
+							/summon experience_orb
+							/summon experience_orb
+						
+							if @s.breed_type == $NoteBlock
+								$num_songs = $len($Songs)
+								@s.song = rand(0, $num_songs)
+								@s.age = 0
+							end
+						end
+					end
+				else
+					if success
+					/kill @e[type=item,nbt={Item:{id:"minecraft:$breed_item"}},distance=..1]
+						@s.willing = 300
+					end
+				end
+				
+				@s.solidify++
+				if @s.solidify >= 100
+					unless @Position do create @Position
+					/tp @Position ~ ~ ~
+					<pos1> = @Position.<pos>
+					align xyz at ~0.5 ~ ~0.5
+						/tp @Position ~ ~ ~
+						<dx, dy, dz> = @Position.<pos> - <pos1>
+					end
+					@s.<vel> += <dx, 0, dz> / 15
+					if dx > -30 and dx < 30 and dy > -30 and dy < 30 and dz > -30 and dz < 30
+						switch @s.breed_type
+							case $i in $range($len($Blocks))
+								$block_type = $Blocks[$i][0]
+								/setblock ~ ~ ~ $block_type
+							end
+						end
+						
+						as @SolidBlock[distance=..2]
+							@s.kill_me = True
+						end
+						/kill @Physics[distance=..1]
+						/kill @Disguise[distance=..1]
+						/kill @FakeBlock[distance=..1]
+						/kill @s
+					end
+				end
+			end
+		end
+	end
+	
+	/tp @SolidBlock[kill_me] ~ -200 ~
+	
+	as @BabyBlock at @s
+		switch @s.song
+			case $s in $range($len($Songs))
+				$song = $Songs[$s]
+				
+				for $note in $song
+					$t = $note[0]
+					$p = $note[1]
+					if @s.age == $t
+						$playsound('block.note_block.flute', $p)
+					end
+				end
+			end
+		end
+	
+		@s.age++
+		/effect give @s invisibility 10 1 true
+		as @s.tinyblock
+			@s.update_tiny()
+			@s.fire = 10
+		else
+			/kill @s
+		end
+		if @s.age >= 200 and block ~ ~ ~ air
+			switch @s.breed_type
+				case $i in $range($len($Blocks))
+					$block_type = $Blocks[$i][0]
+					/setblock ~ ~ ~ $block_type
+					@Pushable.old = True
+					pushables:create_block()
+					as @Pushable unless @s.old
+						@s.breed_type = $i
+						@s.solidify = 0
+					end
+				end
+			end
+			/tp @s ~ -200 ~
+			/kill @s
+		end
+	end
+	as @TinyBlock[babyblock]
+		as @s.babyblock
+		else
+			/kill @s
+		end
+	end
+end
+
+function kill_all()
+	/kill @BabyBlock
+	/kill @TinyBlock[babyblock]
+end

@@ -212,9 +212,15 @@ clock main
 				case 5
 					@s.vflight = True
 				end
+				case 6
+					@s.nomomentum = False
+				end
+				case 7
+					@s.nomomentum = True
+				end
 			end
 
-			tell @s '{C == Flight Settings (datapack by SethBling) =='
+			tell @s '{C == Creative Flight Settings by SethBling =='
 			if @s.noclip
 				tell @s '{GNoclip Enabled. {R[\[Disable\]](/trigger FlightSettings set 2)'
 			else
@@ -224,6 +230,11 @@ clock main
 				tell @s '{GVertical Flying Enabled. {R[\[Disable\]](/trigger FlightSettings set 4)'
 			else
 				tell @s '{RVertical Flying Disabled. {G[\[Enable\]](/trigger FlightSettings set 5)'
+			end
+			if @s.nomomentum
+				tell @s '{GNo Momentum Enabled. {R[\[Disable\]](/trigger FlightSettings set 6)'
+			else
+				tell @s '{RNo Momentum Disabled. {G[\[Enable\]](/trigger FlightSettings set 7)'
 			end
 			tell @s 'Type {w[/trigger FlightSettings](//trigger FlightSettings){- at any time to bring up this menu.'
 		
@@ -244,7 +255,6 @@ clock main
 		if <pos1> == <pos2>
 			@s.stop_count++
 		else
-			
 			<dx, dy, dz> = <pos1> - <pos2>
 			speedsq = dx^2 + dy^2 + dz^2
 			
@@ -256,6 +266,7 @@ clock main
 			if speedsq < oldspeedsq
 				@s.stop_count++
 			else
+				@s[stop_count > 6].stop_count = 0
 				@s[stop_count > 0].stop_count--
 			end
 			
@@ -311,9 +322,8 @@ clock main
 			/gamerule sendCommandFeedback true
 		end
 		if @s.stop_count == 6
-			@s.stop_count = 0
 			@s.speedsq = 0
-			/tp @s[noclip] @s
+			/tp @s[nomomentum] @s
 		end
 	end
 end

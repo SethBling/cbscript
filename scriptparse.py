@@ -849,9 +849,9 @@ def p_qualifier_binop(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_qualifier_builtin(p):
-	'''qualifier : ID EQUALS virtualinteger DOT DOT virtualinteger
-				 | ID EQUALS DOT DOT virtualinteger
-				 | ID EQUALS virtualinteger DOT DOT'''
+	'''qualifier : ID EQUALS virtualnumber DOT DOT virtualnumber
+				 | ID EQUALS DOT DOT virtualnumber
+				 | ID EQUALS virtualnumber DOT DOT'''
 	p[0] = ''.join(p[1:])
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
@@ -1043,6 +1043,15 @@ def p_virtualinteger_literal(p):
 	
 def p_virtualinteger_symbol(p):
 	'''virtualinteger : DOLLAR ID'''
+	p[0] = '$' + p[2]
+	
+#### Virtual number
+def p_virtualnumber_literal(p):
+	'''virtualnumber : number'''
+	p[0] = p[1]
+	
+def p_virtualnumber_symbol(p):
+	'''virtualnumber : DOLLAR ID'''
 	p[0] = '$' + p[2]
 
 #### Block tags

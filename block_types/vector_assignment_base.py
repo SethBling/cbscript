@@ -1,4 +1,5 @@
 from variable_types.scoreboard_var import scoreboard_var
+from CompileError import CompileError
 
 class vector_assignment_base(object):
 	def perform_vector_assignment(self, func):
@@ -14,6 +15,8 @@ class vector_assignment_base(object):
 		elif var_type == 'SEL_VAR_ID':
 			selector, id = var_content
 			components = [scoreboard_var(selector, '_{0}_{1}'.format(id, i)) for i in range(3)]
+		elif var_type == 'VAR_CONST':
+			raise CompileError('Cannot assign to vector constant at line {}.'.format(self.line))
 		
 		if op == '=':
 			assignto = []
