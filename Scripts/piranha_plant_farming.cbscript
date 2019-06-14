@@ -32,6 +32,11 @@ define @Plant : @Entity[type=area_effect_cloud, tag=PiranhaPlant]
 	end
 end
 
+define @Fireball : @Entity[type=slime,tag=Fireball]
+	create {Size:0, Tags:["Fireball"]}
+	size: Size byte 1
+end
+
 reset
 	/scoreboard objectives add plant_wheat minecraft.used:minecraft.wheat_seeds
 	
@@ -211,7 +216,7 @@ clock main
 					@s.fire = 10
 					updown()
 					at @s
-						/effect give @Player[distance=..1] instant_damage 1 0 true
+						/effect give @Entity[distance=..1] instant_damage 1 0 true
 					end
 				end
 				
@@ -238,16 +243,10 @@ clock main
 						case 0 to 6
 							$dx = $direction * -0.034
 							move @s ~$dx ~ ~
-							
-							$dx = $direction * 34
-							@s.dx -= $dx
 						end
 						case 8 to 14
 							$dx = $direction * 0.034
 							move @s ~$dx ~ ~
-							
-							$dx = $direction * 34
-							@s.dx += $dx
 						end
 					end
 				end
