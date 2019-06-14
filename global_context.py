@@ -58,8 +58,6 @@ class global_context(object):
 		self.clocks.append(name)
 		
 	def register_function(self, name, func):
-		if name in self.functions:
-			raise CompileError('Function "{}" is defined multiple times.'.format(name))
 		self.functions[name] = func
 		
 	def register_array(self, name, from_val, to_val, selector_based):
@@ -69,7 +67,7 @@ class global_context(object):
 		
 	def register_objective(self, objective):
 		if len(objective) > 16:
-			raise CompileError('Cannot create objective "{0}", name is {1} characters (max is 16)'.format(objective, len(objective)))
+			raise CompileError('Cannot create objective "{}", name is {} characters (max is 16)'.format(objective, len(objective)))
 		self.objectives[objective] = True
 	
 	def get_reset_function(self):

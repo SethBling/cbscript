@@ -1,0 +1,291 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Breed blocks with each other"
+
+import common
+import tinyblock
+import miniblock
+
+define @Plant : @Entity[type=area_effect_cloud, tag=PiranhaPlant]
+	create {Tags:["PiranhaPlant"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+	
+	array stalk[0 to 7]
+	array miniblocks[0 to 11]
+	array mouth[0 to 5]
+	
+	function kill()
+		for $i in $range(8)
+			as @s.stalk[$i]
+				/kill @s
+			end
+		end
+		for $i in $range(12)
+			as @s.miniblocks[$i]
+				/kill @s
+			end
+		end
+		for $i in $range(6)
+			as @s.mouth[$i]
+				/kill @s
+			end
+		end
+		/kill @s
+	end
+end
+
+reset
+	/scoreboard objectives add plant_wheat minecraft.used:minecraft.wheat_seeds
+	
+	tell @a '{G[\[Give Piranha Plant Seed\]](call give_seed)'
+end
+
+function give_seed()
+	/give @s wheat_seeds{piranha:1b, display:{Name:"{\"text\":\"Piranha Plant Seeds\", \"italic\":\"false\"}"}}
+end
+
+clock main
+	as @Player at @s eyes ^ ^ ^
+		if @s.plant_wheat and @s.holding_seed
+			steps = 0
+			while steps < 60 at feet ^ ^ ^0.1
+				if block ~ ~ ~ wheat and block ~ ~-1 ~ farmland align xyz at ~0.5 ~ ~0.5
+					as create @Plant
+						@s.current_stage = -1
+					end
+					steps = 1000000
+				end
+				steps++
+			end
+		end
+		if @s[nbt={SelectedItem:{tag:{piranha:1b}}}]
+			@s.holding_seed = True
+		else
+			@s.holding_seed = False
+		end
+	end
+	
+	@Player.plant_wheat = 0
+	
+	as @Plant at @s
+		stage = -1
+		for $i in $range(8)
+			/execute if block ~ ~ ~ wheat[age=$i] run scoreboard players set Global stage $i
+			# TODO: kill any wheat seeds that were just spawned
+			if current_stage >= 7
+				# TODO: Drop seeds
+			end
+		end
+		if stage == -1
+			@s.kill()
+		end
+		unless stage == @s.current_stage
+			for $i in $range(8)
+				if stage >= $i
+					$offset = $i * 0.375 - 0.225
+					$create_offset = $offset-0.5
+					as @s.stalk[$i]
+					else
+						@s.stalk[$i] = create @TinyBlock ~0.0625 ~$create_offset ~-0.375
+						as @s.stalk[$i]
+							/replaceitem entity @s weapon.mainhand minecraft:cactus
+						end
+					end
+					as @s.stalk[$i]
+						at ~ ~$offset ~
+							@s.update_tiny()
+						end
+					end
+				else
+					as @s.stalk[$i]
+						/kill @s
+					end
+				end
+			end
+			if stage >= 2
+				for $i in $range(2)
+					as @s.miniblocks[$i]
+					else
+						@s.miniblocks[$i] = create @MiniBlock
+					end
+					as @s.miniblocks[$i]
+						/replaceitem entity @s armor.head lime_carpet
+						switch stage
+							case $stage in $range(2, 8)
+								$offx = $i - 0.5
+								$offy = 0.5 + $stage * 0.2 - $i * 0.2
+								at ~$offx ~$offy ~
+									@s.update()
+								end
+							end
+						end
+					end
+				end
+			else
+				for $i in $range(2)
+					as @s.miniblocks[$i]
+						/kill @s
+					end
+				end
+			end
+			if stage >= 4 and stage < 7
+				as @s.miniblocks[3]
+				else
+					@s.miniblocks[3] = create @MiniBlock
+				end
+				as @s.miniblocks[3]
+					/replaceitem entity @s armor.head red_mushroom_block
+					switch stage
+						case $stage in $range(4, 7)
+							$offy = 0.375 * $stage + 0.55
+							at ~ ~$offy ~
+								@s.update()
+							end
+						end
+					end
+				end
+			else
+				as @s.miniblocks[3]
+					/kill @s
+				end
+			end
+			if stage == 7
+				for $i in $range(4, 12)
+					as @s.miniblocks[$i]
+					else
+						@s.miniblocks[$i] = create @MiniBlock
+					end
+					as @s.miniblocks[$i]
+						/replaceitem entity @s armor.head red_mushroom_block
+						$idx = $i - 4
+						$offx = ($idx % 2) * 0.6 - 0.3
+						$offz = ($idx / 2) % 2 * 0.6 - 0.3
+						$offy = ($idx / 4) * 0.6 + 7 * 0.375 + 0.6
+						at ~$offx ~$offy ~$offz
+							@s.update()
+						end
+					end
+				end
+				
+				for $i in $range(6)
+					as @s.mouth[$i]
+					else
+						@s.mouth[$i] = create @TinyBlock
+					end
+					as @s.mouth[$i]
+						/replaceitem entity @s weapon.mainhand white_wool
+						$offx = ($i / 3) * 0.8 - 0.4
+						$offy = 7 * 0.375 + 1.1
+						$offz = ($i % 3) * 0.375 - 0.375
+						at ~$offx ~$offy ~$offz
+							@s.update_tiny()
+						end
+					end
+				end
+			else
+				for $i in $range(4, 12)
+					as @s.miniblocks[$i]
+						/kill @s
+					end
+				end
+				for $i in $range(6)
+					as @s.mouth[$i]
+						/kill @s
+					end
+				end
+			end
+			if stage == 7
+				@s.anim_timer = 0
+			end
+			
+			@s.current_stage = stage
+		end
+		if stage == 7
+			anim_timer = @s.anim_timer
+			for $i in $range(2)
+				as @s.miniblocks[$i] (@MiniBlock)
+					@s.fire = 10
+					small_updown()
+				end
+			end
+			for $i in $range(4, 12)
+				as @s.miniblocks[$i] (@MiniBlock)
+					@s.fire = 10
+					updown()
+					at @s
+						/effect give @Player[distance=..1] instant_damage 1 0 true
+					end
+				end
+				
+			end
+			for $i in $range(6)
+				as @s.mouth[$i] (@TinyBlock)
+					switch anim_timer
+						case 0 to 19
+							move @s ~ ~-0.12 ~
+							@s.dy -= 120
+						end
+						case 60 to 79
+							move @s ~ ~0.12 ~
+							@s.dy += 120
+						end
+						case 119
+							anim_timer = -1
+						end
+					end
+					
+					@s.fire = 10
+					$direction = (($i / 3) * 2 - 1)
+					switch anim_timer % 15
+						case 0 to 6
+							$dx = $direction * -0.034
+							move @s ~$dx ~ ~
+							
+							$dx = $direction * 34
+							@s.dx -= $dx
+						end
+						case 8 to 14
+							$dx = $direction * 0.034
+							move @s ~$dx ~ ~
+							
+							$dx = $direction * 34
+							@s.dx += $dx
+						end
+					end
+				end
+			end
+			for $i in $range(4, 8)
+				as @s.stalk[$i] (@TinyBlock)
+					@s.fire = 10
+					small_updown()
+				end
+			end
+			
+			@s.anim_timer = anim_timer
+			@s.anim_timer++
+		end
+	end
+end
+
+function updown()
+	switch anim_timer
+		case 0 to 19
+			move @s ~ ~-0.12 ~
+		end
+		case 60 to 79
+			move @s ~ ~0.12 ~
+		end
+		case 119
+			anim_timer = -1
+		end
+	end
+end
+
+function small_updown()
+	switch anim_timer
+		case 0 to 19
+			move @s ~ ~-0.062 ~
+		end
+		case 60 to 79
+			move @s ~ ~0.062 ~
+		end
+	end
+end

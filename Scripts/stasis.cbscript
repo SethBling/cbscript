@@ -1,56 +1,195 @@
-dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
-desc: Stasis ability from Breath of the Wild
-$temp: '\''
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Stasis from Breath of the Wild"
 
-$marker: "\"Marker\":1b, \"Invisible\":1b, \"NoGravity\":1b, \"Invulnerable\":1b"
+import common
+import music
 
-define @Entity = @e
-	x = Pos[0] double 100
-	y = Pos[1] double 100
-	z = Pos[2] double 100
-	vx = Motion[0] double 100
-	vy = Motion[1] double 100
-	vz = Motion[2] double 100
+define @HitDetector = @Entity[type=slime,tag=HitDetector,limit=1]
+    create {CustomName:"\"HitDetector\"", Tags:["HitDetector"], NoGravity:1b, NoAI: 1b, Invisible:1b, Silent:1b, Size:3, AbsorptionAmount: 100f}
 end
 
-define @Marker = @Entity[type=armor_stand,name=Marker]
-	create: {CustomName:"\"Marker\"", $marker}
+define @Vector = @Entity[type=slime,tag=Vector]
+    create {CustomName:"\"Vector\"", Tags:["Vector"], NoGravity:1b, NoAI: 1b, Invisible:1b, Silent:1b, Size:0, Invulnerable:1b}
 end
-
+@Frozen = @Entity[stasis_timer > 0,limit=1]
+	
 reset
-	/scoreboard objectives add shift minecraft.custom:minecraft.sneak_time
+	/team add stasis_target
+	/team modify stasis_target color yellow
+	/team add stasis_freeze
+	/team modify stasis_freeze color gold
+	/team add vector
+	/team modify vector color red
+	/team modify vector collisionRule never
+	/team add no_collision
+    /team modify no_collision collisionRule never
+
+	/scoreboard objectives add apply_stasis minecraft.used:minecraft.carrot_on_a_stick
 end
 
-function get_stasis_target()
-	step++
-	at @s rotated @s
-		@e[type=!armor_stand,distance=.. 3, limit=1,sort=nearest].target = True
-		unless @e[target] unless step >= 200
-			create @Marker
-			@Marker.age++
-			/tp @Marker[age==1,limit=1] @Marker[age==2,limit=1]
-			/kill @Marker[age>=2]
-			move @Marker ^ ^ ^1
-			as @Marker[limit=1]
-				get_stasis_target()
-			end
+function kill_hit_detector()
+	/tp @HitDetector ~ -200 ~
+	/kill @HitDetector
+end
+
+function refresh_hit_detector()
+	kill_hit_detector()
+	at @Entity[stasis_timer > 0,limit=1]
+		create @HitDetector ~ ~400 ~
+		as @HitDetector
+			/tp @s ~ ~ ~
+			@s.absorption = 100
+			/team join no_collision
 		end
 	end
 end
 
 clock main
-	/scoreboard players reset @e target
-	as @a
-		if @s.shift > 0
-			@s.shift = 0
-			at @s do create @Marker
-			@Marker.age++
-			/tp @Marker[limit=1] @s
-			move @Marker ^ ^ ^4
-			step = 0
-			as @Marker[limit=1]
-				get_stasis_target()
+	as @Entity[tag=stasis_target] unless @s.stasis_timer
+		/team leave @s
+		@s.glowing = False
+		/tag @s remove stasis_target
+	end
+	
+	@Player[stasis_cooldown > 0].stasis_cooldown--
+	
+	for @player in @Player[nbt={SelectedItem:{id:"minecraft:carrot_on_a_stick",tag:{display:{Name:"{\"text\":\"Stasis\"}"}}}}]
+		unless @s.stasis_cooldown > 0 at @s ~ ~1.6 ~
+			steps = 0
+			
+			while steps < 100 at ^ ^ ^0.1
+				at ~ ~-1 ~ as @Entity[type=!player,distance=..1,limit=1,sort=nearest] unless @s[type=area_effect_cloud] at @s ~ ~1 ~
+					steps = 1000000
+					
+					/tag @s add stasis_target
+					@s.glowing = True
+					/team join stasis_target @s
+
+					if @player.apply_stasis
+						@player.stasis_cooldown = 270
+						/team join stasis_freeze @s
+						@s.stasis_timer = 260
+						@s.old_noai = @s.noai
+						@s.noai = 1
+						@s.old_nograv = @s.no_gravity
+						@s.no_gravity = 1
+						@s.<freeze_pos> = @s.<pos>
+						@s.<vel> = 0
+						@s.<hit_dir> = 0
+						@s.hit_mag = 0
+						@s.old_invuln = @s.invulnerable
+						@s.invulnerable = True
+						
+						refresh_hit_detector()
+						
+						for i = 1 to 40
+							as create @Vector ~ ~50 ~
+								/tp @s ~ ~ ~
+								@s.part = i
+								/team join vector
+								@s.glowing = True
+							end
+						end
+						
+						$playsound('entity.iron_golem.hurt', 0)
+					end
+				end
+				steps++
+			end
+		else if @s.apply_stasis
+			@Frozen.stasis_timer = 2
+			@s.stasis_cooldown = 0
+		end
+	end
+	
+
+	@Frozen.stasis_timer--
+	
+	as @HitDetector
+		/effect give @s invisibility 10 1 true
+	end
+	as @Vector
+		/effect give @s invisibility 10 1 true
+	end
+	
+	as @Frozen at @s
+		@s.<pos> = @s.<freeze_pos>
+		
+		if @s.stasis_timer > 128
+			if @s.stasis_timer % 32 == 0
+				$playsound('block.note_block.guitar', 24)
+				/team join stasis_target
+			end
+			if @s.stasis_timer % 32 == 16
+				/team join stasis_freeze
+			end
+		else if @s.stasis_timer > 64
+			if @s.stasis_timer % 16 == 0
+				$playsound('block.note_block.guitar', 24)
+				/team join stasis_target
+			end
+			if @s.stasis_timer % 16 == 8
+				/team join stasis_freeze
+			end
+		else
+			if @s.stasis_timer % 8 == 0
+				$playsound('block.note_block.guitar', 24)
+				/team join stasis_target
+			end
+			if @s.stasis_timer % 8 == 4
+				/team join stasis_freeze
 			end
 		end
+		
+		if @HitDetector.absorption < 100
+			as @Player[sort=nearest,limit=1] at @s
+				unless @Position do create @Position
+				/tp @Position ~ ~ ~ ~ ~
+				<pos1> = @Position.<pos>
+				/tp @Position ^ ^ ^1
+				<delta> = @Position.<pos> - <pos1>
+				
+				@Frozen.<hit_dir> = <delta>
+				@Frozen.hit_mag++
+				if @Frozen.hit_mag > 8
+					@Frozen.hit_mag = 8
+				end
+				
+				switch @Frozen.hit_mag
+					case $i in $range(9)
+						$playsound('block.note_block.bit', $i)
+					end
+				end
+				
+				<hit_vec> = @Frozen.<hit_dir> * @Frozen.hit_mag
+				as @Vector
+					@s.<pos> = @Frozen.<pos> + <hit_vec> * @s.part / 60 + <0, 1000, 0>
+				end
+			end
+			refresh_hit_detector()
+		end
+	end
+	
+	as @Entity[stasis_timer == 1] at @s
+		@s.noai = @s.old_noai
+		@s.no_gravity = @s.old_nograv
+		@s.invulnerable = @s.old_invuln
+		@s.glowing = False
+		/team leave
+		$playsound('block.glass.break', 0)
+		kill_hit_detector()
+		/tp @Vector ~ -200 ~
+		/kill @Vector
+		@s.<vel> = @s.<hit_dir> * @s.hit_mag / 2
+		@Player.stasis_cooldown = 0
+	end
+	
+	@Player.apply_stasis = 0
+	
+	unless @Frozen
+		/tp @Vector ~ -200 ~
+		/kill @Vector
+		/tp @HitDetector ~ -200 ~
+		/kill @HitDetector
 	end
 end

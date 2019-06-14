@@ -590,10 +590,8 @@ def p_execute_align(p):
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_opt_anchor(p):
-	'''opt_anchor : ID'''
-	if p[1] not in ['eyes', 'feet']:
-		raise SyntaxError('Invalid anchor location "{}" at line {}'.format(p[1], p.lineno(1)))
-		
+	'''opt_anchor : eyes
+	              | feet'''
 	p[0] = p[1]
 	
 def p_opt_anchor_empty(p):

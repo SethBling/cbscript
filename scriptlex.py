@@ -6,7 +6,7 @@ keywords = (
     'move', 'create', 'tell', 'title', 'subtitle', 'actionbar',
     'reset', 'clock', 'function', 'if', 'unless', 'then', 'do', 'else', 'switch', 'case',
     'return', 'while', 'macro', 'block', 'block_tag', 'item_tag', 'define', 'array', 'remove', 'success', 'result',
-	'shaped', 'recipe', 'keys',
+	'shaped', 'recipe', 'keys', 'eyes', 'feet',
 )
 
 tokens = keywords + (

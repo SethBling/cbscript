@@ -64,9 +64,7 @@ function create_slope()
 				@s.current = True
 				
 				for $i in $range($len($offsets))
-					$ox, $oy, $oz = $offsets[$i]
-					
-					rotated @s at ^$ox ^$oy ^$oz
+					rotated @s at ^<$offsets[$i]>
 						@s.blocks[$i] = create @MiniBlock ^ ^-1.6 ^-0.22
 						as @s.blocks[$i] (@MiniBlock)
 							@s.slope = True
@@ -137,16 +135,16 @@ clock main
 					/tp @s ~ -100 ~
 					/kill @s
 				end
-				as @SolidBlock[distance=..1]
-					/tp @s ~ -100 ~
-					/kill @s
-				end
-				as @Physics[distance=..1]
-					/tp @s ~ -100 ~
-					/kill @s
-				end
+			end
+			as @SolidBlock[distance=..1]
+				/tp @s ~ -100 ~
 				/kill @s
 			end
+			as @Physics[distance=..1]
+				/tp @s ~ -100 ~
+				/kill @s
+			end
+			/kill @s
 		end
 	end
 	
@@ -182,7 +180,7 @@ clock main
 			at @s ~ ~1.6 ~
 				while block ^ ^ ^ air and steps < 100 at ^ ^ ^0.1
 					steps++
-					unless block ^ ^ ^ air
+					unless block ^ ^ ^ air unless block ^ ^ ^ tripwire
 						create_slope()
 						steps = 1000
 					end

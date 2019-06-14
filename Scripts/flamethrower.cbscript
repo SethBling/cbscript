@@ -1,0 +1,72 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Flamethrower"
+
+import common
+
+define @Flame: @Entity[type=pig, tag=Flame]
+	create {Tags:["Flame"], Fire:100, Invulnerable:1b, Silent:1b}
+end
+
+reset
+	
+end
+
+clock main
+	as @Player[nbt={SelectedItem:{id:"minecraft:pig_spawn_egg",tag:{display:{Name:"{\"text\":\"Flamethrower\"}"}}}}] at @s
+		unless @s.fuel > 0
+			if success
+			/clear @s coal 1
+				@s.fuel += 8
+			else
+				if success
+				/clear @s charcoal 1
+					@s.fuel += 8
+				end
+			end
+		end
+		
+		if @s.fuel > 0
+			@s.fuel--
+			
+			@s.get_aim()
+			
+			rx = @s.rx
+			ry = @s.ry
+			
+			at ^ ^1 ^2
+				/tp @Position ~ ~ ~ ~ ~
+				as create @Flame ~ ~ ~
+					@s.timer = 50
+					@s.rx = rx
+					@s.ry = ry
+					@s.<vel> = <aim>*2 + <rand(-500, 500), rand(-200, 200), rand(-500, 500)>
+					@s.<pos> += <rand(-500, 500), rand(100), rand(-500, 500)>
+				end
+			end
+		end
+	end
+
+	as @Flame at @s
+		/effect give @s minecraft:invisibility 10 1 true
+		if block ~ ~ ~ air
+			/setblock ~ ~ ~ fire
+		end
+		@s.vy += 30
+		if @s.vx == 0
+			@s.vz += rand(-100, 100)
+			@s.vy += rand(-100, 100)
+		end
+		if @s.vy >= -100 and @s.vy <= 100
+			@s.vx += rand(-100, 100)
+			@s.vz += rand(-100, 100)
+		end
+		if @s.vz == 0
+			@s.vx += rand(-100, 100)
+			@s.vy += rand(-100, 100)
+		end
+		@s.timer--
+		if @s.timer <= 0
+			/kill @s
+		end
+	end
+end
