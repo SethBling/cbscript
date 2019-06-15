@@ -33,7 +33,7 @@ define @Plant : @Entity[type=area_effect_cloud, tag=PiranhaPlant]
 end
 
 define @Fireball : @Entity[type=slime,tag=Fireball]
-	create {Size:0, Tags:["Fireball"]}
+	create {Size:0, Tags:["Fireball"], Fire: 10000s, Invulnerable:1, Silent:1}
 	size: Size byte 1
 end
 
@@ -258,8 +258,39 @@ clock main
 				end
 			end
 			
+			if anim_timer == 80
+				spawn_fireball()
+			end
+			
+			if anim_timer == 100
+				spawn_fireball()
+			end
+			
 			@s.anim_timer = anim_timer
 			@s.anim_timer++
+		end
+	end
+	
+	as @Fireball at @s
+		/effect give @s invisibility 10 0 true
+		kill = False
+		if @s.vx == 0 then kill = True
+		if @s.vz == 0 then kill = True
+		if @s.on_ground
+			@s.vy = 500
+			@s.on_ground = False
+		end
+		@s.vx = @s.dx
+		@s.vz = @s.dz
+		
+		at ~ ~-1 ~ if @Player[distance=..1.2]
+			/effect give @Player[distance=..1.2] instant_damage 1 0 true
+			/tp @s ~ -100 ~
+			/kill @s
+		end
+
+		if kill
+			/kill @s
 		end
 	end
 end
@@ -285,6 +316,24 @@ function small_updown()
 		end
 		case 60 to 79
 			move @s ~ ~0.062 ~
+		end
+	end
+end
+
+function spawn_fireball()
+	at ~ ~4 ~ facing @Player[distance=..32,sort=nearest,limit=1]
+		/playsound minecraft:entity.blaze.shoot hostile @a
+		unless @Position do create @Position
+		as @Position
+			/tp @s ~ ~ ~ ~ 0
+			<pos1> = @s.<pos>
+			move @s ^ ^ ^1
+			<dx, dy, dz> = @s.<pos> - <pos1>
+		end
+		as create @Fireball
+			@s.<vel> = <dx/2, 500, dz/2>
+			@s.dx = dx/2
+			@s.dz = dz/2
 		end
 	end
 end

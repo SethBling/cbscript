@@ -9,9 +9,15 @@ import music
 $Blocks = [
 	('command_block', 'redstone', 'enchant'),
 	('note_block', 'bell', 'note'),
+	('bookshelf', 'book', 'enchant'),
+	('diamond_ore', 'diamond', 'block diamond_ore'),
+	('piston', 'iron_ingot', 'block piston'),
 ]
 $CommandBlock = 0
 $NoteBlock = 1
+$Bookshelf = 2
+$DiamondOre = 3
+$Piston = 4
 
 $Mario = [
 	(0, 12),
@@ -127,15 +133,11 @@ define @BabyBlock: @Entity[type=slime,tag=BabyBlock]
 	create {CustomName:"\"Baby\"", Tags:["BabyBlock"],Size:0, CustomNameVisible:0}
 end
 
+@Slime = @Entity[type=slime]
+
 @Text = @Entity[type=armor_stand,tag=Text]
 $Commands = [
-	"/summon creeper ~ ~ ~",
-	"/summon lightning_bolt ~ ~ ~",
-	"/effect give @a blindness 5",
 	"/say Hello World!",
-	"/setblock ~ ~2 ~ podzol",
-	"/time set noon",
-	"/time set midnight",
 ]
 
 reset
@@ -174,18 +176,17 @@ clock main
 				if @s.hop_cooldown > 0
 					@s.hop_cooldown--
 				else if @s.on_ground
-					if @s.willing facing @Pushable[distance=1..8,willing,limit=1,sort=nearest]
-						@s.solidify = 0
-						/tp @s ~ ~ ~ ~ ~
-						unless @Position do create @Position
-						/tp @Position ~ ~ ~ ~ ~
-						<pos1> = @Position.<pos>
-						move @Position ^ ^ ^1
-						<dx,dy,dz> = @Position.<pos> - <pos1>
-						@s.<vel> = <dx, 1700, dz> / 3
-						@s.hop_cooldown = rand(30, 50)
-						/playsound minecraft:entity.slime.jump neutral @a
-					else facing @Player[distance=..8,nbt={SelectedItem:{id:"minecraft:$breed_item"}},limit=1,sort=nearest]
+					@Entity.target = False
+					if @s.willing and @s.breed_type == $Piston
+						@Slime[distance=1..8,willing,limit=1,sort=nearest].target = True
+					end
+					if @s.willing unless @Entity[target]
+						@Pushable[distance=1..8,willing,breed_type==$i,limit=1,sort=nearest].target = True
+					end
+					unless @Entity[target]
+						@Player[distance=..8,nbt={SelectedItem:{id:"minecraft:$breed_item"}},limit=1,sort=nearest].target = True
+					end
+					facing @Entity[target,limit=1]
 						@s.solidify = 0
 						/tp @s ~ ~ ~ ~ ~
 						unless @Position do create @Position
@@ -202,15 +203,26 @@ clock main
 				
 				if @s.willing
 					at ~ ~1 ~
-						if heart_cooldown > 0
-							heart_cooldown--
+						if @s.heart_cooldown > 0
+							@s.heart_cooldown--
 						else
 							/particle minecraft:heart ~ ~ ~ 0.2 0.2 0.2 0.2 1 force
-							heart_cooldown = 10
+							@s.heart_cooldown = 10
 						end
 						@s.willing--
 					end
-					as @Pushable[willing, distance=0.1..1.2, breed_type == $i]
+					@Entity.target = False
+					if @s.breed_type == $Piston
+						@Slime[willing,distance=0.1..1.2,limit=1].target = True
+					end
+					if @Entity[target]
+						sticky = True
+					else
+						sticky = False
+						@Pushable[willing, distance=0.1..1.2, breed_type == $i,limit=1].target = True
+					end
+					
+					as @Entity[target]
 						@s.willing = 0
 						@pushable.willing = 0
 						breed_type = @s.breed_type
@@ -223,9 +235,15 @@ clock main
 							
 							id = &@s
 							@s.tinyblock = create @TinyBlock
+							@s.sticky = sticky
 							as @s.tinyblock
 								@s.babyblock = id
-								/replaceitem entity @s weapon.mainhand $block_type
+								@s.sticky = sticky
+								if sticky
+									/replaceitem entity @s weapon.mainhand sticky_piston
+								else
+									/replaceitem entity @s weapon.mainhand $block_type
+								end
 							end
 							
 							/particle minecraft:$particle ~ ~ ~ 0.5 0.5 0.5 0.5 10 normal
@@ -273,7 +291,11 @@ clock main
 						switch @s.breed_type
 							case $i in $range($len($Blocks))
 								$block_type = $Blocks[$i][0]
-								/setblock ~ ~ ~ $block_type
+								if @s.sticky
+									/setblock ~ ~ ~ sticky_piston
+								else
+									/setblock ~ ~ ~ $block_type
+								end
 							end
 						end
 						
@@ -287,6 +309,22 @@ clock main
 					end
 				end
 			end
+		end
+	end
+	
+	as @Slime unless @s[tag=BabyBlock] at @s
+		if success
+		/kill @e[type=item,nbt={Item:{id:"minecraft:iron_ingot"}},distance=..2]
+			@s.willing = 300
+		end
+		if @s.willing at ~ ~1 ~
+			if @s.heart_cooldown > 0
+				@s.heart_cooldown--
+			else
+				/particle minecraft:heart ~ ~ ~ 0.2 0.2 0.2 0.2 1 force
+				@s.heart_cooldown = 10
+			end
+			@s.willing--
 		end
 	end
 	
@@ -319,10 +357,19 @@ clock main
 			switch @s.breed_type
 				case $i in $range($len($Blocks))
 					$block_type = $Blocks[$i][0]
-					/setblock ~ ~ ~ $block_type
+					if @s.sticky
+						/setblock ~ ~ ~ sticky_piston
+						sticky = True
+					else
+						/setblock ~ ~ ~ $block_type
+						sticky = False
+					end
 					@Pushable.old = True
 					pushables:create_block()
 					as @Pushable unless @s.old
+						if sticky
+							@s.sticky = True
+						end
 						@s.breed_type = $i
 						@s.solidify = 0
 					end

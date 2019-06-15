@@ -197,6 +197,6 @@ clock main
 	@Player.slide = 0
 	
 	as @MiniBlock[slope]
-		@s.fire = 0
+		@s.fire = 10
 	end
 end
