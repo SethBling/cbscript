@@ -5,6 +5,12 @@ import common
 import tinyblock
 import miniblock
 
+$Stalk		= 1
+$Leaf		= 2
+$Mouth		= 3
+$SmallHead	= 4
+$BigHead	= 5
+
 define @Plant : @Entity[type=area_effect_cloud, tag=PiranhaPlant]
 	create {Tags:["PiranhaPlant"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
 	
@@ -90,14 +96,19 @@ clock main
 					as @s.stalk[$i]
 					else
 						@s.stalk[$i] = create @TinyBlock ~0.0625 ~$create_offset ~-0.375
+						id = &@s
 						as @s.stalk[$i]
 							/replaceitem entity @s weapon.mainhand minecraft:cactus
+							@s.parent = id
+							@s.type = $Stalk
+							@s.segment = $i
 						end
 					end
 					as @s.stalk[$i]
 						at ~ ~$offset ~
 							@s.update_tiny()
 						end
+						@s.stage = stage
 					end
 				else
 					as @s.stalk[$i]
@@ -107,11 +118,14 @@ clock main
 			end
 			if stage >= 2
 				for $i in $range(2)
+					id = &@s
 					as @s.miniblocks[$i]
 					else
 						@s.miniblocks[$i] = create @MiniBlock
 					end
 					as @s.miniblocks[$i]
+						@s.parent = id
+						@s.type = $Leaf
 						/replaceitem entity @s armor.head lime_carpet
 						switch stage
 							case $stage in $range(2, 8)
@@ -132,11 +146,14 @@ clock main
 				end
 			end
 			if stage >= 4 and stage < 7
+				id = &@s
 				as @s.miniblocks[3]
 				else
 					@s.miniblocks[3] = create @MiniBlock
 				end
 				as @s.miniblocks[3]
+					@s.parent = id
+					@s.type = $SmallHead
 					/replaceitem entity @s armor.head red_mushroom_block
 					switch stage
 						case $stage in $range(4, 7)
@@ -154,11 +171,14 @@ clock main
 			end
 			if stage == 7
 				for $i in $range(4, 12)
+					id = &@s
 					as @s.miniblocks[$i]
 					else
 						@s.miniblocks[$i] = create @MiniBlock
 					end
 					as @s.miniblocks[$i]
+						@s.parent = id
+						@s.type = $BigHead
 						/replaceitem entity @s armor.head red_mushroom_block
 						$idx = $i - 4
 						$offx = ($idx % 2) * 0.6 - 0.3
@@ -171,12 +191,17 @@ clock main
 				end
 				
 				for $i in $range(6)
+					id = &@s
 					as @s.mouth[$i]
 					else
 						@s.mouth[$i] = create @TinyBlock
 					end
 					as @s.mouth[$i]
+						@s.type = $Mouth
+						@s.parent = id
 						/replaceitem entity @s weapon.mainhand white_wool
+						$direction = (($i / 3) * 2 - 1)
+						@s.direction = $direction
 						$offx = ($i / 3) * 0.8 - 0.4
 						$offy = 7 * 0.375 + 1.1
 						$offz = ($i % 3) * 0.375 - 0.375
@@ -204,70 +229,86 @@ clock main
 			@s.current_stage = stage
 		end
 		if stage == 7
-			anim_timer = @s.anim_timer
-			for $i in $range(2)
-				as @s.miniblocks[$i] (@MiniBlock)
-					@s.fire = 10
-					small_updown()
-				end
-			end
-			for $i in $range(4, 12)
-				as @s.miniblocks[$i] (@MiniBlock)
-					@s.fire = 10
-					updown()
-					at @s
-						/effect give @Entity[distance=..1] instant_damage 1 0 true
-					end
+			update_anim_timer()
+			
+			if @s.shoot_fire
+				if @s.anim_timer == 80
+					spawn_fireball()
 				end
 				
-			end
-			for $i in $range(6)
-				as @s.mouth[$i] (@TinyBlock)
-					switch anim_timer
-						case 0 to 19
-							move @s ~ ~-0.12 ~
-							@s.dy -= 120
-						end
-						case 60 to 79
-							move @s ~ ~0.12 ~
-							@s.dy += 120
-						end
-						case 119
-							anim_timer = -1
-						end
-					end
-					
-					@s.fire = 10
-					$direction = (($i / 3) * 2 - 1)
-					switch anim_timer % 15
-						case 0 to 6
-							$dx = $direction * -0.034
-							move @s ~$dx ~ ~
-						end
-						case 8 to 14
-							$dx = $direction * 0.034
-							move @s ~$dx ~ ~
-						end
-					end
-				end
-			end
-			for $i in $range(4, 8)
-				as @s.stalk[$i] (@TinyBlock)
-					@s.fire = 10
-					small_updown()
+				if @s.anim_timer == 100
+					spawn_fireball()
 				end
 			end
 			
-			if anim_timer == 80
-				spawn_fireball()
+			if @s.eat_time > 0
+				@s.eat_time--
+			end
+			switch @s.eat_time
+				case $i in [2, 7, 12]
+					/playsound minecraft:entity.generic.eat block @a
+				end
+				case 1
+					@s.shoot_fire = True
+				end
+			end
+		end
+	end
+	
+	
+				
+	as @Entity[type=armor_stand]
+		if @s.type == $Mouth
+			update_anim_timer()
+			switch @s.anim_timer
+				case 0 to 19
+					move @s ~ ~-0.12 ~
+					@s.dy -= 120
+				end
+				case 60 to 79
+					move @s ~ ~0.12 ~
+					@s.dy += 120
+				end
 			end
 			
-			if anim_timer == 100
-				spawn_fireball()
+			@s.fire = 10
+			switch @s.anim_timer % 15
+				case 0 to 6
+					dx = @s.direction * -34
+					@s.x += dx
+				end
+				case 8 to 14
+					dx = @s.direction * 34
+					@s.x += dx
+				end
 			end
-			
-			@s.anim_timer = anim_timer
-			@s.anim_timer++
+		end
+		
+		if @s.type == $Stalk and @s.segment >= 4 and @s.stage == 7
+			update_anim_timer()
+			@s.fire = 10
+			small_updown()
+		end
+		
+		if @s.type == $Leaf
+			update_anim_timer()
+			@s.fire = 10
+			small_updown()
+		end
+	
+		if @s.type == $BigHead
+			update_anim_timer()
+			@s.fire = 10
+			updown()
+			at @s
+				/effect give @Entity[distance=..1] instant_damage 1 0 true
+				if success
+				/kill @e[type=item,nbt={Item:{id:"minecraft:flint_and_steel"}},distance=..1]
+					as @s.parent
+						@s.eat_time = 13
+					end
+				end
+			end
 		end
 	end
 	
@@ -285,32 +326,40 @@ clock main
 		
 		at ~ ~-1 ~ if @Player[distance=..1.2]
 			/effect give @Player[distance=..1.2] instant_damage 1 0 true
-			/tp @s ~ -100 ~
-			/kill @s
+			kill = True
+		end
+		if block ~ ~ ~ water
+			kill = True
 		end
 
 		if kill
+			/particle poof ~ ~ ~ 0.5 0.5 0.5 0 5
+			/tp @s ~ -100 ~
 			/kill @s
 		end
 	end
 end
 
+function update_anim_timer()
+	@s.anim_timer++
+	if @s.anim_timer == 119
+		@s.anim_timer = -1
+	end
+end
+
 function updown()
-	switch anim_timer
+	switch @s.anim_timer
 		case 0 to 19
 			move @s ~ ~-0.12 ~
 		end
 		case 60 to 79
 			move @s ~ ~0.12 ~
 		end
-		case 119
-			anim_timer = -1
-		end
 	end
 end
 
 function small_updown()
-	switch anim_timer
+	switch @s.anim_timer
 		case 0 to 19
 			move @s ~ ~-0.062 ~
 		end

@@ -1,3 +1,5 @@
+import common
+
 $FacingDown = 0
 $FacingUp = 1
 $FacingNorth = 2

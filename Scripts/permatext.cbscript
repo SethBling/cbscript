@@ -1,0 +1,38 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Write permanent float text in your world."
+
+import common
+import item_frame
+
+define @Text: @Entity[type=armor_stand,tag=FloatingText]
+	create {Tags:["FloatingText"], Invulnerable:1, Marker:1, NoGravity:1, Invisible:1, CustomNameVisible:1}
+end
+
+reset
+
+end
+
+clock main
+	for @frame in @ItemFrame
+		unless @s.no_text if @s.{Item{id:"minecraft:name_tag"}} and @s.{Item.tag.display.Name} at @s align xyz at ~0.5 ~0.5 ~0.5
+			as create @Text
+				@s.{CustomName} = @frame.{Item.tag.display.Name}
+				/kill @frame
+				/summon item ~ ~ ~ {Item:{id:"minecraft:item_frame", Count:1b},PickupDelay:20}
+				/playsound minecraft:entity.item_frame.break block @a
+			end
+		end
+	end
+	
+	for @frame in @ItemFrame
+		unless @s.{Item} at @s align xyz at ~0.5 ~0.5 ~0.5
+			@s.no_text = False
+			as @Text[distance=0..0.01,limit=1]
+				@frame.no_text = True
+				@frame.{Item} = {id:"minecraft:name_tag", Count:1b, tag:{display:{Name:"\"temp\""}}}
+				@frame.{Item.tag.display.Name} = @s.{CustomName}
+				/kill @s
+			end
+		end
+	end
+end

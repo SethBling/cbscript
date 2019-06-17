@@ -1205,6 +1205,11 @@ def p_data_path_array_match(p):
 	p[0] = p[1] + p[2] + p[3] + p[4]
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
+def p_data_path_object_match(p):
+	'''data_path : ID json_object'''
+	p[0] = p[1] + p[2]
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
 def p_data_path_multi(p):
 	'''data_path : data_path DOT data_path'''
 	p[0] = '{0}.{1}'.format(p[1], p[3])
