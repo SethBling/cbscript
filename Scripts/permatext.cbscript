@@ -1,7 +1,6 @@
 dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
 desc "Write permanent float text in your world."
 
-import common
 import item_frame
 
 define @Text: @Entity[type=armor_stand,tag=FloatingText]

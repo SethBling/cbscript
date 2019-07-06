@@ -783,3 +783,9 @@ class mcfunction(object):
 		
 	def add_recipe(self, recipe):
 		self.environment.add_recipe(recipe)
+		
+	def add_advancement(self, name, advancement):
+		self.environment.add_advancement(name, advancement)
+		
+	def add_loot_table(self, name, loot_table):
+		self.environment.add_loot_table(name, loot_table)

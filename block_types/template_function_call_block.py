@@ -42,6 +42,7 @@ class template_function_call_block(object):
 		
 		# Compile the function if it doens't exist yet
 		if func_name not in func.functions:
+			func.functions[func_name] = None
 			new_env = func.clone_environment()
 			
 			# Bind template paramters in the function's environment

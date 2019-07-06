@@ -1,0 +1,121 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Test thrust using fake physics objects."
+
+import common
+
+advancement thrust_damage {
+	criteria: {
+		creeper_damage: {
+			trigger: "minecraft:entity_hurt_player",
+			conditions: {
+				damage: {
+					source_entity: {
+						type: "minecraft:creeper"
+					}
+				}
+			}
+		}
+	},
+	rewards : {
+		"function": "thrust:on_creeper_damage"
+	}
+}
+
+define @Motion: @Entity[type=armor_stand,tag=Motion]
+	create {Tags:["Motion"],Invulnerable:1,Invisible:1}
+	player: @Player
+end
+
+define @Player: @Player
+	motion: @Motion
+end
+
+function on_creeper_damage()
+	if @s.lockout
+		/advancement revoke @s only thrust:thrust_damage
+		/effect clear @s resistance
+		
+		/tag @Player remove current
+		/tag @s add current
+		@player = @Player[tag=current]
+		
+		<old_pos> = @s.<old_pos>
+		
+		unless @Position do create @Position
+		as @Position
+			@s.<pos> = <old_pos>
+			at @s
+				/tp @player ~ ~ ~
+			end
+		end
+		@s.lockout = False
+	end
+end
+
+reset
+	/scoreboard objectives add thrust minecraft.used:minecraft.carrot_on_a_stick
+end
+
+clock main
+	armor_stand_thrust()
+	#explosion_thrust()
+	@Player.thrust = 0
+end
+
+function explosion_thrust()
+	as @Player
+		if @s.thrust unless @s.lockout
+			@s.lockout = True
+			@s.<old_pos> = @s.<pos>
+			move @s ~ 300 ~
+			/effect give @s resistance 1 4 true
+			at @s eyes ^ ^ ^-0.1
+				/summon creeper ~ ~ ~ {Fuse:0s, ignited:1b, powered:1b}
+			end
+		end
+	end
+end
+
+function armor_stand_thrust()
+	for @player in @Player
+		if @s.thrust at @s
+			as @s.motion
+				/kill @s
+			end
+			@s.motion = create @Motion
+			@s.<old_pos> = @s.<pos>
+			
+			at @s do get_aim()
+			id = &@s
+			
+			as @s.motion
+				@s.<vel> = <aim> * 3
+				@s.player = id
+			end
+		end
+		
+		if @s.on_ground unless @s.was_on_ground if @s.motion
+			as @s.motion
+				/kill @s
+			end
+			@s.motion = None
+		end
+		@s.was_on_ground = @s.on_ground
+		<delta> = @s.<pos> - @s.<old_pos>
+		as @s.motion
+			
+			@s.<vel> += <delta> * 5
+			at @s
+				/tp @player 0 0 0
+				/tp @player ~ ~ ~
+			end
+			
+			if @s.on_ground
+				/kill @s
+				@player.motion = None
+			end
+		end
+		@s.<old_pos> = @s.<pos>
+		
+	end
+end

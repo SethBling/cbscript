@@ -1,0 +1,198 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\Pool Table"
+desc "Enderman makes a clock tick."
+
+import miniblock
+import math
+
+$Solid = 1
+$Stripes = 2
+$Eight = 3
+$Cue = 4
+
+@Ball = @MiniBlock[billiard_ball]
+@Cue = @Ball[color==$Cue]
+
+define @Arrow: @Entity[type=arrow]
+	in_ground: inGround byte 1
+end
+
+reset
+	/scoreboard objectives add Billiards trigger
+end
+
+function create_balls()
+	/kill @Ball
+	for $dx, $dz, $bl, $t in [
+		(-4, -4, 'green_wool', $Solid),
+		(-2, -4, 'gold_ore', $Stripes),
+		(0, -4, 'magenta_wool', $Solid),
+		(2, -4, 'lapis_ore', $Stripes),
+		(4, -4, 'redstone_ore', $Stripes),
+		(-3, -2, 'yellow_wool', $Solid),
+		(-1, -2, 'coal_ore', $Stripes),
+		(1, -2, 'blue_wool', $Solid),
+		(3, -2, 'iron_ore', $Stripes),
+		(-2, 0, 'red_wool', $Solid),
+		(0, 0, 'obsidian', $Eight),
+		(2, 0, 'purple_wool', $Solid),
+		(-1, 2, 'diamond_ore', $Stripes),
+		(1, 2, 'orange_wool', $Solid),
+		(0, 4, 'emerald_ore', $Stripes),
+		(0, 30.6, 'smooth_quartz', $Cue),
+	]
+		$dx = $dx * 0.36
+		$dz = $dz * 0.36
+		
+		at ~$dx ~0.3 ~$dz
+			as create @MiniBlock
+				@s.billiard_ball = True
+				/replaceitem entity @s armor.head $bl
+				@s.color = $t
+				@s.update()
+			end
+		end
+	end
+end
+
+function tell_buttons()
+	tell @s '{G[\[Reset Game\]](/trigger Billiards set 2)'
+	tell @s '{w[\[Reset Cue Ball\]](/trigger Billiards set 3)'
+end
+
+clock trigger
+	as @Player at @s
+		switch @s.Billiards
+			case 2
+				create_balls()
+			end
+			case 3
+				/kill @Ball[color==$Cue]
+				at ~ ~0.3 ~
+					as create @MiniBlock
+						@s.billiard_ball = True
+						/replaceitem entity @s armor.head smooth_quartz
+						@s.color = $Cue
+						@s.update()
+					end
+				end
+			end
+		end
+		unless @s.Billiards == 0
+			tell_buttons()
+		end
+	end
+	
+	@a.Billiards = 0
+	/scoreboard players enable @a Billiards
+end
+
+function is_moving()
+	<x, y, z> = @s.<v>
+	if x > -5 and x < 5 and z > -5 and z < 5
+		return False
+	else
+		return True
+	end	
+end
+
+clock main
+	unless @Position do create @Position
+	as @Cue at @s ~ ~1.5 ~ if @Arrow[distance=..1.5,limit=1]
+		as @Arrow[distance=..1.5]
+			<vx, vy, vz> = @s.<vel> / 2
+			/kill @s
+		end
+		@s.<v> = <vx, 0, vz>
+		/playsound block.wood.hit ambient @a ~ ~ ~ 1 2
+	end
+	
+	as @Arrow
+		if @s.in_ground
+			/kill @s
+		end
+	end
+	
+	for @ball in @Ball
+		@s.<v> *= 98
+		@s.<v> /= 100
+		<x, y, z> = @s.<v>
+		if x > -50 and x < 0
+			x++
+		end
+		if z > -50 and z < 0
+			z++
+		end
+		@s.<v> = <x, y, z>
+	
+		<v1> = @s.<v>
+		<pos1> = @s.<pos>
+		<x1, y1, z1> = <v1>
+		p1 = <v1>*<v1>
+		
+		at @s
+			while @Ball[distance=0.001..0.69, limit=1]
+				as @Ball[distance=0.001..0.69]
+					at @s facing @ball
+						/tp @s ^ ^ ^-0.01
+					end
+				end
+			end
+			moving1 = is_moving()
+			if @s.y > 54590 as @Ball[distance=0.001..0.7]
+				moving2 = is_moving()
+				
+				if not moving1 and not moving2
+				else if @s.y > 54590
+					<v2> = @s.<v>
+					<x2, y2, z2> = <v2>
+					p2 = <v2>*<v2>
+					<pos2> = @s.<pos>
+					
+					@s.<v> -= (<v2>-<v1>)*(<pos2>-<pos1>)*(<pos2>-<pos1>)/((<pos2>-<pos1>)*(<pos2>-<pos1>))
+					@ball.<v> -= (<v1>-<v2>)*(<pos1>-<pos2>)*(<pos1>-<pos2>)/((<pos1>-<pos2>)*(<pos1>-<pos2>))
+					/playsound block.wood.hit ambient @a ~ ~ ~ 1 2
+				end
+			end
+			
+			for $dx, $dz in [
+				(0, 1),
+				(0, -1),
+				(1, 0),
+				(-1, 0)
+			]
+				<vx, vy, vz> = @s.<v>
+				@Position.<pos> = @s.<pos>
+				@Position.x += vx + $dx*300
+				@Position.z += vz + $dz*300
+				at @Position unless block ~ ~1.41 ~ air
+					if $dx == 0
+						@s.<v> = <vx*4/5, vy, -vz*4/5>
+						if @s.y > 54590
+							/playsound block.wool.hit ambient @a ~ ~ ~ 1 2
+						end
+					end
+					if $dz == 0
+						@s.<v> = <-vx*4/5, vy, vz*4/5>
+						if @s.y > 54590
+							/playsound block.wool.hit ambient @a ~ ~ ~ 1 2
+						end
+					end
+					$dx = 0.1 * $dx
+					$dz = 0.1 * $dz
+					move @s ~-$dx ~ ~-$dz
+				end
+			end
+		end
+		
+		at @s ~ ~1.2 ~
+			if block ~-0.3 ~-0.1 ~-0.3 air and block ~0.3 ~-0.5 ~-0.3 air and block ~-0.3 ~-0.5 ~0.3 air and block ~0.3 ~-0.5 ~0.3 air
+				@s.<v> -= <0, 80, 0>
+			else
+				<x, y, z> = @s.<v>
+				@s.<v> = <x, 0, z>
+			end
+		end
+		
+		@s.<pos> += @s.<v>
+	end
+end

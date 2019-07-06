@@ -6,6 +6,7 @@ import time
 import json
 import io
 import zipfile
+from CompileError import CompileError
 
 class mcworld(object):
 	def __init__(self, leveldir, namespace):
@@ -55,6 +56,30 @@ class mcworld(object):
 				recipe_struct = recipe.get_json_struct()
 				
 				self.zip.writestr(recipe_file, json.dumps(recipe_struct, indent=4))
+				
+	def write_advancements(self, advancements):
+		if len(advancements) > 0:
+			advancement_dir = 'data/{}/advancements/'.format(self.namespace)
+			
+			for name in advancements:
+				advancement_file = os.path.join(advancement_dir, '{}.json'.format(name))
+				self.zip.writestr(advancement_file, advancements[name])
+				
+	def write_loot_tables(self, loot_tables):
+		if len(loot_tables) > 0:
+			for name in loot_tables:
+				(type, contents) = loot_tables[name]
+				if ':' in name:
+					parts = name.split(':')
+					if len(parts) != 2:
+						raise CompileError('Invalid loot tables name "{}"'.format(name))
+					loot_table_dir = 'data/{}/loot_tables/{}/'.format(parts[0], type)
+					filename = parts[1]
+				else:
+					loot_table_dir = 'data/{}/loot_tables/{}/'.format(self.namespace, type)
+					filename = name
+				loot_table_file = os.path.join(loot_table_dir, '{}.json'.format(filename))
+				self.zip.writestr(loot_table_file, contents)
 		
 	def write_mcmeta(self, desc):
 		mcmeta_file = 'pack.mcmeta'

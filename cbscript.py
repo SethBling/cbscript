@@ -111,6 +111,8 @@ class cbscript(object):
 		world.write_tags(self.global_context.clocks, self.global_context.block_tags, self.global_context.item_tags)
 		world.write_mcmeta(parsed['desc'])
 		world.write_recipes(self.global_context.recipes)
+		world.write_advancements(self.global_context.advancements)
+		world.write_loot_tables(self.global_context.loot_tables)
 		world.write_zip()
 		
 		self.dependencies = [source_file(d) for d in self.global_context.dependencies]

@@ -126,6 +126,7 @@ clock main
 					as @s.miniblocks[$i]
 						@s.parent = id
 						@s.type = $Leaf
+						@s.stage = stage
 						/replaceitem entity @s armor.head lime_carpet
 						switch stage
 							case $stage in $range(2, 8)
@@ -290,7 +291,7 @@ clock main
 			small_updown()
 		end
 		
-		if @s.type == $Leaf
+		if @s.type == $Leaf and @s.stage == 7
 			update_anim_timer()
 			@s.fire = 10
 			small_updown()
@@ -336,6 +337,15 @@ clock main
 			/particle poof ~ ~ ~ 0.5 0.5 0.5 0 5
 			/tp @s ~ -100 ~
 			/kill @s
+		end
+	end
+	
+	for @seeds in @Entity[type=item,nbt={Item:{id:"minecraft:wheat_seeds", Count:1b}}]
+		at @s unless @s[nbt={Item:{tag:{piranha:1b}}}] as @Entity[type=item,nbt={Item:{id:"minecraft:mushroom_stew",Count:1b}},distance=..0.5,limit=1] at @s
+			/kill @s
+			/kill @seeds
+			/particle poof ~ ~ ~ 0.5 0.5 0.5 0 5
+			/summon item ~ ~ ~ {Item:{id:"minecraft:wheat_seeds", Count:1b, tag:{piranha:1b, display:{Name:"{\"text\":\"Piranha Plant Seeds\", \"italic\":\"false\"}"},Enchantments:[{lvl:1s,id:"minecraft:thorns"}]}},PickupDelay:20s}
 		end
 	end
 end

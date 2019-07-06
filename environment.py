@@ -351,3 +351,9 @@ class environment(object):
 		
 	def add_recipe(self, recipe):
 		self.global_context.add_recipe(recipe)
+	
+	def add_advancement(self, name, advancement):
+		self.global_context.add_advancement(name, advancement)
+		
+	def add_loot_table(self, name, loot_table):
+		self.global_context.add_loot_table(name, loot_table)

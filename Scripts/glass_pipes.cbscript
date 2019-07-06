@@ -179,7 +179,10 @@ clock main
 					@s.ry = @player.ry
 					@s.rx = @player.rx
 					
-					/tp @player @s
+					/tp @player ~ 128 ~
+					at @s
+						/tp @player ~ ~ ~
+					end
 
 					at @s
 						unless is_pipe()
@@ -188,7 +191,10 @@ clock main
 								@s.pick_dir()
 								if @s.done
 									@s.<pos> = @s.<pos> / 1000 * 1000 + <500, 0, 500>
-									/tp @player @s
+									/tp @player ~ 128 ~
+									at @s
+										/tp @player ~ ~ ~
+									end
 								
 									/kill @s
 									@player.travel = None

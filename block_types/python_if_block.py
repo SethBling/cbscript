@@ -19,6 +19,6 @@ class python_if_block(object):
 		elif self.else_sub != None:
 			try:
 				func.compile_blocks(self.else_sub)
-			except Excetion as e:
+			except Exception as e:
 				print(e.message)
 				raise Exception('Unable to compile false block for python if block at line {}'.format(self.line))

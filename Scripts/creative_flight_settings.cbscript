@@ -323,7 +323,10 @@ clock main
 		end
 		if @s.stop_count == 6
 			@s.speedsq = 0
-			/tp @s[nomomentum] @s
+			at @s[nomomentum]
+				/tp @s 0 0 0
+				/tp @s ~ ~ ~
+			end
 		end
 	end
 end

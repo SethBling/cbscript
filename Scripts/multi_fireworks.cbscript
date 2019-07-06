@@ -1,0 +1,103 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Colored slime blocks for piston machines"
+
+import common
+
+define @FireworkItem : @Entity[type=item,nbt={Item:{id:"minecraft:firework_rocket"}}]
+	count: Item.Count byte 1
+	multi: Item.tag.Multi byte 1
+end
+
+define @Firework : @Entity[type=firework_rocket]
+	create {Life: 0, LifeTime:10}
+	multi: FireworksItem.tag.Multi byte 1
+	life: Life int 1
+	lifetime: LifeTime int 1
+	tilted: ShotAtAngle byte 1
+end
+
+define @PopIt : @Entity[type=snowball,nbt={Item:{tag:{display:{Name:"{\"text\":\"Pop-It\"}"}}}}]
+	tracker: @Marker
+end
+
+reset
+
+end
+
+clock main
+	as @FireworkItem if @s.{Item.tag} at @s
+		unless @s.count == 1
+			found = False
+			as @FireworkItem[distance=..1] unless @s.{Item.tag.Fireworks.Explosions}
+				if @s.count == 1 unless found
+					found = True
+					/kill @s
+				end
+			end
+			if found
+				/data merge entity @s {Item:{tag:{Multi:1b}}}
+				@s.multi = @s.count
+				@s.count = 1
+			end
+		end
+	end
+	
+	for @firework in @Firework
+		if @s.multi at @s
+			if @s.life == @s.lifetime - 10
+				for i = 1 to @s.multi
+					as create @Firework
+						@s.{FireworksItem} = @firework.{FireworksItem}
+						@s.tilted = True
+						@s.<vel> = <rand(-500, 500), rand(500), rand(-500, 500)>
+						@s.lifetime += rand(5)
+						@s.multi = 0
+					end
+				end
+				/kill @s
+			end
+		end
+	end
+	
+	as @Player[nbt={"SelectedItem":{id:"minecraft:stick",tag:{display:{Name:"{\"text\":\"Sparkler\"}"}}}}] at @s eyes ^ ^ ^1
+		/particle flame ~ ~ ~ 0 0 0 0.005 1 force @a
+		@s.audio_cooldown--
+		if @s.audio_cooldown <= 0
+			/playsound minecraft:entity.creeper.primed neutral @a ~ ~ ~ 0.2 2
+			@s.audio_cooldown = rand(5)
+		end
+	end
+	
+	as @Player[nbt={"SelectedItem":{id:"minecraft:fishing_rod",tag:{display:{Name:"{\"text\":\"Sparkler\"}"}}}}] at @s eyes ^-0.5 ^-0.1 ^0.7
+		/particle flame ~ ~ ~ 0 0 0 0.005 1 force @a
+		@s.audio_cooldown--
+		if @s.audio_cooldown <= 0
+			/playsound minecraft:entity.creeper.primed neutral @a ~ ~ ~ 0.2 2
+			@s.audio_cooldown = rand(5)
+		end
+	end
+	
+	as @PopIt at @s
+		if @s.tracker
+			as @s.tracker
+				/tp @s ~ ~ ~
+			end
+		else
+			id = &@s
+			@s.tracker = create @Marker
+			as @s.tracker
+				@s.popit = id
+				/tp @s ~ ~ ~
+			end
+		end
+	end
+	
+	as @Marker[popit] at @s
+		as @s.popit (@PopIt)
+		else
+			/particle smoke ~ ~ ~ 0 0 0 0.05 20 force @a
+			/playsound minecraft:block.note_block.snare neutral @a ~ ~ ~ 1 1
+			/kill @s
+		end
+	end
+end

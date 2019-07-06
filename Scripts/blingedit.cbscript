@@ -19,7 +19,7 @@ $PluginClick = 12
 $Type_Source = 1
 $Type_Dest = 2
 
-define block cursor_continue
+define block_tag cursor_continue
     air
     water
     cave_air
@@ -1208,6 +1208,8 @@ function move_dir()
 end
 
 reset
+	/gamerule maxCommandChainLength 1000000000
+
 	click_detector_reset()
 	
     /team add source

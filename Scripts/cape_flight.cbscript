@@ -1,0 +1,156 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Cape Flight from Super Mario World"
+
+import common
+
+$Bossbars = 20
+array Bossbars[0 to $Bossbars-1]
+
+reset
+	/scoreboard objectives add sprint minecraft.custom:minecraft.sprint_one_cm
+	/scoreboard objectives add swoop minecraft.custom:minecraft.sneak_time
+	/scoreboard objectives add jump minecraft.custom:minecraft.jump
+	/scoreboard objectives add thrust minecraft.used:minecraft.carrot_on_a_stick
+	
+	for $i in $range($Bossbars)
+		/bossbar add p_bar$i "P Meter"
+		/bossbar set p_bar$i max 30
+	end
+end
+
+
+function assign_bossbar()
+	for i = 0 to $Bossbars-1
+		switch i
+			case $i in $range($Bossbars)
+				unless Bossbars[$i]
+					Bossbars[$i] = True
+					@s.p_bar = $i
+					/bossbar set p_bar$i players @s
+					i = $Bossbars
+				end
+			end
+		end
+	end
+end
+
+function set_bossbar_value()
+	switch @s.p_bar
+		case $i in $range($Bossbars)
+			/execute store result bossbar p_bar$i value run scoreboard players get @s p_meter
+		end
+	end
+end
+
+function clear_bossbar()
+	switch @s.p_bar
+		case $i in $range($Bossbars)
+			Bossbars[$i] = False
+			/bossbar set p_bar$i players
+			@s.p_bar = -1
+		end
+	end
+end
+
+clock main
+	for @player in @Player
+		if @s.sprint
+			@s.p_meter++
+			if @s.p_meter > 32
+				@s.p_meter = 32
+			end
+		else if @s.on_ground
+			@s.p_meter -= 2
+			if @s.p_meter < 0
+				@s.p_meter = 0
+			end
+		end
+		
+		if @s.p_meter
+			unless @s.p_bar >= 0
+				assign_bossbar()
+			end
+			set_bossbar_value()
+		else
+			unless @s.p_bar < 0
+				clear_bossbar()
+			end
+		end
+		
+		if @s.p_meter >= 30
+			/effect give @s speed 1 0 true
+			if @s.jump
+				@s.takeoff = 40
+			end
+			
+			if not @s.on_ground
+				if @s.takeoff at @s
+					@s.takeoff--
+					unless @Position do create @Position
+					as @Position
+						if block ~ ~2.3 ~ air
+							/tp @s ~ ~0.3 ~ ~ ~
+						else
+							/tp @s ~ ~ ~ ~ ~
+						end
+						at @s
+							/tp @Player ~ 128 ~
+							/tp @Player ~ ~ ~
+						end
+					end
+				else
+					if @s.swoop_cooldown
+						@s.swoop_cooldown--
+					end
+					if not @s.was_swoop and @s.swoop and not @s.swoop_cooldown at @s
+						@s.takeoff = 5
+						/playsound minecraft:entity.cat.hurt ambient @a ~ ~ ~ 1 0
+					end
+					@s.was_swoop = @s.swoop
+					if @s.swoop
+						@s.swoop_cooldown = 15
+					end
+					/effect give @s minecraft:slow_falling 1 0 true
+				end
+			end
+		end
+		
+		ry = @s.ry % 360000
+		prev_ry = @s.prev_ry
+		
+		dry = (ry - prev_ry + 180000) % 360000 - 180000
+		
+		dry /= 1000
+		
+		@s.cum_dry += dry
+		
+		if dry >= 0 and @s.prev_dry <= 0
+			@s.cum_dry = 0
+		end
+		if dry <= 0 and @s.prev_dry >= 0
+			@s.cum_dry = 0
+		end
+		
+		spin = False
+		if @s.cum_dry >= 360
+			@s.cum_dry = 0
+			spin = True
+		end
+		if @s.cum_dry <= -360
+			@s.cum_dry = 0
+			spin = True
+		end
+		if spin at @s
+			/playsound minecraft:entity.cat.purreow neutral @a ~ ~ ~ 2 2
+			/effect give @Entity[distance=0.1..2] instant_damage 2 0 true
+		end
+		
+		
+		@s.prev_ry = @s.ry
+		@s.prev_dry = dry
+	end
+
+	@Player.sprint = 0
+	@Player.swoop = 0
+	@Player.jump = 0
+end

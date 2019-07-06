@@ -1,0 +1,76 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Create giant fireworks"
+
+import common
+
+define @Giant : @Entity[type=giant]
+
+end
+
+define @GiantItem : @Giant[tag=GiantItem]
+	create {Tags:["GiantItem", "InvisGiant"], Silent:True}
+end
+
+define @GiantFirework : @Giant[tag=GiantFirework]
+	create {Tags:["GiantFirework", "InvisGiant"], Silent:True}
+end
+
+@InvisGiant = @Giant[tag=InvisGiant]
+
+reset
+    /team add no_collision
+    /team modify no_collision collisionRule never
+
+	tell @a '{G[\[Spawn Giant Firework\]](call giant_firework)'
+end
+
+function giant_firework()
+	as create @GiantFirework ~2 ~-6 ~-4
+		/replaceitem entity @s weapon.mainhand firework_rocket
+		/playsound minecraft:entity.firework_rocket.launch neutral @a ~ ~ ~ 1 0 0.7
+	end
+end
+
+clock main
+	unless @Position do create @Position
+
+	as @InvisGiant
+		/effect give @s invisibility 1 1 true
+	end
+	as @GiantFirework at @s
+		@s.vy = 2000
+		@s.age++
+		if @s.age == 40
+			/playsound minecraft:entity.firework_rocket.large_blast neutral @a ~ ~ ~ 1 0 0.7
+			
+			for ry = 0 to 350000 by 20000
+				for rx = -80000 to 80000 by 10000
+					as create @GiantItem ~2 ~-6 ~-4
+						as @Position
+							/tp @s ~ ~ ~
+							@s.rx = rx
+							@s.ry = ry
+							<pos1> = @s.<pos>
+							move @s ^ ^ ^6
+							<delta> = @s.<pos> - <pos1>
+						end
+						@s.<vel> = <delta>
+						@s.vy /= 2
+						
+						/team join no_collision
+						/replaceitem entity @s weapon.mainhand blue_wool
+					end
+				end
+			end
+			
+			/kill @s
+		end
+	end
+	as @GiantItem at @s
+		@s.vy += 120
+		@s.age++
+		if @s.age >= 30
+			/kill @s
+		end
+	end
+end

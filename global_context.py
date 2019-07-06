@@ -43,6 +43,8 @@ class global_context(object):
 		self.parser = None
 		self.dependencies = []
 		self.recipes = []
+		self.advancements = {}
+		self.loot_tables = {}
 
 	def register_block_tag(self, name, blocks):
 		self.block_tags[name] = blocks
@@ -134,3 +136,9 @@ class global_context(object):
 		
 	def add_recipe(self, recipe):
 		self.recipes.append(recipe)
+		
+	def add_advancement(self, name, advancement):
+		self.advancements[name] = advancement
+		
+	def add_loot_table(self, name, loot_table):
+		self.loot_tables[name] = loot_table

@@ -1,34 +1,18 @@
-dir: C:\Users\Seth\AppData\Roaming\.minecraft\saves\SethBling's World 1.13
-desc: Enderman makes a clock tick.
-scale: 1000
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\EnderClock"
+desc "Enderman makes a clock tick."
 
-$marker: "Marker:1b, Invisible:1b, NoGravity:1b, Invulnerable:1b, Silent:1b"
+import common
 
-define @Entity = @e
-	x = Pos[0] double
-	y = Pos[1] double
-	z = Pos[2] double
-	<pos> = Pos double
-	vx = Motion[0] double
-	vy = Motion[1] double
-	vz = Motion[2] double
-	<vel> = Motion double
-	ry = Rotation[0] float
-	rx = Rotation[1] float
-	on_ground = OnGround byte 1
-	no_gravity = NoGravity byte 1
-	
-	function get_facing_dir()
-		at @s rotated @s at ^ ^ ^1 do <facing_dir> = here - @s.<pos>
-	end
+define @Enderman = @Entity[type=enderman,tag=Clockerman,limit=1]
+	create {Tags:["Clockerman"], PersistenceRequired:1b, NoAI:1b, Invulnerable:1b}
 end
 
-define @Enderman = @Entity[type=enderman,name=Clockerman,limit=1]
-	create: {"CustomName":"\"Clockerman\""}
+define @Marker = @Entity[type=area_effect_cloud,tag=Marker]
+	create {Tags:["Marker"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
 end
 
-define @Marker = @Entity[type=area_effect_cloud,name=Marker]
-	create: {"CustomName":"\"Marker\"", Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+define @Position = @Entity[type=area_effect_cloud,tag=Enderpos,limit=1]
+	create {Tags:["Enderpos"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
 end
 
 @Player = @Entity[type=player, limit=1]
@@ -40,11 +24,11 @@ reset
 	/fill -10 55 179 29 55 190 red_sandstone
 	
 	at @p
-		for x = 19 to 27
+		for x = 17 to 27
 			for y = 56 to 58
 				for z = 187 to 189
 					as create @Marker
-						<@s.x, @s.y, @s.z> = <x, y, z> * scale + <500, 0, 500>
+						@s.<pos> = <x, y, z> * scale + <500, 500, 500>
 						@s.pile = True
 					end
 				end
@@ -52,7 +36,7 @@ reset
 		end
 	end
 	
-	at 20 56 185 do create @Enderman
+	create @Enderman 20 56 185
 	as @Marker[pile] at @s
 		/setblock ~ ~ ~ diamond_block
 	end
@@ -67,12 +51,12 @@ reset
 					@s.vseg = vseg
 					@s.piece = piece
 					
-					@s.x = scale * (-16 + digit * 7 + piece) + (scale / 2)
+					@s.x = scale * (-16 + digit * 7 + piece) + 500
 					if digit >= 3
 						@s.x += 3 * scale
 					end
-					@s.y = scale * (52 + vseg * 4)
-					@s.z = 180 * scale + (scale / 2)
+					@s.y = scale * (52 + vseg * 4) + 500
+					@s.z = 180 * scale + 500
 				end
 			end		
 		end
@@ -92,7 +76,7 @@ reset
 						if digit >= 3
 							@s.x += 3000
 						end
-						@s.y = scale * (51 + vseg * 4 + piece)
+						@s.y = scale * (51 + vseg * 4 + piece) + 500
 						@s.z = 180500
 					end
 				end
@@ -104,30 +88,35 @@ reset
 	/setblock 6 61 180 diamond_block
 	
 	hour = 9
-	minute = 59
-	second = 55
-	tick = 0
+	minute = 58
+	second = 0
+	clock_tick = 0
+	
+	tell @a '{C[\[Add 20 Seconds\]](/scoreboard players add Global second 20) {Y[\[Add 10 Minutes\]](/scoreboard players add Global minute 10) {G[\[Add Hour\]](/scoreboard players add Global hour 1)'
 end
 
 clock main
 	@Enderman.vx = 0
 	@Enderman.vz = 0
 	
-	tick++
-	if tick >= 20
-		tick = 0
+	clock_tick++
+	if clock_tick >= 20
+		clock_tick -= 20
 		second++
-		if second >= 60
-			second = 0
-			minute++
-			if minute >= 60
-				minute = 0
-				hour++
-				if hour >= 13
-					hour = 1
-				end
-			end
-		end
+	end
+	
+	if second >= 60
+		second -= 60
+		minute++
+	end
+	
+	if minute >= 60
+		minute -= 60
+		hour++
+	end
+	
+	if hour >= 13
+		hour -= 12
 	end
 	
 	for digit = 1 to 4
@@ -193,8 +182,12 @@ clock main
 		/setblock ~ ~ ~ diamond_block
 	end
 	
-	as @Marker[segment, not on] at @s if block ~ ~-20 ~ diamond_block
-		@s.on = True
+	as @Marker[segment, not on] at @s
+		if block ~ ~-20 ~ diamond_block
+			@s.on = True
+		else
+			@s.on = False
+		end
 	end
 
 	#as @Marker[segment, not on] at @s
@@ -204,8 +197,10 @@ clock main
 	#	/setblock ~ ~ ~ diamond_block		
 	#end
 	
+	unless @Position do create @Position
+	
 	cooldown++
-	if cooldown >= 20
+	if cooldown >= 25
 		cooldown = 0
 		
 		as @Marker at @s
@@ -227,27 +222,51 @@ clock main
 		
 		found = False
 		i = 0
-		while not found and i < 100
+		while not found and i < 500
 			i++
 			@Marker.current = False
 			
 			type = rand(2)
+			attached = False
 			if type == 0
 				@Marker[segment, on, not has_block, limit=1, sort=random].current = True
 			end
 			if type == 1
 				@Marker[segment, not on, has_block, limit=1, sort=random].current = True
 			end
-			as @Marker[segment, current]
-				check_x = @s.x + rand(-1,2) * scale
-				check_y = @s.y + rand(-3,2) * scale
-				check_z = @s.z
-				if y == 56000
-					check_z += rand(-1,2) * scale
+			at @Marker[current,limit=1]
+				for $delta in [
+					(0, 0, 1),
+					(0, 0, -1),
+					(1, 0, 0),
+					(-1, 0, 0),
+					(0, 1, 0),
+					(0, -1, 0),
+					(0, 0, 0),
+				]
+					unless block ~<$delta> air
+						attached = True
+					end
 				end
-				<dest> = <check_x, check_y, check_z>
+			end
+			if attached as @Marker[segment, current]
+				dx = rand(-2000,2000)
+				dy = rand(-3,2)
+				dz = 0
+				y = @s.y
+				if dx >= -400 and dx <= 400 and dy == -2
+					dy--
+				end
 				
-				at <dest> unless block ~ ~-1 ~ air if block ~ ~ ~ air and block ~ ~1 ~ air and block ~ ~2 ~ air
+				check_x = @s.x + dx
+				check_y = @s.y + dy * scale - 500
+				if check_y == 56000
+					dz += rand(-2000,2000)
+				end
+				check_z = @s.z + dz
+				@Position.<pos> = <check_x, check_y, check_z>
+				
+				at @Position unless block ~ ~-1 ~ air if block ~ ~ ~ air and block ~ ~1 ~ air and block ~ ~2 ~ air
 					found = True
 				end
 			end			
@@ -255,13 +274,13 @@ clock main
 	end
 	if found
 		if cooldown == 0 and type == 1
-			as @Enderman
-				@s.<pos> = <dest>
-				at @s
-					/tp @s ~ ~ ~ facing entity @Marker[current,limit=1]
+			as @Enderman at @Position
+				/tp @s ~ ~ ~
+				at @s ~ ~1.8 ~ facing @Marker[current,limit=1]
+					/tp @s ~ ~ ~ ~ ~
 					/playsound minecraft:entity.enderman.teleport block @a
 				end
-
+				/tp @s ~ ~ ~
 			end
 		end
 	
@@ -271,6 +290,17 @@ clock main
 				@Marker[pile, has_block, available, limit=1, sort=random].current_pile = True
 				as @Marker[current_pile] at @s
 					/tp @Enderman ~ ~1 ~
+					at @Enderman ~ ~1.8 ~ facing @Marker[current_pile,limit=1]
+						/tp @Enderman ~ ~ ~ ~ ~
+					end
+					/tp @Enderman ~ ~1 ~
+				end
+			end
+		end
+		
+		if cooldown == 10
+			if type == 0
+				as @Marker[current_pile] at @s
 					/data merge entity @Enderman {carriedBlockState:{Name:"minecraft:diamond_block"}}
 					/setblock ~ ~ ~ air
 				end
@@ -283,15 +313,15 @@ clock main
 			end
 		end
 		
-		if cooldown == 10
+		if cooldown == 15
 			if type == 0
 				as @Enderman
-					@s.<pos> = <dest>
-					at @s
-						/tp @s ~ ~ ~ facing entity @Marker[current,limit=1]
+					@s.<pos> = @Position.<pos>
+					at @s ~ ~1.8 ~ facing @Marker[current,limit=1]
+						/tp @s ~ ~ ~ ~ ~
 						/playsound minecraft:entity.enderman.teleport block @a
 					end
-
+					@s.<pos> = @Position.<pos>
 				end
 			end
 			if type == 1
@@ -299,7 +329,21 @@ clock main
 			end
 		end
 		
-		if cooldown == 15
+		if cooldown == 20
+			if type == 1
+				@Marker[pile].current_pile = False
+				@Marker[pile, not has_block, supported, limit=1, sort=random].current_pile = True
+				as @Marker[current_pile] at @s
+					/tp @Enderman ~ ~1 ~
+					at @Enderman ~ ~1.8 ~ facing @Marker[current_pile, limit=1]
+						/tp @Enderman ~ ~ ~ ~ ~
+					end
+					/tp @Enderman ~ ~1 ~
+				end
+			end
+		end
+		
+		if cooldown == 23
 			if type == 0
 				as @Marker[current] at @s
 					/setblock ~ ~ ~ diamond_block
@@ -307,14 +351,21 @@ clock main
 				end
 			end
 			if type == 1
-				@Marker[pile].current_pile = False
-				@Marker[pile, not has_block, supported, limit=1, sort=random].current_pile = True
 				as @Marker[current_pile] at @s
-					/tp @Enderman ~ ~1 ~
 					/data merge entity @Enderman {carriedBlockState:{Name:"minecraft:air"}}
 					/setblock ~ ~ ~ diamond_block
 				end
 			end
 		end
 	end
+	as @Enderman at @s
+		if block ~ ~0.1 ~ air
+			@s.fall -= 80
+			@s.y += @s.fall
+		else
+			@s.fall = 0
+		end
+	end
+	
+	/effect give @Enderman instant_health 1 1 true
 end

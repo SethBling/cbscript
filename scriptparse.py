@@ -1,6 +1,7 @@
 from ply import *
 import traceback
 import scriptlex
+from block_types.advancement_definition_block import advancement_definition_block
 from block_types.array_definition_block import array_definition_block
 from block_types.block_definition_block import block_definition_block
 from block_types.block_tag_block import block_tag_block
@@ -13,6 +14,7 @@ from block_types.for_selector_block import for_selector_block
 from block_types.function_call_block import function_call_block
 from block_types.import_block import import_block
 from block_types.item_tag_block import item_tag_block
+from block_types.loot_table_definition_block import loot_table_definition_block
 from block_types.macro_call_block import macro_call_block
 from block_types.method_call_block import method_call_block
 from block_types.move_block import move_block
@@ -345,7 +347,9 @@ def p_optassignments_multiple(p):
 					  | import_statement newlines optassignments
 					  | print_block newlines optassignments
 					  | pointer_decl newlines optassignments
-					  | shaped_recipe newlines optassignments'''
+					  | shaped_recipe newlines optassignments
+					  | advancement_definition newlines optassignments
+					  | loot_table_definition newlines optassignments'''
 	p[0] = [p[1]] + p[3]
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -679,14 +683,45 @@ def p_condition_not_bool(p):
 	p[0] = ('score', (p[2], '<=', virtualint_var(0)))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
+def p_opt_block_state(p):
+	'''opt_block_state : LBRACK block_states RBRACK'''
+	p[0] = p[1] + p[2] + p[3]
+	mcfunction.line_numbers.append((p[0], p.lineno(1)))
+	
+def p_opt_block_state_none(p):
+	'''opt_block_state : empty'''
+	p[0] = ''
+	
+def p_block_states_one(p):
+	'''block_states : ID EQUALS ID
+					| ID EQUALS virtualinteger
+					| facing EQUALS ID
+					| facing EQUALS virtualinteger'''
+	p[0] = p[1] + p[2] + p[3]
+	
+def p_block_states_list(p):
+	'''block_states : ID EQUALS ID COMMA block_states
+					| ID EQUALS virtualinteger COMMA block_states
+					| facing EQUALS ID COMMA block_states
+					| facing EQUALS virtualinteger COMMA block_states'''
+	p[0] = p[1] + p[2] + p[3] + p[4] + p[5]
+	
+def p_opt_tile_data(p):
+	'''opt_tile_data : json_object'''
+	p[0] = p[1]
+
+def p_opt_tile_data_empty(p):
+	'''opt_tile_data : empty'''
+	p[0] = ''
+	
 def p_condition_block(p):
-	'''condition : block relcoords ID'''
-	p[0] = ('block', (p[2], p[3]))
+	'''condition : block relcoords ID opt_block_state opt_tile_data'''
+	p[0] = ('block', (p[2], p[3] + p[4] + p[5]))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
 def p_condition_block_virtual(p):
-	'''condition : block relcoords DOLLAR ID'''
-	p[0] = ('block', (p[2], p[3]+p[4])) 
+	'''condition : block relcoords DOLLAR ID opt_block_state opt_tile_data'''
+	p[0] = ('block', (p[2], p[3]+p[4]+p[5]+p[6])) 
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
 def p_condition_nbt_path(p):
@@ -1191,7 +1226,8 @@ def p_selector_array(p):
 	p[0] = ('Array', p[1])
 	
 def p_data_path_id(p):
-	'''data_path : ID'''
+	'''data_path : ID
+				 | facing'''
 	p[0] = p[1]
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 	
@@ -1515,25 +1551,26 @@ def p_vector_expr_here_scale(p):
 	
 #### Json (can't implement until COLON is an available token)
 def p_json_object(p):
-	'''json_object : LCURLY json_members RCURLY'''
-	p[0] = p[1] + p[2] + p[3]
+	'''json_object : LCURLY optnewlines json_members optnewlines RCURLY'''
+	p[0] = p[1] + p[3] + p[5]
 	
 def p_json_members(p):
 	'''json_members : json_pair'''
 	p[0] = p[1]
 	
 def p_json_members_multi(p):
-	'''json_members : json_pair COMMA json_members'''
-	p[0] = p[1] + p[2] + p[3]
+	'''json_members : json_pair COMMA optnewlines json_members'''
+	p[0] = p[1] + p[2] + p[4]
 	
 def p_json_members_empty(p):
 	'''json_members : empty'''
 	p[0] = ''
 	
 def p_json_pair(p):
-	'''json_pair : ID COLON json_value
-				 | string COLON json_value'''
-	p[0] = '"' + p[1] + '"' + p[2] + p[3]
+	'''json_pair : ID COLON optnewlines json_value
+				 | string COLON optnewlines json_value
+				 | facing COLON optnewlines json_value'''
+	p[0] = '"' + p[1] + '"' + p[2] + p[4]
 	
 def p_json_value(p):
 	'''json_value : number
@@ -1557,16 +1594,16 @@ def p_json_value_string(p):
 	p[0] = '"' + p[1] + '"'
 	
 def p_json_array(p):
-	'''json_array : LBRACK json_elements RBRACK'''
-	p[0] = p[1] + p[2] + p[3]
+	'''json_array : LBRACK optnewlines json_elements optnewlines RBRACK'''
+	p[0] = p[1] + p[3] + p[5]
 	
 def p_json_elements(p):
 	'''json_elements : json_value'''
 	p[0] = p[1]
 	
 def p_json_elements_multi(p):
-	'''json_elements : json_value COMMA json_elements'''
-	p[0] = p[1] + p[2] + p[3]
+	'''json_elements : json_value COMMA optnewlines json_elements'''
+	p[0] = p[1] + p[2] + p[4]
 	
 def p_json_elements_empty(p):
 	'''json_elements : empty'''
@@ -1602,6 +1639,32 @@ def p_recipe_key_list(p):
 def p_recipe_key_list_empty(p):
 	'''recipe_key_list : empty'''
 	p[0] = []
+	
+#### Advancements
+def p_advancement_definition(p):
+	'''advancement_definition : advancement ID json_object'''
+	p[0] = advancement_definition_block(p.lineno(1), p[2], p[3])
+	
+
+
+#### Loot Tables
+def p_loot_table_type(p):
+	'''loot_table_type : block'''
+	types = {
+		'block': 'blocks',
+	}
+	if p[1] not in types:
+		raise SyntaxError('Invalid loot table type "{}" at line {}.'.format(p[1], p.lineno(1)))
+		
+	p[0] = types[p[1]]
+	
+def p_loot_table_definition(p):
+	'''loot_table_definition : loot_table loot_table_type ID json_object'''
+	p[0] = loot_table_definition_block(p.lineno(1), p[2], p[3], p[4])
+
+def p_loot_table_definition(p):
+	'''loot_table_definition : loot_table loot_table_type ID COLON ID json_object'''
+	p[0] = loot_table_definition_block(p.lineno(1), p[2], p[3] + p[4] + p[5], p[6])
 	
 #### Empty
 def p_empty(p):
