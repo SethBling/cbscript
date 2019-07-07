@@ -1,0 +1,24 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Test block switches."
+
+import common
+
+reset
+
+end
+
+clock main
+	as @Player at @s
+		switch block at ~ ~-1 ~
+			case $block_name, $block_id
+				@s.block_id = $block_id
+			end
+		end
+	
+		switch block @s.block_id
+			case $block_name, $block_id
+				/setblock ~ ~ ~ $block_name
+			end
+		end
+	end
+end

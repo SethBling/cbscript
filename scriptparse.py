@@ -4,6 +4,8 @@ import scriptlex
 from block_types.advancement_definition_block import advancement_definition_block
 from block_types.array_definition_block import array_definition_block
 from block_types.block_definition_block import block_definition_block
+from block_types.block_switch_block import block_switch_block
+from block_types.block_id_switch_block import block_id_switch_block
 from block_types.block_tag_block import block_tag_block
 from block_types.command_block import command_block
 from block_types.comment_block import comment_block
@@ -37,6 +39,7 @@ from block_types.title_block import title_block
 from block_types.vector_assignment_block import vector_assignment_block
 from block_types.vector_assignment_scalar_block import vector_assignment_scalar_block
 from block_types.while_block import while_block
+from data_types.block_case import block_case
 from data_types.const_number import const_number
 from data_types.const_string import const_string
 from data_types.number_macro_path import number_macro_path
@@ -786,6 +789,39 @@ def p_switch_case_python(p):
 	p[0] = ('python', (p[3], p[5], p[7]))
 	mcfunction.line_numbers.append((p[0], p.lineno(1)))
 
+#### Block Switch
+def p_block_switch(p):
+	'''codeblock : switch block opt_coords newlines block_cases end'''
+	p[0] = block_switch_block(p.lineno(1), p[3], p[5])
+	
+def p_block_id_switch(p):
+	'''codeblock : switch block expr newlines block_cases end'''
+	p[0] = block_id_switch_block(p.lineno(1), p[3], p[5])
+	
+def p_opt_coords(p):
+	'''opt_coords : at relcoords'''
+	p[0] = p[2]
+	
+def p_opt_coords_empty(p):
+	'''opt_coords : empty'''
+	p[0] = relcoords()
+	
+def p_block_cases_empty(p):
+	'''block_cases : empty'''
+	p[0] = []
+	
+def p_block_cases_multi(p):
+	'''block_cases : block_case newlines block_cases'''
+	p[0] = [p[1]] + p[3]
+	
+def p_block_case_default(p):
+	'''block_case : case DOLLAR ID COMMA DOLLAR ID newlines blocklist end'''
+	p[0] = block_case(p[2] + p[3], p[5] + p[6], p[8], True)
+	
+def p_block_case_specific(p):
+	'''block_case : case ID COMMA DOLLAR ID newlines blocklist end'''
+	p[0] = block_case(p[2], p[4]+p[5], p[7], False)
+	
 #### Tell/Title	
 def p_block_tell(p):
 	'''codeblock : tell fullselector string'''

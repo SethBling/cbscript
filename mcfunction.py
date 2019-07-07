@@ -352,8 +352,6 @@ class mcfunction(object):
 				except CompileError as e:
 					print(e)
 					raise Exception('Unable to compile case at line {}'.format(line))
-				except Exception:
-					raise
 					
 				single_command = case_func.single_command()
 				if single_command != None:
@@ -789,3 +787,6 @@ class mcfunction(object):
 		
 	def add_loot_table(self, name, loot_table):
 		self.environment.add_loot_table(name, loot_table)
+		
+	def get_block_state_list(self):
+		return self.environment.get_block_state_list()

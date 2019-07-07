@@ -357,3 +357,6 @@ class environment(object):
 		
 	def add_loot_table(self, name, loot_table):
 		self.global_context.add_loot_table(name, loot_table)
+		
+	def get_block_state_list(self):
+		return self.global_context.get_block_state_list()

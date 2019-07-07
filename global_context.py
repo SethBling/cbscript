@@ -1,5 +1,6 @@
 from mcfunction import mcfunction
 from CompileError import CompileError
+import json
 
 def get_friendly_name(namespace):
 	name = "CB" + namespace[:14]
@@ -45,6 +46,7 @@ class global_context(object):
 		self.recipes = []
 		self.advancements = {}
 		self.loot_tables = {}
+		self.block_state_list = None
 
 	def register_block_tag(self, name, blocks):
 		self.block_tags[name] = blocks
@@ -142,3 +144,33 @@ class global_context(object):
 		
 	def add_loot_table(self, name, loot_table):
 		self.loot_tables[name] = loot_table
+		
+	def get_block_state_list(self):
+		if not self.block_state_list:
+			with open('blocks.json', 'r') as f:
+				blocks = json.load(f)
+			
+		return blocks
+
+'''			
+			self.block_state_list = []
+			for block in blocks:
+				for state in blocks[block]["states"]:
+					if "properties" in blocks[block]["states"][state]:
+						block_state = block + '['
+						first = True
+						for property in blocks[block]["states"][state]["properties"]:
+							if first:
+								first = False
+							else:
+								block_state += ','
+							
+							block_state += property
+							block_state += '='
+							block_state += blocks[block]["states"][state]["properties"][property]
+						
+						block_state += ']'
+						self.block_state_list.append(block)
+					else:
+						self.block_state_list.append(block)
+'''
