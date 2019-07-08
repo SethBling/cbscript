@@ -27,7 +27,7 @@ class for_index_block(object):
 				by_const = int(by_const)
 				
 		unique = func.get_unique_id()
-		loop_func_name = 'for{0:03}_ln{1}'.format(unique, self.line)
+		loop_func_name = 'line{:03}/for{0:03}'.format(self.line, unique)
 
 		loop_func = func.create_child_function()
 		func.register_function(loop_func_name, loop_func)	

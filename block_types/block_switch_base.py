@@ -53,11 +53,11 @@ class block_switch_base(object):
 					func.add_command('execute if {} run {}'.format(self.get_range_condition(func, quartile), single_command))
 				else:
 					unique = func.get_unique_id()
-					range_name = 'switch_{}-{}_{}_ln{}'.format(
+					range_name = 'line{:03}/switch_{}-{}_{}'.format(
+						self.line,
 						str(quartile[0]).replace('minecraft:',''),
 						str(quartile[-1]).replace('minecraft:',''),
-						unique,
-						self.line)
+						unique)
 					func.add_command('execute if {} run function {}:{}'.format(
 						self.get_range_condition(func, quartile),
 						func.namespace,

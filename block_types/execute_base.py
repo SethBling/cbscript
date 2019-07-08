@@ -33,7 +33,7 @@ class execute_base(object):
 		single = exec_func.single_command()
 		if single == None or self.force_sub_function():
 			unique = func.get_unique_id()
-			func_name = '{0}{1:03}_ln{2}'.format(self.display_name(), unique, self.line)
+			func_name = 'line{:03}/{}{:03}'.format(self.line, self.display_name(), unique)
 			func.register_function(func_name, exec_func)
 			
 			self.add_continuation_command(func, func_name, exec_func)

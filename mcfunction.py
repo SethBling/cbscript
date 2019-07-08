@@ -365,15 +365,15 @@ class mcfunction(object):
 					unique = self.get_unique_id()
 
 					if vmin == vmax:
-						case_name = '{}{}_{:03}_ln{}'.format(case_func_name, vmin, unique, line)
+						case_name = 'line{:03}/{}{}_{:03}'.format(line, case_func_name, vmin, unique)
 					else:
-						case_name = '{}{}-{}_{:03}_ln{}'.format(case_func_name, vmin, vmax, unique, line)
+						case_name = 'line{:03}/{}{}-{}_{:03}_ln{}'.format(line, case_func_name, vmin, vmax, unique)
 						
 					self.add_command('execute if score {} {} matches {}..{} run function {}:{}'.format(var.selector, var.objective, vmin, vmax, self.namespace, case_name))
 					self.register_function(case_name, case_func)
 			else:
 				unique = self.get_unique_id()
-				case_name = '{}{}-{}_{:03}_ln{}'.format(switch_func_name, vmin, vmax, unique, line)
+				case_name = 'line{:03}/{}{}-{}_{:03}'.format(line, switch_func_name, vmin, vmax, unique)
 				self.add_command('execute if score {} {} matches {}..{} run function {}:{}'.format(var.selector, var.objective, vmin, vmax, self.namespace, case_name))
 				self.register_function(case_name, case_func)
 			

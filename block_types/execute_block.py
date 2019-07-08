@@ -56,7 +56,7 @@ class execute_block(execute_base):
 			single = exec_func.single_command()
 			if single == None:
 				unique = func.get_unique_id()
-				func_name = 'else{0:03}_ln{1}'.format(unique, self.line)
+				func_name = 'line{:03}/else{:03}'.format(self.line, unique)
 				func.register_function(func_name, exec_func)
 				
 				func.add_command('{}run function {}:{}'.format(prefix, func.namespace, func_name))
