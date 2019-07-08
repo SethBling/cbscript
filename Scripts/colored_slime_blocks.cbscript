@@ -84,11 +84,12 @@ $Pushable = 1
 $Break = 2
 $BlockPush = 3
 $Pushed = 4
+$Nonstick = 5
 
 $OppositeDir = [1, 0, 3, 2, 5, 4]
 
 define @SlimeMarker: @Entity[type=area_effect_cloud,tag=SlimeMarker]
-	create {Tags:["SlimeMarker","Pushing"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+	create {Tags:["SlimeMarker"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
 end
 
 define @PushMarker: @Entity[type=area_effect_cloud,tag=PushMarker]
@@ -99,6 +100,15 @@ define @BreakMarker: @Entity[type=area_effect_cloud,tag=BreakMarker]
 	create {Tags:["BreakMarker","Pushing"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
 end
 
+define @MovingBlockPos : @Entity[type=armor_stand, tag=MovingBlockPos]
+end
+
+@NewMovingBlockPos = @Entity[type=armor_stand, tag=NewMovingBlockPos]
+
+define @MovingBlock : @Entity[type=falling_block,tag=MovingBlock]
+	time: Time byte 1
+end
+@NewMovingBlock = @Entity[type=falling_block,tag=NewMovingBlock]
 
 @Pushing = @Entity[type=area_effect_cloud, tag=Pushing]
 
@@ -108,11 +118,44 @@ define [Moving]
 	source: source byte 1
 end
 
-reset
+define @Player: @Player
+	array place_slime[0 to 15]
+end
 
+reset
+	/gamerule maxCommandChainLength 1000000000
+
+	for $i in $range($len($Colors))
+		$c = $Colors[$i]
+		/scoreboard objectives add place_slime$i minecraft.used:minecraft.$c
+	end
+	
+	tell @a 'Loaded {RColored {GSlime {BBlocks{- by SethBling'
 end
 
 clock main
+	as @PushMarker[move_timer > 0]
+		@s.move_timer--
+		if @s.move_timer == 0
+			at @s if block ~ ~ ~ barrier
+				/setblock ~ ~ ~ air
+			end
+			move_dir = @s.move_dir
+			switch @s.move_dir
+				case $d in $range(6)
+					at @s as @SlimeMarker[distance=..0.1,move_timer==0]
+						move @s ~<$Deltas[$d]>
+					end
+					move @s ~<$Deltas[$d]>
+				end
+			end
+			at @s
+				set_block()
+			end
+			/kill @s
+		end
+	end
+	
 	as @SlimeMarker at @s
 		if @s.move_timer
 			@s.move_timer--
@@ -125,8 +168,13 @@ clock main
 						move @s ~<$Deltas[$d]>
 					end
 				end
-				at @s
-					/setblock ~ ~ ~ black_stained_glass
+				switch @s.color
+					case $i in $range(16)
+						$color = $Colors[$i]
+						at @s
+							/setblock ~ ~ ~ $color
+						end
+					end
 				end
 			end
 		else
@@ -136,8 +184,6 @@ clock main
 					if [Moving].face == $d and [Moving].extending == 0 and [Moving].source == 1
 						at @s
 							$dx, $dy, $dz = $PullDeltas[$d]
-							/setblock ~ ~ ~ barrier
-							/setblock ~$dx ~$dy ~$dz barrier
 							
 							$op = $OppositeDir[$d]
 							@s.move_dir = $op
@@ -175,56 +221,68 @@ clock main
 					end
 				end
 			end
+			
+			at @s unless block ~ ~ ~ sticky unless block ~ ~ ~ barrier if @s.move_timer == 0
+				/kill @s
+			end
+		end
+	end
+	
+	@MovingBlockPos.move_timer--
+	@MovingBlock.move_timer--
+	as @MovingBlockPos
+		if @s.move_timer >= 0
+			switch @s.d
+				case $d in $range(6)
+					$dx, $dy, $dz = $Deltas[$d]
+					$dx = $dx / 2.0
+					$dy = $dy / 2.0
+					$dz = $dz / 2.0
+					move @s ~$dx ~$dy ~$dz
+				end
+			end
+		else
+			/kill @s
+		end
+	end
+	as @MovingBlock
+		@s.time = 1
+		if @s.move_timer < 0
+			/kill @s
+		end
+	end
+		
+	as @Player at @s eyes ^ ^ ^
+		for $i in $range(16)
+			if @s.place_slime[$i]
+				steps = 0
+				while steps < 60 at feet ^ ^ ^0.1
+					if block ~ ~ ~ sticky align xyz at ~0.5 ~0.5 ~0.5 unless @SlimeMarker[distance=..0.1]
+						for $i in $range(16)
+							$color = $Colors[$i]
+							if block ~ ~ ~ $color
+								as create @SlimeMarker
+									@s.color = $i
+									@s.move_timer = 0
+								end
+								steps = 1000000
+							end
+						end
+					end
+					steps++
+				end
+				
+				@s.place_slime[$i] = False
+			end
 		end
 	end
 end
 
 function get_pushable_list{$d, $extend}()
-	if $extend
-		push_count = 0
-	else
-		push_count = 1
-	end
+	push_count = 0
 	
 	at @s
-		as create @PushMarker
-			@s.act = False
-		end
-		if $extend
-			at ~<$Deltas[$d]>
-				as create @PushMarker
-					@s.act = False
-					if push_count <= 12
-						recursive_pushed{$d}()
-					end
-				end
-			end
-		end
-		for $side_delta in $SideDeltas[$d]
-			at ~<$side_delta>
-				$get_pushable($d)
-				switch pushable
-					case $Pushable
-						push_count++
-						as create @PushMarker
-							@s.act = True
-							if push_count <= 12
-								recursive_push{$d, $extend, False}()
-							end
-						end
-					end
-					case $Pushed
-						push_count++
-						as create @PushMarker
-							@s.act = False
-							if push_count <= 12
-								recursive_push{$d, $extend, False}()
-							end
-						end
-					end
-				end
-			end
-		end
+		recursive_pushed{$d}()
 	end
 	
 	if push_count <= 12
@@ -233,69 +291,125 @@ function get_pushable_list{$d, $extend}()
 		end
 		/kill @BreakMarker
 		/kill @PushMarker[not act]
-		while @PushMarker[act]
-			as @PushMarker[act] at @s
-				at ~<$Deltas[$d]> if @Pushing[distance=..0.1]
-				else
-					$dx, $dy, $dz = $Deltas[$d]
-					/clone ~ ~ ~ ~ ~ ~ ~$dx ~$dy ~$dz replace
-					/setblock ~ ~ ~ air replace
-					/kill @s
-				end
+		@PushMarker.move_timer += 0
+		as @PushMarker[move_timer==0] at @s
+			get_block()
+			@s.move_dir = $d
+		end
+		as @PushMarker[move_timer==0] at @s
+			@s.move_timer = 3
+			$dx, $dy, $dz = $Deltas[$d]
+			/setblock ~ ~ ~ barrier
+			/setblock ~$dx ~$dy ~$dz barrier
+			
+			block_id = @s.block_id
+			create_moving_block()
+			as @NewMovingBlockPos[limit=1]
+				@s.d = $d
+				@s.move_timer = 3
+				/tag @s remove NewMovingBlockPos
+			end
+			as @NewMovingBlock[limit=1]
+				@s.move_timer = 3
+				set_moving_block_state()
+				/tag @s remove NewMovingBlock
+			end
+		end
+	else
+		@PushMarker.move_timer += 0
+		/kill @PushMarker[move_timer == 0]
+		/kill @BreakMarker
+	end
+end
+
+function create_moving_block()
+	switch block block_id
+		case $block_name, $block_id
+			$block_name_parts = $block_name.$split('[')
+			$block_name = $block_name_parts[0]
+			/summon armor_stand ~ ~-0.5 ~ {Tags:["MovingBlockPos", "NewMovingBlockPos"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"falling_block", Time:1b, NoGravity:1b, BlockState:{Name:"$block_name"}, Tags:["MovingBlock","NewMovingBlock"]}]}
+		end
+	end
+end
+
+function get_block()
+	switch block
+		case $block_name, $block_id
+			@s.block_id = $block_id
+		end
+	end
+end
+
+function set_block()
+	switch block @s.block_id
+		case $block_name, $block_id
+			$is_observer = $block_name.$startswith('minecraft:observer[')
+			if $is_observer
+				$block_name = $block_name.$replace('powered=false', 'powered=true')
+				/setblock ~ ~ ~ $block_name
+			else
+				/setblock ~ ~ ~ $block_name
 			end
 		end
 	end
-	
-	/kill @PushMarker
-	/kill @BreakMarker
 end
 
 function recursive_pushed{$d}()
-	at @s
-		sticky = -1
-		at ~<$Deltas[$d]>
-			push_count++
-			$get_pushable($d)
-			if pushable == $Pushed
-				as create @PushMarker
-					@s.act = False
-					recursive_pushed{$d}()
-				end
-				/execute if data block ~ ~ ~ {blockState:{Name:"minecraft:black_stained_glass"}} run scoreboard players set Global sticky 15
+	at ~<$Deltas[$d]>
+		$get_pushable($d)
+	end
+	if pushable == $Pushed
+		push_count++
+		as create @PushMarker
+			@s.act = False
+			at ~<$Deltas[$d]>
+				recursive_pushed{$d}()
 			end
-		end
-		if sticky >= 0
-			recursive_push{$d, True, True}()
+			
+			for $i in $range(16)
+				sticky_color = -1
+			
+				$color = $Colors[$i]
+				
+				$dx, $dy, $dz = $Deltas[$d]
+				/execute if data block ~$dx ~$dy ~$dz {blockState:{Name:"minecraft:$color"}} run scoreboard players set Global sticky_color $i
+				if sticky_color >= 0
+					recursive_push{$d, True, True}()
+				end
+			end
 		end
 	end
 end
 
 function recursive_push{$d, $extend, $force_sticky}()
 	at @s
-		at ~<$Deltas[$d]> unless @Pushing[distance=..0.1,limit=1]
-			$get_pushable($d)
-			if pushable == $BlockPush
-				push_count = 1000
-				<x, y, z> = here / scale
-				tell @a 'Blocked at (x) (y) (z)'
-			else if pushable == $Break
-				create @BreakMarker
-			else
-				recursive = False
-				if pushable == $Pushable
-					recursive = True
-					act = True
-				end
-				if pushable == $Pushed
-					recursive = True
-					act = False
-				end
-				if recursive
-					push_count++
-					as create @PushMarker
-						@s.act = act
+		if $force_sticky
+		else
+			at ~<$Deltas[$d]> unless @Pushing[distance=..0.1,limit=1]
+				$get_pushable($d)
+				if pushable == $BlockPush
+					push_count = 1000
+					<x, y, z> = here / scale
+					tell @a 'Blocked at (x) (y) (z)'
+				else if pushable == $Break
+					create @BreakMarker
+				else
+					recursive = False
+					if pushable == $Pushable
+						recursive = True
+						act = True
+					end
+					if pushable == $Pushed
+						recursive = True
+						act = False
+					end
+					if recursive
+						push_count++
 						if push_count <= 12
-							recursive_push{$d, $extend, False}()
+							as create @PushMarker
+								@s.act = act
+								recursive_push{$d, $extend, False}()
+							end
 						end
 					end
 				end
@@ -314,23 +428,39 @@ function recursive_push{$d, $extend, $force_sticky}()
 			for $side_delta in $SideDeltas[$d]
 				at ~<$side_delta> unless @Pushing[distance=..0.1,limit=1]
 					$get_pushable($d)
-					switch pushable
-						case $Pushable
-							push_count++
-							as create @PushMarker
-								@s.act = True
-								if push_count <= 12
-									recursive_push{$d, $extend, False}()
+					
+					if $force_sticky
+						switch sticky_color
+							case $i in $range(16)
+								$color = $Colors[$i]
+								if block ~ ~ ~ sticky unless block ~ ~ ~ $color
+									pushable = $Nonstick
 								end
 							end
 						end
-						case $Pushed
-							push_count++
+					else					
+						for $color in $Colors
+							if block ~ ~ ~ sticky if block ~ ~ ~ $color at @s unless block ~ ~ ~ $color
+								pushable = $Nonstick
+							end
+						end
+					end
+					
+					recursive = False
+					if pushable == $Pushable
+						recursive = True
+						act = True
+					end
+					if pushable == $Pushed
+						recursive = True
+						act = False
+					end
+					if recursive
+						push_count++
+						if push_count <= 12
 							as create @PushMarker
-								@s.act = False
-								if push_count <= 12
-									recursive_push{$d, $extend, False}()
-								end
+								@s.act = act
+								recursive_push{$d, $extend, False}()
 							end
 						end
 					end

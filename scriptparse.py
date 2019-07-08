@@ -1079,13 +1079,13 @@ def p_pyexpr_array_lookup(p):
 	'''pyexpr : pyexpr LBRACK pyexpr RBRACK'''
 	p[0] = p[1] + p[2] + p[3] + p[4]
 	
+def p_pyexpr_member(p):
+	'''pyexpr : pyexpr DOT pyexpr'''
+	p[0] = p[1] + p[2] + p[3]
+	
 def p_pyexpr_pyid(p):
 	'''pyid : DOLLAR ID'''
 	p[0] = p[2]
-	
-def p_pyexpr_pyid_member(p):
-	'''pyid : pyid DOT ID'''
-	p[0] = p[1] + p[2] + p[3]
 
 def p_pyexpr_var(p):
 	'''pyexpr : pyid'''
