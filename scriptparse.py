@@ -813,7 +813,7 @@ def p_block_cases_empty(p):
 def p_block_cases_multi(p):
 	'''block_cases : block_case newlines block_cases'''
 	p[0] = [p[1]] + p[3]
-	
+
 def p_block_case_default(p):
 	'''block_case : case DOLLAR ID COMMA DOLLAR ID newlines blocklist end'''
 	p[0] = block_case(p[2] + p[3], p[5] + p[6], p[8], True)

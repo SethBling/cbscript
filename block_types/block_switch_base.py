@@ -14,6 +14,7 @@ class block_switch_base(object):
 		self.block_list = {}
 		self.block_state_ids = {}
 		self.id_block_states = {}
+		self.falling_block_nbt = {}
 		
 	def compile_initialization(self, func):
 		None
@@ -82,6 +83,24 @@ class block_switch_base(object):
 		
 		return block_state
 		
+	def get_falling_block_nbt(self, block, state):
+		nbt = 'Name:"{}"'.format(block)
+		if "properties" in state:
+			nbt += ',Properties:{'
+			
+			first = True
+			for property in state["properties"]:
+				if first:
+					first = False
+				else:
+					nbt += ','
+				
+				nbt += '{}:"{}"'.format(property, state["properties"][property])
+			
+			nbt += '}'
+		
+		return nbt
+		
 	def get_block_state_list(self, blocks):
 		self.block_state_list = {}
 		self.block_list = {}
@@ -98,6 +117,8 @@ class block_switch_base(object):
 							self.block_list[block] = []
 						self.block_list[block].append(block_state)
 						self.block_state_ids[block_state] = state["id"]
+						
+						self.falling_block_nbt[block_state] = self.get_falling_block_nbt(block, state)
 			else:
 				case = self.get_matching_case(block)
 				if case != None:
@@ -106,6 +127,8 @@ class block_switch_base(object):
 						self.block_list[block] = []
 					self.block_list[block].append(block)
 					self.block_state_ids[block] = blocks[block]["states"][0]["id"]
+					
+					self.falling_block_nbt[block] = 'Name:"{}"'.format(block)
 					
 		self.id_block_states = {self.block_state_ids[block_state]:block_state for block_state in self.block_state_ids}
 					

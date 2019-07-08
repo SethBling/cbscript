@@ -231,7 +231,7 @@ clock main
 	@MovingBlockPos.move_timer--
 	@MovingBlock.move_timer--
 	as @MovingBlockPos
-		if @s.move_timer >= 0
+		if @s.move_timer == 1
 			switch @s.d
 				case $d in $range(6)
 					$dx, $dy, $dz = $Deltas[$d]
@@ -241,7 +241,8 @@ clock main
 					move @s ~$dx ~$dy ~$dz
 				end
 			end
-		else
+		end
+		if @s.move_timer <= 0
 			/kill @s
 		end
 	end
@@ -303,15 +304,19 @@ function get_pushable_list{$d, $extend}()
 			/setblock ~$dx ~$dy ~$dz barrier
 			
 			block_id = @s.block_id
-			create_moving_block()
+			$mdx = $dx / 2.0
+			$mdy = $dy / 2.0
+			$mdz = $dz / 2.0
+			at ~$mdx ~$mdy ~$mdz
+				create_moving_block()
+			end
 			as @NewMovingBlockPos[limit=1]
 				@s.d = $d
-				@s.move_timer = 3
+				@s.move_timer = 2
 				/tag @s remove NewMovingBlockPos
 			end
 			as @NewMovingBlock[limit=1]
-				@s.move_timer = 3
-				set_moving_block_state()
+				@s.move_timer = 2
 				/tag @s remove NewMovingBlock
 			end
 		end
@@ -325,9 +330,7 @@ end
 function create_moving_block()
 	switch block block_id
 		case $block_name, $block_id
-			$block_name_parts = $block_name.$split('[')
-			$block_name = $block_name_parts[0]
-			/summon armor_stand ~ ~-0.5 ~ {Tags:["MovingBlockPos", "NewMovingBlockPos"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"falling_block", Time:1b, NoGravity:1b, BlockState:{Name:"$block_name"}, Tags:["MovingBlock","NewMovingBlock"]}]}
+			/summon armor_stand ~ ~-0.5 ~ {Tags:["MovingBlockPos", "NewMovingBlockPos"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"falling_block", Time:1b, NoGravity:1b, BlockState:{$falling_block_nbt}, Tags:["MovingBlock","NewMovingBlock"]}]}
 		end
 	end
 end
@@ -347,6 +350,8 @@ function set_block()
 			if $is_observer
 				$block_name = $block_name.$replace('powered=false', 'powered=true')
 				/setblock ~ ~ ~ $block_name
+				/setblock ~ ~ ~ $block_name
+				$print($block_id)
 			else
 				/setblock ~ ~ ~ $block_name
 			end

@@ -19,10 +19,11 @@ class block_switch_block(block_switch_base):
 		
 			id = self.block_state_ids[block_state]
 			case = self.block_state_list[block_state]
+			falling_block_nbt = self.falling_block_nbt[block_state]
 			
 			case_func = func.create_child_function()
 			try:
-				case.compile(block_state, id, case_func)
+				case.compile(block_state, id, case_func, falling_block_nbt)
 			except CompileError as e:
 				print(e)
 				raise CompileError('Unable to compile block switch at line {}'.format(self.line))
@@ -32,7 +33,7 @@ class block_switch_block(block_switch_base):
 				func.add_command('execute if {} run {}'.format(self.case_condition(func, block_state), single_command))
 			else:
 				unique = func.get_unique_id()
-				case_name = 'case{}{}_{:03}_ln{}'.format(block, index, unique, self.line)
+				case_name = 'line{:03}/case{}{}_{:03}'.format(self.line, block, index, unique)
 				func.add_command('execute if {} run function {}:{}'.format(func.namespace, case_name))
 				func.register_function(case_name, case_func)
 				

@@ -15,10 +15,12 @@ class block_case(object):
 			
 		return block_state.startswith(block_name)
 		
-	def compile(self, block_state, block_id, func):
+	def compile(self, block_state, block_id, func, falling_block_nbt):
 		if self.block_name.startswith('$'):
 			func.set_dollarid(self.block_name[1:], block_state)
 		if self.block_id.startswith('$'):
 			func.set_dollarid(self.block_id[1:], block_id)
+			
+		func.set_dollarid('falling_block_nbt', falling_block_nbt)
 			
 		func.compile_blocks(self.lines)
