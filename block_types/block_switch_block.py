@@ -13,6 +13,8 @@ class block_switch_block(block_switch_base):
 		
 	def compile_block_case(self, func, block):
 		index = 0
+		
+		block_func = func.create_child_function()
 	
 		for block_state in self.block_list[block]:
 			index += 1
@@ -21,7 +23,7 @@ class block_switch_block(block_switch_base):
 			case = self.block_state_list[block_state]
 			falling_block_nbt = self.falling_block_nbt[block_state]
 			
-			case_func = func.create_child_function()
+			case_func = block_func.create_child_function()
 			try:
 				case.compile(block_state, id, case_func, falling_block_nbt)
 			except CompileError as e:
@@ -30,12 +32,22 @@ class block_switch_block(block_switch_base):
 				
 			single_command = case_func.single_command()
 			if single_command:
-				func.add_command('execute if {} run {}'.format(self.case_condition(func, block_state), single_command))
+				block_func.add_command('execute if {} run {}'.format(self.case_condition(block_func, block_state), single_command))
 			else:
-				unique = func.get_unique_id()
-				case_name = 'line{:03}/case{}{}_{:03}'.format(self.line, block, index, unique)
-				func.add_command('execute if {} run function {}:{}'.format(func.namespace, case_name))
-				func.register_function(case_name, case_func)
+				unique = block_func.get_unique_id()
+				case_name = 'line{:03}/case_{}{}_{:03}'.format(self.line, block.replace('minecraft:',''), index, unique)
+				block_func.add_command('execute if {} run function {}:{}'.format(block_func.namespace, case_name))
+				block_func.register_function(case_name, case_func)
+				
+		single_command = block_func.single_command()
+		
+		if single_command:
+			func.add_command(single_command)
+		else:
+			unique = block_func.get_unique_id()
+			block_case_name = 'line{:03}/case_{}_base_{:03}'.format(self.line, block.replace('minecraft:',''), unique)
+			func.add_command('execute if block ~ ~ ~ {} run function {}:{}'.format(block, func.namespace, block_case_name))
+			func.register_function(block_case_name, block_func)
 				
 	def get_range_condition(self, func, blocks):
 		unique = func.get_unique_id()

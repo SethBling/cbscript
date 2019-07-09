@@ -16,9 +16,11 @@ class block_switch_base(object):
 		self.id_block_states = {}
 		self.falling_block_nbt = {}
 		
+	# In child classes, can be used to initialize switch variables
 	def compile_initialization(self, func):
 		None
 
+	# Create and call all required switch/case functions
 	def compile(self, func):
 		self.compile_initialization(func)
 		blocks = func.get_block_state_list()
@@ -26,6 +28,7 @@ class block_switch_base(object):
 		case_ids = self.get_case_ids()
 		self.compile_block_cases(func, case_ids)
 		
+	# Splits a list into four quartiles
 	def get_quartiles(self, list):
 		size = len(list)
 		return [
@@ -34,6 +37,7 @@ class block_switch_base(object):
 			list[size/2:size*3/4],
 			list[size*3/4:]]
 	
+	# Creates switch and case function tree
 	def compile_block_cases(self, func, block_cases):
 		quartiles = self.get_quartiles(block_cases)
 		
@@ -65,7 +69,7 @@ class block_switch_base(object):
 						range_name))
 					func.register_function(range_name, range_func)
 			
-		
+	# Gets a block state name in command format from a json block state object
 	def get_block_state_name(self, block, state):
 		if 'properties' in state:
 			props = state['properties']
@@ -77,6 +81,7 @@ class block_switch_base(object):
 		else:
 			return block
 			
+	# Gets BlockProperties nbt from a json block state object
 	def get_falling_block_nbt(self, block, state):
 		if 'properties' in state:
 			props = state['properties']
@@ -89,6 +94,7 @@ class block_switch_base(object):
 		else:
 			return 'Name:"{}"'.format(block)
 		
+	# Gets a list of all block states matching some case (including the default case)
 	def get_block_state_list(self, blocks):
 		self.block_state_list = {}
 		self.block_list = {}
@@ -108,6 +114,7 @@ class block_switch_base(object):
 				
 		self.id_block_states = {self.block_state_ids[block_state]:block_state for block_state in self.block_state_ids}
 					
+	# Finds a case matching a block state in command format
 	def get_matching_case(self, block_state):
 		for case in self.cases:
 			if not case.is_default and case.matches(block_state):
