@@ -67,69 +67,45 @@ class block_switch_base(object):
 			
 		
 	def get_block_state_name(self, block, state):
-		block_state = block + '['
-		first = True
-		for property in state["properties"]:
-			if first:
-				first = False
-			else:
-				block_state += ','
+		if 'properties' in state:
+			props = state['properties']
 			
-			block_state += property
-			block_state += '='
-			block_state += state["properties"][property]
-		
-		block_state += ']'
-		
-		return block_state
-		
+			return '{}[{}]'.format(
+				block,
+				','.join('{}={}'.format(p, props[p]) for p in props)
+			)
+		else:
+			return block
+			
 	def get_falling_block_nbt(self, block, state):
-		nbt = 'Name:"{}"'.format(block)
-		if "properties" in state:
-			nbt += ',Properties:{'
+		if 'properties' in state:
+			props = state['properties']
 			
-			first = True
-			for property in state["properties"]:
-				if first:
-					first = False
-				else:
-					nbt += ','
-				
-				nbt += '{}:"{}"'.format(property, state["properties"][property])
-			
-			nbt += '}'
+			return 'Name:"{}",Properties:{{{}}}'.format(
+				block,
+				','.join('{}:"{}"'.format(p, props[p]) for p in props)
+			)
 		
-		return nbt
+		else:
+			return 'Name:"{}"'.format(block)
 		
 	def get_block_state_list(self, blocks):
 		self.block_state_list = {}
 		self.block_list = {}
 		
 		for block in blocks:
-			if "properties" in blocks[block]:
-				for state in blocks[block]["states"]:
-					block_state = self.get_block_state_name(block, state)
-					
-					case = self.get_matching_case(block_state)
-					if case != None:
-						self.block_state_list[block_state] = case
-						if block not in self.block_list:
-							self.block_list[block] = []
-						self.block_list[block].append(block_state)
-						self.block_state_ids[block_state] = state["id"]
-						
-						self.falling_block_nbt[block_state] = self.get_falling_block_nbt(block, state)
-			else:
-				case = self.get_matching_case(block)
+			for state in blocks[block]["states"]:
+				block_state = self.get_block_state_name(block, state)
+				
+				case = self.get_matching_case(block_state)
 				if case != None:
-					self.block_state_list[block] = case
+					self.block_state_list[block_state] = case
 					if block not in self.block_list:
 						self.block_list[block] = []
-					self.block_list[block].append(block)
-					self.block_state_ids[block] = blocks[block]["states"][0]["id"]
-					
-					self.falling_block_nbt[block] = 'Name:"{}"'.format(block)
-					
+					self.block_list[block].append(block_state)
+					self.block_state_ids[block_state] = state["id"]
+					self.falling_block_nbt[block_state] = self.get_falling_block_nbt(block, state)
+				
 		self.id_block_states = {self.block_state_ids[block_state]:block_state for block_state in self.block_state_ids}
 					
 	def get_matching_case(self, block_state):

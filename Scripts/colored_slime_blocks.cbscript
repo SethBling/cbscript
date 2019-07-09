@@ -88,6 +88,16 @@ $Nonstick = 5
 
 $OppositeDir = [1, 0, 3, 2, 5, 4]
 
+$BehindObserver = {
+	'north': (0, 0, -1),
+	'south': (0, 0, 1),
+	'east': (1, 0, 0),
+	'west': (-1, 0, 0),
+	'up': (1, 0, 0),
+	'down': (-1, 0, 0)
+}
+
+
 define @SlimeMarker: @Entity[type=area_effect_cloud,tag=SlimeMarker]
 	create {Tags:["SlimeMarker"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
 end
@@ -112,10 +122,15 @@ end
 
 @Pushing = @Entity[type=area_effect_cloud, tag=Pushing]
 
+define @ObserverScheduler : @Entity[type=area_effect_cloud, tag=ObserverScheduler]
+	create {Tags:["ObserverScheduler"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
 define [Moving]
 	extending: extending byte 1
 	face: facing int 1
 	source: source byte 1
+	progress: progress float 2
 end
 
 define @Player: @Player
@@ -133,7 +148,7 @@ reset
 	tell @a 'Loaded {RColored {GSlime {BBlocks{- by SethBling'
 end
 
-clock main
+clock main	
 	as @PushMarker[move_timer > 0]
 		@s.move_timer--
 		if @s.move_timer == 0
@@ -181,42 +196,44 @@ clock main
 			for $d in $range(6)
 				# Regular 3 tick pull
 				at ~<$PullDeltas[$d]> at ~<$PullDeltas[$d]>
-					if [Moving].face == $d and [Moving].extending == 0 and [Moving].source == 1
+					if [Moving].face == $d and [Moving].extending == 0 and [Moving].source == 1 and [Moving].progress == 0
 						at @s
 							$dx, $dy, $dz = $PullDeltas[$d]
 							
 							$op = $OppositeDir[$d]
 							@s.move_dir = $op
 							@s.move_timer = 3
-							get_pushable_list{$op, False}()
+							get_pushable_list{$op}(False)
 						end
 					end
 				end
 				
 				# 0-tick push then pull
 				at ~<$PullDeltas[$d]>
-					if [Moving].face == $d and [Moving].extending == 0 and [Moving].source == 1
+					if [Moving].face == $d and [Moving].extending == 0 and [Moving].source == 1 and [Moving].progress == 0
+						/say 0 tick
+					
 						$op = $OppositeDir[$d]
 						at @s
-							get_pushable_list{$d, True}()
+							get_pushable_list{$d}(True)
 						end
 						at @s ~<$Deltas[$d]>
 							/setblock ~ ~ ~ barrier
 							/tp @s ~ ~ ~
 							@s.move_dir = $op
 							@s.move_timer = 3
-							get_pushable_list{$op, False}()
+							get_pushable_list{$op}(False)
 						end
 					end
 				end
 				
 				# Regular 3 tick push
 				at ~<$Deltas[$d]>
-					if [Moving].face == $d and [Moving].extending and not [Moving].source
+					if [Moving].face == $d and [Moving].extending and not [Moving].source and [Moving].progress == 0
 						@s.move_dir = $d
 						@s.move_timer = 3
 						at @s
-							get_pushable_list{$d, True}()
+							get_pushable_list{$d}(False)
 						end
 					end
 				end
@@ -277,9 +294,22 @@ clock main
 			end
 		end
 	end
+	
+	as @ObserverScheduler at @s
+		for $d in ['north', 'south', 'east', 'west', 'up', 'down']
+			if block ~ ~ ~ observer[facing=$d,powered=false]
+				at ~<$BehindObserver[$d]>
+					get_block()
+					/setblock ~ ~ ~ barrier
+					set_block()
+				end
+			end
+		end
+		/kill @s
+	end
 end
 
-function get_pushable_list{$d, $extend}()
+function get_pushable_list{$d}(instant)
 	push_count = 0
 	
 	at @s
@@ -293,31 +323,44 @@ function get_pushable_list{$d, $extend}()
 		/kill @BreakMarker
 		/kill @PushMarker[not act]
 		@PushMarker.move_timer += 0
-		as @PushMarker[move_timer==0] at @s
-			get_block()
-			@s.move_dir = $d
-		end
-		as @PushMarker[move_timer==0] at @s
-			@s.move_timer = 3
-			$dx, $dy, $dz = $Deltas[$d]
-			/setblock ~ ~ ~ barrier
-			/setblock ~$dx ~$dy ~$dz barrier
-			
-			block_id = @s.block_id
-			$mdx = $dx / 2.0
-			$mdy = $dy / 2.0
-			$mdz = $dz / 2.0
-			at ~$mdx ~$mdy ~$mdz
-				create_moving_block()
+		$dx, $dy, $dz = $Deltas[$d]
+		if instant
+			while @PushMarker[move_timer==0]
+				as @PushMarker[move_timer==0] at @s
+					at ~<$Deltas[$d]> if block ~ ~ ~ air
+					else
+						/clone ~ ~ ~ ~ ~ ~ ~$dx ~$dy ~$dz
+						/setblock ~ ~ ~ air
+						/kill @s
+					end
+				end
 			end
-			as @NewMovingBlockPos[limit=1]
-				@s.d = $d
-				@s.move_timer = 2
-				/tag @s remove NewMovingBlockPos
+		else
+			as @PushMarker[move_timer==0] at @s
+				get_block()
+				@s.move_dir = $d
 			end
-			as @NewMovingBlock[limit=1]
-				@s.move_timer = 2
-				/tag @s remove NewMovingBlock
+			as @PushMarker[move_timer==0] at @s
+				@s.move_timer = 3
+				/setblock ~ ~ ~ barrier
+				/setblock ~$dx ~$dy ~$dz barrier
+				
+				block_id = @s.block_id
+				$mdx = $dx / 2.0
+				$mdy = $dy / 2.0
+				$mdz = $dz / 2.0
+				at ~$mdx ~$mdy ~$mdz
+					create_moving_block()
+				end
+				as @NewMovingBlockPos[limit=1]
+					@s.d = $d
+					@s.move_timer = 2
+					/tag @s remove NewMovingBlockPos
+				end
+				as @NewMovingBlock[limit=1]
+					@s.move_timer = 2
+					/tag @s remove NewMovingBlock
+				end
 			end
 		end
 	else
@@ -348,10 +391,8 @@ function set_block()
 		case $block_name, $block_id
 			$is_observer = $block_name.$startswith('minecraft:observer[')
 			if $is_observer
-				$block_name = $block_name.$replace('powered=false', 'powered=true')
 				/setblock ~ ~ ~ $block_name
-				/setblock ~ ~ ~ $block_name
-				$print($block_id)
+				create @ObserverScheduler
 			else
 				/setblock ~ ~ ~ $block_name
 			end
@@ -360,9 +401,7 @@ function set_block()
 end
 
 function recursive_pushed{$d}()
-	at ~<$Deltas[$d]>
-		$get_pushable($d)
-	end
+	$get_pushable($d)
 	if pushable == $Pushed
 		push_count++
 		as create @PushMarker
@@ -379,14 +418,14 @@ function recursive_pushed{$d}()
 				$dx, $dy, $dz = $Deltas[$d]
 				/execute if data block ~$dx ~$dy ~$dz {blockState:{Name:"minecraft:$color"}} run scoreboard players set Global sticky_color $i
 				if sticky_color >= 0
-					recursive_push{$d, True, True}()
+					recursive_push{$d, True}()
 				end
 			end
 		end
 	end
 end
 
-function recursive_push{$d, $extend, $force_sticky}()
+function recursive_push{$d, $force_sticky}()
 	at @s
 		if $force_sticky
 		else
@@ -413,7 +452,7 @@ function recursive_push{$d, $extend, $force_sticky}()
 						if push_count <= 12
 							as create @PushMarker
 								@s.act = act
-								recursive_push{$d, $extend, False}()
+								recursive_push{$d, False}()
 							end
 						end
 					end
@@ -465,7 +504,7 @@ function recursive_push{$d, $extend, $force_sticky}()
 						if push_count <= 12
 							as create @PushMarker
 								@s.act = act
-								recursive_push{$d, $extend, False}()
+								recursive_push{$d, False}()
 							end
 						end
 					end
@@ -478,9 +517,11 @@ end
 macro $get_pushable($direction)
 	pushable = $Undefined
 	
-	/execute if data block ~ ~ ~ {id:"minecraft:piston", source:0b, progress:0.0f, extending:1b, facing: $direction} run scoreboard players set Global pushable $Pushed
+	$dx,$dy,$dz = $Deltas[$direction]
+	
+	/execute if data block ~$dx ~$dy ~$dz {id:"minecraft:piston", source:0b, progress:0.0f, extending:1b, facing: $direction} run scoreboard players set Global pushable $Pushed
 	$op = $OppositeDir[$direction]
-	/execute if data block ~ ~ ~ {id:"minecraft:piston", source:0b, progress:0.0f, extending:0b, facing: $op} run scoreboard players set Global pushable $Pushed
+	/execute if data block ~$dx ~$dy ~$dz {id:"minecraft:piston", source:0b, progress:0.0f, extending:0b, facing: $op} run scoreboard players set Global pushable $Pushed
 	if pushable == $Undefined
 		/execute if data block ~ ~ ~ {} run scoreboard players set Global pushable $BlockPush
 	end

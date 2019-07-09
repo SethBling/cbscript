@@ -1,5 +1,6 @@
 from mcfunction import mcfunction
 from environment import isNumber, isInt
+from variable_types.scoreboard_var import scoreboard_var
 
 class template_function_call_block(object):
 	def __init__(self, line, function, template_args, args):
@@ -31,14 +32,12 @@ class template_function_call_block(object):
 		# Calculate function arguments
 		for i in range(len(args)):
 			assignto = 'Param{}'.format(i)
-			id = args[i].compile(func, assignto)
-			if id == None:
-				raise Exception('Unable to compute argument "{}" for template function "{}" at line {}'.format(params[i], function, self.line))
-
-			if id != assignto:
-				func.add_command('scoreboard players operation Global {} = Global {}'.format(i, id))
-				
-			func.free_scratch(id)
+			arg_var = args[i].compile(func, assignto)
+			
+			param_var = scoreboard_var('Global', assignto)
+			param_var.copy_from(func, arg_var)
+			
+			arg_var.free_scratch(func)
 		
 		# Compile the function if it doens't exist yet
 		if func_name not in func.functions:
