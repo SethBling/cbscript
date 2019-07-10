@@ -1,4 +1,5 @@
 from block_switch_base import block_switch_base
+from CompileError import CompileError
 
 class block_switch_block(block_switch_base):
 	def __init__(self, line, coords, cases):
@@ -19,11 +20,15 @@ class block_switch_block(block_switch_base):
 			self.compile_property_case(case_func, block, props.keys(), props, '{}['.format(block))
 			func.call_function(
 				case_func,
-				'line{:03}/case_{}'.format(self.line, block.replace('minecraft:','')),
+				'line{0:03}/switch_{1}/{1}'.format(self.line, block.replace('minecraft:','')),
 				'execute if block {} {} run '.format(self.coords.get_value(func), block)
 			)
 		else:
-			self.compile_single_case(func, block, block.replace('minecraft:',''))
+			self.compile_single_case(
+				func,
+				block,
+				'line{:03}/case_{}'.format(self.line, block.replace('minecraft:',''))
+			)
 			
 	def compile_property_case(self, func, block, prop_names, props, partial_block_state):
 		cur_prop_name = prop_names[0]
@@ -32,7 +37,11 @@ class block_switch_block(block_switch_base):
 		if len(prop_names) == 1:
 			for value in cur_prop:
 				block_state = '{}{}={}]'.format(partial_block_state, cur_prop_name, value)
-				self.compile_single_case(func, block_state, '{}_{}_{}'.format(block.replace('minecraft:',''), cur_prop_name, value))
+				self.compile_single_case(
+					func,
+					block_state,
+					'line{:03}/switch_{}/{}_{}'.format(self.line, block.replace('minecraft:',''), cur_prop_name, value)
+				)
 		else:
 			for value in cur_prop:
 				block_state = '{}{}={},'.format(partial_block_state, cur_prop_name, value)
@@ -42,12 +51,12 @@ class block_switch_block(block_switch_base):
 				self.compile_property_case(case_func, block, prop_names[1:], props, block_state)
 				func.call_function(
 					case_func,
-					'line{:03}/case_{}_{}_{}'.format(self.line, block.replace('minecraft:',''), cur_prop_name, value),
+					'line{:03}/switch_{}/{}_{}'.format(self.line, block.replace('minecraft:',''), cur_prop_name, value),
 					'execute if block {} {}[{}={}] run '.format(self.coords.get_value(func), block, cur_prop_name, value)
 				)
 				
 			
-	def compile_single_case(self, func, block_state, case_name):
+	def compile_single_case(self, func, block_state, case_func_name):
 		id = self.block_state_ids[block_state]
 		case = self.block_state_list[block_state]
 		falling_block_nbt = self.falling_block_nbt[block_state]
@@ -61,7 +70,7 @@ class block_switch_block(block_switch_base):
 			
 		func.call_function(
 			case_func,
-			'line{:03}/case_{}'.format(self.line, case_name),
+			case_func_name,
 			'execute if {} run '.format(self.case_condition(func, block_state))
 		)
 	
