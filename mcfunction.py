@@ -790,3 +790,17 @@ class mcfunction(object):
 		
 	def get_block_state_list(self):
 		return self.environment.get_block_state_list()
+		
+	def call_function(self, sub_func, sub_name, prefix = ''):
+		single_command = sub_func.single_command()
+		
+		if single_command:
+			self.add_command('{}{}'.format(prefix, single_command))
+		else:
+			unique = self.get_unique_id()
+			sub_name = '{}_{:03}'.format(sub_name, unique)
+			
+			cmd = '{}function {}:{}'.format(prefix, self.namespace, sub_name)
+				
+			self.add_command(cmd)
+			self.register_function(sub_name, sub_func)
