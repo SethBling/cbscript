@@ -10,10 +10,13 @@ class block_case(object):
 			return True
 			
 		block_name = self.block_name
-		if not block_name.startswith('minecraft:'):
+		if not block_name.startswith('minecraft:') and block_name != '*':
 			block_name = 'minecraft:' + block_name
 			
 		if block_name != '*' and block_name != block:
+			return False
+		
+		if len(self.props) > 0 and 'properties' not in state:
 			return False
 			
 		block_props = state['properties']

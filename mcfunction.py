@@ -37,6 +37,9 @@ def compile_section(section, environment):
 		
 	f.compile_blocks(lines)
 
+def real_command(cmd):
+		return not cmd.startswith('#') and len(cmd) > 0
+	
 class mcfunction(object):
 	def __init__(self, environment, callable = False, params = []):
 		self.commands = []
@@ -443,7 +446,7 @@ class mcfunction(object):
 		ret = None
 		count = 0
 		for cmd in self.commands:
-			if not cmd.startswith('#') and len(cmd) > 0:
+			if real_command(cmd):
 				ret = cmd
 				count += 1
 			
@@ -451,6 +454,13 @@ class mcfunction(object):
 				return None
 				
 		return ret
+		
+	def is_empty(self):
+		for cmd in self.commands:
+			if real_command(cmd):
+				return False
+				
+		return True
 			
 	def check_single_entity(self, selector):
 		if selector[0] != '@':
@@ -792,6 +802,9 @@ class mcfunction(object):
 		return self.environment.get_block_state_list()
 		
 	def call_function(self, sub_func, sub_name, prefix = ''):
+		if sub_func.is_empty():
+			return
+	
 		single_command = sub_func.single_command()
 		
 		if single_command:

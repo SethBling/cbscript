@@ -833,7 +833,9 @@ def p_opt_block_properties(p):
 	
 def p_block_property(p):
 	'''block_property : ID EQUALS ID
-					  | ID EQUALS virtualinteger'''
+					  | ID EQUALS virtualinteger
+					  | facing EQUALS ID
+					  | facing EQUALS virtualinteger'''
 	p[0] = (p[1], p[3])
 	
 def p_block_properties_one(p):

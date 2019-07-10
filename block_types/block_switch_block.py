@@ -37,11 +37,12 @@ class block_switch_block(block_switch_base):
 		if len(prop_names) == 1:
 			for value in cur_prop:
 				block_state = '{}{}={}]'.format(partial_block_state, cur_prop_name, value)
-				self.compile_single_case(
-					func,
-					block_state,
-					'line{:03}/switch_{}/{}_{}'.format(self.line, block.replace('minecraft:',''), cur_prop_name, value)
-				)
+				if block_state in self.block_state_list:
+					self.compile_single_case(
+						func,
+						block_state,
+						'line{:03}/switch_{}/{}_{}'.format(self.line, block.replace('minecraft:',''), cur_prop_name, value)
+					)
 		else:
 			for value in cur_prop:
 				block_state = '{}{}={},'.format(partial_block_state, cur_prop_name, value)

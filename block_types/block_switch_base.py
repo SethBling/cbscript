@@ -53,21 +53,15 @@ class block_switch_base(object):
 				range_func = func.create_child_function()
 				self.compile_block_cases(range_func, quartile)
 				
-				single_command = range_func.single_command()
-				if single_command:
-					func.add_command('execute if {} run {}'.format(self.get_range_condition(func, quartile), single_command))
-				else:
-					unique = func.get_unique_id()
-					range_name = 'line{:03}/switch_{}-{}_{}'.format(
+				func.call_function(
+					range_func,
+					'line{:03}/switch_{}-{}'.format(
 						self.line,
 						str(quartile[0]).replace('minecraft:',''),
-						str(quartile[-1]).replace('minecraft:',''),
-						unique)
-					func.add_command('execute if {} run function {}:{}'.format(
-						self.get_range_condition(func, quartile),
-						func.namespace,
-						range_name))
-					func.register_function(range_name, range_func)
+						str(quartile[-1]).replace('minecraft:','')
+					),
+					'execute if {} run '.format(self.get_range_condition(func, quartile))
+				)
 			
 	# Gets a block state name in command format from a json block state object
 	def get_block_state_name(self, block, state):

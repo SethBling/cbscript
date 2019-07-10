@@ -8,16 +8,44 @@ reset
 end
 
 clock main
-	as @Player at @s
-		switch block at ~ ~-1 ~
-			case $block_name, $block_id
-				@s.block_id = $block_id
-			end
-		end
+	test_step++
 	
-		switch block @s.block_id
-			case $block_name, $block_id
-				/setblock ~ ~ ~ $block_name
+	if test_step >= 3
+		test_step = 0
+
+		as @Player at @s ~ ~-1 ~
+			id = -1
+			switch block
+				case *[facing=east]
+					id = $block_id
+				end
+				case *[facing=north]
+					id = $block_id
+				end
+				case *[facing=west]
+					id = $block_id
+				end
+				case *[facing=south]
+					id = $block_id
+				end
+			end
+			switch block id
+				case *[facing=east]
+					$block_name = $block_name.$replace('facing=east', 'facing=north')
+					/setblock ~ ~ ~ $block_name
+				end
+				case *[facing=north]
+					$block_name = $block_name.$replace('facing=north', 'facing=west')
+					/setblock ~ ~ ~ $block_name
+				end
+				case *[facing=west]
+					$block_name = $block_name.$replace('facing=west', 'facing=south')
+					/setblock ~ ~ ~ $block_name
+				end
+				case *[facing=south]
+					$block_name = $block_name.$replace('facing=south', 'facing=east')
+					/setblock ~ ~ ~ $block_name
+				end
 			end
 		end
 	end
