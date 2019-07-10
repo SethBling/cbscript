@@ -815,12 +815,34 @@ def p_block_cases_multi(p):
 	p[0] = [p[1]] + p[3]
 
 def p_block_case_default(p):
-	'''block_case : case DOLLAR ID COMMA DOLLAR ID newlines blocklist end'''
-	p[0] = block_case(p[2] + p[3], p[5] + p[6], p[8], True)
+	'''block_case : default newlines blocklist end'''
+	p[0] = block_case(None, None, p[3], True)
 	
 def p_block_case_specific(p):
-	'''block_case : case ID COMMA DOLLAR ID newlines blocklist end'''
-	p[0] = block_case(p[2], p[4]+p[5], p[7], False)
+	'''block_case : case ID opt_block_properties newlines blocklist end
+				  | case TIMES opt_block_properties newlines blocklist end'''
+	p[0] = block_case(p[2], p[3], p[5], False)
+	
+def p_opt_block_properties_empty(p):
+	'''opt_block_properties : empty'''
+	p[0] = []
+	
+def p_opt_block_properties(p):
+	'''opt_block_properties : LBRACK block_properties RBRACK'''
+	p[0] = p[2]
+	
+def p_block_property(p):
+	'''block_property : ID EQUALS ID
+					  | ID EQUALS virtualinteger'''
+	p[0] = (p[1], p[3])
+	
+def p_block_properties_one(p):
+	'''block_properties : block_property'''
+	p[0] = [p[1]]
+	
+def p_block_properties_multi(p):
+	'''block_properties : block_property COMMA block_properties'''
+	p[0] = [p[1]] + p[3]
 	
 #### Tell/Title	
 def p_block_tell(p):

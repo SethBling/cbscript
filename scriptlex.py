@@ -4,7 +4,7 @@ keywords = (
     'for', 'dir', 'desc', 'scale', 'in', 'end', 'not', 'and', 'or', 'to', 'by', 'import',
     'at', 'as', 'facing', 'rotated', 'align', 'here', 'the_end', 'the_nether', 'overworld',
     'move', 'create', 'tell', 'title', 'subtitle', 'actionbar',
-    'reset', 'clock', 'function', 'if', 'unless', 'then', 'do', 'else', 'switch', 'case',
+    'reset', 'clock', 'function', 'if', 'unless', 'then', 'do', 'else', 'switch', 'case', 'default',
     'return', 'while', 'macro', 'block', 'block_tag', 'item_tag', 'define', 'array', 'remove', 'success', 'result',
 	'shaped', 'recipe', 'keys', 'eyes', 'feet',	'advancement', 'loot_table',
 )

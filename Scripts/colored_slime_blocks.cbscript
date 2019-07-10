@@ -309,6 +309,7 @@ clock main
 	end
 end
 
+# Enacts a recursive push/pull
 function get_pushable_list{$d}(instant)
 	push_count = 0
 	
@@ -370,38 +371,39 @@ function get_pushable_list{$d}(instant)
 	end
 end
 
+# Creates a moving_block for @s.block_id
 function create_moving_block()
 	switch block block_id
-		case $block_name, $block_id
+		default
 			/summon armor_stand ~ ~-0.5 ~ {Tags:["MovingBlockPos", "NewMovingBlockPos"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"falling_block", Time:1b, NoGravity:1b, BlockState:{$falling_block_nbt}, Tags:["MovingBlock","NewMovingBlock"]}]}
 		end
 	end
 end
 
+# Gets the current block id and stores it in @s.block_id
 function get_block()
 	switch block
-		case $block_name, $block_id
+		default
 			@s.block_id = $block_id
 		end
 	end
 end
 
+# Runs /setblock for @s.block_id, with special cases for observers to update them
 function set_block()
 	switch block @s.block_id
-		case $block_name, $block_id
-			$is_observer = $block_name.$startswith('minecraft:observer[')
-			if $is_observer
-				/setblock ~ ~ ~ $block_name
-				create @ObserverScheduler
-			else
-				/setblock ~ ~ ~ $block_name
-			end
+		case observer[powered=false]
+			/setblock ~ ~ ~ $block_name
+			create @ObserverScheduler
+		end
+		default
+			/setblock ~ ~ ~ $block_name
 		end
 	end
 end
 
 function recursive_pushed{$d}()
-	$get_pushable($d)
+	get_pushable{$d}()
 	if pushable == $Pushed
 		push_count++
 		as create @PushMarker
@@ -411,11 +413,11 @@ function recursive_pushed{$d}()
 			end
 			
 			for $i in $range(16)
-				sticky_color = -1
-			
 				$color = $Colors[$i]
-				
 				$dx, $dy, $dz = $Deltas[$d]
+				
+				# Check one block over for a piston tile entity with a sticky color
+				sticky_color = -1
 				/execute if data block ~$dx ~$dy ~$dz {blockState:{Name:"minecraft:$color"}} run scoreboard players set Global sticky_color $i
 				if sticky_color >= 0
 					recursive_push{$d, True}()
@@ -430,7 +432,7 @@ function recursive_push{$d, $force_sticky}()
 		if $force_sticky
 		else
 			at ~<$Deltas[$d]> unless @Pushing[distance=..0.1,limit=1]
-				$get_pushable($d)
+				get_pushable{$d}()
 				if pushable == $BlockPush
 					push_count = 1000
 					<x, y, z> = here / scale
@@ -438,24 +440,7 @@ function recursive_push{$d, $force_sticky}()
 				else if pushable == $Break
 					create @BreakMarker
 				else
-					recursive = False
-					if pushable == $Pushable
-						recursive = True
-						act = True
-					end
-					if pushable == $Pushed
-						recursive = True
-						act = False
-					end
-					if recursive
-						push_count++
-						if push_count <= 12
-							as create @PushMarker
-								@s.act = act
-								recursive_push{$d, False}()
-							end
-						end
-					end
+					recursive_create_push{$d}()
 				end
 			end
 		end
@@ -471,50 +456,62 @@ function recursive_push{$d, $force_sticky}()
 		if sticky
 			for $side_delta in $SideDeltas[$d]
 				at ~<$side_delta> unless @Pushing[distance=..0.1,limit=1]
-					$get_pushable($d)
+					get_pushable{$d}()
 					
 					if $force_sticky
-						switch sticky_color
-							case $i in $range(16)
-								$color = $Colors[$i]
-								if block ~ ~ ~ sticky unless block ~ ~ ~ $color
-									pushable = $Nonstick
-								end
-							end
-						end
+						check_force_sticky()
 					else					
-						for $color in $Colors
-							if block ~ ~ ~ sticky if block ~ ~ ~ $color at @s unless block ~ ~ ~ $color
-								pushable = $Nonstick
-							end
-						end
+						check_sticky()
 					end
 					
-					recursive = False
-					if pushable == $Pushable
-						recursive = True
-						act = True
-					end
-					if pushable == $Pushed
-						recursive = True
-						act = False
-					end
-					if recursive
-						push_count++
-						if push_count <= 12
-							as create @PushMarker
-								@s.act = act
-								recursive_push{$d, False}()
-							end
-						end
-					end
+					recursive_create_push{$d}()
 				end
 			end
 		end
 	end
 end
 
-macro $get_pushable($direction)
+function check_force_sticky()
+	switch sticky_color
+		case $i in $range(16)
+			$color = $Colors[$i]
+			if block ~ ~ ~ sticky unless block ~ ~ ~ $color
+				pushable = $Nonstick
+			end
+		end
+	end
+end
+
+function check_sticky()
+	for $color in $Colors
+		if block ~ ~ ~ sticky if block ~ ~ ~ $color at @s unless block ~ ~ ~ $color
+			pushable = $Nonstick
+		end
+	end
+end
+
+function recursive_create_push{$d}()
+	recursive = False
+	if pushable == $Pushable
+		recursive = True
+		act = True
+	end
+	if pushable == $Pushed
+		recursive = True
+		act = False
+	end
+	if recursive
+		push_count++
+		if push_count <= 12
+			as create @PushMarker
+				@s.act = act
+				recursive_push{$d, False}()
+			end
+		end
+	end
+end
+
+function get_pushable{$direction}()
 	pushable = $Undefined
 	
 	$dx,$dy,$dz = $Deltas[$direction]
@@ -522,6 +519,11 @@ macro $get_pushable($direction)
 	/execute if data block ~$dx ~$dy ~$dz {id:"minecraft:piston", source:0b, progress:0.0f, extending:1b, facing: $direction} run scoreboard players set Global pushable $Pushed
 	$op = $OppositeDir[$direction]
 	/execute if data block ~$dx ~$dy ~$dz {id:"minecraft:piston", source:0b, progress:0.0f, extending:0b, facing: $op} run scoreboard players set Global pushable $Pushed
+	
+	get_pushable_here()
+end
+
+function get_pushable_here()
 	if pushable == $Undefined
 		/execute if data block ~ ~ ~ {} run scoreboard players set Global pushable $BlockPush
 	end

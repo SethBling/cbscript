@@ -103,7 +103,7 @@ class block_switch_base(object):
 			for state in blocks[block]["states"]:
 				block_state = self.get_block_state_name(block, state)
 				
-				case = self.get_matching_case(block_state)
+				case = self.get_matching_case(block, state)
 				if case != None:
 					self.block_state_list[block_state] = case
 					if block not in self.block_list:
@@ -115,9 +115,9 @@ class block_switch_base(object):
 		self.id_block_states = {self.block_state_ids[block_state]:block_state for block_state in self.block_state_ids}
 					
 	# Finds a case matching a block state in command format
-	def get_matching_case(self, block_state):
+	def get_matching_case(self, block, state):
 		for case in self.cases:
-			if not case.is_default and case.matches(block_state):
+			if not case.is_default and case.matches(block, state):
 				return case
 				
 		return self.default_case

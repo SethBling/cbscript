@@ -83,39 +83,3 @@ class block_switch_block(block_switch_base):
 		
 	def get_case_ids(self):
 		return sorted(self.block_list.keys())
-		
-'''	
-		index = 0
-		
-		block_func = func.create_child_function()
-	
-		for block_state in self.block_list[block]:
-			index += 1
-		
-			id = self.block_state_ids[block_state]
-			case = self.block_state_list[block_state]
-			falling_block_nbt = self.falling_block_nbt[block_state]
-			
-			case_func = block_func.create_child_function()
-			try:
-				case.compile(block_state, id, case_func, falling_block_nbt)
-			except CompileError as e:
-				print(e)
-				raise CompileError('Unable to compile block switch at line {}'.format(self.line))
-				
-			block_func.call_function(
-				case_func,
-				'line{:03}/case_{}{}'.format(self.line, block.replace('minecraft:',''), index),
-				'execute if {} run '.format(self.case_condition(block_func, block_state))
-			)
-			
-		single_command = block_func.single_command()
-		
-		if single_command:
-			func.add_command(single_command)
-		else:
-			unique = block_func.get_unique_id()
-			block_case_name = 'line{:03}/case_{}_base_{:03}'.format(self.line, block.replace('minecraft:',''), unique)
-			func.add_command('execute if block ~ ~ ~ {} run function {}:{}'.format(block, func.namespace, block_case_name))
-			func.register_function(block_case_name, block_func)
-'''
