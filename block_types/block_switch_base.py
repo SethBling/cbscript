@@ -26,7 +26,14 @@ class block_switch_base(object):
 		self.blocks = func.get_block_state_list()
 		self.get_block_state_list(self.blocks)
 		case_ids = self.get_case_ids()
-		self.compile_block_cases(func, case_ids)
+		
+		switch_func = func.create_child_function()
+		self.compile_block_cases(switch_func, case_ids)
+		func.call_function(
+			switch_func,
+			'line{:03}/switch_block'.format(self.line),
+			'execute if {} run '.format(self.get_range_condition(func, case_ids))
+		)
 		
 	# Splits a list into four quartiles
 	def get_quartiles(self, list):
