@@ -30,8 +30,10 @@ class block_id_switch_block(block_switch_base):
 		case = self.block_state_list[block_state]
 		falling_block_nbt = self.falling_block_nbt[block_state]
 		
+		block = block_state.split('[')[0].replace('minecraft:', '')
+		
 		try:
-			case.compile(block_state, id, case_func, falling_block_nbt)
+			case.compile(block, block_state, id, case_func, falling_block_nbt)
 		except CompileError as e:
 			print(e)
 			raise CompileError('Unable to compile block switch at line {}'.format(self.line))

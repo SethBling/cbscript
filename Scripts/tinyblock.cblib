@@ -4,6 +4,8 @@ define @TinyBlock: @Entity[type=armor_stand,tag=TinyBlock]
 	create {Tags:["TinyBlock"], Pose:{RightArm:[-15f,-45f,0f]}, ShowArms:1b, Marker:1b, Invisible:1b, NoGravity:1b, Invulnerable:1b, Silent:1b}
 	
 	function update_tiny()
+		/data merge entity @s {Fire:32767s}
+	
 		/tp @s ~ ~ ~ ~ 0
 		at @s ^0.0625 ^-0.5 ^-0.375
 			/tp @s ~ ~ ~ ~ 0

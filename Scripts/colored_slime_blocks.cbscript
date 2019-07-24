@@ -93,13 +93,17 @@ $BehindObserver = {
 	'south': (0, 0, 1),
 	'east': (1, 0, 0),
 	'west': (-1, 0, 0),
-	'up': (1, 0, 0),
-	'down': (-1, 0, 0)
+	'up': (0, 1, 0),
+	'down': (0, -1, 0)
 }
 
+$StickyPiston = 1
+$Piston = 2
 
 define @SlimeMarker: @Entity[type=area_effect_cloud,tag=SlimeMarker]
 	create {Tags:["SlimeMarker"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+	
+	array piston_types[6]
 end
 
 define @PushMarker: @Entity[type=area_effect_cloud,tag=PushMarker]
@@ -134,7 +138,7 @@ define [Moving]
 end
 
 define @Player: @Player
-	array place_slime[0 to 15]
+	array place_slime[16]
 end
 
 reset
@@ -143,6 +147,10 @@ reset
 	for $i in $range($len($Colors))
 		$c = $Colors[$i]
 		/scoreboard objectives add place_slime$i minecraft.used:minecraft.$c
+	end
+	
+	unless push_limit > 0
+		push_limit = 12
 	end
 	
 	tell @a 'Loaded {RColored {GSlime {BBlocks{- by SethBling'
@@ -196,7 +204,13 @@ clock main
 			for $d in $range(6)
 				# Regular 3 tick pull
 				at ~<$PullDeltas[$d]> at ~<$PullDeltas[$d]>
-					if [Moving].face == $d and [Moving].extending == 0 and [Moving].source == 1 and [Moving].progress == 0
+					if block ~ ~ ~ sticky_piston
+						@s.piston_types[$d] = $StickyPiston
+					end
+					if block ~ ~ ~ piston
+						@s.piston_types[$d] = $Piston
+					end
+					if [Moving].face == $d and [Moving].extending == 0 and [Moving].source == 1 and [Moving].progress == 0 and @s.piston_types[$d] == $StickyPiston
 						at @s
 							$dx, $dy, $dz = $PullDeltas[$d]
 							
@@ -272,19 +286,17 @@ clock main
 		
 	as @Player at @s eyes ^ ^ ^
 		for $i in $range(16)
+			$color = $Colors[$i]
 			if @s.place_slime[$i]
 				steps = 0
 				while steps < 60 at feet ^ ^ ^0.1
 					if block ~ ~ ~ sticky align xyz at ~0.5 ~0.5 ~0.5 unless @SlimeMarker[distance=..0.1]
-						for $i in $range(16)
-							$color = $Colors[$i]
-							if block ~ ~ ~ $color
-								as create @SlimeMarker
-									@s.color = $i
-									@s.move_timer = 0
-								end
-								steps = 1000000
+						if block ~ ~ ~ $color
+							as create @SlimeMarker
+								@s.color = $i
+								@s.move_timer = 0
 							end
+							steps = 1000000
 						end
 					end
 					steps++
@@ -317,7 +329,7 @@ function get_pushable_list{$d}(instant)
 		recursive_pushed{$d}()
 	end
 	
-	if push_count <= 12
+	if push_count <= push_limit
 		at @BreakMarker
 			/setblock ~ ~ ~ air destroy
 		end
@@ -393,11 +405,11 @@ end
 function set_block()
 	switch block @s.block_id
 		case observer[powered=false]
-			/setblock ~ ~ ~ $block_name
+			/setblock ~ ~ ~ $block_state
 			create @ObserverScheduler
 		end
 		default
-			/setblock ~ ~ ~ $block_name
+			/setblock ~ ~ ~ $block_state
 		end
 	end
 end
@@ -436,7 +448,9 @@ function recursive_push{$d, $force_sticky}()
 				if pushable == $BlockPush
 					push_count = 1000
 					<x, y, z> = here / scale
-					tell @a 'Blocked at (x) (y) (z)'
+					if debug_blocked
+						tell @a 'Blocked at (x) (y) (z)'
+					end
 				else if pushable == $Break
 					create @BreakMarker
 				else
@@ -502,7 +516,7 @@ function recursive_create_push{$d}()
 	end
 	if recursive
 		push_count++
-		if push_count <= 12
+		if push_count <= push_limit
 			as create @PushMarker
 				@s.act = act
 				recursive_push{$d, False}()

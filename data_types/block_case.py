@@ -6,30 +6,31 @@ class block_case(object):
 		self.props = props
 		
 	def matches(self, block, state):
-		if self.is_default:
-			return True
-			
 		block_name = self.block_name
-		if not block_name.startswith('minecraft:') and block_name != '*':
-			block_name = 'minecraft:' + block_name
-			
-		if block_name != '*' and block_name != block:
-			return False
 		
-		if len(self.props) > 0 and 'properties' not in state:
-			return False
+		if block_name != '*':
+			if not block_name.startswith('minecraft:'):
+				block_name = 'minecraft:' + block_name
+				
+			if block_name != block:
+				return False
+		
+		if len(self.props) > 0:
+			if 'properties' not in state:
+				return False
 			
-		block_props = state['properties']
-		for name,value in self.props:
-			if name not in block_props:
-				return False
-			if block_props[name] != value:
-				return False
+			block_props = state['properties']
+			for name,value in self.props:
+				if name not in block_props:
+					return False
+				if block_props[name] != value:
+					return False
 				
 		return True
 		
-	def compile(self, block_state, block_id, func, falling_block_nbt):
-		func.set_dollarid('block_name', block_state)
+	def compile(self, block, block_state, block_id, func, falling_block_nbt):
+		func.set_dollarid('block_name', block)
+		func.set_dollarid('block_state', block_state)
 		func.set_dollarid('block_id', block_id)
 		func.set_dollarid('falling_block_nbt', falling_block_nbt)
 			

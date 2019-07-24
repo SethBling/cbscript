@@ -372,7 +372,8 @@ def p_import_statement(p):
 	
 #### Variable
 def p_variable_selector(p):
-	'''variable : fullselector DOT ID'''
+	'''variable : fullselector DOT ID
+				| ID DOT ID'''
 	p[0] = scoreboard_var(p[1], p[3])
 	
 def p_variable_global(p):
@@ -1629,7 +1630,8 @@ def p_json_members_empty(p):
 def p_json_pair(p):
 	'''json_pair : ID COLON optnewlines json_value
 				 | string COLON optnewlines json_value
-				 | facing COLON optnewlines json_value'''
+				 | facing COLON optnewlines json_value
+				 | block COLON optnewlines json_value'''
 	p[0] = '"' + p[1] + '"' + p[2] + p[4]
 	
 def p_json_value(p):

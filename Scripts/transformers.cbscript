@@ -1,0 +1,522 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Transform structures into other structures"
+
+import common
+
+define @TransformerBlockPos : @Entity[type=armor_stand, tag=TransformerBlockPos]
+	function get_straight_path()
+		x_axis = True
+		y_axis = True
+		z_axis = True
+		blocked = False
+		
+		<x, y, z> = @s.<pos>
+		<dest_x, dest_y, dest_z> = @s.<dest>
+		
+		/tp @Position @s
+		
+		@s.check_axis_blocked(rand(3))
+		@s.<stop1> = <stop>
+		
+		r = rand(2)
+		if r == 0
+			if x_axis
+				axis = 0
+			else
+				axis = 1
+			end
+		else
+			if x_axis
+				if y_axis
+					axis = 1
+				else
+					axis = 2
+				end
+			else
+				axis = 2
+			end
+		end
+		@s.check_axis_blocked(axis)
+		@s.<stop2> = <stop>
+		
+		if x_axis
+			axis = 0
+		else if y_axis
+			axis = 1
+		else
+			axis = 2
+		end
+		@s.check_axis_blocked(axis)
+		
+		if not blocked
+			@s.stops = 2
+		end
+	end
+
+	function check_axis_blocked(axis)
+		at @s as @Position
+			if axis == 0
+				x_axis = False
+				while x < dest_x
+					move @s ~1 ~ ~
+					x += scale
+					check_blocked()
+				end
+				while x > dest_x
+					move @s ~-1 ~ ~
+					x -= scale
+					check_blocked()
+				end
+			else if axis == 1
+				y_axis = False
+				while y < dest_y
+					move @s ~ ~1 ~
+					y += scale
+					check_blocked()
+				end
+				while y > dest_y
+					move @s ~ ~-1 ~
+					y -= scale
+					check_blocked()
+				end
+			else if axis == 2
+				z_axis = False
+				while z < dest_z
+					move @s ~ ~ ~1
+					z += scale
+					check_blocked()
+				end
+				while z > dest_z
+					move @s ~ ~ ~-1
+					z -= scale
+					check_blocked()
+				end
+			end
+		end
+		
+		<stop> = <x, y, z>
+	end
+	
+	function check_blocked()
+		at @s
+			if @TransformerBlockPos[distance=..0.01] then blocked = True
+			unless block ~ ~ ~ air do blocked = True
+		end
+	end
+end
+
+@NewTransformerBlockPos = @Entity[type=armor_stand, tag=NewTransformerBlockPos]
+define @TransformerBlock : @Entity[type=falling_block,tag=TransformerBlock]
+	time: Time byte 1
+end
+@NewTransformerBlock = @Entity[type=falling_block,tag=NewTransformerBlock]
+
+define @BlockMarker: @Entity[type=area_effect_cloud,tag=BlockMarker]
+	create {Tags:["BlockMarker"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+reset
+	/gamerule maxCommandChainLength 1000000000
+	
+	/scoreboard objectives add use_transformer minecraft.used:minecraft.carrot_on_a_stick
+	
+	tell @a 'Loaded Transformers by SethBling'
+	
+	tell @a '[\[Animate 1->2\]](call animate12)'
+end
+
+function animate12()
+	trigger_animation(structure_1, structure_2)
+	tell @a '[\[Animate 2->1\]](call animate21)'
+end
+
+function animate21()
+	trigger_animation(structure_2, structure_1)
+	tell @a '[\[Animate 1->2\]](call animate12)'
+end
+
+function trigger_animation(id1, id2)
+	if anim_ready
+		tell @s 'Animation is ready'
+	else
+		tell @s 'Animation not is ready'
+	end
+
+	@BlockMarker.matched = False
+	
+	as @BlockMarker if @s.structure_id == id1 at @s
+		block_id = @s.block_id 
+		matched = False
+		as @BlockMarker[not matched, sort=random]
+			dummy = 0
+			if not matched and @s.structure_id == id2 and @s.block_id == block_id
+				@s.matched = True
+				matched = True
+				<delta> = @s.<delta>
+			end
+		end
+		
+		
+		@Position.<pos> = <center1> + @s.<delta> + <500, 0, 500>
+		at @Position
+			create_transformer_block(block_id)
+			/setblock ~ ~ ~ air
+		end
+		
+		as @NewTransformerBlock
+			p = &@s
+			/tag @s remove NewTransformerBlock
+		end
+		
+		as @NewTransformerBlockPos
+			@s.<dest> = <center1> + <delta> + <500, 0, 500>
+			@s.block_id = block_id
+			@s.trans_block = p
+			@s.initiated = False
+			/tag @s remove NewTransformerBlockPos
+		end
+	end
+end
+
+clock main
+	unless @Position do create @Position
+	
+	as @Player at @s
+		if @s[nbt={"SelectedItem":{tag:{display:{Name:"{\"text\":\"Transformer\"}"}}}}] and @s.use_transformer
+			steps = 0
+			at @s eyes ^ ^ ^ at feet ~ ~ ~
+				while block ^ ^ ^ air and steps < 100 at ^ ^ ^0.1
+					steps++
+					align xyz unless block ^ ^ ^ air unless block ^ ^ ^ tripwire
+						select_structure()
+						steps = 1000
+					end
+				end
+			end
+		end
+		
+		@s.use_transformer = 0
+	end
+	
+	init_timer++
+	if init_timer >= 1
+		init_timer = 0
+	#unless @TransformerBlockPos[initiated]
+		for $i in $range(1)
+			succeeded = False
+			for step = 1 to 20
+				as @TransformerBlockPos[not initiated,sort=random,limit=1]
+					@s.stops = 0
+					@s.get_straight_path()
+					if @s.stops > 0
+						@s.initiated = True
+						succeeded = True
+						step = 10000
+					end
+				end
+			end
+			
+			if not succeeded
+				as @TransformerBlockPos[not initiated,sort=random,limit=1]
+					@s.initiated = True
+					@s.get_straight_path()
+					@s.stops = 2
+				end
+			end
+		end
+	end
+	
+	
+	as @TransformerBlockPos[initiated] at @s
+		$AnimationTimeSteps = 6
+		@s.age++
+		
+		stop = (@s.age+($AnimationTimeSteps-1)) / $AnimationTimeSteps
+		
+		if stop > @s.stops
+			<dest> = @s.<dest>
+		else if stop == 1
+			<dest> = @s.<stop1>
+		else if stop == 2
+			<dest> = @s.<stop2>
+		end
+		
+		if @s.age % $AnimationTimeSteps == 0
+			@s.<pos> = <dest>
+			if stop > @s.stops
+				finish_animation()
+			end
+		else
+			if @s.<pos> == <dest>
+				@s.age = stop * $AnimationTimeSteps - 1
+			else
+				@s.<pos> = (@s.<pos> + <dest>) / 2
+			end
+		end
+	end
+	
+	as @TransformerBlock
+		@s.time = 1
+		if @s.kill
+			/kill @s
+		end
+	end
+end
+
+function finish_animation()
+	at @s
+		set_block(@s.block_id)
+	end
+	
+	as @s.trans_block
+		@s.kill = True
+		/kill @s
+	end
+	/kill @s
+end
+
+function compute_center()
+	sx = 0
+	sz = 0
+	ymin = 0
+	first = True
+	count = 0
+	
+	as @BlockMarker if @s.structure_id == structure_id
+		<x, y, z> = @s.<pos>
+		if first
+			ymin = y
+			first = False
+		else
+			if y < ymin
+				ymin = y
+			end
+		end
+		sx += x
+		sz += z
+		count++
+	end
+	
+	cx = sx / count / 1000 * 1000
+	cz = sz / count / 1000 * 1000
+	<center> = <cx, ymin, cz>
+	
+	as @BlockMarker if @s.structure_id == structure_id
+		@s.<delta> = @s.<pos> - <center>
+	end
+end
+
+function select_structure()
+	tell @a 'Mapping structure...'
+	block_count = 0
+	structure_id++
+	
+	map_structure_recursive()
+	
+	@BlockMarker.counted = False
+	matching = True
+	# Check that each block has a matching block in structure_1
+	as @BlockMarker
+		dummy = 0
+	
+		# Only continue if it's matching
+		if matching and @s.structure_id == structure_id
+			matched = False
+			id = @s.block_id
+			
+			# Find a matching uncounted block in structure_1
+			as @BlockMarker[not counted]
+				# Do not continue if there was a match already
+				dummy = 0
+				unless matched if @s.structure_id == structure_1
+					if @s.block_id == id
+						@s.counted = True
+						matched = True
+					end
+				end
+			end
+			
+			if not matched
+				matching = False
+			end
+		end
+	end
+	
+	# Check that there are no remaining blocks in structure_1
+	as @BlockMarker[not counted] if @s.structure_id == structure_1
+		matching = False
+	end
+	
+	compute_center()
+	if matching
+		structure_2 = structure_id
+		<center2> = <center>
+		<min2> = <xmin, ymin, zmin>
+		<max2> = <xmax, ymax, zmax>
+		
+		get_combined_bounding_box()
+		
+		anim_ready = True
+		tell @a 'Structure matches!'
+		tell @a '[\[Animate 1->2\]](call animate12)'
+	else
+		structure_1 = structure_id
+		<center1> = <center>
+		<min1> = <xmin, ymin, zmin>
+		<max1> = <xmax, ymax, zmax>
+		anim_ready = False
+	end
+	
+	@BlockMarker.keep = False
+	as @BlockMarker if @s.structure_id == structure_1
+		@s.keep = True
+	end
+	as @BlockMarker if @s.structure_id == structure_2
+		@s.keep = True
+	end
+	/kill @BlockMarker[not keep]
+	
+	tell @a 'Blocks: (block_count)'
+	if block_count > 0
+		<xmin, ymin, zmin> /= 1000
+		<xmax, ymax, zmax> /= 1000
+	end
+	
+	@BlockMarker.counted = False
+	as @BlockMarker
+		dummy = 0
+		unless @s.counted if @s.structure_id == structure_id
+			id = @s.block_id
+			count = 0
+			as @BlockMarker[not counted] if @s.block_id == id and @s.structure_id == structure_id
+				count++
+				@s.counted = True
+			end
+			say_count(id, count)
+		end
+	end
+end
+
+function get_combined_bounding_box()
+	# Get combined delta bounding box
+	<dxmin1, dymin1, dzmin1> = <min1> - <center1>
+	<dxmax1, dymax1, dzmax1> = <max1> - <center1>
+	<dxmin2, dymin2, dzmin2> = <min2> - <center2>
+	<dxmax2, dymax2, dzmax2> = <max2> - <center2>
+	
+	if dxmin1 < dxmin2
+		dxmin = dxmin1
+	else
+		dxmin = dxmin2
+	end
+	if dymin1 < dymin2
+		dymin = dymin1
+	else
+		dymin = dymin2
+	end
+	if dzmin1 < dzmin2
+		dzmin = dzmin1
+	else
+		dzmin = dzmin2
+	end
+	
+	if dxmax1 < dxmax2
+		dxmax = dxmax1
+	else
+		dxmax = dxmax2
+	end
+	if dymax1 < dymax2
+		dymax = dymax1
+	else
+		dymax = dymax2
+	end
+	if dzmax1 < dzmax2
+		dzmax = dzmax1
+	else
+		dzmax = dzmax2
+	end
+end
+
+function map_structure_recursive()
+	if block_count < 1000 unless block ~ ~ ~ air unless @BlockMarker[distance=..0.1]
+		as create @BlockMarker
+			@s.structure_id = structure_id
+			@s.block_id = get_block_id()
+			if block_count == 0
+				xmin = @s.x
+				xmax = xmin
+				ymin = @s.y
+				ymax = ymin
+				zmin = @s.z
+				zmax = zmin
+			else
+				<x, y, z> = @s.<pos>
+				if x > xmax
+					xmax = x
+				end
+				if y > ymax
+					ymax = y
+				end
+				if z > zmax
+					zmax = z
+				end
+				if x < xmin
+					xmin = x
+				end
+				if y < ymin
+					ymin = y
+				end
+				if z < zmin
+					zmin = z
+				end
+			end
+		end
+		block_count++
+		
+		for $delta in [
+			(0, 0, 1),
+			(0, 0, -1),
+			(1, 0, 0),
+			(-1, 0, 0),
+			(0, 1, 0),
+			(0, -1, 0)
+		]
+			at ~<$delta>
+				map_structure_recursive()
+			end
+		end
+	end
+end
+
+function create_transformer_block(id)
+	switch block id
+		default
+			/summon armor_stand ~ ~ ~ {Tags:["TransformerBlockPos", "NewTransformerBlockPos"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"falling_block", Time:1b, NoGravity:1b, BlockState:{$falling_block_nbt}, Tags:["TransformerBlock","NewTransformerBlock"]}]}			
+		end
+	end
+end
+
+function set_block(id)
+	switch block id
+		default
+			/setblock ~ ~ ~ $block_state
+		end
+	end
+end
+
+function get_block_id()
+	switch block
+		default
+			return $block_id
+		end
+	end
+end
+
+function say_count(id, qty)
+	switch block id
+		default
+			$block_state = $block_state.$replace('minecraft:', '')
+			tell @a '(qty)x$block_state'
+		end
+	end
+end

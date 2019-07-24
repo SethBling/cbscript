@@ -127,6 +127,11 @@ class cbscript(object):
 		self.add_random_generation()
 		self.add_trigger_objectives()
 		self.add_registered_objectives()
+		self.add_max_chain_length()
+		
+	def add_max_chain_length(self):
+		f = self.global_context.get_reset_function()
+		f.insert_command('/gamerule maxCommandChainLength 1000000000', 0)
 		
 	def add_scratch_objectives(self):
 		f = self.global_context.get_reset_function()

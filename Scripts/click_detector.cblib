@@ -9,6 +9,7 @@ function click_detector_reset()
     /team modify no_collision collisionRule never
 end
 
+# Make sure this is called after check_clicked()
 function click_detector_tick()
     as @ClickDetector
         @s.absorption = 100

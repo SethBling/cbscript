@@ -1,0 +1,724 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\MinecraftEarth"
+desc "Play Minecraft Earth in Minecraft Java"
+
+import miniblock
+import tinyblock
+import click_detector
+
+@Terrain = @MiniBlock[terrain]
+@Tappable = @TinyBlock[tappable]
+@TappablePos = @Entity[type=armor_stand,tag=TappablePos]
+define @TappableBlock : @Entity[type=falling_block,tag=TappableBlock]
+	time: Time byte 1
+end
+@PlateBlockPos = @Entity[type=armor_stand,tag=PlateBlockPos]
+define @PlateBlock : @Entity[type=falling_block,tag=PlateBlock]
+	time: Time byte 1
+end
+
+$ModeNone = 0
+$ModeWorld = 1
+$ModeTap = 2
+$ModeReward = 3
+$ModePlacingPlate = 4
+$ModeBuilding = 5
+
+$TappableTypes = [
+	'oak_log',
+	'stone',
+	'grass_block'
+]
+$NumTappableTypes = $len($TappableTypes)
+
+$WoodDrops = [
+	('oak_planks', 10),
+	('oak_log', 5),
+	('oak_pressure_plate', 2),
+	('oak_fence', 3),
+	('oak_fence_gate', 2),
+	('oak_button', 3),
+	('ladder', 3),
+	('oak_door', 1),
+	('oak_slab', 3),
+	('oak_stairs', 2),
+]
+
+$StoneDrops = [
+	('stone', 10),
+	('cobblestone', 10),
+	('rail', 4),
+	('powered_rail', 2),
+	('minecart', 1),
+	('diorite', 3),
+	('granite', 3),
+	('redstone', 5),
+	('repeater', 2),
+	('redstone_torch', 2),
+	('water_bucket', 1),
+	('lava_bucket', 1),
+	('bucket', 1),
+	('flower_pot', 1),
+	('note_block', 2),
+	('redstone_lamp', 2),
+	('andesite', 5),
+	('tnt', 1),
+]
+
+$GrassDrops = [
+	('grass_block', 10),
+	('dirt', 10),
+	('grass', 3),
+	('oxeye_daisy', 1),
+	('red_tulip', 1),
+	('white_tulip', 1),
+	('azure_bluet', 1),
+	('water_bucket', 1),
+	('pink_tulip', 1),
+]
+
+$Drops = [
+	$WoodDrops,
+	$StoneDrops,
+	$GrassDrops,
+]
+
+array drop[3]
+
+array temp_buffer[8*8*8]
+array build_plate[8*8*8]
+
+define block_tag terrain_blocks
+	grass_block
+	dirt
+	stone
+	sand
+	sandstone
+	podzol
+	coarse_dirt
+end
+
+define block_tag terrain_test
+	grass_block
+	dirt
+	stone
+	sand
+	sandstone
+	podzol
+	coarse_dirt
+	water
+	lava
+	snow
+end
+
+$Diameter = 11
+
+advancement damage_click_detector {
+	criteria: {
+		damage_slime: {
+			trigger: "minecraft:player_hurt_entity",
+			conditions: {
+				damage: {
+					entity: {
+						nbt: "{\"Tags\":\"ClickDetector\"}"
+					}
+				}
+			}
+		}
+	},
+	rewards: {
+		"function": "minecraft_earth:clicked"
+	}
+}
+
+function clicked()
+	/say clicked
+	/advancement revoke @s only minecraft_earth:damage_click_detector
+end
+
+reset
+	/gamerule maxCommandChainLength 1000000000
+
+	unless game_mode > 0 do game_mode = $ModeNone
+	click_detector_reset()
+	
+	/team add tappable
+	/team modify stasis_target color yellow
+	
+	unless build_plate[0] >= 0
+		for $x in $range(8)
+			for $y in $range(3)
+				for $z in $range(8)
+					build_plate[$x + $y*8 + $z*8*8] = 245
+				end
+			end
+		end
+	end
+end
+
+function refresh_landscape(force)
+	as @Player[limit=1] at @s
+		unless @MiniBlock[player_head,limit=1]
+			as create @MiniBlock
+				@s.player_head = True
+				/replaceitem entity @s armor.head player_head
+			end
+		end
+	
+		unless @Position do create @Position
+		base_x = @s.x / 10000 * 10000
+		base_z = @s.z / 10000 * 10000
+		
+		if base_x == @s.base_x and base_z == @s.base_z and not force
+		else
+			@Terrain.unused = True
+			at ^ ^ ^5
+				for row = 0 to $Diameter-1
+					for col = 0 to $Diameter-1
+						create_terrain()
+					end
+				end
+			end
+			/kill @Terrain[unused]
+		end
+		
+		@s.base_x = base_x
+		@s.base_z = base_z
+	end
+end
+
+function create_terrain()
+	as @Position
+		x = base_x + (row - $Diameter / 2) * 10 * scale
+		y = 255 * scale
+		z = base_z + (col - $Diameter / 2) * 10 * scale
+		@s.<pos> = <x, y, z>
+		
+		used_existing = False
+		as @Terrain
+			unless used_existing if @s.terrain_x == x and @s.terrain_z == z
+				@s.row = row
+				@s.col = col
+				used_existing = True
+				@s.unused = False
+			end
+		end
+		unless used_existing
+			step = 0
+			while step <= 255 at @s unless block ~ ~ ~ terrain_test
+				move @s ~ ~-1 ~
+				step++
+			end
+			at @s
+				as create @MiniBlock
+					@s.terrain = True
+					get_block()
+					@s.row = row
+					@s.col = col
+					@s.terrain_x = x
+					@s.terrain_z = z
+				end
+			end
+		end
+	end
+end
+
+function get_block()
+	switch block
+		case terrain_blocks
+			/replaceitem entity @s armor.head $block_name
+		end
+		case snow
+			/replaceitem entity @s armor.head snow_block
+		end
+		case water
+			/replaceitem entity @s armor.head blue_wool
+		end
+		case lava
+			/replaceitem entity @s armor.head orange_wool
+		end
+	end
+end
+
+function move_landscape()
+	as @Player[limit=1] at @s
+		<player_pos> = @s.<pos>
+		<ox, oy, oz> = (<player_pos> - <player_pos> / 10000 * 10000) * 6 / 100
+		ry = @s.ry
+		unless @Position do create @Position
+		
+		as @Position
+			/tp @s ~ ~ ~ ~ ~
+			move @s ^ ^ ^5
+			
+			at @s ~ ~1.1 ~
+				as @MiniBlock[player_head]
+					@s.rot_y = ry
+					@s.update()
+				end
+			end
+			
+			@s.<pos> -= <ox, 0, oz>
+			at @s
+				for $row in $range($Diameter)
+					for $col in $range($Diameter)
+						$rc = ($row - $Diameter / 2) * 0.6
+						$cc = ($col - $Diameter / 2) * 0.6
+						at ~$rc ~0.5 ~$cc
+							as @Terrain[row==$row,col==$col]
+								@s.update()
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+end
+
+function handle_tappables()
+	as @Player[limit=1] at @s
+		<player_pos> = @s.<pos>
+		as @Position
+			/tp @s ~ ~ ~ ~ ~
+			move @s ^ ^ ^5
+		end
+	end
+	
+	tappable_count = 0
+	
+	as @Tappable at @s
+		<delta> = @s.<world_pos> - <player_pos>
+		<dx, dy, dz> = <delta> / scale
+		dsq = dx*dx + dz*dz
+		if dsq < 20
+			@s.current_tappable = True
+			switch_mode($ModeTap)
+		else if dsq < 2000 and game_mode == $ModeWorld
+			<dx, dy, dz> = <delta> * 6 / 100
+			@s.<pos> = @Position.<pos> + <dx, 800, dz>
+			at @s
+				@s.update_tiny()
+			end
+		else
+			@s.<pos> = @s.<world_pos>
+		end
+		
+		if dsq < 10000
+			tappable_count++
+		end
+	end
+	
+	if tappable_count < 10
+		as create @TinyBlock
+			@s.tappable = True
+			@s.<world_pos> = <player_pos> + <rand(-80000, 80000), 1000000, rand(-80000, 80000)>
+			
+			@s.type = rand(0, $NumTappableTypes)
+			for $type in $range($len($TappableTypes))
+				if @s.type == $type
+					$block_name = $TappableTypes[$type]
+					/replaceitem entity @s weapon.mainhand $block_name
+				end
+			end
+		end
+	end
+end
+
+function switch_mode(mode)
+	# Break down the old mode
+	switch game_mode
+		case $ModeWorld
+			as @Terrain
+				move @s ~ -200 ~
+			end
+			as @MiniBlock[player_head]
+				move @s ~ -200 ~
+			end
+			as @Tappable
+				move @s ~ 1000 ~
+			end
+		end
+		case $ModeTap
+			@Player[limit=1].destroy_click()
+			/effect clear @Player strength
+		end
+		case $ModeReward
+			/kill @Tappable[current_tappable]
+			/kill @TappablePos
+			/kill @TappableBlock
+			/kill @TinyBlock[reward]
+			/effect clear @Player blindness
+		end
+		case $ModePlacingPlate
+			@Player[limit=1].destroy_click()
+			/effect clear @Player strength
+			/kill @PlateBlockPos
+			/kill @PlateBlock
+		end
+		case $ModeBuilding
+			as @Position
+				@s.<pos> = <plate_center>
+				at @s ~-3.5 ~-2 ~-3.5
+					store_plate()
+					load_buffer()
+				end
+			end
+		end
+	end
+	
+	# Set up the new mode
+	switch mode
+		case $ModeWorld
+			refresh_landscape(True)
+		end
+		case $ModeTap
+			/effect give @Player blindness 1000000 0 true
+			for $type in $range($len($TappableTypes))
+				if @s.type == $type
+					$block_name = $TappableTypes[$type]
+					/summon armor_stand ~ ~ ~ {Tags:["TappablePos"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"falling_block", Time:1b, NoGravity:1b, BlockState:{Name:"minecraft:$block_name"}, Tags:["TappableBlock", "NewTappableBlock"], Glowing: 1}]}
+					as @Entity[type=falling_block, tag=NewTappableBlock, limit=1]
+						/team join tappable
+						/tag @s remove NewTappableBlock
+					end
+				end
+			end
+			tap_count = 0
+			@Player[limit=1].create_click()
+			/effect give @Player strength 1000000 0 true
+		end
+		case $ModeReward
+			reward_timer = 0
+			switch reward_type
+				case $type in $range($len($TappableTypes))
+					$num_drops = $len($Drops[$type])
+					drop[0] = rand($num_drops)
+					drop[1] = drop[0]
+					while drop[1] == drop[0]
+						drop[1] = rand($num_drops)
+					end
+					finished = False
+					while not finished
+						drop[2] = rand($num_drops)
+						finished = True
+						if drop[2] == drop[0] then finished = False
+						if drop[2] == drop[1] then finished = False
+					end
+				end
+			end		
+		end
+		case $ModePlacingPlate
+			@Player[limit=1].create_click()
+			/effect give @Player strength 1000000 0 true
+			as @Player[limit=1] at @s eyes ^ ^ ^8
+				get_plate_center()
+				as @Position
+					@s.<pos> = <plate_center>
+					at @s ~-3.5 ~-2 ~-3.5
+						load_plate_image()
+					end
+				end
+			end
+		end
+		case $ModeBuilding
+
+		end
+	end
+	game_mode = mode
+end
+
+function get_plate_center()
+	as @Position align y at ~ ~0.01 ~
+		/tp @s ~ ~ ~ ~ ~
+		while True at @s unless block ~ ~ ~ air
+			move @s ~ ~1 ~
+		end
+		while True at @s if block ~ ~ ~ air
+			move @s ~ ~-1 ~
+		end
+		<plate_delta> = @s.<pos> - <plate_center>
+		<plate_center> = @s.<pos>
+	end
+end
+
+clock main
+	unless @Position do create @Position
+	
+	as @Player
+		if @s[nbt={SelectedItem:{id:"minecraft:dirt",tag:{display:{Name:"{\"text\":\"Minecraft Earth\"}"}}}}]
+			@s.hold_earth = True
+		else
+			@s.hold_earth = False
+		end
+		
+		if @s.hold_earth and game_mode == $ModeNone
+			switch_mode($ModeWorld)
+		end
+		if not @s.hold_earth and game_mode == $ModeWorld
+			switch_mode($ModeNone)
+		end
+		@s.was_hold_earth = @s.hold_earth
+		
+		if @s[nbt={SelectedItem:{id:"minecraft:light_weighted_pressure_plate",tag:{display:{Name:"{\"text\":\"Build Plate\"}"}}}}]
+			@s.hold_plate = True
+		else
+			@s.hold_plate = False
+		end
+		
+		if @s.hold_plate and game_mode == $ModeNone
+			switch_mode($ModePlacingPlate)
+		end
+		if not @s.hold_plate and game_mode == $ModePlacingPlate
+			switch_mode($ModeNone)
+		end
+		@s.was_hold_plate = @s.hold_plate
+	end
+	
+	switch game_mode
+		case $ModeWorld
+			refresh_landscape(False)
+			move_landscape()
+			handle_tappables()
+		end
+		case $ModeTap
+			as @TappableBlock
+				@s.time = 1
+			end
+			as @Player[limit=1]
+				at @s eyes ^ ^ ^3 at ~ ~-0.5 ~
+					/tp @TappablePos ~ ~ ~ ~ ~
+				end
+				if @s.check_clicked()
+					tap_count++
+					at @TappableBlock[limit=1]
+						/particle minecraft:crit ~ ~ ~ 0.5 0.5 0.5 1 10 force
+						switch tap_count
+							case $i in $range(5)
+								$pitch = $i / 2.5
+								/playsound minecraft:block.enchantment_table.use block @a ~ ~ ~ 1 $pitch 1
+							end
+						end
+					end
+				end
+			end
+			
+			if tap_count >= 5
+				reward_type = @Tappable[current_tappable,limit=1].type
+				switch_mode($ModeReward)
+			end
+		end
+		case $ModeReward
+			reward_timer++
+			at @TappableBlock
+				at ~ ~-1 ~
+					/particle minecraft:explosion ~ ~ ~ 1 1 1 0.2 2
+				end
+				switch reward_timer
+					case 1
+						/playsound entity.player.levelup block @a ~ ~ ~ 1 0
+					end
+					case 30
+						at @Player[limit=1] facing @TappableBlock[limit=1] as @Position
+							/tp @s ~ ~ ~ ~ ~
+							<pos> = @s.<pos>
+							move @s ^0.1 ^ ^
+							<dx, dy, dz> = @s.<pos> - <pos>
+						end
+						spawn_reward_tiny_block(drop[0], dx, dz)
+					end
+					case 60
+						at @Player[limit=1] facing @TappableBlock[limit=1] as @Position
+							/tp @s ~ ~ ~ ~ ~
+							<pos> = @s.<pos>
+							move @s ^-0.1 ^ ^
+							<dx, dy, dz> = @s.<pos> - <pos>
+						end
+
+						spawn_reward_tiny_block(drop[1], dx, dz)
+					end
+					case 90
+						spawn_reward_tiny_block(drop[2], 0, 0)
+					end
+					case 160
+						switch reward_type
+							case $type in $range($len($TappableTypes))
+								for $i in $range(3)
+									switch drop[$i]
+										case $r in $range($len($Drops[$type]))
+											$block_name, $count = $Drops[$type][$r]
+											/give @Player[limit=1] $block_name $count
+										end
+									end
+								end
+							end
+						end	
+					
+						switch_mode($ModeWorld)
+					end
+				end
+			end
+			as @TinyBlock[reward] at @s facing @Player[limit=1]
+				/tp @s ~ ~ ~ ~ ~
+				@s.age++
+				if @s.age <= 20
+					@s.x += @s.move_x
+					@s.y += @s.move_y
+					@s.z += @s.move_z
+					@s.move_y -= 15
+				end
+			end
+		end
+		case $ModePlacingPlate
+			as @Player[limit=1] at @s eyes ^ ^ ^8
+				get_plate_center()
+				as @PlateBlockPos
+					@s.<pos> += <plate_delta>
+				end
+			end
+			
+			as @PlateBlock
+				@s.time = 1
+			end
+			
+			as @Player[limit=1]
+				if @s.check_clicked()
+					as @Position
+						@s.<pos> = <plate_center>
+						at @s ~-3.5 ~-2 ~-3.5
+							store_buffer()
+							load_plate()
+						end
+					end
+					switch_mode($ModeBuilding)
+				end
+			end
+			
+			
+		end
+		case $ModeBuilding
+			<delta> = (@Player[limit=1].<pos> - <plate_center>) / scale
+			if <delta> * <delta> > 500
+				switch_mode($ModeNone)
+			end
+		end
+	end
+	
+	click_detector_tick()
+end
+
+function spawn_reward_tiny_block(drop, vx, vz)
+	/playsound minecraft:entity.firework_rocket.launch block @a
+	as create @TinyBlock
+		@s.reward = True
+		switch reward_type
+			case $type in $range($len($TappableTypes))
+				switch drop
+					case $r in $range($len($Drops[$type]))
+						$block_name, $count = $Drops[$type][$r]
+						/replaceitem entity @s weapon.mainhand $block_name $count
+						/data merge entity @s {CustomName:"\"+$count\"",CustomNameVisible:1}
+					end
+				end
+			end
+		end		
+		/data merge entity @s {Pose:{RightArm:[-45f,0f,0f]}}
+		facing @Player[limit=1]
+			/tp @s ~ ~ ~ ~ ~
+		end
+		move @s ^0.5 ^-1 ^-0.3
+		@s.move_x = vx
+		@s.move_z = vz
+		@s.move_y = 300
+	end
+end
+
+function store_buffer()
+	for $dx in $range(8)
+		for $dy in $range(8)
+			for $dz in $range(8)
+				$idx = $dx + $dy*8 + $dz*8*8
+				at ~$dx ~$dy ~$dz
+					temp_buffer[$idx] = get_block_id()
+				end
+			end
+		end
+	end
+end
+
+function load_buffer()
+	for $dx in $range(8)
+		for $dy in $range(8)
+			for $dz in $range(8)
+				$idx = $dx + $dy*8 + $dz*8*8
+				at ~$dx ~$dy ~$dz
+					place_block(temp_buffer[$idx])
+				end
+			end
+		end
+	end
+end
+
+function store_plate()
+	for $dx in $range(8)
+		for $dy in $range(8)
+			for $dz in $range(8)
+				$idx = $dx + $dy*8 + $dz*8*8
+				at ~$dx ~$dy ~$dz
+					build_plate[$idx] = get_block_id()
+				end
+			end
+		end
+	end
+end
+
+function load_plate()
+	for $dx in $range(8)
+		for $dy in $range(8)
+			for $dz in $range(8)
+				$idx = $dx + $dy*8 + $dz*8*8
+				at ~$dx ~$dy ~$dz
+					place_block(build_plate[$idx])
+				end
+			end
+		end
+	end
+end
+
+function load_plate_image()
+	for $dx in $range(8)
+		for $dy in $range(8)
+			for $dz in $range(8)
+				$idx = $dx + $dy*8 + $dz*8*8
+				at ~$dx ~$dy ~$dz
+					create_falling_block(build_plate[$idx])
+				end
+			end
+		end
+	end
+end
+
+function get_block_id()
+	switch block
+		default
+			return $block_id
+		end
+	end
+end
+
+function place_block(id)
+	switch block id
+		default
+			/setblock ~ ~ ~ $block_state
+		end
+	end
+end
+
+function create_falling_block(id)
+	switch block id
+		case air
+		end
+		default
+			/summon armor_stand ~ ~ ~ {Tags:["PlateBlockPos"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"falling_block", Time:1b, NoGravity:1b, BlockState:{$falling_block_nbt}, Tags:["PlateBlock"]}]}
+		end
+	end
+end

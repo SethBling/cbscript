@@ -24,16 +24,21 @@ class block_switch_base(object):
 	def compile(self, func):
 		self.compile_initialization(func)
 		self.blocks = func.get_block_state_list()
-		self.get_block_state_list(self.blocks)
+		self.get_block_state_list(func, self.blocks)
 		case_ids = self.get_case_ids()
 		
-		switch_func = func.create_child_function()
-		self.compile_block_cases(switch_func, case_ids)
-		func.call_function(
-			switch_func,
-			'line{:03}/switch_block'.format(self.line),
-			'execute if {} run '.format(self.get_range_condition(func, case_ids))
-		)
+		if self.default_case:
+			# If there is a default case, launch right into switch branches
+			self.compile_block_cases(func, case_ids)
+		else:
+			# If there isn't a default case, do initial check on all case ids
+			switch_func = func.create_child_function()
+			self.compile_block_cases(switch_func, case_ids)
+			func.call_function(
+				switch_func,
+				'line{:03}/switch_block'.format(self.line),
+				'execute if {} run '.format(self.get_range_condition(func, case_ids))
+			)
 		
 	# Splits a list into four quartiles
 	def get_quartiles(self, list):
@@ -96,7 +101,7 @@ class block_switch_base(object):
 			return 'Name:"{}"'.format(block)
 		
 	# Gets a list of all block states matching some case (including the default case)
-	def get_block_state_list(self, blocks):
+	def get_block_state_list(self, func, blocks):
 		self.block_state_list = {}
 		self.block_list = {}
 		
@@ -104,7 +109,7 @@ class block_switch_base(object):
 			for state in blocks[block]["states"]:
 				block_state = self.get_block_state_name(block, state)
 				
-				case = self.get_matching_case(block, state)
+				case = self.get_matching_case(func, block, state)
 				if case != None:
 					self.block_state_list[block_state] = case
 					if block not in self.block_list:
@@ -116,9 +121,12 @@ class block_switch_base(object):
 		self.id_block_states = {self.block_state_ids[block_state]:block_state for block_state in self.block_state_ids}
 					
 	# Finds a case matching a block state in command format
-	def get_matching_case(self, block, state):
+	def get_matching_case(self, func, block, state):
 		for case in self.cases:
 			if not case.is_default and case.matches(block, state):
+				return case
+			
+			if not case.is_default and case.block_name in func.block_tags and block.replace('minecraft:','') in func.block_tags[case.block_name]:
 				return case
 				
 		return self.default_case

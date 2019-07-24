@@ -1,5 +1,6 @@
 from command_block import command_block
 from variable_types.scoreboard_var import scoreboard_var
+from CompileError import CompileError
 
 class array_definition_block(object):
 	def __init__(self, line, name, from_val, to_val, selector_based):
@@ -14,7 +15,7 @@ class array_definition_block(object):
 			from_val = int(self.from_val.get_value(func))
 			to_val = int(self.to_val.get_value(func))
 		except Exception:
-			raise Exception('Unable to get array range for "{}" at line {}'.format(self.name, self.line))
+			raise CompileError('Unable to get array range for "{}" at line {}'.format(self.name, self.line))
 			
 		name = self.name
 
