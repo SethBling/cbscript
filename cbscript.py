@@ -71,6 +71,7 @@ class cbscript(object):
 			
 		self.global_context = global_context.global_context(self.namespace)
 		global_environment = environment(self.global_context)
+		global_environment.set_dollarid('namespace', self.namespace)
 		global_func = mcfunction(global_environment)
 		
 		self.global_context.scale = parsed['scale']

@@ -5,4 +5,6 @@ class advancement_definition_block(object):
 		self.json = json
 		
 	def compile(self, func):
-		func.add_advancement(self.name, self.json)
+		json = func.apply_replacements(self.json)
+	
+		func.add_advancement(self.name, json)

@@ -1,0 +1,54 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Nether portal cubes"
+
+import common
+
+define @PortalFacePos: @Entity[type=armor_stand]
+	create {Tags:["PortalFacePos", "NewPortalFacePos"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"falling_block", Time:1b, NoGravity:1b, BlockState:{Name:"nether_portal",Properties:{axis:"$portal_axis"}}, Tags:["PortalFace","NewPortalFace"]}]}			
+end
+
+define @PortalFace: @Entity[type=falling_block, tag=PortalFace]
+	create {Tags:["PortalFace"],BlockState:{Name:"nether_portal",Properties:{axis:"$portal_axis"},NoGravity:1,Time:1}}
+	time: Time byte 1
+end	
+
+define @PortalObsidianPos: @Entity[type=armor_stand]
+	create {Tags:["PortalObsidianPos", "NewPortalObsidianPos"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"falling_block", Time:1b, NoGravity:1b, BlockState:{Name:"obsidian"}, Tags:["PortalObsidian","NewPortalObsidian"]}]}			
+end
+
+define @PortalObsidian: @Entity[type=falling_block, tag=PortalObsidian]
+	time: Time byte 1
+end	
+
+reset
+	tell @Player '[\[Create Nether Portal Block\]](call create_block)'
+	tell @Player '[\[Kill Portal Blocks\]](call destroy_blocks)'
+end
+
+function create_block()
+	align xyz
+		$portal_axis = 'x'
+		create @PortalFacePos ~0.5 ~ ~0.124
+		create @PortalFacePos ~0.5 ~ ~0.876
+		$portal_axis = 'z'
+		create @PortalFacePos ~0.124 ~ ~0.5
+		create @PortalFacePos ~0.876 ~ ~0.5
+		create @PortalObsidianPos ~0.5 ~ ~0.5
+	end
+end
+
+function destroy_blocks()
+	/kill @PortalFacePos
+	/kill @PortalFace
+	/kill @PortalObsidianPos
+	/kill @PortalObsidian
+end
+
+clock main
+	as @PortalFace
+		@s.time = 1
+	end
+	as @PortalObsidian
+		@s.time = 1
+	end
+end

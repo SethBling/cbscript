@@ -120,28 +120,37 @@ reset
 	
 	/scoreboard objectives add use_transformer minecraft.used:minecraft.carrot_on_a_stick
 	
+	unless anim_ticks > 0
+		anim_ticks = 1
+	end
+	
 	tell @a 'Loaded Transformers by SethBling'
 	
 	tell @a '[\[Animate 1->2\]](call animate12)'
+	tell @a 'Animation Speed: [\[Slow\]](call slow) [\[Fast\]](call fast)'
+end
+
+function slow()
+	anim_ticks = 24
+end
+
+function fast()
+	anim_ticks = 1
 end
 
 function animate12()
 	trigger_animation(structure_1, structure_2)
 	tell @a '[\[Animate 2->1\]](call animate21)'
+	tell @a 'Animation Speed: [\[Slow\]](call slow) [\[Fast\]](call fast)'
 end
 
 function animate21()
 	trigger_animation(structure_2, structure_1)
 	tell @a '[\[Animate 1->2\]](call animate12)'
+	tell @a 'Animation Speed: [\[Slow\]](call slow) [\[Fast\]](call fast)'
 end
 
 function trigger_animation(id1, id2)
-	if anim_ready
-		tell @s 'Animation is ready'
-	else
-		tell @s 'Animation not is ready'
-	end
-
 	@BlockMarker.matched = False
 	
 	as @BlockMarker if @s.structure_id == id1 at @s
@@ -199,7 +208,7 @@ clock main
 	end
 	
 	init_timer++
-	if init_timer >= 1
+	if init_timer >= anim_ticks
 		init_timer = 0
 	#unless @TransformerBlockPos[initiated]
 		for $i in $range(1)
@@ -228,7 +237,7 @@ clock main
 	
 	
 	as @TransformerBlockPos[initiated] at @s
-		$AnimationTimeSteps = 6
+		$AnimationTimeSteps = 8
 		@s.age++
 		
 		stop = (@s.age+($AnimationTimeSteps-1)) / $AnimationTimeSteps
@@ -359,6 +368,7 @@ function select_structure()
 		anim_ready = True
 		tell @a 'Structure matches!'
 		tell @a '[\[Animate 1->2\]](call animate12)'
+		tell @a 'Animation Speed: [\[Slow\]](call slow) [\[Fast\]](call fast)'
 	else
 		structure_1 = structure_id
 		<center1> = <center>

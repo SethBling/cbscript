@@ -17,7 +17,7 @@ advancement placed_rotator {
 		}
 	},
 	rewards: {
-		"function": "rotator:placed_rotator"
+		"function": "$namespace:placed_rotator"
 	}
 }
 
