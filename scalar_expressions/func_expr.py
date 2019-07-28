@@ -74,53 +74,6 @@ class func_expr(scalar_expression_base):
 				
 			return scoreboard_var('Global', id)
 
-		elif efunc == 'sin' or efunc == 'cos':
-			if len(args) <> 1:
-				print "{0} takes exactly 1 argument, received: {}".format(efunc, len(args))
-				return None
-			
-			raise NotImplementedError()
-			# TODO: Treat args as variables
-			
-			id = args[0].compile(func, None)
-			if id == None:
-				print 'Unable to compile argument for {0} function'.format(efunc)
-				return None
-				
-			moddedId2 = func.get_temp_var()
-			if efunc == 'sin':
-				expr = scriptparse.parse("(({0}%360)+360)%360".format(id))[1]
-			else:
-				expr = scriptparse.parse("(({0}%360)+450)%360".format(id))[1]
-			
-			modret = expr.compile(func, moddedId2)
-			if modret == None:
-				print 'Unable to compile modulus math for {0} function'.format(efunc)
-				return None
-			if modret != moddedId2:
-				func.add_command('scoreboard players operation Global {0} = Global {1}'.format(moddedId2, modret))
-				
-			id = func.get_modifiable_id(id, assignto)
-			
-			modId = func.get_temp_var()
-			func.add_operation('Global', modId, '=', moddedId2)
-			c180 = func.add_constant(180)
-			func.add_command("scoreboard players operation Global {0} %= {1} Constant".format(modId, c180))
-			
-			expr = scriptparse.parse("4000*{0}*(180-{0})/(40500-{0}*(180-{0}))".format(modId))[1]
-			retId = expr.compile(func, assignto)
-			if retId == None:
-				print 'Unable to compile estimator for {0} function'.format(efunc)
-				return None
-			
-			func.add_constant(-1)
-			func.add_command('execute if score Global {} matches 180.. run scoreboard players operation Global {} *= minus Constant'.format(moddedId2, retId))
-			
-			func.free_temp_var(modId)
-			func.free_temp_var(moddedId2)
-			
-			return scoreboard_var('Global', retId)
-		
 		else:
 			self.function_call.compile(func)
 			

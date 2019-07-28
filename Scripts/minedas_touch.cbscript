@@ -1,0 +1,22 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Automatically mine the blocks in front of you"
+
+import common
+
+reset
+
+end
+
+clock main
+	as @Player at @s eyes
+		for $d in $range(0, 51)
+			$forward = $d / 10.0
+			at ^ ^ ^$forward do mine_block()
+		end
+	end
+end
+
+function mine_block()
+	/loot spawn ~ ~ ~ mine ~ ~ ~ mainhand
+	/setblock ~ ~ ~ air destroy
+end

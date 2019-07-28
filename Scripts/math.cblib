@@ -17,7 +17,11 @@ function abs(n)
 	end
 end
 
-function sin(n)
-	sin_angle = (n % 360 + 360) % 360
+function sin(sin_angle)
+	sin_angle %= 360
 	return 4000*sin_angle*(180-sin_angle)/(40500-sin_angle*(180-sin_angle))
+end
+
+function cos(cos_angle)
+	return sin(cos_angle+90)
 end

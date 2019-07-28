@@ -1,0 +1,41 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Automatically mine the blocks in front of you"
+
+import common
+
+reset
+	q = 1
+	r = 0
+	t = 1
+	k = 1
+	m = 3
+	x = 3
+end
+
+clock main
+	if q * 4 + r - t < m * t
+		tell @a '(m)'
+		
+		qp = q
+		rp = r
+		mp = m
+		
+		q *= 10
+		r = 10*(rp-mp*t)
+		m = (10*(3*qp+rp)) / t - 10*mp
+	else
+		qp = q
+		rp = r
+		tp = t
+		kp = k
+		mp = m
+		xp = x
+		
+		q *= kp
+		r = (2*qp+rp)*xp
+		t *= xp
+		k++
+		m = (qp*(7*kp+2)+rp*xp) / (tp*xp)
+		x += 2
+	end
+end

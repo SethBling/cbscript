@@ -1,0 +1,203 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Transform structures into other structures"
+
+import math
+import common
+
+$BaseX = -111000
+$BaseY = 64000
+$BaseZ = 80000
+
+define @Line : @Entity[type=area_effect_cloud,tag=Line]
+	create {Tags:["Line"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+end
+
+define @Segment : @Entity[type=armor_stand, tag=Segment]
+	create {
+		Tags:["Segment"],
+		Pose:{
+			RightArm: [-10f,-90f,0f]
+		},
+		NoGravity:1,
+		ShowArms:1b,
+		Marker:1b,
+		Invisible:1b,
+		NoGravity:1b,
+		Invulnerable:1b,
+		Silent:1b
+	}
+	pose_angle: Pose.RightArm[0] float 1000
+end
+
+reset
+	/kill @Line
+	/kill @Segment
+	
+	# Y Axis
+	<pos1> = <-3000, -3000, -3000>
+	<pos2> = <-3000, 3000, -3000>
+	create_line()
+
+	<pos1> = <-3000, -3000, 3000>
+	<pos2> = <-3000, 3000, 3000>
+	create_line()
+
+	<pos1> = <3000, -3000, -3000>
+	<pos2> = <3000, 3000, -3000>
+	create_line()
+
+	<pos1> = <3000, -3000, 3000>
+	<pos2> = <3000, 3000, 3000>
+	create_line()
+	
+	# X Axis
+	<pos1> = <-3000, -3000, -3000>
+	<pos2> = <3000, -3000, -3000>
+	create_line()
+
+	<pos1> = <-3000, -3000, 3000>
+	<pos2> = <3000, -3000, 3000>
+	create_line()
+
+	<pos1> = <-3000, 3000, -3000>
+	<pos2> = <3000, 3000, -3000>
+	create_line()
+
+	<pos1> = <-3000, 3000, 3000>
+	<pos2> = <3000, 3000, 3000>
+	create_line()
+	
+	# Z Axis
+	<pos1> = <-3000, -3000, -3000>
+	<pos2> = <-3000, -3000, 3000>
+	create_line()
+
+	<pos1> = <-3000, 3000, -3000>
+	<pos2> = <-3000, 3000, 3000>
+	create_line()
+
+	<pos1> = <3000, -3000, -3000>
+	<pos2> = <3000, -3000, 3000>
+	create_line()
+
+	<pos1> = <3000, 3000, -3000>
+	<pos2> = <3000, 3000, 3000>
+	create_line()
+end
+
+function create_line()
+	as create @Line
+		@s.<pos1> = <pos1>
+		@s.<pos2> = <pos2>
+		id = &@s
+		for i = 0 to 15
+			as create @Segment
+				@s.line = id
+				@s.segment = i
+				/replaceitem entity @s weapon.mainhand blaze_rod
+				
+				@s.<pos> = <$BaseX, $BaseY, $BaseZ>
+			end
+		end
+	end
+end
+
+function rotate_around_z_axis(a)
+	<x, y, z> = @s.<pos1>
+	@s.<pos1> = <cos(a)*x-sin(a)*y, sin(a)*x+cos(a)*y, z*1000> / 1000
+	
+	<x, y, z> = @s.<pos2>
+	@s.<pos2> = <cos(a)*x-sin(a)*y, sin(a)*x+cos(a)*y, z*1000> / 1000
+end
+
+function rotate_around_y_axis(a)
+	<x, y, z> = @s.<pos1>
+	@s.<pos1> = <cos(a)*x-sin(a)*z, y*1000, sin(a)*x+cos(a)*z> / 1000
+	
+	<x, y, z> = @s.<pos2>
+	@s.<pos2> = <cos(a)*x-sin(a)*z, y*1000, sin(a)*x+cos(a)*z> / 1000
+end
+
+clock main
+	unless @Position do create @Position
+	unless @Position2 do create @Position2
+	unless @Position3 do create @Position3
+
+	as @Line at @s
+		rotate_around_z_axis(rpt)
+		rotate_around_y_axis(2*rpt)
+		
+		<x1, y1, dummy> = @s.<pos1>
+		<x2, y2, dummy> = @s.<pos2>
+		
+		
+		length = sqrt((x1-x2)^2 + (y1-y2)^2)
+		
+		unitx = (x2-x1) * 1000 / length
+		unity = (y2-y1) * 1000 / length
+		
+		as @Position2
+			/tp @s ~ ~ ~
+			@s.x += unitx
+			@s.z += unity
+		end
+		as @Position
+			# Get angle to tilt stick
+			/tp @s ~ ~ ~
+			at @s facing @Position2
+				/tp @s ~ ~ ~ ~ ~
+				angle = @s.ry				
+			end
+			
+			# Get offset from shoulder to tip of arm
+			@s.ry += 100000
+			<pos1> = @s.<pos>
+			move @s ^ ^ ^0.6
+			<ox, oy, oz> = @s.<pos> - <pos1>
+		end
+		
+		
+		segments = length / 1000
+		id = &@s
+		
+		# TODO: determine line angle
+		
+		as @Segment if @s.line == id
+			if @s.segment <= segments + 5
+				if @s.segment > 0 and (@s.segment+1) * 1000 > length
+					# special case for over-extension
+					seg_off = (@s.segment - 1) * 1000 + length % 1000 + 150
+				else
+					seg_off = @s.segment * 1000
+				end
+				
+				if @s.segment <= segments
+					/replaceitem entity @s weapon.mainhand blaze_rod
+				else
+					/replaceitem entity @s weapon.mainhand air
+				end
+
+			
+				x = $BaseX + x1 + unitx * seg_off / 1000
+				y = $BaseY + y1 + unity * seg_off / 1000
+				@s.x = x
+				@s.y = y
+				
+				
+				@s.pose_angle = 260000 - angle
+				at @s
+					#/particle flame
+				end
+				@s.x += 250
+				@s.y -= 1600
+				
+				@s.x += ox
+				@s.y += oz
+			else
+				@s.x = $BaseX
+				@s.y = $BaseY-15000
+			end
+			move @s ~ ~ ~
+		end
+	end
+end

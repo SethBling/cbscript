@@ -1,4 +1,5 @@
 import traceback
+from CompileError import CompileError
 
 class for_index_block(object):
 	def __init__(self, line, var, fr, to, by, sub):
