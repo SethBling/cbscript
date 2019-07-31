@@ -1,0 +1,18 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Test methods of detecting clicks"
+
+import better_click_detector
+
+function click_callback()
+	at @s eyes ^ ^ ^10
+		/particle barrier
+	end
+end
+
+reset
+	tell @a '[\[Enable click\]](call enable_click) [\[Disable click\]](call disable_click)'
+end
+
+clock main
+
+end

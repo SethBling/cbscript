@@ -27,6 +27,10 @@ def compile_section(section, environment):
 
 	if type == 'function':
 		f = mcfunction(environment.clone(new_function_name = name), True, params)
+	elif type == 'reset':
+		f = environment.get_reset_function()
+		if f == None:
+			f = mcfunction(environment.clone(new_function_name = name))
 	else:
 		f = mcfunction(environment.clone(new_function_name = name))
 		
@@ -749,7 +753,7 @@ class mcfunction(object):
 		
 		result = self.parser('import ' + file.get_text() + '\n')
 		if result == None:
-			raise Exception('Unable to parse file "{}"'.format(filename))
+			raise CompileError('Unable to parse file "{}"'.format(filename))
 		
 		type, parsed = result
 		if type != 'lib':

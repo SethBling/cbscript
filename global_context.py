@@ -75,7 +75,10 @@ class global_context(object):
 		self.objectives[objective] = True
 	
 	def get_reset_function(self):
-		return self.functions['reset']
+		if 'reset' in self.functions:
+			return self.functions['reset']
+		else:
+			return None
 		
 	def add_constant(self, c):
 		try:

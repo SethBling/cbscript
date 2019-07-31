@@ -360,3 +360,6 @@ class environment(object):
 		
 	def get_block_state_list(self):
 		return self.global_context.get_block_state_list()
+		
+	def get_reset_function(self):
+		return self.global_context.get_reset_function()

@@ -1,0 +1,101 @@
+import common
+
+advancement damage_click_detector {
+	criteria: {
+		damage_slime: {
+			trigger: "minecraft:player_hurt_entity",
+			conditions: {
+				damage: {
+					entity: {
+						nbt: "{Tags:\"BigClickDetector\"}"
+					}
+				}
+			}
+		}
+	},
+	rewards: {
+		"function": "$namespace:click_advancement_reward"
+	}
+}
+
+define @BigClickDetector : @Entity[type=slime, tag=BigClickDetector]
+	create {CustomName:"\"ClickDetector\"", Tags:["BigClickDetector"], NoGravity:1b, NoAI: 1b, Silent:1b, Size:18, AbsorptionAmount: 100f}
+	
+	function tick_click_detector()
+		/effect give @s invisibility 10 0 true
+		/tp @s ~ ~-5 ~
+		@s.absorption = 100
+		@s.kill = False
+	end
+end
+
+define @Player : @Player
+	click: @BigClickDetector
+	
+	function enable_click()
+		unless @s.enable_click
+			@s.enable_click = True
+			@s.create_click()
+		end
+	end
+	
+	function create_click()
+		at @s eyes ^ ^ ^
+			@s.click = create @BigClickDetector ~ ~1000 ~
+			as @s.click
+				/tp @s ~ ~-5 ~
+				/team join no_collision
+				@s.tick_click_detector()
+			end
+		end
+	end
+	
+	function disable_click()
+		@s.enable_click = False
+		@s.destroy_click()
+	end
+	
+	function destroy_click()
+		as @s.click
+			@s.kill = True
+			/tp @s ~ -200 ~
+			/kill @s
+		end
+		@s.click = None
+	end
+end
+
+function click_advancement_reward()
+	/advancement revoke @s only $namespace:damage_click_detector
+	@s.destroy_click()
+	@s.create_click()
+	
+	click_callback()
+end
+
+reset
+	/team add no_collision
+	/team modify no_collision collisionRule never
+end
+
+clock click_detector_clock
+	@BigClickDetector.kill = True
+
+	as @Player at @s eyes ^ ^ ^
+		if @s.enable_click
+			as @s.click
+				@s.tick_click_detector()
+			else
+				@s.create_click()
+				as @s.click
+					@s.tick_click_detector()
+				end
+			end
+		end
+	end
+	
+	as @BigClickDetector[kill]
+		/tp @s ~ -200 ~
+		/kill @s
+	end
+end

@@ -11,17 +11,31 @@ end
 function abs(n)
 	if n < 0
 		return -n
-	end
-	if n >= 0
+	else
 		return n
 	end
 end
 
-function sin(sin_angle)
-	sin_angle %= 360
-	return 4000*sin_angle*(180-sin_angle)/(40500-sin_angle*(180-sin_angle))
+function sin(_sin_angle)
+	_sin_angle %= 360
+	mult = 1
+	if _sin_angle > 180
+		_sin_angle -= 180
+		mult = -1
+	end
+	return 4000*_sin_angle*(180-_sin_angle)/(40500-_sin_angle*(180-_sin_angle)) * mult
 end
 
-function cos(cos_angle)
-	return sin(cos_angle+90)
+function cos(_cos_angle)
+	return sin(_cos_angle+90)
+end
+
+function sign(n)
+	if n > 0
+		return 1
+	else if n < 0
+		return -1
+	else
+		return 0
+	end
 end
