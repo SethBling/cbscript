@@ -1,7 +1,8 @@
+from block_base import block_base
 import traceback
 from CompileError import CompileError
 
-class import_block(object):
+class import_block(block_base):
 	def __init__(self, line, filename):
 		self.line = line
 		self.filename = filename

@@ -1,4 +1,6 @@
-class create_block(object):
+from block_base import block_base
+
+class create_block(block_base):
 	def __init__(self, line, atid, relcoords):
 		self.line = line
 		self.atid = atid

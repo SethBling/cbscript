@@ -1,7 +1,7 @@
 import global_context
 import mcworld
 from environment import environment
-from mcfunction import mcfunction, get_line, compile_section
+from mcfunction import mcfunction, compile_section
 from selector_definition import selector_definition
 from source_file import source_file
 from CompileError import CompileError
@@ -77,32 +77,19 @@ class cbscript(object):
 		self.global_context.scale = parsed['scale']
 		self.global_context.parser = self.parse
 
+		lines = parsed['lines']
+		
+		# Register macros and template functions
+		for line in lines:
+			line.register(self.global_context)
+
+		# Compile all lines
 		try:
-			global_func.compile_blocks(parsed['assignments'])
+			global_func.compile_blocks(lines)
 		except Exception as e:
 			print(e)
 			self.dependencies = [source_file(d) for d in self.global_context.dependencies]
 			return False
-
-		for section in parsed['sections']:
-			type, id, template_params, params, sub = section
-			if type == 'macro':
-				self.global_context.macros[id] = (params, sub)
-			elif type == 'template_function':
-				self.global_context.template_functions[id] = (template_params, params, sub)
-				
-		for section in parsed["sections"]:
-			if section[0] == 'macro' or section[0] == 'template_function':
-				continue
-				
-			try:
-				compile_section(section, global_environment)
-			except CompileError as e:
-				print(e)
-				return False
-			except:
-				self.log_traceback()
-				return False
 		
 		self.post_processing()
 			

@@ -1,7 +1,8 @@
+from block_base import block_base
 from data_types.relcoords import relcoords
 from CompileError import CompileError
 
-class block_definition_block(object):
+class block_definition_block(block_base):
 	def __init__(self, line, block_id, items, coords):
 		self.line = line
 		self.block_id = block_id

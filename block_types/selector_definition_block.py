@@ -1,6 +1,7 @@
+from block_base import block_base
 from mcfunction import compile_section
 
-class selector_definition_block(object):
+class selector_definition_block(block_base):
 	def __init__(self, line, id, fullselector, items):
 		self.line = line
 		self.id = id
@@ -28,9 +29,9 @@ class selector_definition_block(object):
 					scale = scale.get_value(func)
 				selector.vector_paths[vector_id] = (path, data_type, scale)
 			elif type == 'Method':
-				sub_env = func.clone_environment()
-				sub_env.update_self_selector('@'+self.id)
-				compile_section(val, sub_env)
+				func_section = val
+				func_section.self_selector = '@'+self.id
+				func_section.compile(func)
 			elif type == 'Pointer':
 				pointer_id, pointer_selector = val
 				selector.pointers[pointer_id] = pointer_selector

@@ -1,6 +1,7 @@
+from block_base import block_base
 from CompileError import CompileError
 
-class block_switch_base(object):
+class block_switch_base(block_base):
 	def __init__(self):
 		self.default_case = None
 		for case in self.cases:

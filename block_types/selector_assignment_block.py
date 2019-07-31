@@ -1,4 +1,6 @@
-class selector_assignment_block(object):
+from block_base import block_base
+
+class selector_assignment_block(block_base):
 	def __init__(self, line, id, fullselector):
 		self.line = line
 		self.id = id

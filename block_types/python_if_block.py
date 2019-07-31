@@ -1,6 +1,7 @@
+from block_base import block_base
 import math
 
-class python_if_block(object):
+class python_if_block(block_base):
 	def __init__(self, line, val, sub, else_sub):
 		self.line = line
 		self.val = val

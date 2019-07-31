@@ -1,5 +1,10 @@
 import common
 
+reset
+	/team add no_collision
+	/team modify no_collision collisionRule never
+end
+
 advancement damage_click_detector {
 	criteria: {
 		damage_slime: {
@@ -17,6 +22,14 @@ advancement damage_click_detector {
 		"function": "$namespace:click_advancement_reward"
 	}
 }
+
+function click_advancement_reward()
+	/advancement revoke @s only $namespace:damage_click_detector
+	@s.destroy_click()
+	@s.create_click()
+	
+	click_callback()
+end
 
 define @BigClickDetector : @Entity[type=slime, tag=BigClickDetector]
 	create {CustomName:"\"ClickDetector\"", Tags:["BigClickDetector"], NoGravity:1b, NoAI: 1b, Silent:1b, Size:18, AbsorptionAmount: 100f}
@@ -63,19 +76,6 @@ define @Player : @Player
 		end
 		@s.click = None
 	end
-end
-
-function click_advancement_reward()
-	/advancement revoke @s only $namespace:damage_click_detector
-	@s.destroy_click()
-	@s.create_click()
-	
-	click_callback()
-end
-
-reset
-	/team add no_collision
-	/team modify no_collision collisionRule never
 end
 
 clock click_detector_clock

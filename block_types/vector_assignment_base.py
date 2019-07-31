@@ -1,7 +1,8 @@
+from block_base import block_base
 from variable_types.scoreboard_var import scoreboard_var
 from CompileError import CompileError
 
-class vector_assignment_base(object):
+class vector_assignment_base(block_base):
 	def perform_vector_assignment(self, func):
 		var, op, expr = self.var, self.op, self.expr
 	

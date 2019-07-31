@@ -1,8 +1,9 @@
+from block_base import block_base
 from command_block import command_block
 from variable_types.scoreboard_var import scoreboard_var
 from CompileError import CompileError
 
-class array_definition_block(object):
+class array_definition_block(block_base):
 	def __init__(self, line, name, from_val, to_val, selector_based):
 		self.line = line
 		self.name = name

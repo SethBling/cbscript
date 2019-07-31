@@ -1,6 +1,7 @@
+from block_base import block_base
 import tellraw
 
-class tell_block(object):
+class tell_block(block_base):
 	def __init__(self, line, selector, unformatted):
 		self.line = line
 		self.selector = selector

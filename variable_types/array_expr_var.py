@@ -28,7 +28,7 @@ class array_expr_var(var_base):
 		index_var = scoreboard_var(self.selector, index_name)
 		index_var.copy_from(func, expr_var)
 		
-		if self.selector == '@s':
+		if self.selector == '@s' or not self.selector.startswith('@'):
 			prefix = ''
 		else:
 			prefix = 'execute as {} run '.format(self.selector)
@@ -77,7 +77,7 @@ class array_expr_var(var_base):
 		
 		val_var.copy_from(func, var)
 		
-		if self.selector == '@s':
+		if self.selector == '@s' or not self.selector.startswith('@'):
 			prefix = ''
 		else:
 			prefix = 'execute as {} run '.format(self.selector)

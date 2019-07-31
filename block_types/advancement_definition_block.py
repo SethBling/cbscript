@@ -1,4 +1,6 @@
-class advancement_definition_block(object):
+from block_base import block_base
+
+class advancement_definition_block(block_base):
 	def __init__(self, line, name, json):
 		self.line = line
 		self.name = name

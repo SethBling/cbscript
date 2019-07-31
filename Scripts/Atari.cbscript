@@ -511,7 +511,7 @@ reset
 end
 
 function global_reset()
-	/gamerule maxCommandChainLength 100000000
+	/gamerule maxCommandChainLength 1000000000
 	/gamerule commandBlockOutput false
 	/gamerule logAdminCommands false
 
@@ -825,11 +825,11 @@ function read_whole_rom()
 end
 
 # Read the ROM address
-function read_rom(addr)
+function read_rom(rom_addr)
 	# 6507 only has 13 address pins
-	addr %= 0x1000
-	addr += 0xF000
-	return ROM[addr]
+	rom_addr %= 0x1000
+	rom_addr += 0xF000
+	return ROM[rom_addr]
 end
 
 # Read 3 bytes from the ROM, store in rom1, rom2 and rom3. This prevents multiple log-time lookups.
@@ -2105,10 +2105,12 @@ function draw_pixels{$x, $reflect}()
 		
 		x++
 		
-		if ($x+1) % 4 != 0 and $x+1 < $ScreenWidth
+		$sub_pixel = ($x+1) % 4
+		
+		if $sub_pixel != 0 and $x+1 < $ScreenWidth
 			draw_pixels{$x+1, $reflect}()
 		end
-		if ($x+1) % 4 == 0 and $x+1 < $ScreenWidth
+		if $sub_pixel == 0 and $x+1 < $ScreenWidth
 			draw_four_pixels{$x+1, $reflect}()
 		end
 	end

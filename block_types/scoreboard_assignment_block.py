@@ -1,6 +1,7 @@
+from block_base import block_base
 from mcfunction import isNumber
 
-class scoreboard_assignment_block(object):
+class scoreboard_assignment_block(block_base):
 	def __init__(self, line, var, op, expr):
 		self.var, self.op, self.expr = var, op, expr
 		self.line = line

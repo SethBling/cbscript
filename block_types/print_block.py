@@ -1,4 +1,6 @@
-class print_block(object):
+from block_base import block_base
+
+class print_block(block_base):
 	def __init__(self, line, val):
 		self.line = line
 		self.val = val

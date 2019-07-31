@@ -1,4 +1,6 @@
-class move_block(object):
+from block_base import block_base
+
+class move_block(block_base):
 	def __init__(self, line, selector, coords):
 		self.line = line
 		self.selector = selector

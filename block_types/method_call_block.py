@@ -1,4 +1,6 @@
-class method_call_block(object):
+from block_base import block_base
+
+class method_call_block(block_base):
 	def __init__(self, line, selector, dest, params):
 		self.line = line
 		self.selector, self.dest, self.params = selector, dest, params

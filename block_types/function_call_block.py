@@ -1,4 +1,6 @@
-class function_call_block(object):
+from block_base import block_base
+
+class function_call_block(block_base):
 	def __init__(self, line, dest, args):
 		self.line = line
 		self.dest, self.args = dest, args

@@ -6,15 +6,6 @@ from CompileError import CompileError
 import math
 import traceback
 
-line_numbers = []
-
-def get_line(parsed):
-	for obj, line in line_numbers:
-		if obj is parsed:
-			return line
-			
-	return 'Unknown'
-
 def get_undecorated_selector_name(selector):
 	if selector.startswith('@'):
 		selector = selector[1:]
@@ -374,7 +365,7 @@ class mcfunction(object):
 					if vmin == vmax:
 						case_name = 'line{:03}/{}{}_{:03}'.format(line, case_func_name, vmin, unique)
 					else:
-						case_name = 'line{:03}/{}{}-{}_{:03}_ln{}'.format(line, case_func_name, vmin, vmax, unique)
+						case_name = 'line{:03}/{}{}-{}_{:03}'.format(line, case_func_name, vmin, vmax, unique)
 						
 					self.add_command('execute if score {} {} matches {}..{} run function {}:{}'.format(var.selector, var.objective, vmin, vmax, self.namespace, case_name))
 					self.register_function(case_name, case_func)
@@ -683,8 +674,8 @@ class mcfunction(object):
 	def get_python_env(self):
 		return self.environment.get_python_env()
 		
-	def clone_environment(self):
-		return self.environment.clone()
+	def clone_environment(self, new_function_name = None):
+		return self.environment.clone(new_function_name = new_function_name)
 		
 	# Combines a selector with an existing selector definition in the environment
 	def get_combined_selector(self, selector):
@@ -727,9 +718,11 @@ class mcfunction(object):
 		return True
 		
 	# Creates an empty function with a copy of the current environment
-	def create_child_function(self):
-		return mcfunction(self.clone_environment())
-		
+	def create_child_function(self, new_function_name = None, callable = False, params = []):
+		return mcfunction(self.clone_environment(new_function_name = new_function_name),
+			callable = callable,
+			params = params
+		)
 
 	def compile_blocks(self, lines):
 		for block in lines:
@@ -759,20 +752,10 @@ class mcfunction(object):
 		if type != 'lib':
 			raise CompileError('Unable to import non-lib-file "{}"'.format(filename))
 			
-		self.compile_blocks(parsed['assignments'])
-		
-		for section in parsed['sections']:
-			type, id, template_params, params, sub = section
-			if type == 'macro':
-				self.macros[id] = (params, sub)
-			elif type == 'template_function':
-				self.template_functions[id] = (template_params, params, sub)
-				
-		for section in parsed["sections"]:
-			if section[0] == 'macro' or section[0] == 'template_function':
-				continue
-				
-			compile_section(section, self.environment)
+		for line in parsed['lines']:
+			line.register(self.global_context)
+			
+		self.compile_blocks(parsed['lines'])
 			
 	def eval(self, expr, line):
 		try:
@@ -821,3 +804,13 @@ class mcfunction(object):
 				
 			self.add_command(cmd)
 			self.register_function(sub_name, sub_func)
+			
+	def get_reset_function(self):
+		return self.environment.get_reset_function()
+		
+	def register_clock(self, id):
+		self.environment.register_clock(id)
+		
+	@property
+	def global_context(self):
+		return self.environment.global_context

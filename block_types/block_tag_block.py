@@ -1,4 +1,6 @@
-class block_tag_block(object):
+from block_base import block_base
+
+class block_tag_block(block_base):
 	def __init__(self, line, name, blocks):
 		self.line = line
 		self.name = name

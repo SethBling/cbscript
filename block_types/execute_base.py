@@ -1,7 +1,8 @@
+from block_base import block_base
 import traceback
 from CompileError import CompileError
 
-class execute_base(object):
+class execute_base(block_base):
 	# Override to force the creation of a sub function, even for a single command
 	def force_sub_function(self):
 		return False

@@ -1,8 +1,9 @@
+from block_base import block_base
 from mcfunction import mcfunction
 from environment import isNumber, isInt
 from variable_types.scoreboard_var import scoreboard_var
 
-class template_function_call_block(object):
+class template_function_call_block(block_base):
 	def __init__(self, line, function, template_args, args):
 		self.line = line
 		self.function = function

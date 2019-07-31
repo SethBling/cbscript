@@ -9,7 +9,13 @@ class array_const_var(var_base):
 		self.idx = idx
 		
 	def check_array(self, func):
-		val = self.idx.get_value(func)
+		try:
+			idx_str = func.apply_replacements(self.idx)
+			val = int(idx_str)
+		except Exception as e:
+			print(e)
+			raise CompileError('"{}" is not an integer for array "{}" index'.format(idx_str, self.array))
+			
 		if self.array not in func.arrays:
 			raise CompileError('Tried to use undefined array {}'.format(self.array))
 		from_val, to_val, selector_based = func.arrays[self.array]
@@ -20,11 +26,11 @@ class array_const_var(var_base):
 			raise CompileError('Tried to use selector-based array {} without a selector.'.format(self.array))
 		if not selector_based and self.selector != 'Global':
 			raise CompileError('Tried to use global array {} with a selector.'.format(self.array))
-		
+	
 	def get_objective(self, func):
 		self.check_array(func)
-		idxval = self.idx.get_value(func)
-		return '{}{}'.format(self.array, idxval)
+		idx_str = func.apply_replacements(self.idx)
+		return '{}{}'.format(self.array, idx_str)
 
 	# Returns a scoreboard objective for this variable.
 	# If assignto isn't None, then this function may

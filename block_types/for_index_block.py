@@ -1,7 +1,8 @@
+from block_base import block_base
 import traceback
 from CompileError import CompileError
 
-class for_index_block(object):
+class for_index_block(block_base):
 	def __init__(self, line, var, fr, to, by, sub):
 		self.line = line
 		self.var = var

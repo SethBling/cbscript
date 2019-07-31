@@ -1,7 +1,8 @@
+from block_base import block_base
 from CompileError import CompileError
 import traceback
 
-class for_selector_block(object):
+class for_selector_block(block_base):
 	def __init__(self, line, id, selector, sub):
 		self.line = line
 		self.id = id

@@ -1,7 +1,8 @@
+from block_base import block_base
 import math
 from CompileError import CompileError
 
-class python_tuple_assignment_block(object):
+class python_tuple_assignment_block(block_base):
 	def __init__(self, line, ids, val):
 		self.line = line
 		self.ids, self.val = ids, val

@@ -1,7 +1,8 @@
+from block_base import block_base
 import math
 from CompileError import CompileError
 
-class python_for_block(object):
+class python_for_block(block_base):
 	def __init__(self, line, ids, val, sub):
 		self.line = line
 		self.ids = ids

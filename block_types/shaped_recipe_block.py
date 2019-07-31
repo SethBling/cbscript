@@ -1,6 +1,7 @@
+from block_base import block_base
 from data_types.shaped_recipe import shaped_recipe
 
-class shaped_recipe_block(object):
+class shaped_recipe_block(block_base):
 	def __init__(self, line, recipe_lines, keys, count, item):
 		self.line = line
 		self.recipe_lines = recipe_lines

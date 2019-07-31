@@ -1,6 +1,7 @@
+from block_base import block_base
 import tellraw
 
-class title_block(object):
+class title_block(block_base):
 	def __init__(self, line, subtype, selector, times, unformatted):
 		self.line = line
 		self.subtype = subtype

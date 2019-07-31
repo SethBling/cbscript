@@ -1,7 +1,7 @@
-from mcfunction import get_line
+from block_base import block_base
 import collections
 
-class switch_block(object):
+class switch_block(block_base):
 	def __init__(self, line, expr, cases_raw):
 		self.line = line
 		self.expr = expr
@@ -17,8 +17,7 @@ class switch_block(object):
 
 		cases = []
 		for case in self.cases_raw:
-			type, content = case
-			line = get_line(case)
+			type, content, line = case
 			if type == 'range':
 				vmin, vmax, sub = content
 				try:
@@ -26,7 +25,7 @@ class switch_block(object):
 					vmax = int(vmax.get_value(func))
 				except Exception as e:
 					print(e)
-					raise Exception('Unable to get values of range for case at line {}'.format(self.line))
+					raise Exception('Unable to get values of range for case at line {}'.format(line))
 					
 				cases.append((vmin, vmax, sub, line, None))
 			elif type == 'python':
