@@ -37,6 +37,31 @@ define @Piece : @Entity[tag=Piece]
 					@s.row = -1
 				end
 			end
+			dc = valid_col - @s.col
+			my_row = @s.row
+			my_col = @s.col
+			
+			checking_castle = False
+			if @s.type == $King
+				if dc == 2
+					as @Piece[type==$Rook] if @s.row == my_row and @s.col == 7
+						@s.col = my_col+1
+					end
+				else if dc == -2
+					as @Piece[type==$Rook] if @s.row == my_row and @s.col == 0
+						@s.col = my_col-1
+					end
+				end
+			end
+			
+			if @s.type == $Pawn
+				if valid_row == ep_row and valid_col == ep_col
+					as @Piece[moved_2]
+						@s.row = -1
+					end
+				end
+			end
+			
 			@s.row = valid_row
 			@s.col = valid_col
 			
@@ -94,8 +119,11 @@ define @Piece : @Entity[tag=Piece]
 				else if edr == 1 and dc == 0
 					return @s.path_available(True, False)
 				else if edr == 1 and adc == 1
-					# TODO include en passant
-					return @s.path_available(False, True)
+					as @Piece if target_row == ep_row and target_col == ep_col
+						return True
+					else
+						return @s.path_available(False, True)
+					end
 				else
 					return False
 				end
@@ -154,6 +182,25 @@ define @Piece : @Entity[tag=Piece]
 					return False
 				else if adr <= 1 and adc <= 1
 					return @s.path_available(False, False)
+				else if not @s.has_moved and dr == 0 and adc == 2
+					if dc == 2
+						castle_col = 7
+						target_col = 6
+					else if dc == -2
+						castle_col = 0
+						target_col = 1
+					end
+					
+					castle_available = False
+					as @Piece[type==$Rook] if @s.color == color and not @s.has_moved and @s.col == castle_col
+						castle_available = True
+					end
+					
+					if castle_available
+						return @s.path_available(True, False)
+					else
+						return False
+					end
 				else
 					# TODO: Include castling
 					return False
@@ -219,11 +266,11 @@ define @Piece : @Entity[tag=Piece]
 end
 
 define @WhitePawn : @Piece[type=villager, tag=WhitePawn]
-	create {CustomName:"\"Pawn\"", CustomNameVisible:1, Tags:["WhitePawn", "White", "Pawn", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1}
+	create {CustomName:"\"Pawn\"", CustomNameVisible:1, Tags:["WhitePawn", "White", "Pawn", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1, Rotation:[-90f, 0f]}
 end
 
 define @WhiteRook : @Piece[type=wolf, tag=WhiteRook]
-	create {CustomName:"\"Rook\"", CustomNameVisible:1, Tags:["WhiteRook", "White", "Rook", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1}
+	create {CustomName:"\"Rook\"", CustomNameVisible:1, Tags:["WhiteRook", "White", "Rook", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1, Rotation:[-90f, 0f]}
 end
 
 define @WhiteKnight : @Piece[type=trader_llama, tag=WhiteKnight]
@@ -231,23 +278,23 @@ define @WhiteKnight : @Piece[type=trader_llama, tag=WhiteKnight]
 end
 
 define @WhiteBishop : @Piece[type=snow_golem, tag=WhiteBishop]
-	create {CustomName:"\"Bishop\"", CustomNameVisible:1, Tags:["WhiteBishop", "White", "Bishop", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1}
+	create {CustomName:"\"Bishop\"", CustomNameVisible:1, Tags:["WhiteBishop", "White", "Bishop", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1, Rotation:[-90f, 0f]}
 end
 
 define @WhiteQueen : @Piece[type=polar_bear, tag=WhiteQueen]
-	create {CustomName:"\"Queen\"", CustomNameVisible:1, Tags:["WhiteQueen", "White", "Queen", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1}
+	create {CustomName:"\"Queen\"", CustomNameVisible:1, Tags:["WhiteQueen", "White", "Queen", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1, Rotation:[-90f, 0f]}
 end
 
 define @WhiteKing : @Piece[type=iron_golem, tag=WhiteKing]
-	create {CustomName:"\"King\"", CustomNameVisible:1, Tags:["WhiteKing", "White", "King", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1}
+	create {CustomName:"\"King\"", CustomNameVisible:1, Tags:["WhiteKing", "White", "King", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1, Rotation:[-90f, 0f]}
 end
 
 define @BlackPawn : @Piece[type=zombie, tag=BlackPawn]
-	create {CustomName:"{\"text\":\"Pawn\",\"color\":\"dark_gray\"}", CustomNameVisible:1, Tags:["BlackPawn", "Black", "Pawn", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1}
+	create {CustomName:"{\"text\":\"Pawn\",\"color\":\"dark_gray\"}", CustomNameVisible:1, Tags:["BlackPawn", "Black", "Pawn", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1, Rotation:[90f, 0f]}
 end
 
 define @BlackRook : @Piece[type=enderman, tag=BlackRook]
-	create {CustomName:"{\"text\":\"Rook\",\"color\":\"dark_gray\"}", CustomNameVisible:1, Tags:["BlackRook", "Black", "Rook", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1}
+	create {CustomName:"{\"text\":\"Rook\",\"color\":\"dark_gray\"}", CustomNameVisible:1, Tags:["BlackRook", "Black", "Rook", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1, Rotation:[90f, 0f]}
 end
 
 define @BlackKnight : @Piece[type=spider, tag=BlackKnight]
@@ -255,15 +302,15 @@ define @BlackKnight : @Piece[type=spider, tag=BlackKnight]
 end
 
 define @BlackBishop : @Piece[type=evoker, tag=BlackBishop]
-	create {CustomName:"{\"text\":\"Bishop\",\"color\":\"dark_gray\"}", CustomNameVisible:1, Tags:["BlackBishop", "Black", "Bishop", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1}
+	create {CustomName:"{\"text\":\"Bishop\",\"color\":\"dark_gray\"}", CustomNameVisible:1, Tags:["BlackBishop", "Black", "Bishop", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1, Rotation:[90f, 0f]}
 end
 
 define @BlackQueen : @Piece[type=wither_skeleton, tag=BlackQueen]
-	create {CustomName:"{\"text\":\"Queen\",\"color\":\"dark_gray\"}", CustomNameVisible:1, Tags:["BlackQueen", "Black", "Queen", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1}
+	create {CustomName:"{\"text\":\"Queen\",\"color\":\"dark_gray\"}", CustomNameVisible:1, Tags:["BlackQueen", "Black", "Queen", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1, Rotation:[90f, 0f]}
 end
 
 define @BlackKing : @Piece[type=blaze, tag=BlackKing]
-	create {CustomName:"{\"text\":\"King\",\"color\":\"dark_gray\"}", CustomNameVisible:1, Tags:["BlackKing", "Black", "King", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1}
+	create {CustomName:"{\"text\":\"King\",\"color\":\"dark_gray\"}", CustomNameVisible:1, Tags:["BlackKing", "Black", "King", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1, Rotation:[90f, 0f]}
 end
 
 @PieceDisplay = @Entity[tag=PieceDisplay]
@@ -332,6 +379,7 @@ function create_piece(piece_type, piece_color, square_row, square_col)
 		@s.color = piece_color
 		@s.row = square_row
 		@s.col = square_col
+		@s.has_moved = False
 		
 		at @s
 			if piece_color == $White
@@ -376,21 +424,17 @@ $Triggers = [
 
 define @Player : @Player
 	function display_menu()
-		tell @a ''
-		tell @a '{CMenu:'
 		switch game_state
 			case $StateNone
+				tell @a ''
+				tell @a '{CMenu:'
 				tell @s '{W[\[Join Team White\]](/trigger join_white)'
 				tell @s '{K[\[Join Team Black\]](/trigger join_black)'
 				tell @s '{G[\[Start Game\]](/trigger start_game)'
 			end
-			case $StatePlayerUnselected
-				tell @s '{R[\[Concede\]](/trigger concede)'
-			end
-			case $StatePlayerSelected
-				tell @s '{R[\[Concede\]](/trigger concede)'
-			end
 			case $StatePromotion
+				tell @a ''
+				tell @a '{CMenu:'
 				tell @s '[\[Promote to Queen\]](/trigger promotion set $Queen)'
 				tell @s '[\[Promote to Rook\]](/trigger promotion set $Rook)'
 				tell @s '[\[Promote to Knight\]](/trigger promotion set $Knight)'
@@ -440,6 +484,9 @@ define @Player : @Player
 			/kill @InvisPiece
 			create_starting_pieces()
 			switch_state($StatePlayerUnselected)
+			
+			tell @Player 'Starting new game!'
+			tell @Player '{R[\[Concede\]](/trigger concede)'
 		else
 			tell @s 'The game has already started.'
 		end
@@ -521,6 +568,7 @@ define @Player : @Player
 								/kill @s
 							end
 						end
+						
 						unless @Position do create @Position
 						as @Position
 							@s.x = GameX + hover_row * 2000 + 1000
@@ -528,8 +576,57 @@ define @Player : @Player
 							@s.y = GameY
 							at @s as @Piece[current_piece]
 								/tp @s ~ ~ ~
+								dc = hover_col - @s.col
+								dr = hover_row - @s.row
+								my_row = @s.row
+								my_col = @s.col
 								@s.row = hover_row
 								@s.col = hover_col
+								
+								@s.has_moved = True
+								
+								if @s.type == $King
+									if dc == 2 as @Piece[type==$Rook, col==7] if @s.row == my_row
+										as @Position
+											@s.x = GameX + my_row * 2000 + 1000
+											@s.z = GameZ + (my_col+1) * 2000 + 1000
+											@s.y = GameY
+										end
+										at @Position
+											/tp @s ~ ~ ~
+											@s.col = my_col + 1
+											@s.has_moved = True
+										end
+									else if dc == -2 as @Piece[type==$Rook, col==0] if @s.row == my_row
+										as @Position
+											@s.x = GameX + my_row * 2000 + 1000
+											@s.z = GameZ + (my_col-1) * 2000 + 1000
+											@s.y = GameY
+										end
+										at @Position
+											/tp @s ~ ~ ~
+											@s.col = my_col - 1
+											@s.has_moved = True
+										end
+									end
+								end
+								
+								if @s.type == $Pawn and @s.row == ep_row and @s.col == ep_col
+									/kill @Piece[moved_2]
+									as @KnightRider at @s unless @Piece[distance=..2]
+										/kill @s
+									end
+								end
+								
+								ep_row = -1
+								ep_col = -1
+								@Piece.moved_2 = False
+								
+								if @s.type == $Pawn and abs(dr) == 2
+									@s.moved_2 = True
+									ep_row = my_row + sign(dr)
+									ep_col = my_col
+								end
 								
 								promote = False
 								if @s.color == $White and @s.row == 7 and @s.type == $Pawn
