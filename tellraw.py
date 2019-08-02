@@ -1,5 +1,6 @@
 import copy
 from scratch_tracker import scratch_tracker
+from CompileError import CompileError
 
 '''
 {C for color
@@ -41,10 +42,10 @@ def formatJsonText(func, text):
 			if unformatted == None:
 				parts = command.split(".")
 				if len(parts) > 2:
-					raise SyntaxError('Json text has invalid () text: "{}"'.format(command))
+					raise CompileError('Json text has invalid () text: "{}"'.format(command))
 				if len(parts) == 1:
 					if len(parts[0]) == 0:
-						raise SyntaxError('Empty () in json text.')
+						raise CompileError('Empty () in json text.')
 					if parts[0][0] == '@':
 						formatted = formatted + ',{{"selector":"{0}"{1}}}'.format(parts[0],getPropertiesText(properties))
 					else:
@@ -80,8 +81,8 @@ def formatJsonText(func, text):
 	return formatted
 
 COLORS = {
-	"l": "black",
-	"L": "dark_gray",
+	"k": "black",
+	"K": "dark_gray",
 	"w": "gray",
 	"W": "white",
 	"r": "dark_red",
@@ -197,7 +198,7 @@ def parseTextFormatting(text):
 			elif ch == "{":
 				seg = seg + ch
 			else:
-				raise SyntaxError('Unexpected formatting character {{{0} in tell command'.format(ch))
+				raise CompileError('Unexpected formatting character {{{0} in tell command'.format(ch))
 			
 			mode = NONE
 	

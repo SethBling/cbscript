@@ -10,6 +10,8 @@ class reset_section(block_base):
 		if reset_func == None:
 			reset_func = func.create_child_function()
 			func.register_function('reset', reset_func)
+			
+		reset_func.copy_environment_from(func)
 		
 		self.compile_lines(reset_func, self.lines)
 		

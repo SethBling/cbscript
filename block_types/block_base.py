@@ -13,10 +13,10 @@ class block_base(object):
 			func.compile_blocks(lines)
 		except CompileError as e:
 			print(e)
-			raise CompileError('Unable to compile {} at line {}'.format(self.name, self.line))
+			raise CompileError('Unable to compile {} at line {}'.format(self.block_name, self.line))
 		except e:
 			print(traceback.format_exc())
-			raise CompileError('Error compiling {} at line {}'.format(self.name, self.line))
+			raise CompileError('Error compiling {} at line {}'.format(self.block_name, self.line))
 		
 	@property
 	def block_name(self):

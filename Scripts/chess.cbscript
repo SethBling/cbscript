@@ -1,0 +1,834 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\Chess"
+desc "Chess"
+
+import better_click_detector
+import math
+
+$StateNone = 0
+$StatePlayerUnselected = 1
+$StatePlayerSelected = 2
+$StatePromotion = 3
+
+$White = 0
+$Black = 1
+
+$ColorName = ['White', 'Black']
+
+define @Piece : @Entity[tag=Piece]
+
+end
+
+$Pawn = 0
+$Rook = 1
+$Knight = 2
+$Bishop = 3
+$Queen = 4
+$King = 5
+
+define @Piece : @Entity[tag=Piece]
+	function valid_move(valid_row, valid_col)
+		this_color = @s.color
+		if @s.square_in_range(valid_row, valid_col)
+			# Simulate the move, and see if any enemy piece can take the king
+			as @Piece
+				@s.undo_row = @s.row
+				@s.undo_col = @s.col
+				if @s.row == valid_row and @s.col == valid_col
+					@s.row = -1
+				end
+			end
+			@s.row = valid_row
+			@s.col = valid_col
+			
+			if this_color == $White
+				other_color = $Black
+			else
+				other_color = $White
+			end
+			
+			as @Piece[type==$King] if @s.color == this_color
+				king_row = @s.row
+				king_col = @s.col
+			end
+			
+			valid_move = True
+			
+			as @Piece if @s.color == other_color and @s.row >= 0
+				if @s.square_in_range(king_row, king_col)
+					valid_move = False
+				end
+			end
+			
+			
+			as @Piece
+				@s.row = @s.undo_row
+				@s.col = @s.undo_col
+			end
+				
+			return valid_move
+		else
+			return False
+		end
+	end
+
+	function square_in_range(target_row, target_col)
+		color = @s.color
+		dr = target_row - @s.row
+		dc = target_col - @s.col
+		
+		adc = abs(dc)
+		adr = abs(dr)
+		
+		switch @s.type
+			case $Pawn
+				if @s.color == $Black
+					edr = -dr
+					er = 7 - @s.row
+				else
+					edr = dr
+					er = @s.row
+				end
+				
+				if er == 1 and edr == 2 and dc == 0
+					return @s.path_available(True, False)
+				else if edr == 1 and dc == 0
+					return @s.path_available(True, False)
+				else if edr == 1 and adc == 1
+					# TODO include en passant
+					return @s.path_available(False, True)
+				else
+					return False
+				end
+			end
+			case $Rook
+				if dr == 0 unless dc == 0
+					return @s.path_available(False, False)
+				else if dc == 0 unless dr == 0
+					return @s.path_available(False, False)
+				else
+					# TODO: Include castling
+					return False
+				end
+			end
+			case $Knight
+				if adr == 1 and adc == 2
+					as @Piece if @s.row == target_row and @s.col == target_col and @s.color == color
+						return False
+					else
+						return True
+					end
+				else if adc == 1 and adr == 2
+					as @Piece if @s.row == target_row and @s.col == target_col and @s.color == color
+						return False
+					else
+						return True
+					end
+				else
+					return False
+				end
+			end
+			case $Bishop
+				if dr == 0
+					return False
+				else if adr == adc
+					return @s.path_available(False, False)
+				else
+					return False
+				end
+			end
+			case $Queen
+				if dr == 0 and dc == 0
+					return False
+				else if adr == adc
+					return @s.path_available(False, False)
+				else if dr == 0
+					return @s.path_available(False, False)
+				else if dc == 0
+					return @s.path_available(False, False)
+				else
+					return False
+				end
+			end
+			case $King
+				if dr == 0 and dc == 0
+					return False
+				else if adr <= 1 and adc <= 1
+					return @s.path_available(False, False)
+				else
+					# TODO: Include castling
+					return False
+				end
+			end
+		end
+	end
+	
+	function path_available(blocked_by_enemy, requires_enemy)
+		# Only call this function if the target is in-line, diagonally or horizontally/vertically
+		# Set target_row and target_col before calling
+		row = @s.row
+		col = @s.col
+		color = @s.color
+		ur = sign(target_row-row)
+		uc = sign(target_col-col)
+		
+		finished = False
+		step = 0
+		while not finished
+			step++
+			if step >= 8
+				source_row = @s.row
+				source_col = @s.col
+				tell @a 'Error, non-terminating loop trying to move from (source_row), (source_col) to (target_row), (target_col)'
+				finished = True
+			end
+			
+			row += ur
+			col += uc
+			if row == target_row and col == target_col
+				# Check if enemy piece
+				finished = True
+				as @Piece if @s.row == row and @s.col == col
+					if @s.color == color
+						# Friendly piece
+						return False
+					else if blocked_by_enemy
+						# Pawn is blocked by enemy piece
+						return False
+					else
+						# Enemy piece, can capture
+						return True
+					end
+				else
+					if requires_enemy
+						# Pawn requires enemy to move, and there isn't one
+						return False
+					else
+						# No pieces in the path
+						return True
+					end
+				end
+			else
+				as @Piece if @s.row == row and @s.col == col
+					# Piece blocking the move
+					finished = True
+					return False
+				end
+			end
+		end
+	end
+end
+
+define @WhitePawn : @Piece[type=villager, tag=WhitePawn]
+	create {CustomName:"\"Pawn\"", CustomNameVisible:1, Tags:["WhitePawn", "White", "Pawn", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1}
+end
+
+define @WhiteRook : @Piece[type=wolf, tag=WhiteRook]
+	create {CustomName:"\"Rook\"", CustomNameVisible:1, Tags:["WhiteRook", "White", "Rook", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1}
+end
+
+define @WhiteKnight : @Piece[type=trader_llama, tag=WhiteKnight]
+	create {Tags:["WhiteKnight", "White", "Knight", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1, Rotation:[-90f, 0f], Passengers:[{id:"wandering_trader", CustomName:"\"Knight\"", CustomNameVisible:1, Tags:["White", "KnightRider", "NewKnightRider", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1, Rotation:[-90f, 0f]}]}
+end
+
+define @WhiteBishop : @Piece[type=snow_golem, tag=WhiteBishop]
+	create {CustomName:"\"Bishop\"", CustomNameVisible:1, Tags:["WhiteBishop", "White", "Bishop", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1}
+end
+
+define @WhiteQueen : @Piece[type=polar_bear, tag=WhiteQueen]
+	create {CustomName:"\"Queen\"", CustomNameVisible:1, Tags:["WhiteQueen", "White", "Queen", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1}
+end
+
+define @WhiteKing : @Piece[type=iron_golem, tag=WhiteKing]
+	create {CustomName:"\"King\"", CustomNameVisible:1, Tags:["WhiteKing", "White", "King", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1}
+end
+
+define @BlackPawn : @Piece[type=zombie, tag=BlackPawn]
+	create {CustomName:"{\"text\":\"Pawn\",\"color\":\"dark_gray\"}", CustomNameVisible:1, Tags:["BlackPawn", "Black", "Pawn", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1}
+end
+
+define @BlackRook : @Piece[type=enderman, tag=BlackRook]
+	create {CustomName:"{\"text\":\"Rook\",\"color\":\"dark_gray\"}", CustomNameVisible:1, Tags:["BlackRook", "Black", "Rook", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1}
+end
+
+define @BlackKnight : @Piece[type=spider, tag=BlackKnight]
+	create {Tags:["BlackKnight", "Black", "Knight", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1, Rotation:[90f, 0f], Passengers:[{id:"skeleton", CustomName:"{\"text\":\"Knight\",\"color\":\"dark_gray\"}", CustomNameVisible:1, Tags:["Black", "KnightRider", "NewKnightRider", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1, Rotation:[90f, 0f]}]}
+end
+
+define @BlackBishop : @Piece[type=evoker, tag=BlackBishop]
+	create {CustomName:"{\"text\":\"Bishop\",\"color\":\"dark_gray\"}", CustomNameVisible:1, Tags:["BlackBishop", "Black", "Bishop", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1}
+end
+
+define @BlackQueen : @Piece[type=wither_skeleton, tag=BlackQueen]
+	create {CustomName:"{\"text\":\"Queen\",\"color\":\"dark_gray\"}", CustomNameVisible:1, Tags:["BlackQueen", "Black", "Queen", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1}
+end
+
+define @BlackKing : @Piece[type=blaze, tag=BlackKing]
+	create {CustomName:"{\"text\":\"King\",\"color\":\"dark_gray\"}", CustomNameVisible:1, Tags:["BlackKing", "Black", "King", "Piece", "PieceDisplay"], NoAI:1, Silent:1, Invulnerable:1}
+end
+
+@PieceDisplay = @Entity[tag=PieceDisplay]
+@InvisPiece = @Entity[tag=InvisPiece]
+@KnightRider = @Entity[tag=KnightRider]
+@InvisKnightRider = @Entity[tag=InvisKnightRider]
+
+function create_piece(piece_type, piece_color, square_row, square_col)
+	@Piece.old = True
+
+	unless @Position do create @Position
+	as @Position
+		@s.x = GameX + square_row*2000 + 1000
+		@s.z = GameZ + square_col*2000 + 1000
+		@s.y = GameY
+		
+		at @s
+			switch piece_type
+				case $Pawn
+					if piece_color == $White
+						create @WhitePawn
+					else
+						create @BlackPawn
+					end
+				end
+				case $Rook
+					if piece_color == $White
+						create @WhiteRook
+					else
+						create @BlackRook
+					end
+				end
+				case $Knight
+					if piece_color == $White
+						create @WhiteKnight
+					else
+						create @BlackKnight
+					end
+				end
+				case $Bishop
+					if piece_color == $White
+						create @WhiteBishop
+					else
+						create @BlackBishop
+					end
+				end
+				case $Queen
+					if piece_color == $White
+						create @WhiteQueen
+					else
+						create @BlackQueen
+					end
+				end
+				case $King
+					if piece_color == $White
+						create @WhiteKing
+					else
+						create @BlackKing
+					end
+				end
+			end
+		end
+	end
+	as @Piece unless @s.old
+		@s.type = piece_type
+		@s.color = piece_color
+		@s.row = square_row
+		@s.col = square_col
+		
+		at @s
+			if piece_color == $White
+				/tp @s ~ ~ ~ -90 ~
+			else
+				/tp @s ~ ~ ~ 90 ~
+			end
+		end
+	end
+end
+
+function create_starting_pieces()
+	for col = 0 to 7
+		create_piece($Pawn, $White, 1, col)
+		create_piece($Pawn, $Black, 6, col)
+	end
+	for $col in [0, 7]
+		create_piece($Rook, $White, 0, $col)
+		create_piece($Rook, $Black, 7, $col)
+	end
+	for $col in [1, 6]
+		create_piece($Knight, $White, 0, $col)
+		create_piece($Knight, $Black, 7, $col)
+	end
+	for $col in [2, 5]
+		create_piece($Bishop, $White, 0, $col)
+		create_piece($Bishop, $Black, 7, $col)
+	end
+	create_piece($Queen, $White, 0, 3)
+	create_piece($Queen, $Black, 7, 3)
+	create_piece($King, $White, 0, 4)
+	create_piece($King, $Black, 7, 4)
+end
+
+$Triggers = [
+	'join_white',
+	'join_black',
+	'start_game',
+	'concede',
+	'promotion',
+]
+
+define @Player : @Player
+	function display_menu()
+		tell @a ''
+		tell @a '{CMenu:'
+		switch game_state
+			case $StateNone
+				tell @s '{W[\[Join Team White\]](/trigger join_white)'
+				tell @s '{K[\[Join Team Black\]](/trigger join_black)'
+				tell @s '{G[\[Start Game\]](/trigger start_game)'
+			end
+			case $StatePlayerUnselected
+				tell @s '{R[\[Concede\]](/trigger concede)'
+			end
+			case $StatePlayerSelected
+				tell @s '{R[\[Concede\]](/trigger concede)'
+			end
+			case $StatePromotion
+				tell @s '[\[Promote to Queen\]](/trigger promotion set $Queen)'
+				tell @s '[\[Promote to Rook\]](/trigger promotion set $Rook)'
+				tell @s '[\[Promote to Knight\]](/trigger promotion set $Knight)'
+				tell @s '[\[Promote to Bishop\]](/trigger promotion set $Bishop)'
+				tell @s '{R[\[Concede\]](/trigger concede)'
+			end
+		end
+	end
+	
+	function join_white()
+		/team join white
+		@s.team = $White
+	end
+	
+	function join_black()
+		/team join black
+		@s.team = $Black
+	end
+	
+	function promotion()
+		if @s.team == current_player
+			if game_state == $StatePromotion
+				as @Piece[promote_piece,limit=1]
+					promote_row = @s.row
+					promote_col = @s.col
+				end
+				if @s.promotion >= $Rook and @s.promotion <= $Queen
+					create_piece(@s.promotion, current_player, promote_row, promote_col)
+					move @Piece[promote_piece] ~ -200 ~
+					/kill @Piece[promote_piece]
+					new_turn()
+				end
+			else
+				tell @s "There's no piece to promote."
+			end
+		else
+			tell @s "It's not your turn!"
+		end
+	end
+	
+	function start_game()
+		if game_state == $StateNone
+			current_player = $White
+			move @PieceDisplay ~ -200 ~
+			/kill @PieceDisplay
+			move @InvisPiece ~ -200 ~
+			/kill @InvisPiece
+			create_starting_pieces()
+			switch_state($StatePlayerUnselected)
+		else
+			tell @s 'The game has already started.'
+		end
+	end
+	
+	function concede()
+		@Player.conceded = False
+		@s.conceded = True
+		switch @s.team
+			case $color in [$White, $Black]
+				$color_name = $ColorName[$color]
+				tell @Player '(@a[conceded]) has conceded for team $color_name!'
+			end
+		end
+		
+		switch_state($StateNone)
+	end
+	
+	function cancel_move()
+		if @s.team == current_player
+			switch_state($StatePlayerUnselected)
+		else
+			tell @s "It's not your turn!"
+		end
+	end
+	
+	function get_hover_coords()
+		unless @Position do create @Position
+		at @s eyes ^ ^ ^ as @Position
+			/tp @s ~ ~ ~ ~ ~
+			<pos1> = @s.<pos>
+			at @s feet ^ ^ ^1
+				/tp @s ~ ~ ~
+				<pos2> = @s.<pos>
+			end
+			<x1, y1, z1> = <pos1>
+			dy = GameY - y1
+			<ax, ay, az> = <pos2> - <pos1>
+			<delta> = (<pos2> - <pos1>) * dy / ay
+			<ground_x, ground_y, ground_z> = <pos1> + <delta>
+			hover_row = (ground_x - GameX) / 2000
+			hover_col = (ground_z - GameZ) / 2000
+		end
+	end
+	
+	function click_callback()
+		unless @Position do create @Position
+		handled = False
+		
+		switch game_state
+			case $StatePlayerUnselected
+				get_hover_coords()
+				as @Piece if @s.row == hover_row and @s.col == hover_col and @s.selectable
+					for test_row = 0 to 7
+						for test_col = 0 to 7
+							if @s.valid_move(test_row, test_col)
+								create_invis_piece(test_row, test_col, @s.type, @s.color)
+							end
+						end
+					end
+					
+					@Piece.current_piece = False
+					@s.current_piece = True
+					@s.selectable = False
+					
+					switch_state($StatePlayerSelected)
+					handled = True
+				else
+					tell @s "Click on a highlighted piece to select it for movement."
+				end
+			end
+			case $StatePlayerSelected
+				unless handled
+					get_hover_coords()
+					as @InvisPiece if @s.row == hover_row and @s.col == hover_col
+						as @Piece if @s.row == hover_row and @s.col == hover_col
+							/kill @s
+							as @KnightRider at @s unless @Piece[distance=..2]
+								/kill @s
+							end
+						end
+						unless @Position do create @Position
+						as @Position
+							@s.x = GameX + hover_row * 2000 + 1000
+							@s.z = GameZ + hover_col * 2000 + 1000
+							@s.y = GameY
+							at @s as @Piece[current_piece]
+								/tp @s ~ ~ ~
+								@s.row = hover_row
+								@s.col = hover_col
+								
+								promote = False
+								if @s.color == $White and @s.row == 7 and @s.type == $Pawn
+									promote = True
+								end
+								if @s.color == $Black and @s.row == 0 and @s.type == $Pawn
+									promote = True
+								end
+								
+								if promote
+									@Piece.promote_piece = False
+									@s.promote_piece = True
+									switch_state($StatePromotion)
+								else
+									new_turn()
+								end
+							end
+						end
+					else
+						@s.cancel_move()
+					end
+				end
+			end
+		end
+	end
+end
+
+function new_turn()
+	if current_player == $White
+		current_player = $Black
+		@a.team = $Black
+	else
+		current_player = $White
+		@a.team = $White
+	end
+	switch_state($StatePlayerUnselected)
+end
+
+function create_invis_piece(new_row, new_col, new_type, new_color)
+	@Piece.old = True
+	@KnightRider.old = True
+	create_piece(new_type, new_color, new_row, new_col)
+	as @Piece unless @s.old
+		/tag @s remove Piece
+		/tag @s add InvisPiece
+		/effect give @s invisibility 10 0 true
+		@s.glowing = True
+		@s.selectable = True
+	end
+	as @KnightRider unless @s.old
+		/tag @s remove KnightRider
+		/tag @s add InvisKnightRider
+		/effect give @s invisibility 10 0 true
+		@s.glowing = True
+	end
+end
+
+function unhighlight_all()
+	unless @Position do create @Position
+	@Position.x = GameX
+	@Position.y = GameY
+	@Position.z = GameZ
+	at @Position
+		/clone ~ ~-2 ~ ~15 ~-2 ~15 ~ ~-1 ~
+	end
+	
+	as @Piece
+		@s.glowing = False
+		@s.selectable = False
+	end
+	
+	unless game_state == $StatePlayerSelected
+		move @InvisPiece ~ -200 ~
+		/kill @InvisPiece
+	end
+end
+
+reset
+	/team remove white
+	/team add white
+	/team modify white color white
+	/team modify white displayName "White"
+	
+	/team remove black
+	/team add black
+	/team modify black color black
+	/team modify white displayName "Black"
+	
+	for $trigger in $Triggers
+		/scoreboard objectives add $trigger trigger
+	end
+
+	unless game_state >= 0
+		game_state = $StateNone
+	end
+	unless current_player >= 0
+		current_player = $White
+	end
+	
+	unless GameX >= -10000000
+		GameX = 0
+	end
+	unless GameY >= 0
+		GameY = 56000
+	end
+	unless GameZ >= -10000000
+		GameZ = 0
+	end
+	
+	@Player.display_menu()
+end
+
+function switch_state(new_state)
+	exit_state(game_state)
+	
+	game_state = new_state
+	
+	enter_state(game_state)
+	
+	@Player.display_menu()
+end
+
+function exit_state(state)
+	switch state
+		case $StateNone
+			
+		end
+	end
+end
+
+function enter_state(state)
+	switch state
+		case $StateNone
+			@Player.disable_click()
+			unhighlight_all()
+		end
+		case $StatePlayerUnselected
+			unhighlight_all()
+			
+			any_valid_moves = False
+			
+			as @Piece
+				@s.glowing = False
+				@s.selectable = False
+				if @s.color == current_player
+					if @s.type == $King
+						cur_king_row = @s.row
+						cur_king_col = @s.col
+					end
+				
+					for test_row = 0 to 7
+						for test_col = 0 to 7
+							if @s.valid_move(test_row, test_col)
+								any_valid_moves = True
+								@s.glowing = True
+								@s.selectable = True
+							end
+						end
+					end
+				end
+			end
+			
+			if current_player == $White
+				other_player = $Black
+			else
+				other_player = $White
+			end
+			
+			check = False
+			as @Piece if @s.color == other_player
+				if @s.square_in_range(cur_king_row, cur_king_col)
+					check = True
+				end
+			end
+			
+			if check and not any_valid_moves
+				if other_player == $White
+					title @a 10 100 10 'Check mate!'
+					subtitle @a 10 100 10 '{D{WWhite{-{D wins!'
+					
+					tell @a 'Check mate! {D{WWhite{-{D wins!'
+				else
+					title @a 10 100 10 'Check mate!'
+					subtitle @a 10 100 10 '{D{KBlack{-{D wins!'
+					
+					tell @a 'Check mate! {D{KBlack{-{D wins!'
+				end
+				
+				switch_state($StateNone)
+			else if check
+				if current_player == $White
+					actionbar @a 10 100 10 '{D{WWhite{-{D is in check.'
+					tell @a '{D{WWhite{-{D is in check.'
+				else
+					actionbar @a 10 100 10 '{D{KBlack{-{D is in check.'
+					tell @a '{D{KBlack{-{D is in check.'
+				end
+			else if not any_valid_moves
+				if current_player == $White
+					title @a 10 100 10 '{DStale Mate!'
+					subtitle @a 10 100 10 '{D{WWhite{-{D has no valid moves. Game over!'
+					
+					tell @a '{DStale Mate! {D{WWhite{-{D has no valid moves. Game over!'
+				else
+					title @a 10 100 10 '{DStale Mate!'
+					subtitle @a 10 100 10 '{D{KBlack{-{D has no valid moves. Game over!'
+					
+					tell @a '{DStale Mate! {D{KBlack{-{D has no valid moves. Game over!'
+				end
+				
+				switch_state($StateNone)
+			end
+		end
+		case $StatePlayerSelected
+			unhighlight_all()
+			@Piece[current_piece,limit=1].glowing = True
+		end
+		case $StatePromotion
+			unhighlight_all()
+		end
+	end
+end
+
+function run_state(state)
+	switch state
+		case $StateNone
+		
+		end		
+		case $StatePlayerUnselected
+			@Piece.selected = False
+			as @Player
+				if @s.team == current_player
+					@s.enable_click()
+					
+					@s.get_hover_coords()
+					
+					as @Piece if @s.row == hover_row and @s.col == hover_col and @s.selectable at @s
+						@s.selected = True
+						@s.was_selected = True
+						/fill ~-1 ~-1 ~-1 ~ ~-1 ~ lime_concrete
+					end
+				else
+					@s.disable_click()
+				end
+			end
+			
+			as @Piece[not selected, was_selected] at @s
+				/clone ~-1 ~-2 ~-1 ~ ~-2 ~ ~-1 ~-1 ~-1
+				@s.was_selected = False
+			end
+		end
+		case $StatePlayerSelected
+			as @InvisPiece
+				/effect give @s invisibility 10 0 true
+				@s.selected = False
+			end
+			as @InvisKnightRider
+				/effect give @s invisibility 10 0 true
+			end
+			
+			as @Player
+				if @s.team == current_player
+					@s.enable_click()
+					
+					@s.get_hover_coords()
+					
+					as @InvisPiece if @s.row == hover_row and @s.col == hover_col at @s
+						@s.selected = True
+						@s.was_selected = True
+						/fill ~-1 ~-1 ~-1 ~ ~-1 ~ lime_concrete
+					end
+				else
+					@s.disable_click()
+				end
+			end
+			
+			as @InvisPiece[not selected, was_selected] at @s
+				/clone ~-1 ~-2 ~-1 ~ ~-2 ~ ~-1 ~-1 ~-1
+				@s.was_selected = False
+			end
+		end
+	end
+end
+
+function clear_triggers()
+	as @Player
+		for $trigger in $Triggers
+			/execute if score @s $trigger matches 1.. run function $namespace:$trigger
+			/scoreboard players enable @s $trigger
+			/scoreboard players set @s $trigger 0
+		end
+	end
+end
+
+clock main
+	run_state(game_state)
+	clear_triggers()
+	
+	as @Entity
+		@s.fire = 0
+	end
+end

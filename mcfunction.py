@@ -349,7 +349,10 @@ class mcfunction(object):
 					case_func.compile_blocks(sub)
 				except CompileError as e:
 					print(e)
-					raise Exception('Unable to compile case at line {}'.format(line))
+					raise CompileError('Unable to compile case at line {}'.format(line))
+				except Exception as e:
+					print(traceback.format_exc())
+					raise CompileError('Unable to compile case at line {}'.format(line))
 					
 				single_command = case_func.single_command()
 				if single_command != None:
@@ -814,3 +817,6 @@ class mcfunction(object):
 	@property
 	def global_context(self):
 		return self.environment.global_context
+		
+	def copy_environment_from(self, func):
+		self.environment = func.environment.clone()

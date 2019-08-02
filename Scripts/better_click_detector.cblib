@@ -28,7 +28,9 @@ function click_advancement_reward()
 	@s.destroy_click()
 	@s.create_click()
 	
-	click_callback()
+	if @s.enable_click
+		click_callback()
+	end
 end
 
 define @BigClickDetector : @Entity[type=slime, tag=BigClickDetector]
