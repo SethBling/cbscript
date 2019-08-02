@@ -225,7 +225,7 @@ define @Piece : @Entity[tag=Piece]
 			if step >= 8
 				source_row = @s.row
 				source_col = @s.col
-				tell @a 'Error, non-terminating loop trying to move from (source_row), (source_col) to (target_row), (target_col)'
+				tell @Player 'Error, non-terminating loop trying to move from (source_row), (source_col) to (target_row), (target_col)'
 				finished = True
 			end
 			
@@ -426,15 +426,15 @@ define @Player : @Player
 	function display_menu()
 		switch game_state
 			case $StateNone
-				tell @a ''
-				tell @a '{CMenu:'
+				tell @s ''
+				tell @s '{CMenu:'
 				tell @s '{W[\[Join Team White\]](/trigger join_white)'
 				tell @s '{K[\[Join Team Black\]](/trigger join_black)'
 				tell @s '{G[\[Start Game\]](/trigger start_game)'
 			end
 			case $StatePromotion
-				tell @a ''
-				tell @a '{CMenu:'
+				tell @s ''
+				tell @s '{CMenu:'
 				tell @s '[\[Promote to Queen\]](/trigger promotion set $Queen)'
 				tell @s '[\[Promote to Rook\]](/trigger promotion set $Rook)'
 				tell @s '[\[Promote to Knight\]](/trigger promotion set $Knight)'
@@ -657,10 +657,8 @@ end
 function new_turn()
 	if current_player == $White
 		current_player = $Black
-		@a.team = $Black
 	else
 		current_player = $White
-		@a.team = $White
 	end
 	switch_state($StatePlayerUnselected)
 end
@@ -804,37 +802,37 @@ function enter_state(state)
 			
 			if check and not any_valid_moves
 				if other_player == $White
-					title @a 10 100 10 'Check mate!'
-					subtitle @a 10 100 10 '{D{WWhite{-{D wins!'
+					title @Player 10 100 10 'Check mate!'
+					subtitle @Player 10 100 10 '{D{WWhite{-{D wins!'
 					
-					tell @a 'Check mate! {D{WWhite{-{D wins!'
+					tell @Player 'Check mate! {D{WWhite{-{D wins!'
 				else
-					title @a 10 100 10 'Check mate!'
-					subtitle @a 10 100 10 '{D{KBlack{-{D wins!'
+					title @Player 10 100 10 'Check mate!'
+					subtitle @Player 10 100 10 '{D{KBlack{-{D wins!'
 					
-					tell @a 'Check mate! {D{KBlack{-{D wins!'
+					tell @Player 'Check mate! {D{KBlack{-{D wins!'
 				end
 				
 				switch_state($StateNone)
 			else if check
 				if current_player == $White
-					actionbar @a 10 100 10 '{D{WWhite{-{D is in check.'
-					tell @a '{D{WWhite{-{D is in check.'
+					actionbar @Player 10 100 10 '{D{WWhite{-{D is in check.'
+					tell @Player '{D{WWhite{-{D is in check.'
 				else
-					actionbar @a 10 100 10 '{D{KBlack{-{D is in check.'
-					tell @a '{D{KBlack{-{D is in check.'
+					actionbar @Player 10 100 10 '{D{KBlack{-{D is in check.'
+					tell @Player '{D{KBlack{-{D is in check.'
 				end
 			else if not any_valid_moves
 				if current_player == $White
-					title @a 10 100 10 '{DStale Mate!'
-					subtitle @a 10 100 10 '{D{WWhite{-{D has no valid moves. Game over!'
+					title @Player 10 100 10 '{DStale Mate!'
+					subtitle @Player 10 100 10 '{D{WWhite{-{D has no valid moves. Game over!'
 					
-					tell @a '{DStale Mate! {D{WWhite{-{D has no valid moves. Game over!'
+					tell @Player '{DStale Mate! {D{WWhite{-{D has no valid moves. Game over!'
 				else
-					title @a 10 100 10 '{DStale Mate!'
-					subtitle @a 10 100 10 '{D{KBlack{-{D has no valid moves. Game over!'
+					title @Player 10 100 10 '{DStale Mate!'
+					subtitle @Player 10 100 10 '{D{KBlack{-{D has no valid moves. Game over!'
 					
-					tell @a '{DStale Mate! {D{KBlack{-{D has no valid moves. Game over!'
+					tell @Player '{DStale Mate! {D{KBlack{-{D has no valid moves. Game over!'
 				end
 				
 				switch_state($StateNone)

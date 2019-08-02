@@ -21,6 +21,10 @@ $MaxSegments = 13
 
 $NumLines = 40
 
+# Animation IDs
+$RandomSpin = 1
+$Bounce = 2
+
 array segments[$NumLines]
 array length[$NumLines]
 array base_x[$NumLines]
@@ -34,20 +38,48 @@ define @Line : @Entity[type=area_effect_cloud,tag=Line]
 	
 	function get_transformed_pos()
 		<tpos> = @s.<pos1>
-		#rotate_around_z_axis(t*2/3)
-		#rotate_around_y_axis(t)
-		#rotate_around_x_axis(t/2)
-		#<tpos> += <sin(2*t), sin(3*t), 2*sin(t*5/3)+3000>
+		apply_animation()
 		apply_camera_transform()
 		<x1, y1, z1> = <tpos>
 		
 		<tpos> = @s.<pos2>
-		#rotate_around_z_axis(t*2/3)
-		#rotate_around_y_axis(t)
-		#rotate_around_x_axis(t/2)
-		#<tpos> += <sin(2*t), sin(3*t), 2*sin(t*5/3)+3000>
+		apply_animation()
 		apply_camera_transform()
 		<x2, y2, z2> = <tpos>
+	end
+	
+	function apply_animation()
+		switch Animation
+			case $RandomSpin
+				random_spin_transform()
+			end
+			case $Bounce
+				slime_jump_transform()
+			end
+		end
+	end
+	
+	function random_spin_transform()
+		rotate_around_z_axis(t*2/3)
+		rotate_around_y_axis(t)
+		rotate_around_x_axis(t/2)
+		<tpos> += <sin(2*t), sin(3*t), 2*sin(t*5/3)+3000>
+	end
+	
+	function slime_jump_transform()
+		if t < 10
+			<x, y, z> = <tpos>
+			<tpos> = <x*(t+10)/10, y*(15-t)/15, z*(t+10)/10>
+		else if t >= 10 and t < 20
+			dt = t - 10
+			<x, y, z> = <tpos>
+			<tpos> = <x*(20-dt)/10, y*(5+dt)/15, z*(20-dt)/10>
+		else if t >= 20 and t <= 100
+			dt = t - 60
+			<tpos> += <0, 20 * (1600 - dt * dt), 0>
+		else
+			t = 0
+		end
 	end
 	
 	function get_perspective_pos()
@@ -138,6 +170,14 @@ define @Segment : @Entity[type=armor_stand, tag=Segment]
 	function show()
 		unless @s.was_visibile
 			switch @s.material
+				case -1
+					switch Material
+						case $i in $range($len($Materials))
+							$item_name = $Materials[$i]
+							/replaceitem entity @s weapon.mainhand $item_name
+						end
+					end
+				end
 				case $i in $range($len($Materials))
 					$item_name = $Materials[$i]
 					/replaceitem entity @s weapon.mainhand $item_name
@@ -175,7 +215,6 @@ define @Segment : @Entity[type=armor_stand, tag=Segment]
 end
 
 function create_die_faces()
-	
 	# 1
 	material = 1
 	<pos1> = <0, 100, 4000>
@@ -274,7 +313,7 @@ function create_die_faces()
 end
 
 function create_cube(radius)
-	material = 0
+	material = -1
 	
 	# Y Axis
 	<pos1> = <-radius, -radius, -radius>
@@ -329,7 +368,7 @@ function create_cube(radius)
 end
 
 function create_creeper_face()
-	material = 0
+	material = -1
 	
 	# Left Eye
 	<pos1> = <-3000, 2000, 4000>
@@ -393,6 +432,16 @@ function create_creeper_face()
 	create_line()
 end
 
+function spawn_cube()
+	delete_object()
+	create_cube(4000)
+end
+
+function spawn_tie_fighter()
+	delete_object()
+	create_tie_fighter()
+end
+
 macro $create_line($x1, $y1, $z1, $x2, $y2, $z2)
 	<pos1> = <$x1, $y1, $z1>
 	<pos2> = <$x2, $y2, $z2>
@@ -400,6 +449,7 @@ macro $create_line($x1, $y1, $z1, $x2, $y2, $z2)
 end
 
 function create_tie_fighter()
+	
 	create_cube(1500)
 	
 	# Wing arms
@@ -424,19 +474,18 @@ function create_tie_fighter()
 		$create_line(-6000*$m, 2000, -4000, -6000*$m, 2000, 4000)
 		$create_line(-6000*$m, -2000, -4000, -6000*$m, -2000, 4000)
 	end
-	
-	
 end
 
-reset
+function delete_object()
 	/kill @Line
 	/kill @Segment
 	
 	line_id = 0
-	#create_cube(4000)
-	#create_creeper_face()
-	#create_die_faces()
-	create_tie_fighter()
+end
+
+reset
+	spawn_cube(4000)
+	#spawn_tie_fighter()
 	
 	<camera_pos> = <0, 0, -10000>
 	camera_rx = 0
@@ -444,6 +493,10 @@ reset
 	
 	as @Player
 		draw_buttons()
+	end
+	
+	unless Material >= 0
+		Material = 0
 	end
 end
 
