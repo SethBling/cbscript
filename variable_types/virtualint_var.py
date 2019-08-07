@@ -7,7 +7,7 @@ class virtualint_var(var_base):
 		self.val = val
 		
 	def get_value(self, func):
-		return func.apply_replacements(self.val)
+		return int(func.apply_replacements(self.val))
 	
 	# Returns a scoreboard objective for this variable.
 	# If assignto isn't None, then this function may

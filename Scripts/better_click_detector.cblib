@@ -26,9 +26,9 @@ advancement damage_click_detector {
 function click_advancement_reward()
 	/advancement revoke @s only $namespace:damage_click_detector
 	@s.destroy_click()
-	@s.create_click()
 	
 	if @s.enable_click
+		@s.create_click()
 		click_callback()
 	end
 end
@@ -38,7 +38,7 @@ define @BigClickDetector : @Entity[type=slime, tag=BigClickDetector]
 	
 	function tick_click_detector()
 		/effect give @s invisibility 10 0 true
-		/tp @s ~ ~-5 ~
+		/tp @s ~ ~-6 ~
 		@s.absorption = 100
 		@s.kill = False
 	end
@@ -58,7 +58,7 @@ define @Player : @Player
 		at @s eyes ^ ^ ^
 			@s.click = create @BigClickDetector ~ ~1000 ~
 			as @s.click
-				/tp @s ~ ~-5 ~
+				/tp @s ~ ~-6 ~
 				/team join no_collision
 				@s.tick_click_detector()
 			end

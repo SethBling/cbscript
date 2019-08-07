@@ -1,0 +1,863 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\Tetris"
+desc "Test for tetris"
+
+import miniblock
+import better_click_detector
+
+@ScoreDigit = @Entity[type=armor_stand, score_digit >= 0]
+@LineDigit = @Entity[type=armor_stand, line_digit >= 0]
+@LevelDigit = @Entity[type=armor_stand, level_digit >= 0]
+@FixedBlock = @Entity[type=armor_stand, fixed]
+@FallingBlock = @Entity[type=armor_stand, falling]
+@NextBlock = @Entity[type=armor_stand, next]
+define @Background : @Entity[type=armor_stand, tag=Background]
+	create {Tags:["Background"], ArmorItems:[{},{},{},{id:"minecraft:diamond_pickaxe",Count:1,tag:{Unbreakable:1,Damage:40}}],NoGravity:1}
+end
+
+$StateIntro = 0
+$StateFalling = 1
+$StateLineAnimation = 2
+
+reset
+	unless game_state >= 0
+		game_state = $StateIntro
+	end
+
+	tell @a 'Loaded {GTetris{- by SethBling and MrMakistein.'
+	tell @a 'Click {B{U[here](call give_tetris_item){- to get a Tetris item to play.'
+	if game_state == $StateIntro
+		tell @a '{GLeft click{- with a {GTetris item{- to start the game.'
+	end
+	
+	/kill @Background
+	for $x in [1.5, 4.5]
+		for $y in [79, 82, 85, 88]
+			$pos = ($x, $y, -3.1)
+			create @Background <$pos>
+		end
+	end
+	
+	/kill @ScoreDigit
+	for i = 0 to 5
+		@Position.x = 12000 - i * 800
+		@Position.y = 87700
+		@Position.z = -700
+		at @Position
+			as create @MiniBlock
+				@s.score_digit = i
+			end
+		end
+	end
+	
+	/kill @LevelDigit
+	for i = 0 to 1
+		@Position.x = 11000 - i * 800
+		@Position.y = 84700
+		@Position.z = -700
+		at @Position
+			as create @MiniBlock
+				@s.level_digit = i
+			end
+		end
+	end
+	
+	/kill @LineDigit
+	for i = 0 to 2
+		@Position.x = 11000 - i * 800
+		@Position.y = 82700
+		@Position.z = -700
+		at @Position
+			as create @MiniBlock
+				@s.line_digit = i
+			end
+		end
+	end
+	
+	/scoreboard objectives add right_click minecraft.used:minecraft.carrot_on_a_stick
+	/scoreboard objectives add shift minecraft.custom:minecraft.sneak_time
+	/scoreboard objectives add jump minecraft.custom:minecraft.jump
+	/scoreboard objectives add login minecraft.custom:minecraft.leave_game
+	
+	update_score(0)
+	update_level(0)
+	update_lines(0)
+end
+
+array full_lines[4]
+
+$Scale = 0.6
+
+$ShapeSquare = 0
+$ShapeLine = 1
+$ShapeL = 2
+$ShapeLR = 3
+$ShapeS = 4
+$ShapeZ = 5
+$ShapeT = 6
+
+$shape_models = [
+	[
+		13,
+		12,
+		10,
+		11,
+	],
+	[
+		17,
+		16,
+		15,
+		14,
+	],
+	[
+		5,
+		4,
+		3,
+		2,
+	],
+	[
+		9,
+		8,
+		7,
+		6,
+	],
+	[
+		25,
+		24,
+		23,
+		22,
+	],
+	[
+		21,
+		20,
+		19,
+		18,
+	],
+	[
+		29,
+		27,
+		26,
+		28,
+	],
+]
+
+$shape_offsets = [
+	[
+		[
+			(0, 0),
+			(1, 0),
+			(0, 1),
+			(1, 1),
+		],
+		[
+			(0, 1),
+			(0, 0),
+			(1, 1),
+			(1, 0),
+		],
+		[
+			(1, 1),
+			(0, 1),
+			(1, 0),
+			(0, 0),
+		],
+		[
+			(1, 0),
+			(1, 1),
+			(0, 0),
+			(0, 1),
+		],
+	],
+	[
+		[
+			(1, -1),
+			(1, 0),
+			(1, 1),
+			(1, 2),
+		],
+		[
+			(-1, 0),
+			(0, 0),
+			(1, 0),
+			(2, 0),
+		],
+		[
+			(1, 2),
+			(1, 1),
+			(1, 0),
+			(1, -1),
+		],
+		[
+			(2, 0),
+			(1, 0),
+			(0, 0),
+			(-1, 0),
+		],
+	],
+	[
+		[
+			(0, -1),
+			(0, 0),
+			(0, 1),
+			(-1, 1),
+		],
+		[
+			(-1, 0),
+			(0, 0),
+			(1, 0),
+			(1, 1),
+		],
+		[
+			(0, 1),
+			(0, 0),
+			(0, -1),
+			(1, -1),
+		],
+		[
+			(1, 0),
+			(0, 0),
+			(-1, 0),
+			(-1, -1),
+		],
+	],
+	[
+		[
+			(0, -1),
+			(0, 0),
+			(0, 1),
+			(1, 1),
+		],
+		[
+			(-1, 0),
+			(0, 0),
+			(1, 0),
+			(1, -1),
+		],
+		[
+			(0, 1),
+			(0, 0),
+			(0, -1),
+			(-1, -1),
+		],
+		[
+			(1, 0),
+			(0, 0),
+			(-1, 0),
+			(-1, 1),
+		],
+	],
+	[
+		[
+			(1, -1),
+			(1, 0),
+			(0, 0),
+			(0, 1),
+		],
+		[
+			(-1, -1),
+			(0, -1),
+			(0, 0),
+			(1, 0),
+		],
+		[
+			(0, 1),
+			(0, 0),
+			(1, 0),
+			(1, -1),
+		],
+		[
+			(1, 0),
+			(0, 0),
+			(0, -1),
+			(-1, -1),
+		],
+	],
+	[
+		[
+			(0, -1),
+			(0, 0),
+			(1, 0),
+			(1, 1),
+		],
+		[
+			(-1, 0),
+			(0, 0),
+			(0, -1),
+			(1, -1),
+		],
+		[
+			(1, 1),
+			(1, 0),
+			(0, 0),
+			(0, -1),
+		],
+		[
+			(1, -1),
+			(0, -1),
+			(0, 0),
+			(-1, 0),
+		],
+	],
+	[
+		[
+			(0, -1),
+			(-1, 0),
+			(0, 0),
+			(1, 0),
+		],
+		[
+			(-1, 0),
+			(0, 1),
+			(0, 0),
+			(0, -1),
+		],
+		[
+			(0, 1),
+			(1, 0),
+			(0, 0),
+			(-1, 0),
+		],
+		[
+			(1, 0),
+			(0, -1),
+			(0, 0),
+			(0, 1),
+		],
+	],
+]
+
+function give_tetris_item()
+	/give @s carrot_on_a_stick{display:{Name:"{\"text\":\"Tetris\"}"}}
+	tell @s "If the game isn't running, simply hold this item and {Gleft click{- to start the game."
+end
+
+function spawn_square()
+	spawn_shape($ShapeSquare)
+end
+
+function spawn_line()
+	spawn_shape($ShapeLine)
+end
+
+function spawn_l()
+	spawn_shape($ShapeL)
+end
+
+function spawn_lr()
+	spawn_shape($ShapeLR)
+end
+
+function spawn_s()
+	spawn_shape($ShapeS)
+end
+
+function spawn_z()
+	spawn_shape($ShapeZ)
+end
+
+function spawn_t()
+	spawn_shape($ShapeT)
+end
+
+function spawn_random()
+	random_shape = rand(7)
+	if not space_available(4, 18, random_shape, 0)
+		tell @a 'Game over! Score: {G(score){- - Lines: {G(lines){- - Level: {G(level){-'
+		game_state = $StateIntro
+		intro_cooldown = 30
+	end
+	spawn_shape(random_shape)
+end
+
+function restart_game()
+	/kill @FixedBlock
+	score = 0
+	update_score(0)
+	lines = 0
+	update_lines(0)
+	level = 0
+	update_level(0)
+	
+	/kill @FallingBlock
+	/kill @NextBlock
+	spawn_random()
+	spawn_new_piece = True
+	
+	game_state = $StateFalling
+end
+
+function spawn_shape(shape)
+	falling_x = 4
+	falling_y = 18
+	falling_rotation = 0
+	falling_shape = next_shape
+	
+	as @NextBlock
+		@s.next = False
+		@s.falling = True
+	end
+	reposition_falling()
+	
+	next_shape = shape
+	
+	@Position.x = 9000
+	@Position.y = 80300
+	@Position.z = -700
+	
+	at @Position
+		switch shape
+			case $shape in $range($len($shape_offsets))
+				for $i in $range(4)
+					$dx, $dy = $shape_offsets[$shape][0][$i]
+					
+					$dx = $Scale * $dx
+					$dy = $Scale * $dy
+
+					as create @MiniBlock
+						@s.block_num = $i
+						@s.next = True
+						$damage_value = $shape_models[$shape][$i]
+						/replaceitem entity @s armor.head minecraft:diamond_pickaxe{Unbreakable:1,Damage:$damage_value}
+						@s.rot_y = 90000
+						at ~$dx ~$dy ~
+							@s.update()
+						end
+					end
+					
+				end
+				rotation = 0
+			end
+		end
+	end
+end
+
+function space_available(x, y, shape, rotation)
+	available = True
+	switch shape
+		case $shape in $range($len($shape_offsets))
+			switch rotation
+				case $r in $range(4)
+					for $i in $range(4)
+						$dx, $dy = $shape_offsets[$shape][$r][$i]
+						
+						cx = x + $dx
+						cy = y + $dy
+
+						if cx < 0 then available = False
+						if cx >= 10 then available = False
+						if cy < 0 then available = False
+						as @FixedBlock if @s.block_x == cx and @s.block_y == cy then available = False
+					end
+				end
+			end
+		end
+	end
+	
+	return available
+end
+
+function rotate_left()
+	if space_available(falling_x, falling_y, falling_shape, (falling_rotation - 1) % 4)
+		as @Player at @s
+			/playsound block.brewing_stand.brew block @s ~ ~ ~ 0.5 2
+		end
+		falling_rotation--
+		falling_rotation %= 4
+		reposition_falling()
+	end
+end
+
+function rotate_right()
+	if space_available(falling_x, falling_y, falling_shape, (falling_rotation + 1) % 4)
+		as @Player at @s
+			/playsound block.brewing_stand.brew block @s ~ ~ ~ 0.5 2
+		end
+		falling_rotation++
+		falling_rotation %= 4
+		reposition_falling()
+	end
+end
+
+function move_left()
+	if space_available(falling_x-1, falling_y, falling_shape, falling_rotation)
+		as @Player at @s
+			/playsound block.note_block.harp block @s ~ ~ ~ 0.2 2
+		end
+		falling_x--
+		reposition_falling()
+	end
+end
+
+function move_right()
+	if space_available(falling_x+1, falling_y, falling_shape, falling_rotation)
+		as @Player at @s
+			/playsound block.note_block.harp block @s ~ ~ ~ 0.2 2
+		end
+		falling_x++
+		reposition_falling()
+	end
+end
+
+
+function reposition_falling()
+	@Position.x = 300 + falling_x * 600
+	@Position.y = 79300 + falling_y * 600
+	@Position.z = -500
+	at @Position
+		switch falling_shape
+			case $shape in $range($len($shape_offsets))
+				switch falling_rotation
+					case $r in $range(4)
+						for $i in $range(4)
+							$dx, $dy = $shape_offsets[$shape][$r][$i]
+							
+							$dx = $Scale * $dx
+							$dy = $Scale * $dy
+
+							as @FallingBlock[block_num == $i] at ~$dx ~$dy ~
+								@s.rot_x = rotation * -90000
+								@s.update()
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+end
+
+function land()
+	as @Player at @s
+		/playsound block.stone.break block @a ~ ~ ~ 1 0
+	end
+
+	@Position.x = 300 + falling_x * 600
+	@Position.y = 79300 + falling_y * 600
+	@Position.z = -500
+	
+	at @Position
+		switch falling_shape
+			case $shape in $range($len($shape_offsets))
+				switch falling_rotation
+					case $r in $range(4)
+						for $i in $range(4)
+							as @FallingBlock[block_num == $i]
+								@s.falling = False
+								@s.fixed = True
+								
+								$dx, $dy = $shape_offsets[$shape][$r][$i]
+								@s.block_x = falling_x + $dx
+								@s.block_y = falling_y + $dy
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+	
+	check_for_full_lines()
+	
+	if line_count > 0 and line_count < 4
+		as @Player at @s
+			/playsound item.trident.riptide_1 block @s ~ ~ ~ 0.5 0
+		end
+	end
+	if line_count == 4
+		as @Player at @s
+			/playsound item.trident.riptide_3 block @s ~ ~ ~ 1 0
+			/playsound block.beacon.activate block @s ~ ~ ~ 1 2
+		end
+	end
+	
+	switch line_count
+		case 0 
+			update_score(drop_streak)
+		end
+		case 1
+			update_score(40 + drop_streak)
+		end
+		case 2
+			update_score(100 + drop_streak)
+		end
+		case 3
+			update_score(300 + drop_streak)
+		end
+		case 4
+			update_score(1200 + drop_streak)
+		end
+	end
+	
+	update_lines(line_count)
+	if lines >= (level+1)*10
+		update_level(1)
+	end
+	
+	drop_streak = 0
+	@Player.drop_cooldown = 8
+	
+	spawn_new_piece = True
+	fall_timer = 0
+end
+
+function check_for_full_lines()
+	line_count = 0
+
+	for y = falling_y + 2 to falling_y - 1 by -1
+		line_complete = True
+		for x = 0 to 9
+			block_exists = False
+			as @FixedBlock if @s.block_y == y and @s.block_x == x
+				block_exists = True
+			end
+			if not block_exists
+				line_complete = False
+			end
+		end
+		
+		if line_complete
+			full_lines[line_count] = y
+			line_count++
+			game_state = $StateLineAnimation
+			line_anim_timer = 0
+		end
+	end
+end
+
+function advance_falling_piece()
+	if space_available(falling_x, falling_y-1, falling_shape, falling_rotation)
+		falling_y--
+		reposition_falling()
+	else
+		land()
+	end
+end
+
+$LineAnimationDuration = 24
+
+function click_callback()
+	if game_state == $StateFalling
+		move_left()
+	end
+	if game_state == $StateIntro and intro_cooldown <= 0
+		restart_game()
+	end
+end
+
+clock main
+	unless @Position do create @Position
+	
+	as @Player at @s
+		/effect give @s saturation 1 0 true
+	
+		if @s.was_holding unless @s[nbt={SelectedItem:{id:"minecraft:carrot_on_a_stick",tag:{display:{Name:"{\"text\":\"Tetris\"}"}}}}]
+			dummy = 0
+			if success
+			/kill @Entity[type=item, nbt={Item:{tag:{display:{Name:"{\"text\":\"Tetris\"}"}}}},distance=..2,limit=1]
+				switch @s.selected_slot
+					case $slot in $range(9)
+						/replaceitem entity @s hotbar.$slot carrot_on_a_stick{display:{Name:"{\"text\":\"Tetris\"}"}}
+					end
+				end
+				if game_state == $StateFalling
+					rotate_right()
+				end
+			end
+		end
+	
+		if @s[nbt={SelectedItem:{id:"minecraft:carrot_on_a_stick",tag:{display:{Name:"{\"text\":\"Tetris\"}"}}}}]
+			@s.enable_click()
+			
+			if @s.right_click
+				if game_state == $StateFalling
+					move_right()
+				end
+			end
+			if @s.jump
+				if game_state == $StateFalling
+					rotate_left()
+				end
+			end
+			
+			if @s.shift
+				@s.drop_cooldown--
+				if @s.drop_cooldown <= 0
+					if @s.was_shifting
+						@s.drop_cooldown = 1
+					else
+						@s.drop_cooldown = 8
+					end
+					if game_state == $StateFalling
+						advance_falling_piece()
+						drop_streak++
+					end
+				end
+				
+				@s.was_shifting = True
+			else
+				@s.drop_cooldown = 0
+				@s.was_shifting = False
+				drop_streak = 0
+			end
+			
+			@s.was_holding = True
+		else
+			@s.disable_click()
+			@s.drop_cooldown = 0
+			
+			@s.was_holding = False
+		end
+		
+		if @s.login
+			tell @s 'Running {GTetris{- by SethBling and MrMakistein.'
+			tell @s 'Click {B{U[here](call give_tetris_item){- to get a Tetris item to play.'
+			if game_state == $StateIntro
+				tell @s '{GLeft click{- with a {GTetris item{- to start the game.'
+			end
+		end
+		
+		@s.right_click = 0
+		@s.shift = 0
+		@s.jump = 0
+		@s.login = 0
+	end
+
+	switch game_state
+		case $StateIntro
+			if intro_cooldown > 0
+				intro_cooldown--
+				if intro_cooldown == 0
+					tell @a '{GLeft click{- with the {GTetris item{- to start a new game.'
+				end
+			end
+		end
+		case $StateFalling
+			if spawn_new_piece
+				spawn_random()
+				spawn_new_piece = False
+			end
+			fall_timer++
+			if fall_timer >= 20 - level
+				fall_timer = 0
+				advance_falling_piece()
+			end
+		end
+		case $StateLineAnimation
+			if line_anim_timer < $LineAnimationDuration
+				line_anim_timer++
+				for i = 0 to line_count-1
+					as @FixedBlock if @s.block_y == full_lines[i]
+						move_dir = line_anim_timer % 12
+						if move_dir >= 3 and move_dir < 9
+							move @s ~0.05 ~ ~
+						else
+							move @s ~-0.05 ~ ~
+						end
+					end
+				end
+			else
+				for i = 0 to line_count-1
+					clear_line(full_lines[i])
+				end
+				
+				fall_timer = 0
+				game_state = $StateFalling
+			end
+		end
+	end
+	
+	as @ScoreDigit at @s facing @Player[limit=1, sort=nearest]
+		/tp @s ~ ~ ~ ~ 0
+	end
+	as @LineDigit at @s facing @Player[limit=1, sort=nearest]
+		/tp @s ~ ~ ~ ~ 0
+	end
+	as @LevelDigit at @s facing @Player[limit=1, sort=nearest]
+		/tp @s ~ ~ ~ ~ 0
+	end
+end
+
+function clear_line(line_y)
+	as @FixedBlock
+		if @s.block_y == line_y
+			/kill @s
+		else if @s.block_y > line_y
+			@s.block_y--
+			move @s ~ ~-0.6 ~
+		end
+	end
+end
+
+function update_score(add_amount)
+	score += add_amount
+	if score > 999999
+		score = 999999
+	end
+	
+	score_remainder = score
+	for i = 0 to 5
+		as @ScoreDigit if @s.score_digit == i
+			value = score_remainder % 10
+			if score_remainder == 0 and i > 0
+				/replaceitem entity @s armor.head air
+			else
+				switch value
+					case $i in $range(10)
+						$damage_value = 30+$i
+						/replaceitem entity @s armor.head minecraft:diamond_pickaxe{Unbreakable:1,Damage:$damage_value}
+					end
+				end
+			end
+			score_remainder /= 10
+		end
+	end
+end
+
+function update_lines(add_amount)
+	lines += add_amount
+	if lines > 999
+		lines = 999
+	end
+	
+	lines_remainder = lines
+	for i = 0 to 2
+		as @LineDigit if @s.line_digit == i
+			value = lines_remainder % 10
+			if lines_remainder == 0 and i > 0
+				/replaceitem entity @s armor.head air
+			else
+				switch value
+					case $i in $range(10)
+						$damage_value = 30+$i
+						/replaceitem entity @s armor.head minecraft:diamond_pickaxe{Unbreakable:1,Damage:$damage_value}
+					end
+				end
+			end
+			lines_remainder /= 10
+		end
+	end
+end
+
+function update_level(add_amount)
+	level += add_amount
+	if level > 99
+		level = 99
+	end
+	
+	level_remainder = level
+	for i = 0 to 2
+		as @LevelDigit if @s.level_digit == i
+			value = level_remainder % 10
+			if level_remainder == 0 and i > 0
+				/replaceitem entity @s armor.head air
+			else
+				switch value
+					case $i in $range(10)
+						$damage_value = 30+$i
+						/replaceitem entity @s armor.head minecraft:diamond_pickaxe{Unbreakable:1,Damage:$damage_value}
+					end
+				end
+			end
+			level_remainder /= 10
+		end
+	end
+end

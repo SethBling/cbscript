@@ -1,0 +1,336 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Test for tetris"
+
+import miniblock
+import better_click_detector
+
+reset
+	tell @a '[\[Rotate Left\]](call rotate_left) [\[Rotate Right\]](call rotate_right)'
+	tell @a 'Spawn: [\[Square\]](call respawn_square) [\[Line\]](call respawn_line) [\[L\]](call respawn_l) [\[LR\]](call respawn_lr) [\[S\]](call respawn_s) [\[Z\]](call respawn_z) [\[T\]](call respawn_t)'
+
+end
+
+$Scale = 0.6
+
+$Square = 0
+$Line = 1
+$L = 2
+$LR = 3
+$S = 4
+$Z = 5
+$T = 6
+
+$shape_offsets = [
+	[
+		[
+			(0, 0),
+			(1, 0),
+			(0, 1),
+			(1, 1),
+		],
+		[
+			(0, 1),
+			(0, 0),
+			(1, 1),
+			(1, 0),
+		],
+		[
+			(1, 1),
+			(0, 1),
+			(1, 0),
+			(0, 0),
+		],
+		[
+			(1, 0),
+			(1, 1),
+			(0, 0),
+			(0, 1),
+		],
+	],
+	[
+		[
+			(1, -1),
+			(1, 0),
+			(1, 1),
+			(1, 2),
+		],
+		[
+			(-1, 0),
+			(0, 0),
+			(1, 0),
+			(2, 0),
+		],
+		[
+			(1, 2),
+			(1, 1),
+			(1, 0),
+			(1, -1),
+		],
+		[
+			(2, 0),
+			(1, 0),
+			(0, 0),
+			(-1, 0),
+		],
+	],
+	[
+		[
+			(0, -1),
+			(0, 0),
+			(0, 1),
+			(-1, 1),
+		],
+		[
+			(-1, 0),
+			(0, 0),
+			(1, 0),
+			(1, 1),
+		],
+		[
+			(0, 1),
+			(0, 0),
+			(0, -1),
+			(1, -1),
+		],
+		[
+			(1, 0),
+			(0, 0),
+			(-1, 0),
+			(-1, -1),
+		],
+	],
+	[
+		[
+			(0, -1),
+			(0, 0),
+			(0, 1),
+			(1, 1),
+		],
+		[
+			(-1, 0),
+			(0, 0),
+			(1, 0),
+			(1, -1),
+		],
+		[
+			(0, 1),
+			(0, 0),
+			(0, -1),
+			(-1, -1),
+		],
+		[
+			(1, 0),
+			(0, 0),
+			(-1, 0),
+			(-1, 1),
+		],
+	],
+	[
+		[
+			(1, -1),
+			(1, 0),
+			(0, 0),
+			(0, 1),
+		],
+		[
+			(-1, -1),
+			(0, -1),
+			(0, 0),
+			(1, 0),
+		],
+		[
+			(0, 1),
+			(0, 0),
+			(1, 0),
+			(1, -1),
+		],
+		[
+			(1, 0),
+			(0, 0),
+			(0, -1),
+			(-1, -1),
+		],
+	],
+	[
+		[
+			(0, -1),
+			(0, 0),
+			(1, 0),
+			(1, 1),
+		],
+		[
+			(-1, 0),
+			(0, 0),
+			(0, -1),
+			(1, -1),
+		],
+		[
+			(1, 1),
+			(1, 0),
+			(0, 0),
+			(0, -1),
+		],
+		[
+			(1, -1),
+			(0, -1),
+			(0, 0),
+			(-1, 0),
+		],
+	],
+	[
+		[
+			(0, -1),
+			(-1, 0),
+			(0, 0),
+			(1, 0),
+		],
+		[
+			(-1, 0),
+			(0, 1),
+			(0, 0),
+			(0, -1),
+		],
+		[
+			(0, 1),
+			(1, 0),
+			(0, 0),
+			(-1, 0),
+		],
+		[
+			(1, 0),
+			(0, -1),
+			(0, 0),
+			(0, 1),
+		],
+	],
+]
+
+$blocks = [
+	'diamond_block',
+	'emerald_block',
+	'iron_block',
+	'dispenser',
+]
+
+
+
+function respawn_square()
+	shape = 0
+	
+	spawn_shape()
+end
+
+function respawn_line()
+	shape = 1
+	
+	spawn_shape()
+end
+
+function respawn_l()
+	shape = 2
+	
+	spawn_shape()
+end
+
+function respawn_lr()
+	shape = 3
+	
+	spawn_shape()
+end
+
+function respawn_s()
+	shape = 4
+	
+	spawn_shape()
+end
+
+function respawn_z()
+	shape = 5
+	
+	spawn_shape()
+end
+
+function respawn_t()
+	shape = 6
+	
+	spawn_shape()
+end
+
+function spawn_shape()
+	/kill @MiniBlock[block_num >= 0]
+	/kill @Marker[bottom_left]
+
+	switch shape
+		case $shape in $range($len($shape_offsets))
+			at @s ~ ~1.6 ~ at ^ ^ ^3
+				for $i in $range(4)
+					$dx, $dy = $shape_offsets[$shape][0][$i]
+					
+					$dx = $Scale * $dx
+					$dy = $Scale * $dy
+
+					as create @MiniBlock
+						@s.block_num = $i
+						$block_name = $blocks[$i]
+						/replaceitem entity @s armor.head $block_name
+						@s.rot_y = 90000
+						at ~$dx ~$dy ~
+							@s.update()
+						end
+					end
+					
+				end
+				as create @Marker
+					@s.bottom_left = True
+				end
+			end
+			rotation = 0
+		end
+	end
+end
+
+function rotate_left()
+	rotation--
+	
+	reorient()
+end
+
+function rotate_right()
+	rotation++
+	
+	reorient()
+end
+
+function reorient()
+	rotation %= 4
+	
+	at @Marker[bottom_left,limit=1]
+		switch shape
+			case $shape in $range($len($shape_offsets))
+				switch rotation
+					case $r in $range(4)
+						for $i in $range(4)
+							$dx, $dy = $shape_offsets[$shape][$r][$i]
+							
+							$dx = $Scale * $dx
+							$dy = $Scale * $dy
+
+							as @MiniBlock[block_num == $i] at ~$dx ~$dy ~
+								@s.rot_x = rotation * -90000
+								@s.update()
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+end
+
+clock main
+
+end
+
+function click_callback()
+	/say click
+end

@@ -41,16 +41,19 @@ define @Piece : @Entity[tag=Piece]
 			my_row = @s.row
 			my_col = @s.col
 			
-			checking_castle = False
+			valid_move = True
+			
 			if @s.type == $King
 				if dc == 2
 					as @Piece[type==$Rook] if @s.row == my_row and @s.col == 7
 						@s.col = my_col+1
 					end
+					if check then valid_move = False
 				else if dc == -2
 					as @Piece[type==$Rook] if @s.row == my_row and @s.col == 0
 						@s.col = my_col-1
 					end
+					if check then valid_move = False
 				end
 			end
 			
@@ -75,8 +78,6 @@ define @Piece : @Entity[tag=Piece]
 				king_row = @s.row
 				king_col = @s.col
 			end
-			
-			valid_move = True
 			
 			as @Piece if @s.color == other_color and @s.row >= 0
 				if @s.square_in_range(king_row, king_col)
@@ -764,6 +765,13 @@ function enter_state(state)
 		case $StatePlayerUnselected
 			unhighlight_all()
 			
+			check = False
+			as @Piece if @s.color == other_player
+				if @s.square_in_range(cur_king_row, cur_king_col)
+					check = True
+				end
+			end
+			
 			any_valid_moves = False
 			
 			as @Piece
@@ -791,13 +799,6 @@ function enter_state(state)
 				other_player = $Black
 			else
 				other_player = $White
-			end
-			
-			check = False
-			as @Piece if @s.color == other_player
-				if @s.square_in_range(cur_king_row, cur_king_col)
-					check = True
-				end
 			end
 			
 			if check and not any_valid_moves
