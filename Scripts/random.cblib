@@ -1,0 +1,15 @@
+import common
+
+reset
+	as create @Marker
+		/execute store result score Global _random_seed run data get entity @s UUIDMost 0.0000000002328306436538696289
+		/kill @s
+	end
+end
+
+function randint(_rand_min, _rand_max)
+	_rand_range = _rand_max - _rand_min
+	_random_seed *= 1664525
+	_random_seed += 1013904223
+	return _random_seed / 256 % _rand_range + _rand_min
+end

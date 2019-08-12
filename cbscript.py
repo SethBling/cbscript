@@ -112,7 +112,6 @@ class cbscript(object):
 		self.add_scratch_objectives()
 		self.add_temp_objectives()
 		self.add_constants()
-		self.add_random_generation()
 		self.add_trigger_objectives()
 		self.add_registered_objectives()
 		self.add_max_chain_length()
@@ -138,22 +137,6 @@ class cbscript(object):
 	def add_constants(self):
 		self.global_context.add_constant_definitions()
 	
-	def add_random_generation(self):
-		f = self.global_context.get_reset_function()
-		
-		if self.global_context.rand > 0:
-			objective = self.global_context.get_random_objective()
-			commands = []
-			commands.append('kill @e[type=armor_stand,name={0},scores={{{0}=0..}}]'.format(objective))
-			commands.append("scoreboard objectives add {0} dummy".format(objective))
-			for i in xrange(self.global_context.rand):
-				commands.append('summon minecraft:armor_stand ~ ~ ~ {{CustomName:"\\"{0}\\"", "Invulnerable":1b, "Invisible":1b, "Marker":1b, "NoGravity":1b}}'.format(objective))
-				commands.append('scoreboard players add @e[type=armor_stand,name={0}] {0} 1'.format(objective))
-			commands.append('scoreboard players remove @e[type=armor_stand,name={0}] {0} 1'.format(objective))	
-			
-			for i in range(len(commands)):
-				f.insert_command(commands[i], i)
-			
 	def add_trigger_objectives(self):
 		None
 	

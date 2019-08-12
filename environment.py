@@ -291,9 +291,6 @@ class environment(object):
 	def add_constant(self, val):
 		return self.global_context.add_constant(val)
 		
-	def allocate_rand(self, val):
-		self.global_context.allocate_rand(val)
-	
 	def get_friendly_name(self):
 		return self.global_context.get_friendly_name()
 		

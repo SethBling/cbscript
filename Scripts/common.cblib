@@ -40,14 +40,3 @@ end
 define @Position3 = @Entity[type=area_effect_cloud,tag=Position2,limit=1]
 	create {Tags:["Position2"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
 end
-
-
-function get_aim()
-	unless @Position do create @Position
-	as @Position
-		/tp @s ~ ~ ~ ~ ~
-		<pos1> = @s.<pos>
-		move @s ^ ^ ^1
-		<aim> = @s.<pos> - <pos1>
-	end
-end

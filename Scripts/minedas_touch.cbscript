@@ -1,4 +1,4 @@
-dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\Minedas"
 desc "Automatically mine the blocks in front of you"
 
 import common
@@ -7,16 +7,33 @@ reset
 
 end
 
+
 clock main
-	as @Player at @s eyes
+	as @Player[gamemode=!spectator] at @s eyes
+		/gamerule doTileDrops false
 		for $d in $range(0, 51)
 			$forward = $d / 10.0
 			at ^ ^ ^$forward do mine_block()
 		end
+		/gamerule doTileDrops true
+		/effect give @s night_vision 100 0 true
 	end
 end
 
+define block_tag unmineable
+	water
+	lava
+	air
+	cave_air
+	nether_portal
+	end_portal
+	end_portal_frame
+	bedrock
+end
+
 function mine_block()
-	/loot spawn ~ ~ ~ mine ~ ~ ~ mainhand
-	/setblock ~ ~ ~ air destroy
+	unless block ~ ~ ~ unmineable
+		/loot spawn ~ ~ ~ mine ~ ~ ~ mainhand
+		/setblock ~ ~ ~ air destroy
+	end
 end

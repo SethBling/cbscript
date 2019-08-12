@@ -1,0 +1,126 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Snow flows like water"
+
+import common
+
+$Neighbors = [
+	(1, 0),
+	(-1, 0),
+	(0, 1),
+	(0, -1),
+]
+
+define @SnowMarker: @Entity[type=area_effect_cloud,tag=SnowMarker]
+	create {Tags:["SnowMarker"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+	
+	function check_neighbors()
+		if @s.source
+			my_level = 8
+		else
+			my_level = @s.level
+		end
+		
+		max_neighbor = 0
+		
+		for $dx, $dz in $Neighbors
+			at @s ~$dx ~ ~$dz
+				as @SnowMarker[distance=..0.01,limit=1]
+					if @s.source
+						max_neighbor = 8
+					else
+						if @s.level < my_level-1
+							@s.update_level(my_level-1)
+						end
+						if @s.level > max_neighbor
+							max_neighbor = @s.level
+						end
+					end
+				else if block ~ ~ ~ air
+					as create @SnowMarker
+						@s.update_level(my_level-1)
+					end
+				end
+			end
+		end
+		
+		if my_level >= max_neighbor unless @s.source
+			@s.update_level(@s.level-1)
+		end
+	end
+	
+	function update_level(new_level)
+		at @s
+			@s.level = new_level
+			switch new_level
+				case 0
+					/setblock ~ ~ ~ air
+					/kill @s
+				end
+				case $level in $range(1, 8)
+					/setblock ~ ~ ~ snow[layers=$level]
+				end
+			end
+		end
+	end
+end
+
+
+advancement place_snow {
+	criteria: {
+		place_snow: {
+			trigger: "minecraft:placed_block",
+			conditions: {
+				nbt: {
+					id: "minecraft:snow"
+				}
+			}
+		}
+	},
+	rewards: {
+		"function": "$namespace:place_snow"
+	}
+}
+
+define @Player: @Player
+	function place_snow()
+		/advancement revoke @s only $namespace:place_snow
+		at @s eyes ^ ^ ^
+			step = 0
+			while step < 100 at feet ^ ^ ^0.1
+				align xyz if block ~ ~ ~ snow_block unless @SnowMarker[distance=..0.01]
+					step = 100000
+					as create @SnowMarker
+						@s.source = True
+					end
+				end
+				step++
+			end
+		end
+	end
+end
+
+reset
+
+end
+
+clock main
+	as @SnowMarker at @s
+		if @s.source
+			unless block ~ ~ ~ snow_block
+				/kill @s
+			end
+		else
+			unless block ~ ~ ~ snow
+				/kill @s
+			end
+		end
+	end
+	
+	as @SnowMarker at @s
+		@s.tick++
+		if @s.tick >= 5
+			@s.check_neighbors()
+			@s.tick = 0
+		end
+	end
+end

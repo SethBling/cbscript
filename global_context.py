@@ -34,7 +34,6 @@ class global_context(object):
 		self.arrays = {}
 		self.scratch = {}
 		self.temp = 0
-		self.rand = 0
 		self.unique = 0
 		self.friendly_name = get_friendly_name(namespace)
 		self.block_tags = {}
@@ -110,10 +109,6 @@ class global_context(object):
 	def allocate_temp(self, temp):
 		if temp > self.temp:
 			self.temp = temp
-	
-	def allocate_rand(self, rand):
-		if rand > self.rand:
-			self.rand = rand
 	
 	def finalize_functions(self):
 		for func in self.functions.values():

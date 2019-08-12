@@ -2,7 +2,7 @@ dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\Tetris"
 desc "Test for tetris"
 
 import miniblock
-import better_click_detector
+import left_right_click_detector
 
 @ScoreDigit = @Entity[type=armor_stand, score_digit >= 0]
 @LineDigit = @Entity[type=armor_stand, line_digit >= 0]
@@ -21,6 +21,50 @@ $StateLineAnimation = 2
 reset
 	unless game_state >= 0
 		game_state = $StateIntro
+		
+		/kill @Background
+		for $x in [1.5, 4.5]
+			for $y in [79, 82, 85, 88]
+				$pos = ($x, $y, -3.1)
+				create @Background <$pos>
+			end
+		end
+		
+		/kill @ScoreDigit
+		for i = 0 to 5
+			@Position.x = 12000 - i * 800
+			@Position.y = 87700
+			@Position.z = -700
+			at @Position
+				as create @MiniBlock
+					@s.score_digit = i
+				end
+			end
+		end
+		
+		/kill @LevelDigit
+		for i = 0 to 1
+			@Position.x = 11000 - i * 800
+			@Position.y = 84700
+			@Position.z = -700
+			at @Position
+				as create @MiniBlock
+					@s.level_digit = i
+				end
+			end
+		end
+		
+		/kill @LineDigit
+		for i = 0 to 2
+			@Position.x = 11000 - i * 800
+			@Position.y = 82700
+			@Position.z = -700
+			at @Position
+				as create @MiniBlock
+					@s.line_digit = i
+				end
+			end
+		end
 	end
 
 	tell @a 'Loaded {GTetris{- by SethBling and MrMakistein.'
@@ -29,51 +73,6 @@ reset
 		tell @a '{GLeft click{- with a {GTetris item{- to start the game.'
 	end
 	
-	/kill @Background
-	for $x in [1.5, 4.5]
-		for $y in [79, 82, 85, 88]
-			$pos = ($x, $y, -3.1)
-			create @Background <$pos>
-		end
-	end
-	
-	/kill @ScoreDigit
-	for i = 0 to 5
-		@Position.x = 12000 - i * 800
-		@Position.y = 87700
-		@Position.z = -700
-		at @Position
-			as create @MiniBlock
-				@s.score_digit = i
-			end
-		end
-	end
-	
-	/kill @LevelDigit
-	for i = 0 to 1
-		@Position.x = 11000 - i * 800
-		@Position.y = 84700
-		@Position.z = -700
-		at @Position
-			as create @MiniBlock
-				@s.level_digit = i
-			end
-		end
-	end
-	
-	/kill @LineDigit
-	for i = 0 to 2
-		@Position.x = 11000 - i * 800
-		@Position.y = 82700
-		@Position.z = -700
-		at @Position
-			as create @MiniBlock
-				@s.line_digit = i
-			end
-		end
-	end
-	
-	/scoreboard objectives add right_click minecraft.used:minecraft.carrot_on_a_stick
 	/scoreboard objectives add shift minecraft.custom:minecraft.sneak_time
 	/scoreboard objectives add jump minecraft.custom:minecraft.jump
 	/scoreboard objectives add login minecraft.custom:minecraft.leave_game
@@ -94,6 +93,16 @@ $ShapeLR = 3
 $ShapeS = 4
 $ShapeZ = 5
 $ShapeT = 6
+
+$LandingSounds = [
+	'entity.pig.hurt',
+	'entity.villager.hurt',
+	'entity.zombie.hurt',
+	'entity.skeleton.hurt',
+	'entity.sheep.hurt',
+	'entity.creeper.hurt',
+	'entity.phantom.hurt',
+]
 
 $shape_models = [
 	[
@@ -330,34 +339,6 @@ function give_tetris_item()
 	tell @s "If the game isn't running, simply hold this item and {Gleft click{- to start the game."
 end
 
-function spawn_square()
-	spawn_shape($ShapeSquare)
-end
-
-function spawn_line()
-	spawn_shape($ShapeLine)
-end
-
-function spawn_l()
-	spawn_shape($ShapeL)
-end
-
-function spawn_lr()
-	spawn_shape($ShapeLR)
-end
-
-function spawn_s()
-	spawn_shape($ShapeS)
-end
-
-function spawn_z()
-	spawn_shape($ShapeZ)
-end
-
-function spawn_t()
-	spawn_shape($ShapeT)
-end
-
 function spawn_random()
 	random_shape = rand(7)
 	if not space_available(4, 18, random_shape, 0)
@@ -480,7 +461,7 @@ end
 function move_left()
 	if space_available(falling_x-1, falling_y, falling_shape, falling_rotation)
 		as @Player at @s
-			/playsound block.note_block.harp block @s ~ ~ ~ 0.2 2
+			/playsound block.note_block.harp block @s ~ ~ ~ 0.2 1.83
 		end
 		falling_x--
 		reposition_falling()
@@ -528,6 +509,12 @@ end
 function land()
 	as @Player at @s
 		/playsound block.stone.break block @a ~ ~ ~ 1 0
+		switch falling_shape
+			case $i in $range(7)
+				$sound = $LandingSounds[$i]
+				/playsound $sound block @a ~ ~ ~ 1 1
+			end
+		end
 	end
 
 	@Position.x = 300 + falling_x * 600
@@ -634,9 +621,18 @@ end
 
 $LineAnimationDuration = 24
 
-function click_callback()
+function left_click_callback()
 	if game_state == $StateFalling
 		move_left()
+	end
+	if game_state == $StateIntro and intro_cooldown <= 0
+		restart_game()
+	end
+end
+
+function right_click_callback()
+	if game_state == $StateFalling
+		move_right()
 	end
 	if game_state == $StateIntro and intro_cooldown <= 0
 		restart_game()
@@ -667,11 +663,6 @@ clock main
 		if @s[nbt={SelectedItem:{id:"minecraft:carrot_on_a_stick",tag:{display:{Name:"{\"text\":\"Tetris\"}"}}}}]
 			@s.enable_click()
 			
-			if @s.right_click
-				if game_state == $StateFalling
-					move_right()
-				end
-			end
 			if @s.jump
 				if game_state == $StateFalling
 					rotate_left()

@@ -653,9 +653,6 @@ class mcfunction(object):
 	def add_constant(self, val):
 		return self.environment.add_constant(val)
 		
-	def allocate_rand(self, val):
-		self.environment.allocate_rand(val)
-		
 	def get_friendly_name(self):
 		return self.environment.get_friendly_name()
 		
