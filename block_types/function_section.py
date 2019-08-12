@@ -20,6 +20,9 @@ class function_section(block_base):
 			func_func.update_self_selector(self.self_selector)
 		self.compile_lines(func_func, self.lines)
 		
+	def register(self, global_context):
+		global_context.register_function_params(self.name, self.params)
+		
 	@property
 	def block_name(self):
 		return 'function "{}"'.format(self.name)

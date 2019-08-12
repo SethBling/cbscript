@@ -26,6 +26,7 @@ class global_context(object):
 	def __init__(self, namespace):
 		self.clocks = []
 		self.functions = {}
+		self.function_params = {}
 		self.macros = {}
 		self.template_functions = {}
 		self.reset = None
@@ -62,6 +63,9 @@ class global_context(object):
 		
 	def register_function(self, name, func):
 		self.functions[name] = func
+		
+	def register_function_params(self, name, params):
+		self.function_params[name] = param
 		
 	def register_array(self, name, from_val, to_val, selector_based):
 		if name in self.arrays:
