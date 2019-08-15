@@ -835,10 +835,6 @@ def p_qualifiers(p):
 	p[0] = ""
 	
 #### Qualifier
-def p_qualifier_integer(p):
-	'''qualifier : const_value'''
-	p[0] = p[1]
-	
 def p_qualifier_binop(p):
 	'''qualifier : ID EQUALS virtualinteger
 				 | ID EQUALS ID
@@ -873,14 +869,15 @@ def p_qualifier_not(p):
 	p[0] = 'not ' + p[2]
 
 #### Full Selector
-def p_fullselector_symbol(p):
-	'''fullselector : ATID
-					| ATID LBRACK qualifiers RBRACK'''
-	if len(p) == 2:
-		p[0] = "@{0}[]".format(p[1])
-	else:
-		p[0] = "@{0}[{1}]".format(p[1], p[3])
+def p_fullselector(p):
+	'''fullselector : ATID'''
+	p[0] = '@{0}[]'.format(p[1])
 
+def p_fullselector_qualifiers(p):
+	'''fullselector : ATID LBRACK virtualinteger RBRACK
+					| ATID LBRACK qualifiers RBRACK'''
+	p[0] = '@{0}[{1}]'.format(p[1], p[3])
+	
 #### Relative Coordinates
 def p_relcoord_number(p):
 	'''relcoord : const_value'''
@@ -1111,6 +1108,10 @@ def p_block_item_macro_path_scale(p):
 	p[0] = number_macro_path(p[1], p[3], p[6], p[7], p[8])
 	
 #### Selector Assignment
+def p_uuid(p):
+	'''uuid : integer MINUS integer MINUS integer MINUS integer MINUS integer'''
+	p[0] = '{:X}-{:X}-{:X}-{:X}-{:X}'.format(int(p[1]), int(p[3]), int(p[5]), int(p[7]), int(p[9]))
+
 def p_selector_assignment(p):
 	'''selector_assignment : ATID EQUALS fullselector'''
 	p[0] = selector_assignment_block(p.lineno(1), p[1], p[3])
@@ -1118,8 +1119,12 @@ def p_selector_assignment(p):
 def p_selector_define(p):
 	'''selector_define_block : define ATID EQUALS fullselector newlines selector_definition end
 	                         | define ATID COLON  fullselector newlines selector_definition end'''
-	p[0] = selector_definition_block(p.lineno(1), p[2], p[4], p[6])
+	p[0] = selector_definition_block(p.lineno(1), p[2], p[4], None, p[6])
 	
+def p_selector_define_uuid(p):
+	'''selector_define_block : define ATID COLON uuid LPAREN fullselector RPAREN newlines selector_definition end'''
+	p[0] = selector_definition_block(p.lineno(1), p[2], p[6], p[4], p[9])
+
 def p_selector_definition_empty(p):
 	'''selector_definition : empty'''
 	p[0] = []
@@ -1209,11 +1214,19 @@ def p_block_create(p):
 	
 def p_create(p):
 	'''create_block : create ATID relcoords'''
-	p[0] = create_block(p.lineno(1), p[2], p[3])
+	p[0] = create_block(p.lineno(1), p[2], p[3], None)
 	
 def p_create_nocoords(p):
 	'''create_block : create ATID'''
-	p[0] = create_block(p.lineno(1), p[2], relcoords())
+	p[0] = create_block(p.lineno(1), p[2], relcoords(), None)
+
+def p_create_index(p):
+	'''create_block : create ATID LBRACK const_value RBRACK relcoords'''
+	p[0] = create_block(p.lineno(1), p[2], p[6], p[4])
+	
+def p_create_index_nocoords(p):
+	'''create_block : create ATID LBRACK const_value RBRACK'''
+	p[0] = create_block(p.lineno(1), p[2], relcoords(), p[4])
 	
 #### Python Assignment
 def p_pythonassignment_interpreted_string(p):

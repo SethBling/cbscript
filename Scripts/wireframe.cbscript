@@ -33,6 +33,27 @@ array unit_x[$NumLines]
 array unit_y[$NumLines]
 array pose_angle[$NumLines]
 
+$LineStorage = (-69, 56, 54)
+$LineStoragePos = "-69 56 54"
+
+define [Line] at <$LineStorage>
+	new_x1: RecordItem.tag.lines[-1].x1 int 1
+	new_x2: RecordItem.tag.lines[-1].x2 int 1
+	new_y1: RecordItem.tag.lines[-1].y1 int 1
+	new_y2: RecordItem.tag.lines[-1].y2 int 1
+	new_z1: RecordItem.tag.lines[-1].z1 int 1
+	new_z2: RecordItem.tag.lines[-1].z2 int 1
+	new_id: RecordItem.tag.lines[-1].id int 1
+	
+	cur_x1: RecordItem.tag.line_iter[-1].x1 int 1
+	cur_x2: RecordItem.tag.line_iter[-1].x2 int 1
+	cur_y1: RecordItem.tag.line_iter[-1].y1 int 1
+	cur_y2: RecordItem.tag.line_iter[-1].y2 int 1
+	cur_z1: RecordItem.tag.line_iter[-1].z1 int 1
+	cur_z2: RecordItem.tag.line_iter[-1].z2 int 1
+	cur_id: RecordItem.tag.line_iter[-1].id int 1
+end
+
 define @Line : @Entity[type=area_effect_cloud,tag=Line]
 	create {Tags:["Line"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
 	
@@ -479,6 +500,10 @@ end
 function delete_object()
 	/kill @Line
 	/kill @Segment
+	/setblock $LineStoragePos air
+	/setblock $LineStoragePos jukebox
+	[<$LineStorage>].{RecordItem} = {id:"minecraft:diamond", Count:1, tag:{lines:[]}}
+	
 	
 	line_id = 0
 end
@@ -526,6 +551,21 @@ function create_line()
 	line_id++
 end
 
+function new_create_line()
+	<x1, y1, z1> = <pos1>
+	<x2, y2, z2> = <pos2>
+	[<$LineStorage>].[RecordItem.tag.lines] += {}
+	[Line].new_x1 = x1
+	[Line].new_y1 = y1
+	[Line].new_z1 = z1
+	[Line].new_x2 = x2
+	[Line].new_y2 = y2
+	[Line].new_z2 = z2
+	
+	line_id++
+	[Line].new_id = line_id
+end
+
 function rotate_around_z_axis(a)
 	<x, y, z> = <tpos>
 	<tpos> = <cos(a)*x-sin(a)*y, sin(a)*x+cos(a)*y, z*1000> / 1000
@@ -570,10 +610,9 @@ function get_line_properties()
 end
 
 clock main
-	/gamerule sendCommandFeedback false
+	/gamerule sendCommandFeedback true
 
 	unless @Position do create @Position
-	unless @Position2 do create @Position2
 	
 	t += 2
 

@@ -28,6 +28,7 @@ class selector_definition(object):
 		self.paths = {}
 		self.vector_paths = {}
 		self.pointers = {}
+		self.uuid = None
 		
 		selector = env.apply_replacements(selector)
 		
@@ -63,6 +64,8 @@ class selector_definition(object):
 				self.pointers[var] = base_selector.pointers[var]
 				
 			self.tag = base_selector.tag
+			
+			self.uuid = base_selector.uuid
 		else:
 			if len(base_name) != 1:
 				raise CompileError('Tried to create selector with base name @{0}'.format(base_name))
@@ -73,6 +76,14 @@ class selector_definition(object):
 			parts = selector.split('[')[1].split(']')[0].split(',')
 			parts = [part.strip() for part in parts]
 			
+			if len(parts) == 1:
+				try:
+					index = int(parts[0])
+					self.uuid = '0-0-0-0-{:X}'.format(index + hash(base_name) % (2 ** 32))
+					return
+				except:
+					None
+					
 			nbt_part = None
 			lbrack = 0
 			rbrack = 0
@@ -138,6 +149,9 @@ class selector_definition(object):
 					env.register_objective(before)
 					
 	def compile(self):
+		if self.uuid:
+			return self.uuid
+	
 		major_parts = []
 		
 		if len(self.parts) > 0:
@@ -174,6 +188,9 @@ class selector_definition(object):
 		self.parts.append((name, value))
 		
 	def single_entity(self):
+		if self.uuid:
+			return True
+	
 		if self.base_name == 's' or self.base_name == 'p':
 			return True
 		

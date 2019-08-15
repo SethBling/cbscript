@@ -2,14 +2,16 @@ from block_base import block_base
 from mcfunction import compile_section
 
 class selector_definition_block(block_base):
-	def __init__(self, line, id, fullselector, items):
+	def __init__(self, line, id, fullselector, uuid, items):
 		self.line = line
 		self.id = id
+		self.uuid = uuid
 		self.fullselector = fullselector
 		self.items = items
 		
 	def compile(self, func):
 		selector = func.set_atid(self.id, self.fullselector)
+		selector.uuid = self.uuid
 		
 		for type, val in self.items:
 			if type == 'Tag':

@@ -65,7 +65,7 @@ class global_context(object):
 		self.functions[name] = func
 		
 	def register_function_params(self, name, params):
-		self.function_params[name] = param
+		self.function_params[name] = params
 		
 	def register_array(self, name, from_val, to_val, selector_based):
 		if name in self.arrays:

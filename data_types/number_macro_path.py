@@ -32,7 +32,7 @@ class number_macro_path(object):
 	def copy_from(self, func, coords, macro_args, var):
 		const_val = var.get_const_value(func)
 		if const_val:
-			func.add_command('data modify block {} {} {}'.format(coords.get_value(func), self.get_path(func, macro_args), float(const_val) / float(self.get_scale(func))))
+			func.add_command('data modify block {} {} set value {}'.format(coords.get_value(func), self.get_path(func, macro_args), float(const_val) / float(self.get_scale(func))))
 		else:
 			func.add_command('execute store result block {} {} {} {} run {}'.format(
 				coords.get_value(func),

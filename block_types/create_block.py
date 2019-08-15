@@ -1,11 +1,12 @@
 from block_base import block_base
 
 class create_block(block_base):
-	def __init__(self, line, atid, relcoords):
+	def __init__(self, line, atid, relcoords, index):
 		self.line = line
 		self.atid = atid
 		self.relcoords = relcoords
+		self.index = index
 		
 	def compile(self, func):
-		if not func.run_create(self.atid, self.relcoords):
+		if not func.run_create(self.atid, self.relcoords, self.index):
 			raise Exception('Error creating entity at line {0}'.format(self.line))

@@ -5,6 +5,7 @@ from variable_types.scoreboard_var import scoreboard_var
 from CompileError import CompileError
 import math
 import traceback
+import json
 
 def get_undecorated_selector_name(selector):
 	if selector.startswith('@'):
@@ -132,7 +133,7 @@ class mcfunction(object):
 					if op == '<=':						
 						test += '{3} score {0} {1} matches ..{2} '.format(sbvar.selector, sbvar.objective, const, iftype)
 					if op == '=':						
-						test += '{3} score {0} {1} matches {2}..{2} '.format(sbvar.selector, sbvar.objective, const, iftype)
+						test += '{3} score {0} {1} matches {2} '.format(sbvar.selector, sbvar.objective, const, iftype)
 					
 				else:
 					# Continue if chain comparing two score values
@@ -697,7 +698,7 @@ class mcfunction(object):
 	def pop_environment(self):
 		self.environment = self.environment_stack.pop()
 		
-	def run_create(self, atid, relcoords):
+	def run_create(self, atid, relcoords, idx=None):
 		if atid not in self.selectors:
 			print('Unable to create unknown entity: @{0}'.format(atid))
 			return False
@@ -711,9 +712,20 @@ class mcfunction(object):
 			return False
 			
 		if selector.tag == None:
-			self.add_command('summon {0} {1}'.format(entity_type, relcoords.get_value(self)))
+			if idx:
+				self.add_command('summon {0} {1} {{UUIDMost:0, UUIDLeast:{}}}'.format(entity_type, relcoords.get_value(self), idx.get_value(self) + hash(atid) % (2 ** 32)))
+			else:
+				self.add_command('summon {0} {1}'.format(entity_type, relcoords.get_value(self)))
 		else:
-			self.add_command('summon {0} {1} {2}'.format(entity_type, relcoords.get_value(self), selector.tag))
+			if idx:
+				parsed = json.loads(selector.tag)
+				parsed['UUIDMost'] = 0
+				parsed['UUIDLeast'] = idx.get_value(self) + hash(atid) % (2 ** 32)
+				tag = json.dumps(parsed)
+			else:
+				tag = selector.tag
+			
+			self.add_command('summon {0} {1} {2}'.format(entity_type, relcoords.get_value(self), tag))
 			
 		return True
 		

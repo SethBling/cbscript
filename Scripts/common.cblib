@@ -22,21 +22,21 @@ define @Entity: @e
 end
 
 define @Marker: @Entity[type=area_effect_cloud,tag=Marker]
-	create {Tags:["Marker"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+	create {Tags:["Marker"], Duration:-1, Age:-0x80000000, WaitTime:-0x80000000}
 end
 
 define @Player: @Entity[type=player]
 	selected_slot: SelectedItemSlot int 1
 end
 
-define @Position = @Entity[type=area_effect_cloud,tag=Position,limit=1]
-	create {Tags:["Position"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+define @Position : 0-0-0-0-0xAEC (@Entity[type=area_effect_cloud])
+	create {Duration:-1, Age:-0x80000000, WaitTime:-0x80000000, UUIDMost:0, UUIDLeast: 0xAEC}
 end
 
-define @Position2 = @Entity[type=area_effect_cloud,tag=Position2,limit=1]
-	create {Tags:["Position2"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+define @Position2 : 0-0-0-0-0xAEC2 (@Entity[type=area_effect_cloud])
+	create {Duration:-1, Age:-0x80000000, WaitTime:-0x80000000, UUIDMost:0, UUIDLeast: 0xAEC2}
 end
 
-define @Position3 = @Entity[type=area_effect_cloud,tag=Position2,limit=1]
-	create {Tags:["Position2"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
+define @Position3 : 0-0-0-0-0xAEC3 (@Entity[type=area_effect_cloud])
+	create {Duration:-1, Age:-0x80000000, WaitTime:-0x80000000, UUIDMost:0, UUIDLeast: 0xAEC3}
 end
