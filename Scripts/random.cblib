@@ -11,5 +11,5 @@ function randint(_rand_min, _rand_max)
 	_rand_range = _rand_max - _rand_min
 	_random_seed *= 1664525
 	_random_seed += 1013904223
-	return _random_seed / 256 % _rand_range + _rand_min
+	return ((_random_seed / 256) % _rand_range) + _rand_min
 end

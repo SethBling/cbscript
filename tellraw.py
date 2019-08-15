@@ -51,12 +51,7 @@ def formatJsonText(func, text):
 					else:
 						formatted = formatted + ',{{"score":{{"name":"Global","objective":"{0}"}}{1}}}'.format(parts[0], getPropertiesText(properties))
 				if len(parts) == 2:
-					tempId = func.get_scratch()
-					local_scratch.append(tempId)
-					func.add_command("/scoreboard players reset @a {0}".format(tempId))
-					func.get_path(parts[0], parts[1])
-					func.add_command("/scoreboard players operation @a {0} = {1} {2}".format(tempId, parts[0], parts[1]))
-					formatted = formatted + ',{{"score":{{"name":"@s","objective":"{0}"}}{1}}}'.format(tempId, getPropertiesText(properties))
+					formatted = formatted + ',{{"score":{{"name":"{}","objective":"{}"}}{}}}'.format(parts[0], parts[1], getPropertiesText(properties))
 			elif command == None:
 				formatted = formatted + ',{{"text":"{0}"{1}}}'.format(unformatted.replace('"', '\\"'), getPropertiesText(properties))
 			else:

@@ -29,12 +29,12 @@ function click_advancement_reward()
 end
 
 define @ClickPos : @Entity[type=area_effect_cloud, tag=ClickPos]
-	create {Tags:["ClickPos"], Duration:-1,Age:-2147483648,WaitTime:-2147483648, Passengers:[{id:"minecraft:villager", Tags:["ClickDetector", "NewClickDetector"], NoAI:1, Silent:1}]}
+	create {Tags:["ClickPos"], Duration:-1,Age:-2147483648,WaitTime:-2147483648, Passengers:[{id:"minecraft:wandering_trader", Tags:["ClickDetector", "NewClickDetector"], NoAI:1, Silent:1, Offers:{}}]}
 	air: Air short 1
 end
 
-@ClickDetector = @Entity[type=villager, tag=ClickDetector]
-@NewClickDetector = @Entity[type=villager, tag=NewClickDetector]
+@ClickDetector = @Entity[type=wandering_trader, tag=ClickDetector]
+@NewClickDetector = @Entity[type=wandering_trader, tag=NewClickDetector]
 
 define @Player : @Player
 	click_pos: @ClickPos
@@ -49,7 +49,7 @@ define @Player : @Player
 	
 	function create_click()
 		at @s eyes ^ ^ ^1
-			@s.click_pos = create @ClickPos ~ ~10 ~
+			@s.click_pos = create @ClickPos ~ ~1000 ~
 			as @s.click_pos
 				/tp @s ~ ~-1 ~
 				@s.air = 0
@@ -94,18 +94,20 @@ reset
 	/scoreboard objectives add right_clicked minecraft.custom:minecraft.talked_to_villager
 end
 
-clock light_right_click_clock
-	as @Player[enable_click]
-		at @s eyes ^ ^ ^0.3
-			as @s.click_pos
-				/tp @s ~ ~-1 ~
-				/data merge entity @s {Air:0s}
-				/data merge entity @s {Air:1s}
+clock left_right_click_clock
+	as @Player
+		if @s.enable_click
+			at @s eyes ^ ^ ^1
+				as @s.click_pos
+					/tp @s ~ ~-1 ~
+					/data merge entity @s {Air:0s}
+					/data merge entity @s {Air:1s}
+				end
 			end
-		end
-		
-		if @s.right_clicked
-			right_click_callback()
+			
+			if @s.right_clicked
+				right_click_callback()
+			end
 		end
 		@s.right_clicked = 0
 	end
@@ -116,9 +118,9 @@ clock light_right_click_clock
 end
 
 function left_click_callback()
-	/say left click
+	/say left click callback not implemented
 end
 
 function right_click_callback()
-	/say right_click
+	/say right_click callback not implemented
 end

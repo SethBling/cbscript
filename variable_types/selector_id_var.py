@@ -1,5 +1,6 @@
 from variable_types.var_base import var_base
 from variable_types.scoreboard_var import scoreboard_var
+from CompileError import CompileError
 
 class selector_id_var(var_base):
 	def __init__(self, selector):
@@ -7,7 +8,7 @@ class selector_id_var(var_base):
 
 	def initialize_id(self, func):
 		if not func.check_single_entity(self.selector):
-			raise ValueError('Selector "{}" does not specify an individual entity.'.format(self.selector))
+			raise CompileError('Selector "{}" does not specify an individual entity.'.format(self.selector))
 	
 		func.register_objective('_unique')
 		func.register_objective('_id')
