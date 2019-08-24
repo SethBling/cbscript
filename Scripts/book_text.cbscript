@@ -1,0 +1,36 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Read book text"
+
+import common
+import random
+
+define @L : @Entity[type=area_effect_cloud, tag=L]
+	create {Tags:["L"], Duration:-1, Age:-0x80000000, WaitTime:-0x80000000}
+end
+
+$NumChars = 53
+
+reset
+	for $i in $range($NumChars)
+		unless @L[$i] do create @L[$i]
+	end
+end
+
+clock main
+	for i = 1 to 20
+		for $i in $range($NumChars)
+			switch randint(65, 91)
+				case $r in $range(65, 91)
+					$ch = $chr($r)
+					$print($ch)
+					@L[$i].{CustomName} = "\"$ch\""
+				end
+				case 96 to 100
+					@L[$i].{CustomName} = "\" \""
+				end
+			end
+		end
+		$text = $"''.join(['(@L[{}])'.format(i) for i in range(NumChars)])"
+		tell @a '$text'
+	end
+end

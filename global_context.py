@@ -38,6 +38,7 @@ class global_context(object):
 		self.unique = 0
 		self.friendly_name = get_friendly_name(namespace)
 		self.block_tags = {}
+		self.entity_tags = {}
 		self.item_tags = {}
 		self.scratch_prefixes = {}
 		self.namespace = namespace
@@ -50,6 +51,9 @@ class global_context(object):
 
 	def register_block_tag(self, name, blocks):
 		self.block_tags[name] = blocks
+		
+	def register_entity_tag(self, name, entities):
+		self.entity_tags[name] = entities
 		
 	def register_item_tag(self, name, items):
 		self.item_tags[name] = items

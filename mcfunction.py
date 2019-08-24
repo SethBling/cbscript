@@ -586,6 +586,9 @@ class mcfunction(object):
 		
 	def register_block_tag(self, name, blocks):
 		self.environment.register_block_tag(name, blocks)
+	
+	def register_entity_tag(self, name, entities):
+		self.environment.register_entity_tag(name, entities)
 		
 	def register_item_tag(self, name, items):
 		self.environment.register_item_tag(name, items)

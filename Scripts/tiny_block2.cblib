@@ -1,0 +1,34 @@
+import common
+
+define @TinyBlock: @Entity[type=armor_stand,tag=TinyBlock]
+	create {Tags:["TinyBlock"], Pose:{RightArm:[-15f, -90f,0f]}, ShowArms:1b, Marker:1b, Invisible:1b, NoGravity:1b, Invulnerable:1b, Silent:1b}
+	
+	pose_rot_x: Pose.RightArm[0] float
+	pose_rot_y: Pose.RightArm[1] float
+	pose_rot_z: Pose.RightArm[2] float
+	
+	function update_tiny()
+		#prot_x = @s.rot_x + 165000
+		#prot_y = @s.rot_y + 45000
+		
+		prot_x = -@s.rot_x - 15000
+		prot_y = @s.rot_y + 225000
+		
+		@s.pose_rot_x = prot_x
+		#@s.pose_rot_y = prot_y
+		@s.ry = prot_y
+		
+		unless @Position do create @Position
+		/tp @Position ~ ~ ~ 0 0
+		@Position.ry = prot_y
+		move @Position ^0.3166 ^-1.433 ^
+		@Position.rx = prot_x
+		@Position.ry = prot_y
+		move @Position ^0.066 ^0.666 ^-0.266
+		at @Position
+			/tp @s ~ ~ ~
+		end
+		
+		/data merge entity @s {Fire:32767s}
+	end	
+end

@@ -25,17 +25,20 @@ class mcworld(object):
 			text = func.get_utf8_text()
 			self.zip.writestr(filename, text)
 				
-	def write_tags(self, clocks, block_tags, item_tags):
+	def write_tags(self, clocks, block_tags, entity_tags, item_tags):
 		tag_dir = 'data/minecraft/tags/functions/'
 		
 		tick_tag_file = os.path.join(tag_dir, 'tick.json')
 		self.zip.writestr(tick_tag_file, json.dumps({'values':['{0}:{1}'.format(self.namespace, name) for name in clocks]}, indent=4))
 		
-		
 		load_tag_file = os.path.join(tag_dir, 'load.json')
 		self.zip.writestr(load_tag_file, json.dumps({'values':['{0}:reset'.format(self.namespace)]}, indent=4))
 			
-		for name, list in [('blocks', block_tags),('items', item_tags)]:
+		for name, list in [
+			('blocks', block_tags),
+			('items', item_tags),
+			('entity_types', entity_tags)
+		]:
 			if len(list) > 0:
 				tag_dir = 'data/{}/tags/{}/'.format(self.namespace, name)
 				

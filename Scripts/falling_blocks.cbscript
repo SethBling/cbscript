@@ -1,0 +1,21 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "All blocks behave like falling blocks"
+
+import common
+
+define @BlockMarker: @Entity[type=area_effect_cloud,tag=FallingBlockMarker]
+	create {Tags:["FallingBlockMarker"], Duration:-1, Age:-0x80000000, WaitTime:-0x80000000}
+end
+
+$Radius = 6
+$Diameter = 2*Radius+1
+
+reset
+
+end
+
+clock main
+	as @Player[limit=1]
+		
+	end
+end

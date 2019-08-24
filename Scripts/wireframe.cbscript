@@ -1,5 +1,5 @@
 dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
-desc "Transform structures into other structures"
+desc "Render 3D objects as wireframes"
 
 import math
 import common

@@ -11,6 +11,7 @@ from block_types.clock_section import clock_section
 from block_types.command_block import command_block
 from block_types.comment_block import comment_block
 from block_types.create_block import create_block
+from block_types.entity_tag_block import entity_tag_block
 from block_types.execute_block import execute_block
 from block_types.for_index_block import for_index_block
 from block_types.for_selector_block import for_selector_block
@@ -311,6 +312,7 @@ def p_top_level_blocks(p):
 						| selector_define_block newlines top_level_blocks
 						| block_define_block newlines top_level_blocks
 						| blocktag newlines top_level_blocks
+						| entitytag newlines top_level_blocks
 						| itemtag newlines top_level_blocks
 						| array_definition newlines top_level_blocks
 						| import_statement newlines top_level_blocks
@@ -1055,6 +1057,20 @@ def p_block_list(p):
 def p_block_list_one(p):
 	'''block_list : ID newlines'''
 	p[0] = [p[1]]
+
+#### Block tags
+def p_entitytag(p):
+	'''entitytag : define entity_tag ID newlines entity_list end'''
+	p[0] = entity_tag_block(p.lineno(1), p[3], p[5])
+	
+def p_entity_list(p):
+	'''entity_list : ID newlines entity_list'''
+	p[0] = [p[1]] + p[3]
+	
+def p_entity_list_one(p):
+	'''entity_list : ID newlines'''
+	p[0] = [p[1]]
+	
 	
 #### Item tags
 def p_itemtag(p):

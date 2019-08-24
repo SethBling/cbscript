@@ -1,0 +1,24 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Make ladders go fast."
+
+import common
+
+reset
+
+end
+
+clock main
+	as @Player at @s
+		@s.dy = @s.y - @s.prev_y
+		for $direction in ['east', 'west', 'north', 'south']
+			if @s.dy < 0 if block ~ ~ ~ ladder[facing=$direction] and block ~ ~-1 ~ ladder[facing=$direction] at @s ~ ~-0.3 ~
+				/tp @s ~ ~ ~
+			end
+			if @s.dy > 0 if block ~ ~ ~ ladder[facing=$direction] and block ~ ~1 ~ ladder[facing=$direction] and block ~ ~2 ~ ladder[facing=$direction] at @s ~ ~0.3 ~
+				/tp @s ~ ~ ~
+			end
+		end
+			
+		@s.prev_y = @s.y
+	end
+end

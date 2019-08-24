@@ -196,7 +196,15 @@ class environment(object):
 				if parts[1][i].isalnum() or parts[1][i] == '_':
 					end += 1
 				elif parts[1][i] == '[':
-					end = parts[1].find(']')+1
+					brack_count = 1
+					for j in range(i+1, len(parts[1])):
+						if parts[1][j] == '[':
+							brack_count += 1
+						if parts[1][j] == ']':
+							brack_count -= 1
+						if brack_count == 0:
+							end = j+1
+							break
 					break
 				else:
 					break
@@ -230,6 +238,9 @@ class environment(object):
 		
 	def register_block_tag(self, name, blocks):
 		self.global_context.register_block_tag(name, blocks)
+		
+	def register_entity_tag(self, name, entities):
+		self.global_context.register_entity_tag(name, entities)
 	
 	def register_item_tag(self, name, items):
 		self.global_context.register_item_tag(name, items)
@@ -253,6 +264,10 @@ class environment(object):
 	@property
 	def item_tags(self):
 		return self.global_context.item_tags
+		
+	@property
+	def entity_tags(self):
+		return self.global_context.entity_tags
 	
 	@property
 	def namespace(self):

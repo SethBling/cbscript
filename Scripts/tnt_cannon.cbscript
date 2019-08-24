@@ -1,0 +1,52 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Use TNT to fire objects"
+
+import tiny_block2
+
+$TestPos = (-144500, 57500, 106500)
+
+reset
+	/kill @TinyBlock
+	for i = 1 to 10
+		at <$TestPos>
+			as create @TinyBlock
+				@s.rot_x = 0
+				@s.rot_y = 0
+				@s.seg = i
+				
+				/replaceitem entity @s weapon.mainhand diamond_block
+			end
+		end
+	end
+	
+	rx = 0
+	ry = 0
+end
+
+clock main
+	swap_timer++
+	if swap_timer >= 40
+		rx += -10000
+		#ry += -20000
+		
+		unless @Position do create @Position
+		@Position.rx = rx
+		@Position.ry = ry
+		<pos1> = @Position.<pos>
+		move @Position ^ ^ ^0.325
+		<delta> = @Position.<pos> - <pos1>
+		
+		as @TinyBlock
+			@Position.<pos> = <$TestPos> + <delta> * @s.seg
+			@s.rot_x = rx
+			@s.rot_y = ry
+			at @Position
+				@s.update_tiny()
+			end
+		end
+		
+
+		swap_timer = 0
+	end
+	
+end

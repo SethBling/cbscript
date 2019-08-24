@@ -8,6 +8,6 @@ class tell_block(block_base):
 		self.unformatted = unformatted
 		
 	def compile(self, func):
-		text = tellraw.formatJsonText(func, self.unformatted)
+		text = tellraw.formatJsonText(func, func.apply_replacements(self.unformatted))
 		command = '/tellraw {0} {1}'.format(self.selector, text)
 		func.add_command(command)

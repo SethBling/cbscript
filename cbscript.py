@@ -96,7 +96,7 @@ class cbscript(object):
 		world = self.create_world(parsed["dir"], self.namespace)
 
 		world.write_functions(self.global_context.functions)
-		world.write_tags(self.global_context.clocks, self.global_context.block_tags, self.global_context.item_tags)
+		world.write_tags(self.global_context.clocks, self.global_context.block_tags, self.global_context.entity_tags, self.global_context.item_tags)
 		world.write_mcmeta(parsed['desc'])
 		world.write_recipes(self.global_context.recipes)
 		world.write_advancements(self.global_context.advancements)

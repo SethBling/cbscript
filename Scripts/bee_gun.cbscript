@@ -1,0 +1,253 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.15\saves\SethBling's World 1.15"
+desc "Shoot bees at your enemies"
+
+import random
+import no_collision_box
+
+$Bossbars = 20
+array Bossbars[0 to $Bossbars-1]
+
+
+define entity_tag hostile
+	blaze
+	cave_spider
+	creeper
+	drowned
+	elder_guardian
+	ender_dragon
+	enderman
+	endermite
+	evoker
+	ghast
+	guardian
+	husk
+	illusioner
+	magma_cube
+	phantom
+	pillager
+	ravager
+	shulker
+	slime
+	skeleton
+	spider
+	stray
+	vindicator
+	witch
+	wither
+	wither_skeleton
+	zombie
+end
+
+define @Bullet : @Entity[type=bee, tag=Bullet]
+	age: Age int 1
+	anger: Anger int 1
+	create {
+		Age: -20000,
+		Anger: 1,
+		Tags: ["Bullet"],
+		NoAI:1
+	}
+	
+	function tick()
+		at @s
+			@s.age = -20000
+			@s.anger = True
+			@Target = @Entity[type=hostile,sort=nearest,limit=1,distance=..5.0]
+			if @Target
+				/tp @Position2 @Target
+				move @Position2 ~ ~1 ~
+				
+				at @Position2 if @s[distance=..0.5]
+					as @Target
+						hp = @s.hp
+						/effect give @s wither 1 1 true
+						@s.hp = hp - 1
+					end
+					/kill @s
+				else
+					at @s facing @Position2
+						/tp @Position ~ ~ ~ ~ ~
+						target_ry = @Position.ry
+						target_rx = @Position.rx
+					end
+					
+					dry = (@s.my_ry + 180000 - target_ry) % 360000 - 180000
+					if dry > 5000
+						@s.my_ry -= 5000
+					else if dry < -5000
+						@s.my_ry += 5000
+					else
+						@s.my_ry -= dry
+					end
+					
+					drx = @s.my_rx - target_rx
+					if drx > 5000
+						@s.my_rx -= 5000
+					else if drx < -5000
+						@s.my_rx += 5000
+					else
+						@s.my_rx -= drx
+					end
+				end
+			end
+
+			@s.rx = @s.my_rx
+			@s.ry = @s.my_ry
+			
+			@s.rx += randint(-1000, 1000)
+			@s.ry += randint(-1000, 1000)
+			
+			at @s ^ ^ ^0.3 if block ~ ~ ~ no_collision
+				/tp @s ~ ~ ~ ~ ~
+			else at @s
+				/tp @Position ^ ^ ^0.3
+				@Position.x = @s.x
+				@Position.y = @s.y
+				at @Position if block ~ ~ ~ no_collision
+					bounce_z = False
+				else
+					bounce_z = True
+				end
+				
+				/tp @Position ^ ^ ^0.3
+				@Position.x = @s.x
+				@Position.z = @s.z
+				at @Position if block ~ ~ ~ no_collision
+					bounce_y = False
+				else
+					bounce_y = True
+				end
+				
+				/tp @Position ^ ^ ^0.3
+				@Position.y = @s.y
+				@Position.z = @s.z
+				at @Position if block ~ ~ ~ no_collision
+					bounce_x = False
+				else
+					bounce_x = True
+				end
+				
+				if not bounce_x and not bounce_y and not bounce_z
+					bounce_x = True
+					bounce_y = True
+					bounce_z = True
+				end
+				
+				/tp @Position ^ ^ ^0.3
+				<dx, dy, dz> = @Position.<pos> - @s.<pos>
+				if bounce_x then dx *= -1
+				if bounce_y then dy *= -1
+				if bounce_z then dz *= -1
+				/tp @Position ^ ^ ^
+				@Position.<pos> += <dx, dy, dz>
+				facing @Position
+					/tp @s ~ ~ ~ ~ ~
+					@s.my_rx = @s.rx
+					@s.my_ry = @s.ry
+				end
+			end
+			
+			@s.ticks++
+			
+			if @s.ticks >= 100
+				/kill @s
+			end		
+		end
+	end
+end
+
+reset
+	/scoreboard objectives add shot_gun minecraft.used:minecraft.carrot_on_a_stick
+
+	for $i in $range($Bossbars)
+		/bossbar remove bee_bar$i
+		/bossbar add bee_bar$i "Bee Meter"
+		/bossbar set bee_bar$i max 30
+	end
+end
+
+function assign_bossbar()
+	unless @s.bee_bar >= 0
+		for i = 0 to $Bossbars-1
+			switch i
+				case $i in $range($Bossbars)
+					unless Bossbars[$i]
+						Bossbars[$i] = True
+						@s.bee_bar = $i
+						/bossbar set bee_bar$i players @s
+						i = $Bossbars
+					end
+				end
+			end
+		end
+	end
+end
+
+function set_bossbar_value()
+	switch @s.bee_bar
+		case $i in $range($Bossbars)
+			/execute store result bossbar bee_bar$i value run scoreboard players get @s bee_meter
+		end
+	end
+end
+
+function clear_bossbar()
+	switch @s.bee_bar
+		case $i in $range($Bossbars)
+			Bossbars[$i] = False
+			/bossbar set bee_bar$i players
+			@s.bee_bar = -1
+		end
+	end
+end
+
+clock main
+	unless @Position do create @Position
+	unless @Position2 do create @Position2
+
+	as @Player at @s eyes ^ ^ ^1 at ~ ~-0.2 ~
+		if @s.shot_gun unless @s.bee_meter <= 0
+			/playsound minecraft:entity.bee.hurt player @a
+			ry = @s.ry
+			rx = @s.rx
+			as create @Bullet
+				@s.my_ry = ry + randint(-10000, 10000)
+				@s.my_rx = rx + randint(-10000, 10000)
+			end
+			
+			unless @s.bee_meter >= 0
+				@s.bee_meter = 30
+			end
+			@s.bee_meter--
+			assign_bossbar()
+			set_bossbar_value()
+			
+			@s.recent_shot = 20
+		end
+		
+		if @s.recent_shot > 0
+			@s.recent_shot--
+		else
+			if @s.bee_meter < 30
+				if @s.recovery_timer > 0
+					@s.recovery_timer--
+				else
+					@s.bee_meter++
+					set_bossbar_value()
+					@s.meter_fadeout = 30
+					@s.recovery_timer = 2
+				end
+			else
+				if @s.meter_fadeout > 0
+					@s.meter_fadeout--
+				else
+					@s.clear_bossbar()
+				end
+			end
+		end
+		
+		@s.shot_gun = False
+	end
+	
+	@Bullet.tick()
+end

@@ -73,7 +73,7 @@ class selector_definition(object):
 			self.base_name = base_name
 				
 		if '[' in selector and ']' in selector:
-			parts = selector.split('[')[1].split(']')[0].split(',')
+			parts = selector[selector.find('[')+1:selector.rfind(']')].split(',')
 			parts = [part.strip() for part in parts]
 			
 			if len(parts) == 1:
@@ -115,11 +115,18 @@ class selector_definition(object):
 					if '=' in part:
 						subparts = part.split('=')
 						subparts = [part.strip() for part in subparts]
-						if subparts[0] == 'type' and subparts[1][:len('minecraft:')] != 'minecraft:' and subparts[1][:len('!minecraft:')] != '!minecraft:':
-							if subparts[1][0] == '!':
-								subparts[1] = '!minecraft:' + subparts[1][1:]
+						type = subparts[1]
+						if subparts[0] == 'type' and not type.startswith('minecraft:') and not type.startswith('!minecraft:'):
+							if subparts[1].startswith('!'):
+								if type in env.entity_tags:
+									subparts[1] = '!#{}:{}'.format(env.namespace, subparts[1][1:])
+								else:
+									subparts[1] = '!minecraft:' + subparts[1][1:]
 							else:
-								subparts[1] = 'minecraft:' + subparts[1]
+								if type in env.entity_tags:
+									subparts[1] = '#{}:{}'.format(env.namespace, subparts[1])
+								else:
+									subparts[1] = 'minecraft:' + subparts[1]
 						self.parts.append(subparts)
 					else:
 						if len(part) >= 5 and part[:4].upper() == "NOT ":

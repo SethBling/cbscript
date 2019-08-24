@@ -1,5 +1,6 @@
 from block_base import block_base
 import collections
+from CompileError import CompileError
 
 class switch_block(block_base):
 	def __init__(self, line, expr, cases_raw):
@@ -46,7 +47,7 @@ class switch_block(block_base):
 						return False
 					cases.append((ival, ival, sub, line, dollarid))
 			else:
-				raise ValueError('Unknown switch case type "{}"'.format(type))
+				raise CompileError('Unknown switch case type "{}"'.format(type))
 		
 		cases = sorted(cases, key=lambda case: case[0])
 		
@@ -61,7 +62,7 @@ class switch_block(block_base):
 					rangestr = '{}'.format(vmin)
 				else:
 					rangestr = '{}-{}'.format(vmin, vmax)
-				raise ValueError('"case {}" overlaps another case at line {}'.format(rangestr, line))
+				raise CompileError('"case {}" overlaps another case at line {}'.format(rangestr, line))
 				
 			prevmax = vmax
 			

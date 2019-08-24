@@ -1,0 +1,111 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.15\saves\SethBling's World 1.15"
+desc "Put saddles on bees and ride them"
+
+import common
+import left_right_click_detector
+
+define @Pig : @Entity[type=pig, tag=SaddleHolder]
+	create {Tags:["SaddleHolder"], NoAI:1, Silent:1, Absorption:100}
+	saddle = Saddle byte 1
+	
+	bee: @Bee
+end
+
+define @Bee : @Entity[type=bee]
+	pig: @Pig
+end
+
+reset
+	/team add no_collision
+	/team modify no_collision collisionRule never
+end
+
+clock main
+	@Pig.selected = False
+	as @Player at @s
+		if @s[nbt={SelectedItem:{id:"minecraft:saddle"}}] at eyes ^ ^ ^3 as @Bee[distance=..3]
+			unless @s.pig
+				@s.pig = create @Pig ~ 1000 ~
+			end
+			id = &@s
+			as @s.pig
+				/team join no_collision
+				@s.bee = id
+				@s.selected = True
+			end
+		end
+		if @s[nbt={RootVehicle:{Entity:{Tags:["SaddleHolder"]}}}] and @s[nbt={SelectedItem:{id:"minecraft:poppy"}}]
+			@s.enable_click()
+			
+			unless @Position do create @Position
+			/tp @Position ~ ~ ~ ~ ~
+			<pos1> = @Position.<pos>
+			move @Position ^ ^ ^0.2
+			<delta> = @Position.<pos> - <pos1>
+			
+			at @s ~ ~-0.4 ~ as @Pig[sort=nearest,limit=1,distance=..0.1]
+				as @s.bee
+					if @s.dash
+						@s.dash--
+						@s.<vel> = <delta> * 3
+					else
+						@s.<vel> = <delta>
+					end
+					
+					@s.rx = @Position.rx
+					@s.ry = @Position.ry
+				end
+			end
+		else
+			@s.disable_click()
+		end
+	end
+	
+	as @Pig at @s
+		/effect give @s invisibility 1 1 true
+		@s.absorption = 100
+		unless @s.saddle unless @s.selected
+			as @s.bee
+				@s.pig = None
+			end
+			/tp @s ~ -200 ~
+			/kill @s
+		else
+			bee_alive = False
+			as @s.bee
+				<pos> = @s.<pos>
+				ry = @s.ry
+				/team join no_collision
+				bee_alive = True
+			else
+				/tp @s ~ -200 ~
+				/kill @s
+			end
+			if bee_alive
+				@s.ry = ry
+				@s.<pos> = <pos>
+				move @s ^ ^-0.19 ^-0.1
+			end
+		end
+	end
+	
+	as @Bee
+		as @s.pig
+		
+		else
+			@s.pig = None
+		end
+	end
+end
+
+function right_click_callback()
+	at @s ~ ~-0.4 ~ as @Pig[sort=nearest,limit=1,distance=..0.1]
+		as @s.bee
+			@s.dash = 10
+		end
+	end
+end
+
+function left_click_callback()
+
+end
