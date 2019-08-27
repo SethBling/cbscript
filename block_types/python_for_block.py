@@ -15,7 +15,7 @@ class python_for_block(block_base):
 		try:
 			iter(set)
 		except:
-			raise ValueError('"{0}" in "for" block at line {1} is not an iterable set.'.format(set, self.line))
+			raise CompileError('"{0}" in "for" block at line {1} is not an iterable set.'.format(set, self.line))
 
 		for v in set:
 			if len(self.ids) == 1:

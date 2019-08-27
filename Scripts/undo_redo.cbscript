@@ -1,0 +1,175 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Undo and redo placing/breaking blocks"
+
+import common
+
+$Radius = 6
+$Diameter = 2*$Radius+1
+$Volume = $Diameter * $Diameter * $Diameter
+
+define @UndoStack : 0-0-0-0-0x89D0 (@Entity[type=armor_stand])
+	<undo_pos> = HandItems[0].tag.UndoStack[-1].pos int 1
+	<redo_pos> = HandItems[0].tag.RedoStack[-1].pos int 1
+	undo_from_id = HandItems[0].tag.UndoStack[-1].from_id int 1
+	undo_to_id = HandItems[0].tag.UndoStack[-1].to_id int 1
+	redo_from_id = HandItems[0].tag.RedoStack[-1].from_id int 1
+	redo_to_id = HandItems[0].tag.RedoStack[-1].to_id int 1
+
+	create {
+		UUIDMost: 0L,
+		UUIDLeast: 35280L,
+		Invulnerable:1,
+		Invisible:1,
+		HandItems: [
+			{
+				id:"minecraft:stone",
+				Count:1,
+				tag: {
+					UndoStack: [],
+					RedoStack: []
+				}
+			}
+		]
+	}
+end
+
+define @BlockMarker: @Entity[type=area_effect_cloud,tag=BlockMarker]
+	create {Tags:["BlockMarker"], Duration:-1, Age:-0x80000000, WaitTime:-0x80000000}
+	
+	function update_marker()
+		if <x, y, z> == @s.<block_pos>
+			at @s
+				get_block_id()
+			end
+			unless block_id == @s.block_id
+				#tell @a 'Change at (x) (y) (z) from (@s.block_id) to (block_id)'
+				@UndoStack.[HandItems[0].tag.UndoStack] += {pos:[0,0,0], from_id:0, to_id:0}
+				@UndoStack.<undo_pos> = <x, y, z>
+				@UndoStack.undo_from_id = @s.block_id
+				@UndoStack.undo_to_id = block_id
+				/data modify entity @UndoStack HandItems[0].tag.RedoStack set value []
+				@s.block_id = block_id
+			end
+		else
+			@s.<block_pos> = <x, y, z>
+			@s.<pos> = <x, y, z> * scale
+			at @s
+				get_block_id()
+				@s.block_id = block_id
+			end
+		end	
+	end
+end
+
+function disable_feedback()
+	enable_feedback = result
+		/gamerule sendCommandFeedback
+	/gamerule sendCommandFeedback false
+end
+
+reset
+	for $i in $range($Volume)
+		unless @BlockMarker[$i] do create @BlockMarker[$i]
+	end
+	
+	tell @a '{R[\[Undo\]](call undo) {G[\[Redo\]](call redo)'
+end
+
+function undo()
+	block_id = @UndoStack.undo_from_id
+	@Position.<pos> = @UndoStack.<undo_pos>*scale
+	<x, y, z> = @UndoStack.<undo_pos>
+	#tell @a '(x) (y) (z) (block_id)'
+	at @Position
+		set_block()
+	end
+	@UndoStack.[HandItems[0].tag.RedoStack] += @UndoStack.HandItems[0].tag.UndoStack[-1]
+	remove @UndoStack.HandItems[0].tag.UndoStack[-1]
+	
+	update_specific_marker()
+
+	disable_feedback()
+end
+
+function redo()
+	block_id = @UndoStack.redo_to_id
+	@Position.<pos> = @UndoStack.<redo_pos>*scale
+	<x, y, z> = @UndoStack.<redo_pos>
+	#tell @a '(x) (y) (z) (block_id)'
+	at @Position
+		set_block()
+	end
+	@UndoStack.[HandItems[0].tag.UndoStack] += @UndoStack.HandItems[0].tag.RedoStack[-1]
+	remove @UndoStack.HandItems[0].tag.RedoStack[-1]
+	
+	update_specific_marker()
+	
+	disable_feedback()
+end
+
+function update_specific_marker()
+	mx = x % $Diameter
+	my = y % $Diameter
+	mz = z % $Diameter
+	index = mx + my*$Diameter + mz*$Diameter*$Diameter
+	# Manually update block marker so that it doesn't detect an additional change
+	switch index
+		case $i in $range($Volume)
+			as @BlockMarker[$i]
+				if @s.<block_pos> == <x, y, z>
+					@s.block_id = block_id
+				end
+			end
+		end
+	end
+end
+
+clock main
+	if enable_feedback
+		/gamerule sendCommandFeedback true
+	end
+
+	unless @UndoStack do create @UndoStack
+	unless @Position do create @Position
+	player_count = result
+		/execute if entity @Player
+	if player_count == 1
+		as @Player[limit=1] at @s eyes ^ ^ ^ at ~-$Radius ~-$Radius ~-$Radius
+			<base_x, base_y, base_z> = @s.<pos> / scale - <$Radius, $Radius, $Radius>
+			<offx, offy, offz> = <base_x, base_y, base_z> % $Diameter
+			for $mx in $range($Diameter)
+				x = base_x + ($mx - offx) % $Diameter
+				for $my in $range($Diameter)
+					y = base_y + ($my - offy) % $Diameter
+					for $mz in $range($Diameter)
+						z = base_z + ($mz - offz) % $Diameter
+						$index = $mx + $my*$Diameter + $mz*$Diameter*$Diameter
+						@BlockMarker[$index].update_marker()
+					end
+				end
+			end
+			
+			/scoreboard players enable @s undo
+			/scoreboard players enable @s redo
+		end
+	else
+		/scoreboard players reset @Player undo
+		/scoreboard players reset @Player redo
+	end
+end
+
+function get_block_id()
+	switch block at ~ ~ ~
+		default
+			block_id = $block_id
+		end
+	end			
+end
+
+function set_block()
+	switch block block_id
+		default
+			/setblock ~ ~ ~ $block_state
+		end
+	end
+end

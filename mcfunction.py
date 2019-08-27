@@ -178,26 +178,25 @@ class mcfunction(object):
 						
 					for i in range(3):
 						if type1 == 'VAR_ID':
-							sel1 = 'Global'
-							sco1 = '_{}_{}'.format(var1, i)
+							lvar = scoreboard_var('Global', '_{}_{}'.format(var1, i))
 						elif type1 == 'SEL_VAR_ID':
 							sel1, selvar1 = var1
-							sco1 = '_{}_{}'.format(selvar1, i)
+							lvar = scoreboard_var(sel1, '_{}_{}'.format(selvar1, i))
 						elif type1 == 'VAR_COMPONENTS':
-							sel1, sco1 = var1[i]
+							lvar = var1[i].get_scoreboard_var(self)
 						
 						if type2 == 'VAR_CONST':
 							test += 'if score {} {} matches {} '.format(sel1, sco1, const_vals[i])
 						else:
 							if type2 == 'VAR_ID':
-								sel2 = 'Global'
-								sco2 = '_{}_{}'.format(var2, i)
+								rvar = scoreboard_var('Global', '_{}_{}'.format(var2, i))
 							elif type2 == 'SEL_VAR_ID':
 								sel2, selvar2 = var2
-								sco2 = '_{}_{}'.format(selvar2, i)
+								rvar = scoreboard_var(sel2, '_{}_{}'.format(selvar2, i))
 							elif type2 == 'VAR_COMPONENTS':
-								sel2, sco2 = var2[i]
-							test += 'if score {} {} = {} {} '.format(sel1, sco1, sel2, sco2)
+								rvar = var2[i].get_scoreboard_var(self)
+								
+						test += 'if score {} = {} '.format(lvar.selvar, rvar.selvar)
 					
 			elif type == 'block':
 				relcoords, block = val
