@@ -2,12 +2,13 @@ dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
 desc "Undo and redo placing/breaking blocks"
 
 import common
+import music
 
 $Radius = 6
 $Diameter = 2*$Radius+1
 $Volume = $Diameter * $Diameter * $Diameter
 
-define @UndoStack : 0-0-0-0-0x89D0 (@Entity[type=armor_stand])
+define @UndoStack : 0-0-0-0-0x89D0 (@Entity[type=armor_stand, tag=BlockMarker])
 	<undo_pos> = HandItems[0].tag.UndoStack[-1].pos int 1
 	<redo_pos> = HandItems[0].tag.RedoStack[-1].pos int 1
 	undo_from_id = HandItems[0].tag.UndoStack[-1].from_id int 1
@@ -16,8 +17,8 @@ define @UndoStack : 0-0-0-0-0x89D0 (@Entity[type=armor_stand])
 	redo_to_id = HandItems[0].tag.RedoStack[-1].to_id int 1
 
 	create {
-		UUIDMost: 0L,
-		UUIDLeast: 35280L,
+		UUIDMost: 0,
+		UUIDLeast: 0x89D0,
 		Invulnerable:1,
 		Invisible:1,
 		HandItems: [
@@ -29,7 +30,8 @@ define @UndoStack : 0-0-0-0-0x89D0 (@Entity[type=armor_stand])
 					RedoStack: []
 				}
 			}
-		]
+		],
+		Tags: ["BlockMarker"]
 	}
 end
 
@@ -49,6 +51,10 @@ define @BlockMarker: @Entity[type=area_effect_cloud,tag=BlockMarker]
 				@UndoStack.undo_to_id = block_id
 				/data modify entity @UndoStack HandItems[0].tag.RedoStack set value []
 				@s.block_id = block_id
+				
+				while @UndoStack.{HandItems[0].tag.UndoStack[10000]}
+					remove @UndoStack.HandItems[0].tag.UndoStack[0]
+				end
 			end
 		else
 			@s.<block_pos> = <x, y, z>
@@ -67,43 +73,134 @@ function disable_feedback()
 	/gamerule sendCommandFeedback false
 end
 
-reset
-	for $i in $range($Volume)
-		unless @BlockMarker[$i] do create @BlockMarker[$i]
+function spawn_block_markers()
+	for $index in $range($Volume)
+		unless @BlockMarker[$index] do create @BlockMarker[$index]
 	end
+end
+
+reset
+	spawn_block_markers()
 	
-	tell @a '{R[\[Undo\]](call undo) {G[\[Redo\]](call redo)'
+	tell @a '{R[\[Undo\]](call undo) [\[Undo 5\]](call undo5) [\[Undo 25\]](call undo25) [\[Undo 100\]](call undo100)  [\[Clear Undo History\]](call clear_undo)'
+	tell @a '{G[\[Redo\]](call redo) [\[Redo 5\]](call redo5) [\[Redo 25\]](call redo25) [\[Redo 100\]](call redo100)'
+end
+
+function clear_undo()
+	/data modify entity @UndoStack HandItems[0].tag.UndoStack set value []
+	/data modify entity @UndoStack HandItems[0].tag.RedoStack set value []
+	actionbar @s '{RCleared Undo History'
+	disable_feedback()
 end
 
 function undo()
-	block_id = @UndoStack.undo_from_id
-	@Position.<pos> = @UndoStack.<undo_pos>*scale
-	<x, y, z> = @UndoStack.<undo_pos>
-	#tell @a '(x) (y) (z) (block_id)'
-	at @Position
-		set_block()
+	execute_undo(1)
+end
+
+function undo5()
+	execute_undo(5)
+end
+
+function undo25()
+	execute_undo(25)
+end
+
+function undo100()
+	execute_undo(100)
+end
+
+
+function redo()
+	execute_redo(1)
+end
+
+function redo5()
+	execute_redo(5)
+end
+
+function redo25()
+	execute_redo(25)
+end
+
+function redo100()
+	execute_redo(100)
+end
+
+function execute_undo(count)
+	player_count = result
+		/execute if entity @Player
+	if player_count == 1
+		performed = 0
+		for i = 1 to count
+			if @UndoStack.{HandItems[0].tag.UndoStack[-1]}
+				block_id = @UndoStack.undo_from_id
+				@Position.<pos> = @UndoStack.<undo_pos>*scale
+				<x, y, z> = @UndoStack.<undo_pos>
+				actionbar @s '{RPerformed undo at (x) (y) (z)'
+				at @Position align xyz at ~0.5 ~0.5 ~0.5
+					set_block()
+					/particle minecraft:squid_ink ~ ~ ~ 0 0 0 0.1 10 force
+				end
+				@UndoStack.[HandItems[0].tag.RedoStack] += @UndoStack.HandItems[0].tag.UndoStack[-1]
+				remove @UndoStack.HandItems[0].tag.UndoStack[-1]
+				
+				update_specific_marker()
+				performed++
+			end
+		end
+		if performed > 1
+			actionbar @s "{RPerformed (performed) undos."
+		end
+		if performed >= 1
+			/playsound minecraft:block.glass.place block @s ~ ~ ~ 1 1.5
+		end
+		if not performed
+			actionbar @s "{rThere's nothing to undo."
+		end
+	else
+		
+		success_tick = undo_redo_tick
+		tell @s '{RUndo/redo only works with a single player online.'
 	end
-	@UndoStack.[HandItems[0].tag.RedoStack] += @UndoStack.HandItems[0].tag.UndoStack[-1]
-	remove @UndoStack.HandItems[0].tag.UndoStack[-1]
-	
-	update_specific_marker()
 
 	disable_feedback()
 end
 
-function redo()
-	block_id = @UndoStack.redo_to_id
-	@Position.<pos> = @UndoStack.<redo_pos>*scale
-	<x, y, z> = @UndoStack.<redo_pos>
-	#tell @a '(x) (y) (z) (block_id)'
-	at @Position
-		set_block()
+function execute_redo(count)
+	player_count = result
+		/execute if entity @Player
+	if player_count == 1
+		performed = 0
+		for i = 1 to count
+			if @UndoStack.{HandItems[0].tag.RedoStack[-1]}
+				block_id = @UndoStack.redo_to_id
+				@Position.<pos> = @UndoStack.<redo_pos>*scale
+				<x, y, z> = @UndoStack.<redo_pos>
+				actionbar @s '{gPerformed redo at (x) (y) (z)'
+				at @Position align xyz at ~0.5 ~0.5 ~0.5
+					set_block()
+					/particle minecraft:squid_ink ~ ~ ~ 0 0 0 0.1 10 force
+				end
+				@UndoStack.[HandItems[0].tag.UndoStack] += @UndoStack.HandItems[0].tag.RedoStack[-1]
+				remove @UndoStack.HandItems[0].tag.RedoStack[-1]
+				
+				update_specific_marker()
+				performed++
+			end
+		end
+		if performed > 1
+			actionbar @s "{gPerformed (performed) redos."
+		end
+		if performed >= 1
+			/playsound minecraft:block.metal.hit block @s ~ ~ ~ 1 2
+		end
+		if not performed
+			actionbar @s "{rThere's nothing to redo."
+		end
+	else
+		tell @s '{RUndo/redo only works with a single player online.'
 	end
-	@UndoStack.[HandItems[0].tag.UndoStack] += @UndoStack.HandItems[0].tag.RedoStack[-1]
-	remove @UndoStack.HandItems[0].tag.RedoStack[-1]
-	
-	update_specific_marker()
-	
+		
 	disable_feedback()
 end
 
@@ -125,6 +222,8 @@ function update_specific_marker()
 end
 
 clock main
+	undo_redo_tick++
+
 	if enable_feedback
 		/gamerule sendCommandFeedback true
 	end
@@ -134,27 +233,38 @@ clock main
 	player_count = result
 		/execute if entity @Player
 	if player_count == 1
-		as @Player[limit=1] at @s eyes ^ ^ ^ at ~-$Radius ~-$Radius ~-$Radius
-			<base_x, base_y, base_z> = @s.<pos> / scale - <$Radius, $Radius, $Radius>
-			<offx, offy, offz> = <base_x, base_y, base_z> % $Diameter
-			for $mx in $range($Diameter)
-				x = base_x + ($mx - offx) % $Diameter
-				for $my in $range($Diameter)
-					y = base_y + ($my - offy) % $Diameter
-					for $mz in $range($Diameter)
-						z = base_z + ($mz - offz) % $Diameter
-						$index = $mx + $my*$Diameter + $mz*$Diameter*$Diameter
-						@BlockMarker[$index].update_marker()
+		if undo_clock <= 0
+			unless @BlockMarker[0]
+				spawn_block_markers()
+			end
+		
+			as @Player[limit=1] at @s eyes ^ ^ ^ at ~-$Radius ~-$Radius ~-$Radius
+				<base_x, base_y, base_z> = @s.<pos> / scale - <$Radius, $Radius, $Radius>
+				<offx, offy, offz> = -<base_x, base_y, base_z> % $Diameter
+				for $mx in $range($Diameter)
+					x = (offx + $mx) % $Diameter + base_x
+					for $my in $range($Diameter)
+						y = (offy + $my) % $Diameter + base_y
+						for $mz in $range($Diameter)
+							z = (offz + $mz) % $Diameter + base_z
+							$index = $mx + $my*$Diameter + $mz*$Diameter*$Diameter
+							@BlockMarker[$index].update_marker()
+						end
 					end
 				end
+				
+				/scoreboard players enable @s undo
+				/scoreboard players enable @s redo
 			end
-			
-			/scoreboard players enable @s undo
-			/scoreboard players enable @s redo
+			undo_clock = 2
 		end
+		
+		undo_clock--
 	else
+		/kill @BlockMarker
 		/scoreboard players reset @Player undo
 		/scoreboard players reset @Player redo
+		undo_clock = 0
 	end
 end
 
