@@ -90,14 +90,14 @@ class scoreboard_var(var_base):
 		if path_data:
 			path, data_type, scale = path_data
 			
-			if var_const:
+			if var_const != None:
 				func.add_command('data modify entity {} {} set value {}'.format(self.selector, path, float(var_const) / float(scale)))
 			else:
 				func.add_command('{} run {}'.format(self.set_command(func), var.get_command(func)))
 		else:
 			func.register_objective(self.objective)
 			
-			if var_const:
+			if var_const != None:
 				func.add_command('scoreboard players set {} {} {}'.format(self.selector, self.objective, var_const))
 			elif not var.is_objective(func, self.selector, self.objective):
 				func.add_command('{} run {}'.format(self.set_command(func), var.get_command(func)))

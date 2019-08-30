@@ -61,6 +61,7 @@ class environment(object):
 		else:
 			new_env.scratch.prefix = self.global_context.get_scratch_prefix(new_function_name)
 			
+			
 		new_env.self_selector = self.self_selector
 		
 		return new_env

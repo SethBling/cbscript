@@ -22,7 +22,7 @@ class scoreboard_assignment_block(block_base):
 			temp_var = self.var.get_scoreboard_var(func)
 			expr_const = expr_var.get_const_value(func)
 			
-			if expr_const and op in ['+=', '-=']:
+			if expr_const != None and op in ['+=', '-=']:
 				if expr_const < 0:
 					expr_const = -expr_const
 					op = {'+=':'-=', '-=':'+='}[op]

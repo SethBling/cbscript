@@ -1,0 +1,115 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Undo and redo placing/breaking blocks"
+
+import common
+
+$ResetX = -248.5
+$ResetY = 87.0
+$ResetZ = 164.5
+
+$GameX = -258.5
+
+define @BoyPhysics : 0-0-0-0-0xB014CE (@Entity[type=armor_stand])
+	create {
+		Invisible:1,
+		Invulernable:1,
+		UUIDMost:0,
+		UUIDLeast:0xB014CE
+	}
+end
+
+define @BoyPos : 0-0-0-0-0xB0110C (@Entity[type=area_effect_cloud])
+	create {
+		Duration: -1,
+		Age: -0x80000000,
+		WaitTime: -0x80000000,
+		UUIDMost: 0,
+		UUIDLeast: 0xB0110C,
+		Passengers: [
+			{
+				id: "minecraft:armor_stand",
+				ShowArms: 1,
+				Invulnerable: 1,
+				NoBasePlate: 1,
+				UUIDMost: 0,
+				UUIDLeast: 0xB01
+			}
+		]
+	}	
+end
+
+define @Boy : 0-0-0-0-0xB01 (@Entity[type=armor_stand])
+end
+
+reset
+	/scoreboard objectives remove jumped
+	/scoreboard objectives add jumped minecraft.custom:minecraft.jump
+	
+	tell @Player '{G[\[Reload Limbo\]](call reload)'
+end
+
+function reload()
+	/kill @BoyPos
+	/kill @BoyPhysics
+	/kill @Boy
+
+	/tp @Player $ResetX $ResetY $ResetZ 90 0
+end
+
+clock main
+	unless @BoyPos do create @BoyPos $GameX 86 164.5
+	unless @BoyPhysics do create @BoyPhysics $GameX 86 164.5
+
+	as @Player[limit=1] at @s
+		at @s eyes
+			/particle minecraft:squid_ink ^ ^ ^0.15 3 3 3 0 3000 force
+		end
+		if @s.jumped
+			if @BoyPhysics.on_ground
+				@BoyPhysics.vy += 650
+			end
+		end
+		@BoyPhysics.vz /= 2
+			
+		if @s.z > @BoyPhysics.z + 200
+			@BoyPhysics.vz += 170
+			if @BoyPhysics.vz > 300
+				@BoyPhysics.vz = 300
+			end
+		end
+		if @s.z < @BoyPhysics.z - 200
+			@BoyPhysics.vz -= 170
+			if @BoyPhysics.vz < -300
+				@BoyPhysics.vz = -300
+			end
+		end
+		
+		if @s.z < @BoyPhysics.z - 4500
+			/setblock ~ ~ ~-1 barrier
+		else
+			/setblock ~ ~ ~-1 air
+		end
+		if @s.z > @BoyPhysics.z + 4500
+			/setblock ~ ~ ~1 barrier
+		else
+			/setblock ~ ~ ~1 air
+		end
+		
+		at @BoyPhysics ~ ~-0.5 ~
+			/tp @BoyPos ~ ~ ~
+			@BoyPos.air = 0
+			@BoyPos.air = 1
+		end
+		
+		if @BoyPhysics.vz > 0
+			@Boy.ry = 0
+			@BoyPos.ry = 0
+		end
+		if @BoyPhysics.vz < 0
+			@Boy.ry = 270000
+			@BoyPos.ry = 270000
+		end
+		
+		@s.jumped = 0
+	end
+end

@@ -94,7 +94,7 @@ class mcfunction(object):
 				lconst = lvar.get_const_value(self)
 				rconst = rvar.get_const_value(self)
 				
-				if lconst and rconst:
+				if lconst != None and rconst != None:
 					result = False
 					# Perform comparison, terminate if-chain if false
 					if op == '=' and lconst == rconst:
@@ -115,12 +115,12 @@ class mcfunction(object):
 						# No modification to the test string is necessary
 						continue
 					
-				elif lconst or rconst:
+				elif lconst != None or rconst != None:
 					# Continue if chain comparing the scoreboard value with numeric range
-					if lconst:
+					if lconst != None:
 						sbvar = rvar.get_scoreboard_var(self)
 						const = lconst
-					elif rconst:
+					elif rconst != None:
 						sbvar = lvar.get_scoreboard_var(self)
 						const = rconst
 						
@@ -134,6 +134,8 @@ class mcfunction(object):
 						test += '{3} score {0} {1} matches ..{2} '.format(sbvar.selector, sbvar.objective, const, iftype)
 					if op == '=':						
 						test += '{3} score {0} {1} matches {2} '.format(sbvar.selector, sbvar.objective, const, iftype)
+						
+					sbvar.free_scratch(self)
 					
 				else:
 					# Continue if chain comparing two score values
@@ -141,6 +143,9 @@ class mcfunction(object):
 					rsbvar = rvar.get_scoreboard_var(self)
 					
 					test += '{0} score {1} {2} {3} {4} {5} '.format(iftype, lsbvar.selector, lsbvar.objective, op, rsbvar.selector, rsbvar.objective)
+					
+					lsbvar.free_scratch(self)
+					rsbvar.free_scratch(self)
 				
 			elif type == 'vector_equality':
 				if iftype == 'unless':

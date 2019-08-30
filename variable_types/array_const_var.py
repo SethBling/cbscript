@@ -54,7 +54,7 @@ class array_const_var(var_base):
 	# Copies the value from a target variable to this variable
 	def copy_from(self, func, var):
 		const_val = var.get_const_value(func)
-		if const_val:
+		if const_val != None:
 			func.add_command('scoreboard players set {} {} {}'.format(self.selector, self.get_objective(func), const_val))
 		else:
 			func.add_command('execute store result score {} {} run {}'.format(self.selector, self.get_objective(func), var.get_command(func)))
