@@ -91,7 +91,20 @@ class scoreboard_var(var_base):
 			path, data_type, scale = path_data
 			
 			if var_const != None:
-				func.add_command('data modify entity {} {} set value {}'.format(self.selector, path, float(var_const) / float(scale)))
+				suffix = {
+					'byte': 'b',
+					'short': 's',
+					'int': '',
+					'long': 'L',
+					'float': 'f',
+					'double': 'd',
+				}
+				if type != 'float' and type != 'double':
+					val = int(var_const / scale)
+				else:
+					val = float(var_const) / float(scale)
+					
+				func.add_command('data modify entity {} {} set value {}{}'.format(self.selector, path, val, suffix[data_type]))
 			else:
 				func.add_command('{} run {}'.format(self.set_command(func), var.get_command(func)))
 		else:

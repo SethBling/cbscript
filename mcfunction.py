@@ -134,8 +134,6 @@ class mcfunction(object):
 						test += '{3} score {0} {1} matches ..{2} '.format(sbvar.selector, sbvar.objective, const, iftype)
 					if op == '=':						
 						test += '{3} score {0} {1} matches {2} '.format(sbvar.selector, sbvar.objective, const, iftype)
-						
-					sbvar.free_scratch(self)
 					
 				else:
 					# Continue if chain comparing two score values
@@ -143,9 +141,6 @@ class mcfunction(object):
 					rsbvar = rvar.get_scoreboard_var(self)
 					
 					test += '{0} score {1} {2} {3} {4} {5} '.format(iftype, lsbvar.selector, lsbvar.objective, op, rsbvar.selector, rsbvar.objective)
-					
-					lsbvar.free_scratch(self)
-					rsbvar.free_scratch(self)
 				
 			elif type == 'vector_equality':
 				if iftype == 'unless':

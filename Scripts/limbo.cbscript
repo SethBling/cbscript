@@ -2,12 +2,46 @@ dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
 desc "Undo and redo placing/breaking blocks"
 
 import common
+import math
+
+define block_tag death
+	dead_fire_coral
+	dead_brain_coral
+end
 
 $ResetX = -248.5
 $ResetY = 87.0
 $ResetZ = 164.5
 
 $GameX = -258.5
+
+define @Vindicator : @Entity[type=vindicator, tag=Vindicator]
+	create {
+		Tags: ["Vindicator"],
+		HandItems: [
+			{
+				id: "minecraft:iron_axe",
+				Count: 1
+			}
+		],
+		NoAI: 1
+	}
+end
+
+define @Creeper : @Entity[type=creeper, tag=Creeper]
+	create {
+		Tags: ["Creeper"],
+		NoAI: 1
+	}
+end
+
+define @Spider : @Entity[type=spider, tag=Spider]
+	create {
+		Tags: ["Spider"],
+		NoAI:1,
+		Rotation: [180f, 180f]
+	}
+end
 
 define @BoyPhysics : 0-0-0-0-0xB014CE (@Entity[type=armor_stand])
 	create {
@@ -32,19 +66,32 @@ define @BoyPos : 0-0-0-0-0xB0110C (@Entity[type=area_effect_cloud])
 				Invulnerable: 1,
 				NoBasePlate: 1,
 				UUIDMost: 0,
-				UUIDLeast: 0xB01
+				UUIDLeast: 0xB01,
+				Pose: {
+					LeftLeg: [0.01f, 0.01f, 0.01f],
+					RightLeg: [0.01f, 0.01f, 0.01f],
+					LeftArm: [0.01f, 0.01f, 0.01f],
+					RightArm: [0.01f, 0.01f, 0.01f],
+					Body: [0.01f, 0.01f, 0.01f],
+					Head: [0.01f, 0.01f, 0.01f]
+				}
 			}
 		]
 	}	
 end
 
 define @Boy : 0-0-0-0-0xB01 (@Entity[type=armor_stand])
+	left_leg: Pose.LeftLeg[0] float 1
+	right_leg: Pose.RightLeg[0] float 1
+	left_arm: Pose.LeftArm[0] float 1
+	right_arm: Pose.RightArm[0] float 1
+	body: Pose.Body[0] float 1
+	head: Pose.Head[0] float 1
 end
 
 reset
 	/scoreboard objectives remove jumped
 	/scoreboard objectives add jumped minecraft.custom:minecraft.jump
-	
 	tell @Player '{G[\[Reload Limbo\]](call reload)'
 end
 
@@ -54,45 +101,111 @@ function reload()
 	/kill @Boy
 
 	/tp @Player $ResetX $ResetY $ResetZ 90 0
+	
+	/kill @Vindicator
+	/kill @Creeper
+	/kill @Spider
+	create @Vindicator -259 86.0 148
+	create @Creeper -259 86 146
+	
+	dead_amount = 0
+	dead = False
 end
 
 clock main
 	unless @BoyPos do create @BoyPos $GameX 86 164.5
 	unless @BoyPhysics do create @BoyPhysics $GameX 86 164.5
-
-	as @Player[limit=1] at @s
+	
+	as @Entity[run]
+		@s.ry = 180000
+		move @s ~ ~ ~-0.4
+		if @s.z < 0
+			/kill @s
+		end
+	end
+	
+	as @Player[limit=1] at @s				
 		at @s eyes
 			/particle minecraft:squid_ink ^ ^ ^0.15 3 3 3 0 3000 force
 		end
-		if @s.jumped
-			if @BoyPhysics.on_ground
-				@BoyPhysics.vy += 650
+		
+		if dead
+			if dead_amount < 100
+				dead_amount += 4
+			else
+				reload()
 			end
-		end
-		@BoyPhysics.vz /= 2
+		else
+			if @s.jumped
+				if @BoyPhysics.on_ground
+					@BoyPhysics.vy += 650
+				end
+			end
+			@BoyPhysics.vz /= 2
+				
+			if @s.z > @BoyPhysics.z + 200
+				@BoyPhysics.vz += 170
+				if @BoyPhysics.vz > 300
+					@BoyPhysics.vz = 300
+				end
+				
+				if running_amount < 100
+					running_amount += 10
+				end
+			else if @s.z < @BoyPhysics.z - 200
+				@BoyPhysics.vz -= 170
+				if @BoyPhysics.vz < -300
+					@BoyPhysics.vz = -300
+				end
+				
+				if running_amount < 100
+					running_amount += 10
+				end
+			else
+				if running_amount > 0
+					running_amount -= 10
+				end
+			end
 			
-		if @s.z > @BoyPhysics.z + 200
-			@BoyPhysics.vz += 170
-			if @BoyPhysics.vz > 300
-				@BoyPhysics.vz = 300
+			if @BoyPhysics.on_ground
+				if @BoyPhysics.vz > 0
+					@Boy.ry = 0
+				end
+				if @BoyPhysics.vz < 0
+					@Boy.ry = 180000
+				end
 			end
-		end
-		if @s.z < @BoyPhysics.z - 200
-			@BoyPhysics.vz -= 170
-			if @BoyPhysics.vz < -300
-				@BoyPhysics.vz = -300
+		
+			at @BoyPos
+				if block ~ ~0.5 ~ death
+					dead = True
+				end
+			end
+					
+			if @BoyPos and @BoyPos.z < 154000
+				@Vindicator.run = True
+				@Creeper.run = True
+			end
+
+			if @BoyPos.z > 123000 and @BoyPos.z < 125000 unless @Spider[limit=1]
+				create @Spider -252 87.7 130
+			end
+			as @Spider at @s
+				move @s ~ ~ ~-0.275
+				z1 = @BoyPos.z
+				z2 = @s.z
+				y = @BoyPos.y
+				
+				if @BoyPos.z >= @s.z and @BoyPos.z <= @s.z + 5000 and @BoyPos.y >= 85000
+					dead = True
+				end
 			end
 		end
 		
-		if @s.z < @BoyPhysics.z - 4500
-			/setblock ~ ~ ~-1 barrier
-		else
-			/setblock ~ ~ ~-1 air
-		end
-		if @s.z > @BoyPhysics.z + 4500
-			/setblock ~ ~ ~1 barrier
-		else
-			/setblock ~ ~ ~1 air
+		as @Spider
+			if @s.z < 0
+				/kill @s
+			end
 		end
 		
 		at @BoyPhysics ~ ~-0.5 ~
@@ -101,15 +214,59 @@ clock main
 			@BoyPos.air = 1
 		end
 		
-		if @BoyPhysics.vz > 0
-			@Boy.ry = 0
-			@BoyPos.ry = 0
+		if @s.z < @BoyPhysics.z - 750
+			/setblock ~ ~ ~-1 barrier
+		else
+			/setblock ~ ~ ~-1 air
 		end
-		if @BoyPhysics.vz < 0
-			@Boy.ry = 270000
-			@BoyPos.ry = 270000
+		if @s.z > @BoyPhysics.z + 750
+			/setblock ~ ~ ~1 barrier
+		else
+			/setblock ~ ~ ~1 air
 		end
+
+		
+		get_pose()
 		
 		@s.jumped = 0
 	end
+end
+
+$LeftLeg = 0
+$RightLeg = 1
+$LeftArm = 2
+$RightArm = 3
+$Body = 4
+$Head = 5
+function get_pose()
+	running_timer++
+
+	@Boy.left_leg = get_blended($LeftLeg) % 360
+	@Boy.right_leg = get_blended($RightLeg) % 360
+	@Boy.left_arm = get_blended($LeftArm) % 360
+	@Boy.right_arm = get_blended($RightArm) % 360
+	@Boy.body = get_blended($Body) % 360
+	@Boy.head = get_blended($Head) % 360
+end
+
+function get_blended(slot)
+	temp_pose = running_pose(slot) * running_amount / 100
+	pose = (death_pose(slot) * dead_amount + temp_pose * (100 - dead_amount)) / 100
+	
+	return pose
+end
+
+function running_pose(slot)
+	if slot == $Body
+		pose = 0
+	else if slot == $Head
+		pose = 0
+	else
+		pose = sin(20 * running_timer + slot * 180) / 15
+	end
+	return pose
+end
+
+function death_pose(slot)
+	return 90
 end
