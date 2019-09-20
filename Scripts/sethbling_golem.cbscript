@@ -1,0 +1,364 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "SethBling Golem"
+
+import common
+import math
+import random
+
+define @FallingBlock : @Entity[type=falling_block]
+	time: Time int 1
+end
+
+define @ProjectileBlock : @FallingBlock[tag=ProjectileBlock]
+end
+
+$LeftArm = 0
+$RightArm = 1
+
+$ArmIdle = 0
+$ArmPointToBlock = 1
+$ArmSuckBlock = 2
+$ArmRaiseAboveHead = 3
+$ArmPointAtPlayer = 4
+$ArmWaiting = 5
+$ArmPickPlayer = 6
+$ArmShoot = 7
+
+define block_tag transparent
+	air
+	cave_air
+	water
+	lava
+end
+
+define @Golem : @Entity[type=armor_stand, tag=SethBlingGolem]
+	left_arm_rx : Pose.LeftArm[0] float
+	left_arm_ry : Pose.LeftArm[1] float
+	
+	right_arm_rx : Pose.RightArm[0] float
+	right_arm_ry : Pose.RightArm[1] float
+	
+	array arm_state[2]
+	array arm_block[2]
+	array state_delay[2]
+	array next_state[2]
+	array arm_target[2]
+	
+	create {
+		ShowArms: 1,
+		Invulnerable: 1,
+		NoGravity: 1,
+		NoBasePlate: 1,
+		Tags: ["SethBlingGolem"],
+		Pose: {
+			RightArm: [0.001f, 0.001f, 0.001f],
+			LeftArm: [0.001f, 0.001f, 0.001f]
+		}
+	}
+	
+	function point_at(pointx, pointy, pointz, arm)
+		unless @Position do create @Position
+		@Position.<pos> = <pointx, pointy, pointz>
+		
+		if arm == $RightArm
+			at @s ^-0.3 ^1 ^ facing @Position
+				/tp @Position ~ ~ ~ ~ ~
+			end
+			@s.rt_rx = @Position.rx - 90000
+			@s.rt_ry = @Position.ry - @s.ry
+		else
+			at @s ^0.3 ^1 ^ facing @Position
+				/tp @Position ~ ~ ~ ~ ~
+			end
+			@s.lt_rx = @Position.rx - 90000
+			@s.lt_ry = @Position.ry - @s.ry
+		end
+	end
+	
+	function move_arm(arm)
+		$MoveAmount = 5000
+		if arm == $RightArm
+			get_updated_rotations(@s.right_arm_rx, @s.right_arm_ry, @s.rt_rx, @s.rt_ry, $MoveAmount)
+			@s.right_arm_rx = result_rx
+			@s.right_arm_ry = result_ry
+		else
+			get_updated_rotations(@s.left_arm_rx, @s.left_arm_ry, @s.lt_rx, @s.lt_ry, $MoveAmount)
+			@s.left_arm_rx = result_rx
+			@s.left_arm_ry = result_ry
+		end
+	end
+	
+	function get_random_target_block(arm)
+		found_target = False
+		create @Position
+		find_step = 0
+		
+		while not found_target and find_step < 100
+			at @s eyes ^ ^ ^
+				/tp @Position ~ ~ ~
+			end
+			
+			@Position.rx = randint(-90000, 90000)
+			@Position.ry = randint(0, 360000)
+			at @Position
+				step = 0
+				while step < 50 at ^ ^ ^0.5
+					unless block ~ ~ ~ transparent
+						step = 1000000
+						/tp @Position ~ ~ ~
+						if arm == $LeftArm
+							@s.<ltarget_block> = @Position.<pos>
+						else
+							@s.<rtarget_block> = @Position.<pos>
+						end
+						<x, y, z> = @Position.<pos>
+						@s.point_at(x, y, z, arm)
+						found_target = True
+					end
+					step++
+				end
+			end
+			
+			find_step++
+		end
+	end
+	
+	function run_ai()
+		for arm = $LeftArm to $RightArm
+			switch @s.arm_state[arm]
+				case $ArmIdle
+					if randint(0, 40)  == 0
+						@s.get_random_target_block(arm)
+						if found_target
+							@s.arm_state[arm] = $ArmPointToBlock
+						end
+					end
+				end
+				case $ArmPointToBlock
+					@s.move_arm(arm)
+					if rotation_done
+						create @Position
+						if arm == $LeftArm
+							@Position.<pos> = @s.<ltarget_block>
+						else
+							@Position.<pos> = @s.<rtarget_block>
+						end
+						at @Position
+							create_projectile()
+							as @FallingBlock[tag=NewProjectileBlock,limit=1,distance=0]
+								/tag @s remove NewProjectileBlock
+								id = &@s
+							end
+							@s.arm_state[arm] = $ArmSuckBlock
+							@s.arm_block[arm] = id
+						end
+					end
+				end
+				case $ArmSuckBlock
+					@s.move_position_to_arm_socket(arm)
+					as @s.arm_block[arm]
+						at @s facing @Position
+							/tp @s ^ ^ ^0.2
+						end
+						at @Position if @s[distance=..2]
+							done_sucking = True
+						else
+							done_sucking = False
+						end
+						at @Position facing @s
+							/tp @Position ~ ~ ~ ~ ~
+						end
+						move @Position ^ ^ ^1
+						while True at @Position unless @s[distance=..3]
+							move @Position ^ ^ ^0.5
+							/particle cloud ~ ~ ~ 0.2 0.2 0.2 0 1 force
+						end
+					end
+					if done_sucking
+						<x, y, z> = @s.<pos>
+						y += 100000
+						@s.point_at(x, y, z, arm)
+						@s.arm_state[arm] = $ArmRaiseAboveHead
+					end
+				end
+				case $ArmRaiseAboveHead
+					@s.move_arm(arm)
+					if rotation_done
+						as @s.arm_block[arm]
+							@s.igniting = True
+						end
+						@s.delay_next_state(arm, 20, $ArmPickPlayer)
+					else
+						@s.put_block_at_arm_end(arm)
+					end
+				end
+				case $ArmPointAtPlayer
+					@s.move_arm(arm)
+					if rotation_done
+						@s.delay_next_state(arm, 10, $ArmShoot)
+					else
+						@s.put_block_at_arm_end(arm)
+					end
+				end
+				case $ArmWaiting
+					@s.state_delay[arm]--
+					if @s.state_delay[arm] <= 0
+						@s.arm_state[arm] = @s.next_state[arm]
+					end
+				end
+				case $ArmPickPlayer
+					as @s.arm_block[arm] (@FallingBlock)
+						@s.flaming = True
+					end
+					at @s as @Player[distance=..50,limit=1,sort=nearest]
+						<x, y, z> = @s.<pos>
+						player_found = True
+						id = &@s
+					else
+						player_found = False
+					end
+					
+					if player_found
+						@s.point_at(x, y+1000, z, arm)
+						@s.arm_state[arm] = $ArmPointAtPlayer
+						@s.arm_target[arm] = id
+					end
+				end
+				case $ArmShoot
+					as @s.arm_target[arm] (@Player)
+						<pos> = @s.<pos>
+					end
+					as @s.arm_block[arm] (@ProjectileBlock)
+						@s.<vel> = (<pos> - @s.<pos>) / 15 + <0, 400, 0>
+						@s.no_gravity = False
+					end
+					@s.arm_state[arm] = $ArmIdle				
+				end
+			end
+		end
+	end
+	
+	function delay_next_state(arm, delay, state)
+		@s.state_delay[arm] = delay
+		@s.next_state[arm] = state
+		@s.arm_state[arm] = $ArmWaiting
+	end
+	
+	function move_position_to_arm_socket(arm)
+		create @Position
+		if arm == $LeftArm at @s ^0.3 ^1 ^
+			/tp @Position ~ ~ ~
+		else at @s ^-0.3 ^1 ^
+			/tp @Position ~ ~ ~
+		end
+	end
+	
+	function put_block_at_arm_end(arm)
+		@s.move_position_to_arm_socket(arm)
+		if arm == $RightArm
+			@Position.rx = @s.right_arm_rx + 90000
+			@Position.ry = @s.right_arm_ry + @s.ry
+		else
+			@Position.rx = @s.left_arm_rx + 90000
+			@Position.ry = @s.left_arm_ry + @s.ry
+		end
+		move @Position ^ ^ ^2
+		as @s.arm_block[arm]
+			/tp @s @Position
+		end
+	end
+	
+	function destroy()
+		for arm = 1 to 2
+			as @s.arm_block[arm]
+				at @s
+					/particle explosion
+					/kill @s
+				end
+			end
+		end
+	end
+end
+
+function create_projectile()
+	switch block at ~ ~ ~
+		default
+			/summon falling_block ~ ~ ~ {Tags:["ProjectileBlock", "NewProjectileBlock"], Time:1, BlockState: {$falling_block_nbt}, NoGravity:1}
+		end
+	end
+end
+
+function update_rotation(current, target, amount)
+	delta = (target - current + 180000) % 360000 - 180000
+	if delta > amount
+		return current+amount
+	else if delta < -amount
+		return current-amount
+	else
+		return target
+	end
+end
+
+function get_updated_rotations(rx, ry, trx, try, amount)
+	drx = (trx - rx + 180000) % 360000 - 180000
+	dry = (try - ry + 180000) % 360000 - 180000
+	adrx = abs(drx)
+	adry = abs(dry)
+	if adrx > adry
+		main = drx
+		slope = dry * 1000 / drx
+	else
+		main = dry
+		slope = drx * 1000 / dry
+	end
+	
+	if main > amount
+		delta = amount
+		rotation_done = False
+	else if main < -amount
+		delta = -amount
+		rotation_done = False
+	else
+		delta = main
+		rotation_done = True
+	end
+	
+	other = slope * delta / 1000
+	
+	if adrx > adry
+		result_rx = rx + delta
+		result_ry = ry + other
+	else
+		result_ry = ry + delta
+		result_rx = rx + other
+	end
+end
+
+
+reset
+	tell @a '[\[Summon Golem\]](call summon_golem)'
+end
+
+function summon_golem()
+	as create @Golem
+		@s.arm_state[$LeftArm] = $ArmIdle
+		@s.arm_state[$RightArm] = $ArmIdle
+	end
+end
+
+clock main
+	as @Golem
+		@s.run_ai()
+	end
+	as @ProjectileBlock
+		@s.air = 1
+		@s.air = 0
+		@s.time = 1
+		if @s.flaming at @s
+			/particle flame ~ ~ ~ 0.6 0.6 0.6 0 10 force
+		end
+		if @s.igniting at @s
+			/particle flame ~ ~ ~ 0.6 0.6 0.6 0 1 force
+		end
+	end
+end

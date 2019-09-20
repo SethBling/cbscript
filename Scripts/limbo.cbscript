@@ -39,7 +39,7 @@ define @Spider : @Entity[type=spider, tag=Spider]
 	create {
 		Tags: ["Spider"],
 		NoAI:1,
-		Rotation: [180f, 180f]
+		Rotation: [180f, 0f]
 	}
 end
 

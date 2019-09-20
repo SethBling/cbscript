@@ -1,0 +1,119 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\Realistic Explosions"
+desc "TNT throws blocks rather than destroying them"
+
+import common
+$Radius = 5
+$Diameter = 2*$Radius+1
+$Volume = $Diameter * $Diameter * $Diameter
+
+define @ExplosionMarker: @Entity[type=area_effect_cloud,tag=ExplosionMarker]
+	create {
+		Tags:[
+			"ExplosionMarker",
+			"NewExplosionMarker"
+		],
+		Duration:-1,
+		Age:-0x80000000,
+		WaitTime:-0x80000000
+	}
+	age: Age int 1
+	
+	function get_block_id()
+		switch block at ~ ~ ~
+			case air
+			
+			end
+			default
+				@s.block_id = $block_id
+			end
+		end
+	end
+	
+	function spawn_exploding_block()
+		<delta> = @s.<delta>
+		switch block @s.block_id
+			default
+				/summon falling_block ~ ~ ~ {Tags:["ExplodingBlock", "NewExplodingBlock"], BlockState:{$falling_block_nbt}, Time:1}
+			end
+		end
+		as @Entity[tag=NewExplodingBlock,limit=1,distance=..0.1]
+			/tag @s remove NewExplodingBlock
+			@s.<vel> = <delta> * scale / (<delta> * <delta>) * 3
+		end
+		/kill @Entity[type=item,distance=..1.5]
+	end
+end
+
+define @FallingBlock: @Entity[type=falling_block]
+	time: Time int 1
+end
+
+define @ExplodingBlock: @FallingBlock[tag=ExplodingBlock]
+
+end
+
+define @ExplodingTNT: @Entity[type=tnt, nbt={Fuse:1s}]
+
+end
+
+define @ParticleEmitter : @Entity[type=area_effect_cloud,tag=ParticleEmitter]
+	create {
+		Tags:[
+			"ParticleEmitter",
+		],
+		Duration:-1,
+		Age:-0x80000000,
+		WaitTime:-0x80000000
+	}
+end
+
+reset
+	
+end
+
+clock main
+	unless @Position do create @Position
+
+	as @ExplosionMarker at @s
+		if block ~ ~ ~ air
+			@s.spawn_exploding_block()
+		end
+	end
+	/kill @ExplosionMarker
+	
+	as @ParticleEmitter at @s
+		/particle explosion_emitter ~ ~ ~ 3 3 3 0 2 force @a
+		@s.age++
+		if @s.age >= 30
+			/kill @s
+		end
+	end
+	
+	as @ExplodingTNT at @s
+		if particles then create @ParticleEmitter
+		<base_pos> = @s.<pos> / scale * scale + <500, 0, 500>
+		for dx = -$Radius to $Radius
+			for dy = -$Radius to $Radius
+				for dz = -$Radius to $Radius
+					@Position.<pos> = <base_pos> + <dx, dy, dz> * scale
+					at @Position unless block ~ ~ ~ air unless block ~ ~ ~ tnt unless @ExplosionMarker[distance=..0.1]
+						create @ExplosionMarker
+						as @Entity[type=area_effect_cloud,tag=NewExplosionMarker,limit=1,distance=..0.1]
+							@s.get_block_id()
+							/tag @s remove NewExplosionMarker
+							@s.<delta> = <dx, dy, dz>
+						end
+					end
+				end
+			end
+		end
+	end
+
+	as @ExplodingBlock at @s
+		@s.air = 1
+		@s.air = 0
+		if particles
+			/particle campfire_signal_smoke ~ ~ ~ 0 0 0 0 1 force @a
+		end
+	end
+end
