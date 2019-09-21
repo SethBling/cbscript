@@ -41,6 +41,7 @@ class environment(object):
 		self.self_selector = None
 		self.pointers = {}
 		self.block_definitions = {}
+		self.function_name = None
 		
 	def clone(self, new_function_name = None):
 		new_env = environment(self.global_context)
@@ -58,8 +59,10 @@ class environment(object):
 		if new_function_name == None:
 			new_env.scratch = self.scratch
 			new_env.locals = self.locals
+			new_env.function_name = self.function_name
 		else:
 			new_env.scratch.prefix = self.global_context.get_scratch_prefix(new_function_name)
+			new_env.function_name = new_function_name
 			
 			
 		new_env.self_selector = self.self_selector
@@ -376,3 +379,6 @@ class environment(object):
 		
 	def get_reset_function(self):
 		return self.global_context.get_reset_function()
+		
+	def get_all_locals(self):
+		return self.locals + self.scratch.get_active_objectives()

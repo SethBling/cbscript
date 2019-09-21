@@ -70,3 +70,15 @@ class scratch_tracker(object):
 		ret += ['temp{}'.format(i) for i in range(self.temp_allocation)]
 		
 		return ret
+		
+	def get_active_objectives(self):
+		all_objectives = []
+		for num in self.scratch:
+			if self.scratch[num]:
+				all_objectives.append('{}_scratch{}'.format(self.prefix, num))
+				
+		for num in self.temp:
+			if self.temp[num]:
+				all_objectives.append('temp{}'.format(num))
+				
+		return all_objectives

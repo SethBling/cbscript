@@ -26,8 +26,10 @@ from block_types.method_call_block import method_call_block
 from block_types.move_block import move_block
 from block_types.nbt_data_block import nbt_data_block
 from block_types.nbt_remove_block import nbt_remove_block
+from block_types.pop_block import pop_block
 from block_types.pointer_decl_block import pointer_decl_block
 from block_types.print_block import print_block
+from block_types.push_block import push_block
 from block_types.python_assignment_block import python_assignment_block
 from block_types.python_for_block import python_for_block
 from block_types.python_if_block import python_if_block
@@ -54,9 +56,10 @@ from data_types.interpreted_python import interpreted_python
 from data_types.relcoord_vector import relcoord_vector
 from data_types.relcoord import relcoord
 from data_types.relcoords import relcoords
-from nbt_types.nbt_json import nbt_json
-from nbt_types.entity_nbt_path import entity_nbt_path
 from nbt_types.block_nbt_path import block_nbt_path
+from nbt_types.entity_nbt_path import entity_nbt_path
+from nbt_types.nbt_json import nbt_json
+from nbt_types.storage_nbt_path import storage_nbt_path
 from scalar_expressions.binop_expr import binop_expr
 from scalar_expressions.create_expr import create_expr
 from scalar_expressions.dot_expr import dot_expr
@@ -70,6 +73,7 @@ from variable_types.command_var import command_var
 from variable_types.scale_var import scale_var
 from variable_types.scoreboard_var import scoreboard_var
 from variable_types.selector_id_var import selector_id_var
+from variable_types.storage_path_var import storage_path_var
 from variable_types.virtualint_var import virtualint_var
 from vector_expressions.sel_vector_var_expr import sel_vector_var_expr
 from vector_expressions.vector_binop_scalar_expr import vector_binop_scalar_expr
@@ -395,6 +399,14 @@ def p_variable_command(p):
 	'''variable : success NEWLINE COMMAND
 	            | result NEWLINE COMMAND'''
 	p[0] = command_var(p[1], p[3])
+	
+def p_variable_storage(p):
+	'''variable : COLON data_path'''
+	p[0] = storage_path_var(None, p[2])
+	
+def p_variable_storage_target(p):
+	'''variable : ID COLON data_path'''
+	p[0] = storage_path_var(p[1], p[3])
 	
 #### Blocklist
 def p_optcomment(p):
@@ -790,6 +802,27 @@ def p_block_function_call(p):
 				 | pythonassignment
 				 | python_tuple_assignment'''
 	p[0] = p[1]
+	
+#### Push/pop
+def p_block_push(p):
+	'''codeblock : push exprlist'''
+	p[0] = push_block(p.lineno(1), p[2])
+	
+def p_var_list_one(p):
+	'''var_list : variable'''
+	p[0] = [p[1]]
+	
+def p_var_list_empty(p):
+	'''var_list : empty'''
+	p[0] = []
+	
+def p_var_list(p):
+	'''var_list : variable COMMA var_list'''
+	p[0] = [p[1]] + p[3]
+	
+def p_block_pop(p):
+	'''codeblock : pop var_list'''
+	p[0] = pop_block(p.lineno(1), p[2])
 	
 #### String
 def p_string(p):
@@ -1279,6 +1312,14 @@ def p_nbt_append(p):
 def p_nbt_list_entity(p):
 	'''nbt_list : fullselector DOT LBRACK data_path RBRACK'''
 	p[0] = entity_nbt_path(p[1], p[4])
+
+def p_nbt_list_storage(p):
+	'''nbt_list : COLON LBRACK data_path RBRACK'''
+	p[0] = storage_nbt_path(None, p[3])
+	
+def p_nbt_list_storage_target(p):
+	'''nbt_list : ID COLON LBRACK data_path RBRACK'''
+	p[0] = storage_nbt_path(p[1], p[4])
 	
 def p_nbt_list_block(p):
 	'''nbt_list : block_coords DOT LBRACK data_path RBRACK'''
@@ -1288,6 +1329,14 @@ def p_nbt_object_entity(p):
 	'''nbt_object : fullselector DOT LCURLY data_path RCURLY'''
 	p[0] = entity_nbt_path(p[1], p[4])
 	
+def p_nbt_object_storage(p):
+	'''nbt_object : COLON LCURLY data_path RCURLY'''
+	p[0] = storage_nbt_path(None, p[3])
+	
+def p_nbt_object_storage_target(p):
+	'''nbt_object : ID COLON LCURLY data_path RCURLY'''
+	p[0] = storage_nbt_path(p[1], p[4])
+	
 def p_nbt_object_block(p):
 	'''nbt_object : block_coords DOT LCURLY data_path RCURLY'''
 	p[0] = block_nbt_path(p[1], p[4])
@@ -1295,6 +1344,14 @@ def p_nbt_object_block(p):
 def p_nbt_source_path_entity(p):
 	'''nbt_path : fullselector DOT data_path'''
 	p[0] = entity_nbt_path(p[1], p[3])
+
+def p_nbt_source_path_storage(p):
+	'''nbt_object : COLON data_path'''
+	p[0] = storage_nbt_path(None, p[2])
+	
+def p_nbt_source_path_storage_target(p):
+	'''nbt_object : ID COLON data_path'''
+	p[0] = storage_nbt_path(p[1], p[3])
 	
 def p_nbt_source_path_block(p):
 	'''nbt_path : block_coords DOT data_path'''

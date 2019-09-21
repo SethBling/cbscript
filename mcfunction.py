@@ -2,6 +2,8 @@ from selector_definition import selector_definition
 from environment import isNumber
 from source_file import source_file
 from variable_types.scoreboard_var import scoreboard_var
+from block_types.push_block import push_block
+from block_types.pop_block import pop_block
 from CompileError import CompileError
 import math
 import traceback
@@ -831,3 +833,18 @@ class mcfunction(object):
 		
 	def copy_environment_from(self, func):
 		self.environment = func.environment.clone()
+		
+	@property
+	def name(self):
+		return self.environment.function_name
+		
+	def get_local_variables(self):
+		return [scoreboard_var('Global', l) for l in self.environment.get_all_locals()]
+		
+	def push_locals(self, locals):
+		block = push_block(0, locals)
+		block.compile(self)
+		
+	def pop_locals(self, locals):
+		block = pop_block(0, locals)
+		block.compile(self)

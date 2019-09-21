@@ -30,6 +30,10 @@ class template_function_call_block(block_base):
 			template_arg_val = template_arg.get_value(func)
 			func_name = func_name + '_{}'.format(template_arg_val)
 		
+		if func_name == func.name:
+			locals = func.get_all_locals()
+			func.push_locals(locals)
+		
 		# Calculate function arguments
 		for i in range(len(args)):
 			assignto = 'Param{}'.format(i)
@@ -61,4 +65,6 @@ class template_function_call_block(block_base):
 			func.register_function(func_name, new_func)
 			
 		func.add_command('function {}:{}'.format(func.namespace, func_name))
-	
+
+		if func_name == func.name:
+			func.pop_locals(locals)		
