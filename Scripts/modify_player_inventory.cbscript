@@ -1,0 +1,61 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.15\saves\SethBling's World 1.15"
+desc "Test for new data storage features"
+
+import common
+import lootable_shulker_box
+
+reset
+	tell @a '[\[Increment Item Counts\]](call increment)'
+end
+
+function increment()
+	:{inv} = @s.Inventory
+	/setblock ~ ~ ~ yellow_shulker_box
+	[~ ~ ~].[Items] += {id:"minecraft:stone", Count:1, Slot:0}
+	while :{inv[-1]}
+		slot = :inv[-1].Slot
+		
+		:inv[-1].Count++
+		:{inv[-1]} += {Slot:0b}
+		
+		[~ ~ ~].{Items[0]} = :inv[-1]
+		
+		replace_with_loot_item(slot)
+		
+		remove :inv[-1]
+	end
+	
+	/setblock ~ ~ ~ air
+	
+	/gamerule sendCommandFeedback false
+end
+
+function replace_with_loot_item(slot)
+	switch slot
+		case $slot in $range(0, 9)
+			$hotbar = $slot
+			/loot replace entity @s hotbar.$hotbar 1 mine ~ ~ ~ air{drop_contents:1b}
+		end
+		case $slot in $range(9, 36)
+			$inv = $slot - 9
+			/loot replace entity @s inventory.$inv 1 mine ~ ~ ~ air{drop_contents:1b}
+		end
+		case $slot in $range(100, 104)
+			$SlotNames = [
+				"feet",
+				"legs",
+				"chest",
+				"head",
+			]
+			$slot_name = $SlotNames[$slot-100]
+			/loot replace entity @s armor.$slot_name 1 mine ~ ~ ~ air{drop_contents:1b}
+		end
+		case -106
+			/loot replace entity @s weapon.offhand 1 mine ~ ~ ~ air{drop_contents:1b}
+		end
+	end
+end
+
+clock main
+	/gamerule sendCommandFeedback true
+end

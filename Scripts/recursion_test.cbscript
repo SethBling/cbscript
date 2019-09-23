@@ -5,6 +5,7 @@ import common
 
 function recurse(x, y)
 	if x >= 0
+		tell @a '(x) (y)'
 		recurse(x-1, y+1)
 		tell @a '(x) (y)'
 	end
@@ -14,12 +15,11 @@ function factorial(n)
 	if n <= 1
 		return 1
 	else
-		return n * factorial(n-1)
+		return factorial(n-1) * n
 	end
 end
 
 reset
-	/data modify storage $namespace stack set value []
 	recurse(5, 5)
 	val = factorial(5)
 	tell @a '(val)'
