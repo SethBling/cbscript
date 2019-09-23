@@ -35,6 +35,7 @@ from block_types.python_for_block import python_for_block
 from block_types.python_if_block import python_if_block
 from block_types.python_tuple_assignment_block import python_tuple_assignment_block
 from block_types.reset_section import reset_section
+from block_types.return_block import return_block
 from block_types.scoreboard_assignment_block import scoreboard_assignment_block
 from block_types.selector_assignment_block import selector_assignment_block
 from block_types.selector_definition_block import selector_definition_block
@@ -1390,7 +1391,7 @@ def p_nbt_remove(p):
 #### Assignment
 def p_return_expression(p):
 	'''codeblock : return expr'''
-	p[0] = scoreboard_assignment_block(p.lineno(1), scoreboard_var('Global', 'ReturnValue'), '=', p[2])
+	p[0] = return_block(p.lineno(1), p[2])
 	
 def p_assignment(p):
 	'''codeblock : variable EQUALS expr

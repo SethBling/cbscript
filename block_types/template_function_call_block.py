@@ -67,4 +67,4 @@ class template_function_call_block(block_base):
 		func.add_command('function {}:{}'.format(func.namespace, func_name))
 
 		if func_name == func.name:
-			func.pop_locals(locals)		
+			func.pop_locals(locals)
