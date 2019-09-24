@@ -40,5 +40,9 @@ class selector_definition_block(block_base):
 			elif type == 'Array':
 				def_block = val
 				def_block.compile(func)
+			elif type == 'Predicate':
+				def_block = val
+				def_block.compile(func)
+				selector.predicates[def_block.name] = True
 			else:
 				raise ValueError('Unknown selector item type "{0}" in selector definition at line {1}'.format(type, get_line(line)))

@@ -28,6 +28,7 @@ from block_types.nbt_data_block import nbt_data_block
 from block_types.nbt_remove_block import nbt_remove_block
 from block_types.pop_block import pop_block
 from block_types.pointer_decl_block import pointer_decl_block
+from block_types.predicate_definition_block import predicate_definition_block
 from block_types.print_block import print_block
 from block_types.push_block import push_block
 from block_types.python_assignment_block import python_assignment_block
@@ -325,6 +326,7 @@ def p_top_level_blocks(p):
 						| shaped_recipe newlines top_level_blocks
 						| advancement_definition newlines top_level_blocks
 						| loot_table_definition newlines top_level_blocks
+						| predicate_definition newlines top_level_blocks
 						| section_commented newlines top_level_blocks'''
 	p[0] = [p[1]] + p[3]
 	
@@ -596,6 +598,10 @@ def p_conditions(p):
 	'''conditions : condition and conditions'''
 	p[0] = [p[1]] + p[3]
 
+def p_condition_bool_predicate(p):
+	'''condition : predicate ID'''
+	p[0] = ('predicate', p[2])
+	
 def p_condition_fullselector(p):
 	'''condition : fullselector'''
 	p[0] = ('selector', p[1])
@@ -1220,6 +1226,10 @@ def p_selector_array(p):
 	p[1].selector_based = True
 	p[0] = ('Array', p[1])
 	
+def p_selector_predicate(p):
+	'''selector_item : predicate_definition'''
+	p[0]  = ('Predicate', p[1])
+	
 def p_data_path_id(p):
 	'''data_path : ID
 				 | facing'''
@@ -1556,13 +1566,16 @@ def p_json_pair(p):
 	'''json_pair : ID COLON optnewlines json_value
 				 | string COLON optnewlines json_value
 				 | facing COLON optnewlines json_value
-				 | block COLON optnewlines json_value'''
+				 | block COLON optnewlines json_value
+				 | predicate COLON optnewlines json_value'''
 	p[0] = '"' + p[1] + '"' + p[2] + p[4]
 	
 def p_json_value(p):
 	'''json_value : number
 				  | json_object
-				  | json_array'''
+				  | json_array
+				  | true
+				  | false'''
 	p[0] = p[1]
 	
 def p_json_value_dollar_id(p):
@@ -1652,6 +1665,11 @@ def p_loot_table_definition(p):
 def p_loot_table_definition(p):
 	'''loot_table_definition : loot_table loot_table_type ID COLON ID json_object'''
 	p[0] = loot_table_definition_block(p.lineno(1), p[2], p[3] + p[4] + p[5], p[6])
+	
+#### Predicates
+def p_predicate_definition(p):
+	'''predicate_definition : predicate ID json_object'''
+	p[0] = predicate_definition_block(p.lineno(1), p[2], p[3])
 	
 #### Empty
 def p_empty(p):

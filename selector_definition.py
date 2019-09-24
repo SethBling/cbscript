@@ -29,6 +29,7 @@ class selector_definition(object):
 		self.vector_paths = {}
 		self.pointers = {}
 		self.uuid = None
+		self.predicates = {}
 		
 		selector = env.apply_replacements(selector)
 		
@@ -63,6 +64,9 @@ class selector_definition(object):
 			for var in base_selector.pointers:
 				self.pointers[var] = base_selector.pointers[var]
 				
+			for var in base_selector.predicates:
+				self.predicates[var] = base_selector.predicates[var]
+				
 			self.tag = base_selector.tag
 			
 			self.uuid = base_selector.uuid
@@ -92,7 +96,7 @@ class selector_definition(object):
 				if len(part) == 0:
 					continue
 					
-				if part[:3] == 'nbt':
+				if part.startswith('nbt'):
 					lbrack = part.count('{')
 					rbrack = part.count('}')
 					
@@ -133,8 +137,14 @@ class selector_definition(object):
 							self.scores_max[part[4:]] = 0
 							env.register_objective(part[4:])
 						else:
-							self.scores_min[part] = 1
-							env.register_objective(part)
+							if part in self.predicates:
+								if ':' in part:
+									self.parts.append(['predicate', part])
+								else:
+									self.parts.append(['predicate', '{}:{}'.format(env.namespace, part)])
+							else:
+								self.scores_min[part] = 1
+								env.register_objective(part)
 				else:
 					before, op, after = op_parts
 				

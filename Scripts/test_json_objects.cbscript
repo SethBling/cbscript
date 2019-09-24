@@ -1,0 +1,15 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.15\saves\SethBling's World 1.15"
+desc "Test compiling json objects"
+
+define entity_tag test
+	creeper
+end
+
+reset
+	/summon creeper ~ ~ ~
+	if @e[type=test]
+		/say entity_tag pass
+	else
+		/say entity_tag fail
+	end
+end

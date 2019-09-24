@@ -6,8 +6,8 @@ keywords = (
     'move', 'create', 'tell', 'title', 'subtitle', 'actionbar',
     'reset', 'clock', 'function', 'if', 'unless', 'then', 'do', 'else', 'switch', 'case', 'default',
     'return', 'while', 'macro', 'block', 'block_tag', 'entity_tag', 'item_tag', 'define', 'array', 'remove', 'success', 'result',
-	'shaped', 'recipe', 'keys', 'eyes', 'feet',	'advancement', 'loot_table',
-	'push', 'pop',
+	'shaped', 'recipe', 'keys', 'eyes', 'feet',	'advancement', 'loot_table', 'predicate',
+	'push', 'pop', 'true', 'false',
 )
 
 tokens = keywords + (

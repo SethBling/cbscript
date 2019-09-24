@@ -83,6 +83,14 @@ class mcworld(object):
 					filename = name
 				loot_table_file = os.path.join(loot_table_dir, '{}.json'.format(filename))
 				self.zip.writestr(loot_table_file, contents)
+	
+	def write_predicates(self, predicates):
+		if len(predicates) > 0:
+			predicate_dir = 'data/{}/predicates/'.format(self.namespace)
+			
+			for name in predicates:
+				predicate_file = os.path.join(predicate_dir, '{}.json'.format(name))
+				self.zip.writestr(predicate_file, predicates[name])
 		
 	def write_mcmeta(self, desc):
 		mcmeta_file = 'pack.mcmeta'

@@ -374,6 +374,9 @@ class environment(object):
 	def add_loot_table(self, name, loot_table):
 		self.global_context.add_loot_table(name, loot_table)
 		
+	def add_predicate(self, name, predicate):
+		self.global_context.add_predicate(name, predicate)
+		
 	def get_block_state_list(self):
 		return self.global_context.get_block_state_list()
 		
@@ -382,3 +385,7 @@ class environment(object):
 		
 	def get_all_locals(self):
 		return self.locals + self.scratch.get_active_objectives()
+		
+	@property
+	def predicates(self):
+		return self.global_context.predicates

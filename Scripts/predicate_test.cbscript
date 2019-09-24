@@ -1,0 +1,55 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.15\saves\SethBling's World 1.15"
+desc "Test for predicate feature"
+
+import common
+
+define @Player : @Player
+	predicate sneaking {
+		condition: "entity_properties",
+		entity: "this",
+		predicate: {
+			flags: {
+				is_sneaking: true
+			}
+		}
+	}
+
+	predicate desert {
+		condition: "location_check",
+		predicate: {
+			biome: "desert"
+		}
+	}
+
+	predicate above_64 {
+		condition: 'location_check',
+		predicate: {
+			position: {
+				y: {
+					min: 64,
+					max: 256
+				}
+			}
+		}
+	}
+end
+
+predicate coin_flip {
+	condition: 'random_chance',
+	chance: 0.5
+}
+
+reset
+
+end
+
+clock main
+	#/execute as @p if predicate $namespace:sneaking run say hi
+	at @Player if predicate above_64
+		/say hi
+	end
+	
+	as @Player[sneaking]
+		/say hi
+	end
+end

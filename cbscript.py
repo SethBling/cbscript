@@ -101,6 +101,7 @@ class cbscript(object):
 		world.write_recipes(self.global_context.recipes)
 		world.write_advancements(self.global_context.advancements)
 		world.write_loot_tables(self.global_context.loot_tables)
+		world.write_predicates(self.global_context.predicates)
 		world.write_zip()
 		
 		self.dependencies = [source_file(d) for d in self.global_context.dependencies]

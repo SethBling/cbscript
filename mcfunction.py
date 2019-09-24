@@ -87,6 +87,13 @@ class mcfunction(object):
 		for type, val in conditions:
 			if type == 'selector':
 				test += '{0} entity {1} '.format(iftype, val)
+			elif type == 'predicate':
+				if ':' in val:
+					test += 'if predicate {} '.format(val)
+				elif val in self.predicates:
+					test += 'if predicate {}:{} '.format(self.namespace, val)
+				else:
+					raise CompileError('Predicate "{}" does not exist'.format(val))
 			elif type == 'score':
 				lexpr, op, rexpr = val
 				
@@ -801,6 +808,9 @@ class mcfunction(object):
 	def add_loot_table(self, name, loot_table):
 		self.environment.add_loot_table(name, loot_table)
 		
+	def add_predicate(self, name, predicate):
+		self.environment.add_predicate(name, predicate)
+		
 	def get_block_state_list(self):
 		return self.environment.get_block_state_list()
 		
@@ -848,3 +858,7 @@ class mcfunction(object):
 	def pop_locals(self, locals):
 		block = pop_block(0, locals)
 		block.compile(self)
+		
+	@property
+	def predicates(self):
+		return self.environment.predicates
