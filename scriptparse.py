@@ -34,6 +34,7 @@ from block_types.push_block import push_block
 from block_types.python_assignment_block import python_assignment_block
 from block_types.python_for_block import python_for_block
 from block_types.python_if_block import python_if_block
+from block_types.python_import_block import python_import_block
 from block_types.python_tuple_assignment_block import python_tuple_assignment_block
 from block_types.reset_section import reset_section
 from block_types.scoreboard_assignment_block import scoreboard_assignment_block
@@ -321,6 +322,7 @@ def p_top_level_blocks(p):
 						| itemtag newlines top_level_blocks
 						| array_definition newlines top_level_blocks
 						| import_statement newlines top_level_blocks
+						| python_import_statement newlines top_level_blocks
 						| print_block newlines top_level_blocks
 						| pointer_decl newlines top_level_blocks
 						| shaped_recipe newlines top_level_blocks
@@ -342,6 +344,16 @@ def p_top_level_blocks_empty(p):
 def p_import_statement(p):
 	'''import_statement : import ID'''
 	p[0] = import_block(p.lineno(1), p[2])
+
+#### Import	
+def p_python_import_statement(p):
+	'''python_import_statement : import ID DOT ID'''
+	if p[4] == 'py':
+		p[0] = python_import_block(p.lineno(1), p[2])
+	elif p[4] == 'cblib':
+		p[0] = import_block(p.lineno(1), p[2])
+	else:
+		raise SyntaxError('Unknown import file type: "{}.{}"'.format(p[2], p[4]))
 	
 #### Variable
 def p_variable_selector(p):

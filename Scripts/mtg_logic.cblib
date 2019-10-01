@@ -1,0 +1,89 @@
+import common
+import mtg_constants
+
+function handle_step()
+	switch Phase
+		case $PhaseBeginning
+			handle_beginning()
+		end
+		case $PhasePreMain
+			handle_main()
+		end
+		case $PhaseCombat
+			handle_combat()
+		end
+		case $PhasePostMain
+			handle_main()
+		end
+		case $PhaseEnd
+			handle_end()
+		end
+	end
+end
+
+function handle_beginning()
+	switch Step
+		case $StepUntap
+		end
+		case $StepUpkeep
+		end
+		case $StepDraw
+		end
+	end
+end
+
+function handle_main()
+	
+end
+
+function handle_combat()
+	switch Step
+		case $StepBeginning
+		end
+		case $StepDeclareAttackers
+		end
+		case $StepDeclareBlockers
+		end
+		case $StepFirstStrikeDamage
+		end
+		case $StepDamage
+		end
+		case $StepEndCombat
+		end
+	end
+end
+
+function handle_end()
+	switch Step
+		case $StepEnd
+		end
+		case $StepCleanup
+		end
+	end
+end
+
+function next_step()
+	Step++
+	switch Phase
+		case $phase in $range($NumPhases)
+			$phase_steps = $NumSteps[$phase]
+			if Step >= $phase_steps
+				Phase++
+				Step = 0
+			end
+		end
+	end
+	if Phase >= $NumPhases
+		next_turn()
+	end
+end
+
+function next_turn()
+	if ActivePlayer == 0
+		ActivePlayer = 1
+	else
+		ActivePlayer = 0
+	end
+	Phase = $PhaseBeginning
+	Step = $StepUntap
+end

@@ -1,0 +1,14 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.15\saves\MagicTheGathering"
+desc "Play M:tG in Minecraft"
+
+import left_right_click_detector
+import mtg_logic
+import cards.py
+
+reset
+
+end
+
+clock main
+
+end

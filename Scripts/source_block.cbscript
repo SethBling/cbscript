@@ -1,0 +1,116 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.14\saves\SethBling's World 1.14"
+desc "Test for new data storage features"
+
+import common
+import math
+import random
+
+@SourceBlock = @Marker[tag=SourceBlock]
+@Destination = @Marker[tag=Destination]
+
+reset
+	tell @Player[gamemode=creative] '[\[Create Source Block\]](call create_source) [\[Kill Source Block\]](call kill_source)'
+	tell @Player[gamemode=creative] '[\[Create Teleport Destination\]](call create_dest) [\[Kill Teleport Destination\]](call kill_dest)'
+end
+
+function create_source()
+	align xyz at ~0.5 ~0.4 ~0.5
+		as create @Marker
+			/tag @s add SourceBlock
+		end
+	end
+end
+
+function kill_source()
+	/kill @SourceBlock[sort=nearest,limit=1]
+end
+
+function create_dest()
+	align xyz at ~0.5 ~0.4 ~0.5
+		as create @Marker
+			/tag @s add Destination
+		end
+	end
+end
+
+function kill_dest()
+	/kill @Destination[sort=nearest,limit=1]
+end
+
+
+clock main
+	as @SourceBlock at @s
+		<pos> = @s.<pos>
+		as @Player[sort=nearest,limit=1]
+			<delta> = @s.<pos> - <pos>
+		end
+		dist = sqrt(<delta> * <delta>) / 1000
+		mag = 30 - dist
+		for i = 1 to mag
+			switch i
+				case $dist in $range(30)
+					$speed = $dist * $dist / 30 * 0.02
+					/particle firework ~ ~ ~ 0 0 0 $speed 1 force
+				end
+			end
+		end
+		
+		switch dist
+			case $dist in $range(30)
+				$volume = 2 - ($dist / 30.0)
+				if randint(0, 2*$dist+10) == 0
+					/playsound minecraft:ambient.underwater.loop.additions.ultra_rare block @a ~ ~ ~ $volume $volume
+				end
+				if randint(0, 5*$dist+10) == 0
+					#/playsound minecraft:ambient.underwater.enter block @a ~ ~ ~ $volume $volume
+				end
+				if randint(0, 5*$dist+10) == 0
+					#/playsound minecraft:ambient.underwater.exit block @a ~ ~ ~ $volume $volume
+				end
+			end
+		end
+		
+		unless @Position do create @Position
+		unless @Position2 do create @Position2
+		
+		as @Player[distance=..30]
+			@Position.<pos> = <pos>
+			at @s ~ ~0.5 ~
+				/tp @Position2 ~ ~ ~
+			end
+			at @Position facing @Position2
+				/tp @Position ~ ~ ~ ~ ~
+			end
+			
+			<delta> = @s.<pos> - <pos>
+			dist = sqrt(<delta> * <delta>) / 1000
+			
+			mag = 30 - dist
+
+			prog = 0
+			while prog < dist * 1000
+				switch dist
+					case $i in $range(30)
+						$mv = $i * 0.05
+						move @Position ^ ^ ^$mv
+						prog += dist * 50
+						at @Position
+							if randint(0, $i) == 0
+								/particle instant_effect ~ ~ ~ 0.1 0.1 0.1 0 1 force
+							end
+						end
+						
+						if randint(0, $i*100) == 0
+							/effect give @s night_vision 1 0 true
+						end
+					end
+				end
+				move @Position ^ ^ ^0.01
+				prog += 10
+			end
+			if @s[distance=..0.5]
+				/tp @s @Destination[sort=nearest,limit=1]
+			end
+		end
+	end
+end

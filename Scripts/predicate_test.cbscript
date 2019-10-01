@@ -3,6 +3,27 @@ desc "Test for predicate feature"
 
 import common
 
+predicate dark {
+	condition: 'location_check',
+	predicate: {
+		light : {
+			light: {
+				min: 0,
+				max: 8
+			}
+		}
+	}
+}
+
+predicate night {
+	condition: 'time_check',
+	value: {
+		min: 13000,
+		max: 24000
+	},
+	period: 24000
+}
+
 define @Player : @Player
 	predicate sneaking {
 		condition: "entity_properties",
@@ -32,6 +53,16 @@ define @Player : @Player
 			}
 		}
 	}
+	
+	predicate survival {
+		condition: 'entity_properties',
+		entity: 'this',
+		predicate: {
+			player: {
+				gamemode: 'survival'
+			}
+		}
+	}
 end
 
 predicate coin_flip {
@@ -45,11 +76,11 @@ end
 
 clock main
 	#/execute as @p if predicate $namespace:sneaking run say hi
-	at @Player if predicate above_64
-		/say hi
+	at @Player if predicate night
+		/say night
 	end
 	
-	as @Player[sneaking]
-		/say hi
+	as @Player[survival]
+		/say survival
 	end
 end

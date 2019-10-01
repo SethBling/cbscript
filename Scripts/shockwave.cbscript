@@ -1,0 +1,59 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.15\saves\SethBling's World 1.15"
+desc "Creates shockwaves when you land"
+
+import common
+
+define @WaveBlock : @Entity[type=falling_block, tag=WaveBlock]
+	time: Time byte 1
+end
+@NewWaveBlock = @Entity[type=falling_block, tag=NewWaveBlock, limit=1]
+
+reset
+	tell @Player '[\[Create shockwave\]](call create_shockwave)'
+end
+
+function create_shockwave()
+	at @s ~ ~-1 ~
+		create_waveblock(10)
+	end
+end
+
+function create_waveblock(mag)
+	switch block at ~ ~ ~
+		case air
+		
+		end
+		default
+			/summon falling_block ~ ~ ~ {Time:1b, BlockState:{$falling_block_nbt}, Tags:["WaveBlock", "NewWaveBlock"], Motion:[0d, 0.2d, 0d]}
+		end
+	end
+	
+	/setblock ~ ~ ~ air
+	as @NewWaveBlock
+		@s.mag = mag
+		@s.vy = mag * 20
+		/tag @s remove NewWaveBlock
+	end
+
+end
+
+clock main
+	as @WaveBlock at @s
+		@s.air = 1
+		@s.air = 0
+		@s.timer++
+		if @s.timer == 1 and @s.mag > 1
+			new_mag = @s.mag-1
+			for $dx, $dz in [
+				(-1, 0),
+				(1, 0),
+				(0, -1),
+				(0, 1),
+			]
+				at ~$dx ~ ~$dz
+					create_waveblock(new_mag)
+				end
+			end
+		end
+	end
+end

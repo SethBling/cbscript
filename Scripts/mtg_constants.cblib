@@ -1,0 +1,34 @@
+$PhaseBeginning = 0
+$StepUntap = 0
+$StepUpkeep = 1
+$StepDraw = 2
+$PhasePreMain = 1
+$StepMain = 0
+$PhaseCombat = 2
+$StepBeginning = 0
+$StepDeclareAttackers = 1
+$StepDeclareBlockers = 2
+$StepFirstStrikeDamage = 3
+$StepDamage = 4
+$StepEndCombat = 5
+$PhasePostMain = 3
+$PhaseEnd = 4
+$StepEnd = 0
+$StepCleanup = 1
+
+$NumPhases = 5
+$NumSteps = [
+	3,
+	1,
+	6,
+	1,
+	2,
+]
+
+$NumZones = 6
+$ZoneLibrary = 0
+$ZoneHand = 1
+$ZoneBattlefield = 2
+$ZoneGraveyard = 3
+$ZoneStack = 4
+$ZoneExile = 5

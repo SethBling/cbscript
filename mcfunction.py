@@ -779,6 +779,22 @@ class mcfunction(object):
 			line.register(self.global_context)
 			
 		self.compile_blocks(parsed['lines'])
+		
+	def import_python_file(self, filename):
+		self.environment.register_dependency(filename)
+		
+		try:
+			with open(filename) as file:
+				text = file.read()
+		except Exception as e:
+			print(e)
+			raise CompileError('Unable to open "{}"'.format(filename))
+			
+		try:
+			exec(text, globals(), self.get_python_env())
+		except Exception as e:
+			print(e)
+			raise CompileError('Unable to execute "{}"'.format(filename))
 			
 	def eval(self, expr, line):
 		try:
