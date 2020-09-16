@@ -827,8 +827,8 @@ class mcfunction(object):
 	def add_predicate(self, name, predicate):
 		self.environment.add_predicate(name, predicate)
 		
-	def get_block_state_list(self):
-		return self.environment.get_block_state_list()
+	def get_block_state_list(self, include_block_states):
+		return self.environment.get_block_state_list(include_block_states)
 		
 	def call_function(self, sub_func, sub_name, prefix = ''):
 		if sub_func.is_empty():

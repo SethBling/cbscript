@@ -2,10 +2,11 @@ from block_switch_base import block_switch_base
 from CompileError import CompileError
 
 class block_switch_block(block_switch_base):
-	def __init__(self, line, coords, cases):
+	def __init__(self, line, coords, cases, include_block_states):
 		self.line = line
 		self.coords = coords
 		self.cases = cases
+		self.include_block_states = include_block_states
 		
 		super(block_switch_block, self).__init__()
 		

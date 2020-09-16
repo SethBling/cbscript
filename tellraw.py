@@ -46,8 +46,17 @@ def formatJsonText(func, text):
 				if len(parts) == 1:
 					if len(parts[0]) == 0:
 						raise CompileError('Empty () in json text.')
-					if parts[0][0] == '@':
+					elif parts[0][0] == '@':
 						formatted = formatted + ',{{"selector":"{0}"{1}}}'.format(parts[0],getPropertiesText(properties))
+					elif ':' in parts[0]:
+						storage_parts = parts[0].split(':')
+						if len(storage_parts) != 2:
+							raise CompileError('Unable to parse storage variable "{}"'.format(parts[0]))
+						if len(storage_parts[0]) == 0:
+							target = func.namespace
+						else:
+							target = storage_parts[0]
+						formatted = formatted + ',{{"nbt":"{}","storage":"{}"}}'.format(storage_parts[1], target)
 					else:
 						formatted = formatted + ',{{"score":{{"name":"Global","objective":"{0}"}}{1}}}'.format(parts[0], getPropertiesText(properties))
 				if len(parts) == 2:

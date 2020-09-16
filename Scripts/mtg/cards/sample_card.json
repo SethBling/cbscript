@@ -1,0 +1,10 @@
+{
+	"Name": "Sample Card",
+	"Cost": "",
+	"Type": "Artifact",
+	"Subtype": "",
+	"Text": "This is a sample card.",
+	"Power": 0,
+	"Toughness": 0,
+	"Abilities": []
+}

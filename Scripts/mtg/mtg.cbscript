@@ -6,7 +6,7 @@ import mtg_logic
 import cards.py
 
 reset
-
+	
 end
 
 clock main

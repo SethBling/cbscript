@@ -5,14 +5,14 @@ keywords = (
     'at', 'as', 'facing', 'rotated', 'align', 'here', 'the_end', 'the_nether', 'overworld',
     'move', 'create', 'tell', 'title', 'subtitle', 'actionbar',
     'reset', 'clock', 'function', 'if', 'unless', 'then', 'do', 'else', 'switch', 'case', 'default',
-    'return', 'while', 'macro', 'block', 'block_tag', 'entity_tag', 'item_tag', 'define', 'array', 'remove', 'success', 'result',
+    'return', 'while', 'macro', 'block', 'block_data', 'block_tag', 'entity_tag', 'item_tag', 'define', 'array', 'remove', 'success', 'result',
 	'shaped', 'recipe', 'keys', 'eyes', 'feet',	'advancement', 'loot_table', 'predicate',
 	'push', 'pop', 'true', 'false',
 )
 
 tokens = keywords + (
      'COMMAND',
-     'LEQ','GEQ','GT','LT','EQUALEQUAL','DOLLAR','DOT','COLON',
+     'LEQ','GEQ','GT','LT','EQUALEQUAL','DOLLAR','DOT','COLON','SEMICOLON',
      'PLUSEQUALS','MINUSEQUALS','TIMESEQUALS','DIVIDEEQUALS','MODEQUALS','PLUSPLUS','MINUSMINUS',
      'EQUALS','PLUS','MINUS','TIMES','DIVIDE','MOD','REF',
 	 #'POWEREMPTY',
@@ -90,6 +90,7 @@ t_DOT			= r'\.'
 t_COLON			= r'\:'
 t_NOT			= r'!'
 t_REF			= r'&'
+t_SEMICOLON		= r';'
 
 #def t_POWEREMPTY(t):
 #    r'\^[ \t]'

@@ -1,0 +1,219 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.15\saves\Randomize Blocks"
+desc "Randomize all the blocks in the world"
+
+import common
+import random
+
+$NumBlocks = $get_num_blocks()
+
+array Mapping[0 to $NumBlocks-1]
+
+reset
+	tell @a '[\[Start Randomizing\]](call start_randomizing)'
+	
+	for i = 0 to $NumBlocks-1
+		Mapping[i] = i
+	end
+	
+	for i = 0 to $NumBlocks-2
+		j = randint(i, $NumBlocks)
+		val1 = Mapping[i]
+		val2 = Mapping[j]
+		Mapping[i] = val2
+		Mapping[j] = val1
+	end
+end
+
+clock main
+	unless @Position do create @Position
+	doTileDrops = result
+		/gamerule doTileDrops
+		
+	/gamerule doTileDrops false
+	
+	as @Player at @s
+		if Randomize
+			if MidChunk
+				for i = 1 to 3
+					randomize_column()
+					increment_column()
+				end
+			else
+				find_fresh_chunk(@s.x / scale, @s.z / scale)
+			end
+		end
+	end
+	
+	if doTileDrops
+		/gamerule doTileDrops true
+	end
+end
+
+function find_fresh_chunk(x, z)
+	CenterX = x / 16 * 16
+	CenterZ = z / 16 * 16
+	SubX = 0
+	SubZ = 0
+	
+	for search_size = 0 to 15			
+		MinX = CenterX - search_size * 16
+		MaxX = CenterX + search_size * 16
+		MinZ = CenterZ - search_size * 16
+		MaxZ = CenterZ + search_size * 16
+		
+		for d = -search_size to search_size
+			ChunkX = MinX
+			ChunkZ = MinZ + d * 16
+			if fresh_chunk()
+				MidChunk = True
+			else
+				ChunkX = MaxX
+				if fresh_chunk()
+					MidChunk = True
+				else
+					ChunkZ = MinZ
+					ChunkX = MinX + d*16
+					if fresh_chunk()
+						MidChunk = True
+					else
+						ChunkZ = MaxZ
+						if fresh_chunk()
+							MidChunk = True
+						end
+					end
+				end
+			end
+			
+			if MidChunk
+				d = 1000
+			end
+		end
+		if MidChunk
+			search_size = 1000
+		end
+	end
+end
+
+function fresh_chunk()
+	@Position.x = ChunkX * scale
+	@Position.z = ChunkZ * scale
+	@Position.y = 0
+	at @Position if block ~ ~ ~ barrier
+		return False
+	else
+		return True
+	end
+end
+
+function randomize_column()
+	if MidChunk
+		@Position.x = (ChunkX + SubX) * scale
+		@Position.z = (ChunkZ + SubZ) * scale
+		for y = 0 to 255000 by 1000
+			@Position.y = y
+			at @Position
+				randomize_block()
+			end
+		end
+	end
+end
+
+function increment_column()
+	SubX++
+	if SubX >= 16
+		SubX = 0
+		SubZ++
+		if SubZ >= 16
+			MidChunk = False
+			@Position.x = ChunkX * scale
+			@Position.z = ChunkZ * scale
+			@Position.y = 0
+			at @Position
+				/setblock ~ ~ ~ barrier
+			end
+		end
+	end
+end
+
+function start_randomizing()
+	Randomize = True
+end
+
+function randomize_block()
+	if block ~ ~ ~ air
+	else
+		id = -1
+		switch block at ~ ~ ~
+			case air
+			end
+			case cave_air
+			end
+			case barrier
+			end
+			case bedrock
+			end
+			default
+				id = $block_id
+			end
+		end
+		if id >= 0
+			switch block Mapping[id]
+				case shulker_box
+				end
+				case command_block
+				end
+				case repeating_command_block
+				end
+				case chain_command_block
+				end
+				case chest
+				end
+				case trapped_chest
+				end
+				case furnace
+				end
+				case sign
+				end
+				case wall_sign
+				end
+				case white_shulker_box
+				end
+				case orange_shulker_box
+				end
+				case magenta_shulker_box
+				end
+				case light_blue_shulker_box
+				end
+				case yellow_shulker_box
+				end
+				case lime_shulker_box
+				end
+				case pink_shulker_box
+				end
+				case gray_shulker_box
+				end
+				case light_gray_shulker_box
+				end
+				case cyan_shulker_box
+				end
+				case purple_shulker_box
+				end
+				case blue_shulker_box
+				end
+				case brown_shulker_box
+				end
+				case green_shulker_box
+				end
+				case red_shulker_box
+				end
+				case black_shulker_box
+				end
+				case player_head
+				end
+				default
+					/setblock ~ ~ ~ $block_state
+				end
+			end
+		end
+	end
+end

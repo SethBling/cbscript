@@ -24,7 +24,7 @@ class block_switch_base(block_base):
 	# Create and call all required switch/case functions
 	def compile(self, func):
 		self.compile_initialization(func)
-		self.blocks = func.get_block_state_list()
+		self.blocks = func.get_block_state_list(include_block_states=self.include_block_states)
 		self.get_block_state_list(func, self.blocks)
 		case_ids = self.get_case_ids()
 		

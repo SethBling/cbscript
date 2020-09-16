@@ -49,6 +49,7 @@ class global_context(object):
 		self.loot_tables = {}
 		self.predicates = {}
 		self.block_state_list = None
+		self.block_list = None
 
 	def register_block_tag(self, name, blocks):
 		self.block_tags[name] = blocks
@@ -155,9 +156,41 @@ class global_context(object):
 	def add_predicate(self, name, predicate):
 		self.predicates[name] = predicate
 		
-	def get_block_state_list(self):
-		if not self.block_state_list:
-			with open('blocks.json', 'r') as f:
-				blocks = json.load(f)
+	def get_block_state_list(self, include_block_states):
+		if include_block_states:
+			if self.block_state_list:
+				blocks = self.block_state_list
+			else:
+				with open('blocks.json', 'r') as f:
+					blocks = json.load(f)
+					
+				self.block_state_list = blocks
+					
+		else:
+			if self.block_list:
+				blocks = self.block_list
+			else:
+				with open('blocks.json', 'r') as f:
+					blocks = json.load(f)
+			
+				id = 0
+				for block in blocks:
+					blocks[block]['states'] = [state for state in blocks[block]['states'] if 'default' in state]
+					if 'properties' in blocks[block]['states'][0]:
+						del blocks[block]['states'][0]['properties']
+					if 'properties' in blocks[block]:
+						del blocks[block]['properties']
+					blocks[block]['states'][0]['id'] = id
+					id += 1
+					
+				self.block_list = blocks
 			
 		return blocks
+		
+	def get_num_blocks(self):
+		blocks = self.get_block_state_list(False)
+		return len(blocks)
+		
+	def get_num_block_states(self):
+		blocks = self.get_block_state_list(True)
+		return len(blocks)

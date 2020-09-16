@@ -1,0 +1,19 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.16\saves\SethBling's World 1.16"
+desc "1.16 Test Script"
+
+import common
+
+reset
+	tell @a "1.16 Test Script Reloaded"
+end
+
+clock main
+	as @Player
+		if @s.y > @s.prev_y
+			tell @s "Going up!"
+		end
+		
+		@s.prev_y = @s.y
+	end
+end
+

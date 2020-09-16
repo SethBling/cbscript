@@ -735,11 +735,19 @@ def p_switch_case_python(p):
 #### Block Switch
 def p_block_switch(p):
 	'''codeblock : switch block opt_coords newlines block_cases end'''
-	p[0] = block_switch_block(p.lineno(1), p[3], p[5])
+	p[0] = block_switch_block(p.lineno(1), p[3], p[5], False)
 	
 def p_block_id_switch(p):
 	'''codeblock : switch block expr newlines block_cases end'''
-	p[0] = block_id_switch_block(p.lineno(1), p[3], p[5])
+	p[0] = block_id_switch_block(p.lineno(1), p[3], p[5], False)
+
+def p_block_data_switch(p):
+	'''codeblock : switch block_data opt_coords newlines block_cases end'''
+	p[0] = block_switch_block(p.lineno(1), p[3], p[5], True)
+	
+def p_block_data_id_switch(p):
+	'''codeblock : switch block_data expr newlines block_cases end'''
+	p[0] = block_id_switch_block(p.lineno(1), p[3], p[5], True)
 	
 def p_opt_coords(p):
 	'''opt_coords : at relcoords'''
@@ -1586,6 +1594,7 @@ def p_json_value(p):
 	'''json_value : number
 				  | json_object
 				  | json_array
+				  | json_literal_array
 				  | true
 				  | false'''
 	p[0] = p[1]
@@ -1620,6 +1629,33 @@ def p_json_elements_multi(p):
 def p_json_elements_empty(p):
 	'''json_elements : empty'''
 	p[0] = ''
+
+def p_json_literal_array(p):
+	'''json_literal_array : LBRACK optnewlines ID SEMICOLON optnewlines json_literal_elements optnewlines RBRACK'''
+	if p[3].lower() not in ['b', 'i', 'l']:
+		raise SyntaxError('Invalid type "{}" for literal array at line {}'.format(p[3], p.lineno(1)))
+
+	p[0] = p[1] + p[3] + p[4] + p[6] + p[8]
+
+def p_json_literal_element_one(p):
+	'''json_literal_elements : json_literal_value'''
+	p[0] = p[1]
+	
+def p_json_literal_elements_multi(p):
+	'''json_literal_elements : json_literal_value COMMA optnewlines json_literal_elements'''
+	p[0] = p[1] + p[2] + p[4]
+	
+def p_json_literal_elements_empty(p):
+	'''json_literal_elements : empty'''
+	p[0] = ''
+
+def p_json_literal_value(p):
+	'''json_literal_value : number'''
+	p[0] = p[1]
+	
+def p_json_literal_value_dollar_id(p):
+	'''json_literal_value : DOLLAR ID'''
+	p[0] = p[1] + p[2]
 	
 #### Crafting recipes
 def p_shaped_recipe(p):

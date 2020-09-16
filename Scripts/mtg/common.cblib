@@ -37,13 +37,13 @@ define @Player: @Entity[type=player]
 end
 
 define @Position : 0-0-0-0-0xAEC (@Entity[type=area_effect_cloud])
-	create {Duration:-1, Age:-0x80000000, WaitTime:-0x80000000, UUID: [I; 0,0,0,0xAEC]}
+	create {Duration:-1, Age:-0x80000000, WaitTime:-0x80000000, UUIDMost:0, UUIDLeast: 0xAEC}
 end
 
 define @Position2 : 0-0-0-0-0xAEC2 (@Entity[type=area_effect_cloud])
-	create {Duration:-1, Age:-0x80000000, WaitTime:-0x80000000, UUID: [I; 0,0,0,0xAEC2]}
+	create {Duration:-1, Age:-0x80000000, WaitTime:-0x80000000, UUIDMost:0, UUIDLeast: 0xAEC2}
 end
 
 define @Position3 : 0-0-0-0-0xAEC3 (@Entity[type=area_effect_cloud])
-	create {Duration:-1, Age:-0x80000000, WaitTime:-0x80000000, UUID: [I; 0,0,0,0xAEC3]}
+	create {Duration:-1, Age:-0x80000000, WaitTime:-0x80000000, UUIDMost:0, UUIDLeast: 0xAEC3}
 end

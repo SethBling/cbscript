@@ -1,0 +1,93 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.16\saves\New World (2)"
+desc "Test for new data storage features"
+
+
+import common
+import lootable_shulker_box
+
+$DisplayOptions = 1
+$PracticeNether = 2
+
+define block_tag ground
+	grass_block
+	dirt
+	stone
+	sand
+	gravel
+	sandstone
+	podzol
+	coarse_dirt
+	ice
+	water
+end
+
+reset
+	/scoreboard objectives add Practice trigger
+	@Player.display_options()
+end
+
+define @Player = @Player
+	function do_nether()
+		/clear
+		/replaceitem entity @s hotbar.0 stone_axe
+		/replaceitem entity @s hotbar.1 stone_pickaxe
+		/replaceitem entity @s hotbar.2 water_bucket
+		/replaceitem entity @s hotbar.3 stone_shovel
+		/replaceitem entity @s hotbar.4 flint_and_steel
+		/replaceitem entity @s hotbar.5 crafting_table
+		/replaceitem entity @s hotbar.6 oak_planks 16
+		/replaceitem entity @s hotbar.7 cobblestone 16
+		/replaceitem entity @s hotbar.8 bread 22
+		
+		at @s
+			create_lava_pool()
+		end
+			
+		
+		tell @s "Set inventory and created lava pool."
+	end
+	
+	function display_options()
+		tell @s '{R[\[Practice Nether\]](/trigger Practice set 2){-'
+	end
+end
+
+clock main
+	unless @Position do create @Position
+	as @Player unless @s.logged_in == 1
+		@s.display_options()
+	end
+	
+	/scoreboard players reset * logged_in
+	@Player.logged_in = 1
+
+	as @Player
+		switch @s.Practice
+			case $DisplayOptions
+				@s.display_options()
+			end
+			case $PracticeNether
+				@s.do_nether()
+			end
+		end
+	end
+	
+	
+	@Player.Practice = 0
+	/scoreboard players enable @Player Practice
+end
+
+function create_lava_pool()
+	at ~ ~1.6 ~ at ^ ^ ^10
+		/tp @Position ~ ~ ~
+		while True at @Position if block ~ ~ ~ ground
+			/tp @Position ~ ~1 ~
+		end
+		while True at @Position unless block ~ ~ ~ ground
+			/tp @Position ~ ~-1 ~
+		end
+		at @Position
+			/setblock ~ ~ ~ lava
+		end
+	end
+end

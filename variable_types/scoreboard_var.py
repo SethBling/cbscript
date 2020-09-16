@@ -99,7 +99,7 @@ class scoreboard_var(var_base):
 					'float': 'f',
 					'double': 'd',
 				}
-				if type != 'float' and type != 'double':
+				if data_type != 'float' and data_type != 'double':
 					val = int(var_const / scale)
 				else:
 					val = float(var_const) / float(scale)

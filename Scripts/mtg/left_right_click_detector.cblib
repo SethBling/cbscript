@@ -1,0 +1,126 @@
+import common
+
+advancement damage_click_detector {
+	criteria: {
+		damage_click_detector: {
+			trigger: "minecraft:player_hurt_entity",
+			conditions: {
+				damage: {
+					entity: {
+						nbt: "{Tags:\"ClickDetector\"}"
+					}
+				}
+			}
+		}
+	},
+	rewards: {
+		"function": "$namespace:click_advancement_reward"
+	}
+}
+
+function click_advancement_reward()
+	/advancement revoke @s only $namespace:damage_click_detector
+	@s.destroy_click()
+	
+	if @s.enable_click
+		@s.create_click()
+		left_click_callback()
+	end
+end
+
+define @ClickPos : @Entity[type=area_effect_cloud, tag=ClickPos]
+	create {Tags:["ClickPos"], Duration:-1,Age:-2147483648,WaitTime:-2147483648, Passengers:[{id:"minecraft:wandering_trader", Tags:["ClickDetector", "NewClickDetector"], NoAI:1, Silent:1, Offers:{}}]}
+	air: Air short 1
+end
+
+@ClickDetector = @Entity[type=wandering_trader, tag=ClickDetector]
+@NewClickDetector = @Entity[type=wandering_trader, tag=NewClickDetector]
+
+define @Player : @Player
+	click_pos: @ClickPos
+	click_detector: @ClickDetector
+	
+	function enable_click()
+		unless @s.enable_click
+			@s.enable_click = True
+			@s.create_click()
+		end
+	end
+	
+	function create_click()
+		at @s eyes ^ ^ ^1
+			@s.click_pos = create @ClickPos ~ ~1000 ~
+			as @s.click_pos
+				/tp @s ~ ~-1 ~
+				@s.air = 0
+				@s.air = 1
+			end
+		end
+		
+		as @NewClickDetector
+			/tag @s remove NewClickDetector
+			/effect give @s invisibility 1 0 true
+			id = &@s
+			/team join no_collision
+		end
+		@s.click_detector = id
+	end
+	
+	function disable_click()
+		@s.enable_click = False
+		@s.destroy_click()
+	end
+	
+	function destroy_click()
+		as @s.click_pos
+			@s.kill = True
+			/tp @s ~ -200 ~
+			/kill @s
+		end
+		as @s.click_detector
+			@s.kill = True
+			/tp @s ~ -200 ~
+			/kill @s
+		end
+		@s.click_pos = None
+		@s.click_detector = None
+	end
+end
+
+
+reset
+	/team add no_collision
+	/team modify no_collision collisionRule never
+	/scoreboard objectives add right_clicked minecraft.custom:minecraft.talked_to_villager
+end
+
+clock left_right_click_clock
+	as @Player
+		if @s.enable_click
+			at @s eyes ^ ^ ^1
+				as @s.click_pos
+					/tp @s ~ ~-1 ~
+					/data merge entity @s {Air:0s}
+					/data merge entity @s {Air:1s}
+				end
+			end
+			
+			if @s.right_clicked
+				right_click_callback()
+			end
+		end
+		@s.right_clicked = 0
+	end
+	as @ClickDetector
+		/effect give @s invisibility 1 0 true
+		@s.absorption = 100
+	end
+end
+
+function left_click_callback()
+	/say left click callback not implemented
+end
+
+function right_click_callback()
+	/say right_click callback not implemented
+end

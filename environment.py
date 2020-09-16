@@ -55,7 +55,10 @@ class environment(object):
 		for id in self.pointers:
 			new_env.pointers[id] = self.pointers[id]
 		
-		new_env.dollarid = copy.deepcopy(self.dollarid)
+		for id in self.dollarid:
+			new_env.dollarid[id] = self.dollarid[id]
+			
+		#new_env.dollarid = copy.deepcopy(self.dollarid)
 		if new_function_name == None:
 			new_env.scratch = self.scratch
 			new_env.locals = self.locals
@@ -377,8 +380,8 @@ class environment(object):
 	def add_predicate(self, name, predicate):
 		self.global_context.add_predicate(name, predicate)
 		
-	def get_block_state_list(self):
-		return self.global_context.get_block_state_list()
+	def get_block_state_list(self, include_block_states):
+		return self.global_context.get_block_state_list(include_block_states)
 		
 	def get_reset_function(self):
 		return self.global_context.get_reset_function()
