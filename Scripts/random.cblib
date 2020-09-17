@@ -2,7 +2,7 @@ import common
 
 reset
 	as create @Marker
-		/execute store result score Global _random_seed run data get entity @s UUIDMost 0.0000000002328306436538696289
+		/execute store result score Global _random_seed run data get entity @s UUID[0] 0.00001
 		/kill @s
 	end
 end

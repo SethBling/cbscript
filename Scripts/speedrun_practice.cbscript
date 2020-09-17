@@ -1,12 +1,13 @@
-dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.16\saves\New World (2)"
-desc "Test for new data storage features"
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.16\saves\New World (16)"
+desc "Tools for Practicing Speedruns"
 
 
 import common
 import lootable_shulker_box
+import random
+import math
 
-$DisplayOptions = 1
-$PracticeNether = 2
+
 
 define block_tag ground
 	grass_block
@@ -26,8 +27,20 @@ reset
 	@Player.display_options()
 end
 
+$DisplayOptions = 1
+$PracticeNether = 2
+$PracticeFortress = 3
+$RandomFortress = 4
+$PreNetherHotbar = 5
+
 define @Player = @Player
-	function do_nether()
+	function display_options()
+		tell @s '{G[\[Pre-Nether Hotbar\]](/trigger Practice set $PreNetherHotbar){-'
+		tell @s '{R[\[Create Lava Pool\]](/trigger Practice set $PracticeNether){-'
+		tell @s '{r[\[To Nearest Fortress\]](/trigger Practice set $PracticeFortress){- {r[\[To Random Fortress\]](/trigger Practice set $RandomFortress){-'
+	end
+	
+	function pre_nether_hotbar()
 		/clear
 		/replaceitem entity @s hotbar.0 stone_axe
 		/replaceitem entity @s hotbar.1 stone_pickaxe
@@ -37,18 +50,47 @@ define @Player = @Player
 		/replaceitem entity @s hotbar.5 crafting_table
 		/replaceitem entity @s hotbar.6 oak_planks 16
 		/replaceitem entity @s hotbar.7 cobblestone 16
-		/replaceitem entity @s hotbar.8 bread 22
-		
-		at @s
-			create_lava_pool()
-		end
-			
-		
-		tell @s "Set inventory and created lava pool."
+		/replaceitem entity @s weapon.offhand bread 22
+		/replaceitem entity @s inventory.0 stone_hoe
+		/replaceitem entity @s inventory.1 white_bed
+		/replaceitem entity @s inventory.2 arrow 64
 	end
-	
-	function display_options()
-		tell @s '{R[\[Practice Nether\]](/trigger Practice set 2){-'
+
+	function find_nether_bricks()
+		found = False
+		for delta = 1 to 99
+			$search_delta(-1, 0)
+			if found
+				delta = 100000
+			else
+				$search_delta(1, 0)
+				if found
+					delta = 100000
+				else
+					$search_delta(0, -1)
+					if found
+						delta = 100000
+					else
+						$search_delta(0, 1)
+						if found
+							delta = 100000
+						end
+					end
+				end
+			end
+		end
+		
+		if found
+			@Position2.<pos> = @s.<structpos>
+			at @Position2 align xyz
+				/tp @s ~0.5 ~1 ~0.5
+				/effect give @s minecraft:instant_health 1 10
+			end
+			<x, y, z> = @s.<structpos> / scale
+			tell @s 'Fortress at (x), (y), (z).'
+		else
+			tell @s 'No fortress found.'
+		end
 	end
 end
 
@@ -56,6 +98,13 @@ clock main
 	unless @Position do create @Position
 	as @Player unless @s.logged_in == 1
 		@s.display_options()
+	end
+	
+	as @Player[brick_search] at @s
+		in the_nether unless @Position2 do create @Position2
+		/tp @Position2 @s
+		@s.find_nether_bricks()
+		@s.brick_search = False
 	end
 	
 	/scoreboard players reset * logged_in
@@ -67,7 +116,27 @@ clock main
 				@s.display_options()
 			end
 			case $PracticeNether
-				@s.do_nether()
+				at @s
+					create_lava_pool()
+				end
+			end
+			case $PracticeFortress
+				tell @s 'Finding the closest fortress...'
+				at @s do locate_structure{'fortress'}()
+			end
+			case $RandomFortress
+				at @s in the_nether
+					/tp @s ~ ~ ~
+					unless @Position2 do create @Position2
+					randx = randint(-124000000, 124000000)
+					randz = randint(-124000000, 124000000)
+					@Position2.<pos> = <randx, 0, randz>
+					/tp @s @Position2
+					at @Position2 do locate_structure{'fortress'}()
+				end
+			end
+			case $PreNetherHotbar
+				@s.pre_nether_hotbar()
 			end
 		end
 	end
@@ -78,7 +147,10 @@ clock main
 end
 
 function create_lava_pool()
-	at ~ ~1.6 ~ at ^ ^ ^10
+	unless @Position do create @Position
+	/tp @Position ~ ~ ~
+	
+	at ~ ~1.6 ~ at ^ ^ ^15
 		/tp @Position ~ ~ ~
 		while True at @Position if block ~ ~ ~ ground
 			/tp @Position ~ ~1 ~
@@ -86,8 +158,178 @@ function create_lava_pool()
 		while True at @Position unless block ~ ~ ~ ground
 			/tp @Position ~ ~-1 ~
 		end
-		at @Position
-			/setblock ~ ~ ~ lava
+		dx = 0
+		dz = 0
+		for i = 1 to 100
+			mv = randint(0, 4)
+			r = randint(0, 7)
+			nr = randint(-6, 1)
+					
+			switch mv
+				case 0
+					if dx < r
+						move @Position ~1 ~ ~
+						dx++
+					end
+				end
+				case 1
+					if dx > nr
+						move @Position ~-1 ~ ~
+						dx--
+					end
+				end
+				case 2
+					if dz < r
+						move @Position ~ ~ ~1
+						dz++
+					end
+				end
+				case 3
+					if dz > nr
+						move @Position ~ ~ ~-1
+						dz--
+					end
+				end
+			end
+			at @Position
+				create_lava_column()
+			end
 		end
+	end
+end
+
+function create_lava_column()
+	depth = randint(1, 2)
+	/setblock ~ ~ ~ lava
+	/setblock ~ ~-1 ~ stone
+	surround_with_stone()
+	
+	if depth == 2
+		/setblock ~ ~-1 ~ lava
+		/setblock ~ ~-2 ~ stone
+		at ~ ~-1 ~ do surround_with_stone()
+	end
+	for $i in $range(1, 5)
+		/setblock ~ ~$i ~ air
+	end
+end
+
+function surround_with_stone()
+	unless block ~-1 ~ ~ lava
+		/setblock ~-1 ~ ~ stone
+	end
+	unless block ~1 ~ ~ lava
+		/setblock ~1 ~ ~ stone
+	end
+	unless block ~ ~ ~-1 lava
+		/setblock ~ ~ ~-1 stone
+	end
+	unless block ~ ~ ~1 lava
+		/setblock ~ ~ ~1 stone
+	end
+	unless block ~-1 ~ ~-1 lava
+		/setblock ~-1 ~ ~-1 stone
+	end
+	unless block ~1 ~ ~1 lava
+		/setblock ~1 ~ ~1 stone
+	end
+	unless block ~1 ~ ~-1 lava
+		/setblock ~1 ~ ~-1 stone
+	end
+	unless block ~-1 ~ ~1 lava
+		/setblock ~-1 ~ ~1 stone
+	end
+end
+
+function locate_structure{$structure}()
+	in the_nether unless @Position2 do create @Position2
+	/tp @Position2 ~ ~ ~
+	dist = result
+		/locate $structure
+	xdir = 1
+	zdir = 1
+	steps = 0
+
+	while dist > 2 and steps < 5000
+		
+		xdist = dist
+		if xdir > 0
+			if dist > 50
+				move @Position2 ~10 ~ ~
+			else
+				move @Position2 ~1 ~ ~
+			end
+		else
+			if dist > 50
+				move @Position2 ~-10 ~ ~
+			else
+				move @Position2 ~-1 ~ ~
+			end
+		end
+		
+		at @Position2 do dist = result
+			/locate $structure
+		
+		if xdist < dist
+			xdir *= -1
+		end
+		
+		zdist = dist
+		if zdir > 0
+			if dist > 50
+				move @Position2 ~ ~ ~10
+			else
+				move @Position2 ~ ~ ~1
+			end
+		else
+			if dist > 50
+				move @Position2 ~ ~ ~-10
+			else
+				move @Position2 ~ ~ ~-1
+			end
+		end
+		
+		at @Position2 do dist = result
+			/locate $structure
+		
+		if zdist < dist
+			zdir *= -1
+		end
+		
+		steps++
+	end
+	
+	<x, y, z> = @Position2.<pos> / scale
+	/tp @s @Position2
+	/effect give @s minecraft:resistance 5 4
+	if $structure == 'fortress'
+		@s.brick_search = True
+	end
+end
+
+macro $search_delta($signx, $signz)
+	switch delta
+		case $delta in $range(1, 100)
+			$dx = $signx * $delta
+			$dz = $signz * $delta
+			$ndx = -$dx
+			$ndz = -$dz
+			
+			move @Position2 ~$dx 127 ~$dz
+			search_column()
+			move @Position2 ~$ndx ~ ~$ndz
+		end
+	end
+end
+
+function search_column()	
+	tracky = 127
+	while tracky > 0 and not found
+		at @Position2 if block ~ ~ ~ nether_bricks if block ~ ~1 ~ air if block ~ ~2 ~ air
+			@s.<structpos> = @Position2.<pos>
+			found = True
+		end
+		tracky--
+		move @Position2 ~ ~-1 ~
 	end
 end
