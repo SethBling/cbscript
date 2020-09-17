@@ -10,6 +10,7 @@ import traceback
 import math
 import collections
 import time
+import os
 
 class cbscript(object):
 	def __init__(self, source_file, parse_func):
@@ -46,16 +47,21 @@ class cbscript(object):
 		error_text = ''
 		for line in lines:
 			if len(error_text) == 0:
+				# Haven't found an error, keep searching
 				if search_text in line:
 					error_text = line
 			else:
+				# Append lines to the error message until it's over
 				if len(line) > 0 and line[0] == '[':
+					# Error message is over, print and return
 					print('========= Error detected in Minecraft log file =========')
 					print(error_text + '\a')
 					print('========================================================')
 					return
 				else:
-					error_text = error_text + '\n' + line
+					# Error message continues
+					if not line.startswith('\t'):
+						error_text = error_text + '\n \n' + line
 					
 				
 	
@@ -120,8 +126,10 @@ class cbscript(object):
 		self.post_processing()
 			
 		world = self.create_world(parsed["dir"], self.namespace)
-		
-		self.latest_log_file = source_file(world.get_latest_log_file())
+
+		latest_log_filename = world.get_latest_log_file()
+		if os.path.exists(latest_log_filename):
+			self.latest_log_file = source_file(latest_log_filename)
 
 		world.write_functions(self.global_context.functions)
 		world.write_tags(self.global_context.clocks, self.global_context.block_tags, self.global_context.entity_tags, self.global_context.item_tags)

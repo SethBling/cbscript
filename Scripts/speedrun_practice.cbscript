@@ -52,7 +52,7 @@ define @Player = @Player
 		/replaceitem entity @s hotbar.7 cobblestone 16
 		/replaceitem entity @s weapon.offhand bread 22
 		/replaceitem entity @s inventory.0 stone_hoe
-		/replaceitem entity @s inventory.1 white_bedq
+		/replaceitem entity @s inventory.1 white_bed
 		/replaceitem entity @s inventory.2 arrow 64
 	end
 
