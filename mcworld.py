@@ -15,6 +15,14 @@ class mcworld(object):
 		self.zip = zipfile.ZipFile(self.zipbytes, 'w', zipfile.ZIP_DEFLATED, False)
 		self.namespace = namespace
 		
+	def get_latest_log_file(self):
+		savesdir = os.path.split(self.dir)[0]
+		versiondir = os.path.split(savesdir)[0]
+		logsdir = os.path.join(versiondir, 'logs')
+		logfile = os.path.join(logsdir, 'latest.log')
+		
+		return logfile
+	
 	def write_functions(self, functions):
 		function_dir = 'data/{}/functions/'.format(self.namespace)
 		

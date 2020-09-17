@@ -17,6 +17,7 @@ class cbscript(object):
 		self.parse = parse_func
 		self.namespace = self.source_file.get_base_name().split('.')[0].lower()
 		self.dependencies = []
+		self.latest_log_file = None
 	
 	def log(self, text):
 		print(text)
@@ -34,6 +35,29 @@ class cbscript(object):
 				
 		if recompile:
 			self.try_to_compile()
+			
+		if self.latest_log_file and self.latest_log_file.was_updated():
+			log_text = self.latest_log_file.get_text(only_new_text=True)
+			self.search_log_for_errors(log_text)
+			
+	def search_log_for_errors(self, log_text):
+		lines = log_text.split('\n')
+		search_text = 'Failed to load function {}'.format(self.namespace)
+		error_text = ''
+		for line in lines:
+			if len(error_text) == 0:
+				if search_text in line:
+					error_text = line
+			else:
+				if len(line) > 0 and line[0] == '[':
+					print('========= Error detected in Minecraft log file =========')
+					print(error_text + '\a')
+					print('========================================================')
+					return
+				else:
+					error_text = error_text + '\n' + line
+					
+				
 	
 	def try_to_compile(self):
 		try:
@@ -96,6 +120,8 @@ class cbscript(object):
 		self.post_processing()
 			
 		world = self.create_world(parsed["dir"], self.namespace)
+		
+		self.latest_log_file = source_file(world.get_latest_log_file())
 
 		world.write_functions(self.global_context.functions)
 		world.write_tags(self.global_context.clocks, self.global_context.block_tags, self.global_context.entity_tags, self.global_context.item_tags)
