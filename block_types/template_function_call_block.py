@@ -28,6 +28,8 @@ class template_function_call_block(block_base):
 		func_name = function
 		for template_arg in template_args:
 			template_arg_val = template_arg.get_value(func)
+			# TODO: Replace all invalid function characters with _
+			template_arg_val = template_arg_val.replace(' ', '_')
 			func_name = func_name + '_{}'.format(template_arg_val)
 		
 		if func_name == func.name:

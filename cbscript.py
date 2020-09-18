@@ -43,12 +43,11 @@ class cbscript(object):
 			
 	def search_log_for_errors(self, log_text):
 		lines = log_text.split('\n')
-		search_text = 'Failed to load function {}'.format(self.namespace)
 		error_text = ''
 		for line in lines:
 			if len(error_text) == 0:
 				# Haven't found an error, keep searching
-				if search_text in line:
+				if self.namespace in line and ('ERROR' in line or 'Exception' in line):
 					error_text = line
 			else:
 				# Append lines to the error message until it's over

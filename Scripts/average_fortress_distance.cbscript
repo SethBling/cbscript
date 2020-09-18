@@ -1,0 +1,27 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.16\saves\New World (16)"
+desc "Compute the average distance to a nether fortress"
+
+
+import common
+import random
+import math
+
+reset
+	tell @a 'Finding average distance...'
+	dist_total = 0
+	dist_count = 0
+	in the_nether
+		unless @Position2 do create @Position2
+		for x = -100000 to 100000 by 10000
+			for z = -100000 to 100000 by 10000
+				@Position2.<pos> = <x, 0, z> * scale
+				at @Position2 do dist = result
+					/locate fortress
+				dist_total += dist
+				dist_count++
+			end
+		end
+	end
+	avg_dist = dist_total / dist_count
+	tell @a 'Average Distance to (dist_count) Fortresses: (avg_dist)'
+end

@@ -1,4 +1,4 @@
-dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.16\saves\New World (16)"
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.16\saves\New World (35)"
 desc "Tools for Practicing Speedruns"
 
 
@@ -7,7 +7,19 @@ import lootable_shulker_box
 import random
 import math
 
+predicate plains {
+	condition: 'location_check',
+	predicate: {
+		biome : 'plains'
+	}
+}
 
+predicate savanna {
+	condition: 'location_check',
+	predicate: {
+		biome : 'savanna'
+	}
+}
 
 define block_tag ground
 	grass_block
@@ -22,6 +34,108 @@ define block_tag ground
 	water
 end
 
+define block_tag passthrough
+	air
+	cave_air
+	grass
+	fern
+	dead_bush
+	seagrass
+	tall_seagrass
+	piston_head
+	tall_grass
+	oak_sapling
+	spruce_sapling
+	birch_sapling
+	jungle_sapling
+	acacia_sapling
+	dark_oak_sapling
+	powered_rail
+	detector_rail
+	dandelion
+	poppy
+	blue_orchid
+	allium
+	azure_bluet
+	red_tulip
+	orange_tulip
+	white_tulip
+	pink_tulip
+	oxeye_daisy
+	brown_mushroom
+	red_mushroom
+	torch
+	wall_torch
+	redstone_wire
+	wheat
+	ladder
+	rail
+	lever
+	redstone_torch
+	redstone_wall_torch
+	stone_button
+	sugar_cane
+	attached_pumpkin_stem
+	attached_melon_stem
+	pumpkin_stem
+	melon_stem
+	nether_wart
+	tripwire_hook
+	tripwire
+	carrots
+	potatoes
+	oak_button
+	spruce_button
+	birch_button
+	jungle_button
+	acacia_button
+	dark_oak_button
+	activator_rail
+	sunflower
+	lilac
+	rose_bush
+	peony
+	tall_grass
+	large_fern
+	chorus_plant
+	chorus_flower
+	beetroots
+	structure_void
+	kelp
+	kelp_plant
+	dead_tube_coral
+	dead_brain_coral
+	dead_bubble_coral
+	dead_fire_coral
+	dead_horn_coral
+	tube_coral
+	brain_coral
+	bubble_coral
+	fire_coral
+	horn_coral
+	dead_tube_coral_wall_fan
+	dead_brain_coral_wall_fan
+	dead_bubble_coral_wall_fan
+	dead_fire_coral_wall_fan
+	dead_horn_coral_wall_fan
+	tube_coral_wall_fan
+	brain_coral_wall_fan
+	bubble_coral_wall_fan
+	fire_coral_wall_fan
+	horn_coral_wall_fan
+	dead_tube_coral_fan
+	dead_brain_coral_fan
+	dead_bubble_coral_fan
+	dead_fire_coral_fan
+	dead_horn_coral_fan
+	tube_coral_fan
+	brain_coral_fan
+	bubble_coral_fan
+	fire_coral_fan
+	horn_coral_fan
+	void_air
+end
+
 reset
 	/scoreboard objectives add Practice trigger
 	@Player.display_options()
@@ -32,9 +146,15 @@ $PracticeNether = 2
 $PracticeFortress = 3
 $RandomFortress = 4
 $PreNetherHotbar = 5
+$RandomPlainsVillage = 6
+$RandomSavannaVillage = 7
+
+$Plains = 0
+$Savanna = 1
 
 define @Player = @Player
 	function display_options()
+		tell @s '{g[\[To Random Plains Village\]](/trigger Practice set $RandomPlainsVillage){- {y[\[To Random Savanna Village\]](/trigger Practice set $RandomSavannaVillage){-'
 		tell @s '{G[\[Pre-Nether Hotbar\]](/trigger Practice set $PreNetherHotbar){-'
 		tell @s '{R[\[Create Lava Pool\]](/trigger Practice set $PracticeNether){-'
 		tell @s '{r[\[To Nearest Fortress\]](/trigger Practice set $PracticeFortress){- {r[\[To Random Fortress\]](/trigger Practice set $RandomFortress){-'
@@ -100,6 +220,13 @@ clock main
 		@s.display_options()
 	end
 	
+	as @Player[move_to_ground]
+		while True at @s if block ~ ~-1 ~ passthrough
+			/tp @s ~ ~-1 ~
+		end
+		@s.move_to_ground = False
+	end
+	
 	as @Player[brick_search] at @s
 		in the_nether unless @Position2 do create @Position2
 		/tp @Position2 @s
@@ -122,7 +249,7 @@ clock main
 			end
 			case $PracticeFortress
 				tell @s 'Finding the closest fortress...'
-				at @s do locate_structure{'fortress'}()
+				at @s do move_to_fortress_point()
 			end
 			case $RandomFortress
 				at @s in the_nether
@@ -132,18 +259,37 @@ clock main
 					randz = randint(-124000000, 124000000)
 					@Position2.<pos> = <randx, 0, randz>
 					/tp @s @Position2
-					at @Position2 do locate_structure{'fortress'}()
+					at @Position2 do move_to_fortress_point()
 				end
 			end
 			case $PreNetherHotbar
 				@s.pre_nether_hotbar()
 			end
+			case $RandomPlainsVillage
+				@s.find_village = True
+				@s.village_type = $Plains
+			end
+			case $RandomSavannaVillage
+				@s.find_village = True
+				@s.village_type = $Savanna
+			end
 		end
 	end
 	
+	as @Player[find_village]
+		find_village()
+	end
 	
 	@Player.Practice = 0
 	/scoreboard players enable @Player Practice
+end
+
+function move_to_fortress_point()
+	locate_nether_structure{'fortress'}()
+	<x, y, z> = @Position2.<pos> / scale
+	/tp @s @Position2
+	/effect give @s resistance 5 4 true
+	@s.brick_search = True
 end
 
 function create_lava_pool()
@@ -241,7 +387,7 @@ function surround_with_stone()
 	end
 end
 
-function locate_structure{$structure}()
+function locate_nether_structure{$structure}()
 	in the_nether unless @Position2 do create @Position2
 	/tp @Position2 ~ ~ ~
 	dist = result
@@ -250,8 +396,7 @@ function locate_structure{$structure}()
 	zdir = 1
 	steps = 0
 
-	while dist > 2 and steps < 5000
-		
+	while dist > 2 and steps < 500
 		xdist = dist
 		if xdir > 0
 			if dist > 50
@@ -298,12 +443,72 @@ function locate_structure{$structure}()
 		
 		steps++
 	end
-	
-	<x, y, z> = @Position2.<pos> / scale
-	/tp @s @Position2
-	/effect give @s minecraft:resistance 5 4
-	if $structure == 'fortress'
-		@s.brick_search = True
+end
+
+
+function locate_overworld{$command}()
+	in overworld unless @Position do create @Position
+	/tp @Position ~ ~ ~
+	dist = result
+		/$command
+	xdir = 1
+	zdir = 1
+	steps = 0
+
+	while dist > 2 and steps < 100
+		xdist = dist
+		if xdir > 0
+			if dist > 300
+				move @Position ~100 ~ ~
+			else if dist > 30
+				move @Position ~10 ~ ~
+			else
+				move @Position ~1 ~ ~
+			end
+		else
+			if dist > 300
+				move @Position ~-100 ~ ~
+			else if dist > 30
+				move @Position ~-10 ~ ~
+			else
+				move @Position ~-1 ~ ~
+			end
+		end
+		
+		at @Position do dist = result
+			/$command
+		
+		if xdist < dist
+			xdir *= -1
+		end
+		
+		zdist = dist
+		if zdir > 0
+			if dist > 300
+				move @Position ~ ~ ~100
+			else if dist > 30
+				move @Position ~ ~ ~10
+			else
+				move @Position ~ ~ ~1
+			end
+		else
+			if dist > 300
+				move @Position ~ ~ ~-100
+			else if dist > 30
+				move @Position ~ ~ ~-10
+			else
+				move @Position ~ ~ ~-1
+			end
+		end
+		
+		at @Position do dist = result
+			/$command
+		
+		if zdist < dist
+			zdir *= -1
+		end
+		
+		steps++
 	end
 end
 
@@ -332,4 +537,49 @@ function search_column()
 		tracky--
 		move @Position2 ~ ~-1 ~
 	end
+end
+
+function find_village()
+	if @s.at_village at @s
+		right_biome = False
+		if @s.village_type == $Plains and predicate plains
+			right_biome = True
+		end
+		if @s.village_type == $Savanna and predicate savanna
+			right_biome = True
+		end
+	
+		if right_biome
+			unless @Position do create @Position
+			/tp @Position @s
+			randx = randint(-100, 100)
+			randz = randint(-100, 100)
+			@Position.<pos> += <randx, 0, randz> * scale
+			/tp @s @Position
+			@s.move_to_ground = True
+			at @s align xyz
+				/tp @s ~0.5 ~ ~0.5
+			end
+			
+			@s.find_village = False
+			tell @s 'Found village!'
+		end
+		@s.at_village = False
+	else
+		randomize_position()
+
+		at @Position do locate_overworld{'locate village'}()	
+		/tp @s @Position
+		/effect give @s resistance 5 4 true
+		
+		@s.at_village = True
+	end
+end
+
+function randomize_position()
+	randx = randint(-1000000, 1000000)
+	randz = randint(-1000000, 1000000)
+	
+	in overworld unless @Position do create @Position
+	@Position.<pos> = <randx, 200, randz> * scale
 end
