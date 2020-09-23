@@ -96,7 +96,6 @@ class selector_definition(object):
 				if len(part) == 0:
 					continue
 					
-				print(part)
 				if part.startswith('nbt') or part.startswith('scores'):
 					lbrack = part.count('{')
 					rbrack = part.count('}')
