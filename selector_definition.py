@@ -96,7 +96,8 @@ class selector_definition(object):
 				if len(part) == 0:
 					continue
 					
-				if part.startswith('nbt'):
+				print(part)
+				if part.startswith('nbt') or part.startswith('scores'):
 					lbrack = part.count('{')
 					rbrack = part.count('}')
 					
@@ -119,6 +120,8 @@ class selector_definition(object):
 					if '=' in part:
 						subparts = part.split('=')
 						subparts = [part.strip() for part in subparts]
+						if subparts[0] == 'scores':
+							subparts = [subparts[0], '='.join(subparts[1:])]
 						type = subparts[1]
 						if subparts[0] == 'type' and not type.startswith('minecraft:') and not type.startswith('!minecraft:'):
 							if subparts[1].startswith('!'):
@@ -131,7 +134,8 @@ class selector_definition(object):
 									subparts[1] = '#{}:{}'.format(env.namespace, subparts[1])
 								else:
 									subparts[1] = 'minecraft:' + subparts[1]
-						self.parts.append(subparts)
+									
+						self.set_part(subparts[0], subparts[1])
 					else:
 						if len(part) >= 5 and part[:4].upper() == "NOT ":
 							self.scores_max[part[4:]] = 0

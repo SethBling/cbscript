@@ -678,6 +678,15 @@ def p_condition_block(p):
 def p_condition_block_virtual(p):
 	'''condition : block relcoords DOLLAR ID opt_block_state opt_tile_data'''
 	p[0] = ('block', (p[2], p[3]+p[4]+p[5]+p[6])) 
+
+def p_condition_block_nocoords(p):
+	'''condition : block ID opt_block_state opt_tile_data'''
+	p[0] = ('block', (relcoords(), p[2] + p[3] + p[4]))
+
+def p_condition_block_virtual_nocoords(p):
+	'''condition : block DOLLAR ID opt_block_state opt_tile_data'''
+	p[0] = ('block', (relcoords(), p[2]+p[3]+p[4]+p[5])) 
+
 	
 def p_condition_nbt_path(p):
 	'''condition : nbt_object
