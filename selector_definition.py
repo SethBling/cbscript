@@ -173,9 +173,14 @@ class selector_definition(object):
 			return self.uuid
 	
 		major_parts = []
+		base_name = self.base_name
+		parts = self.parts
+		if base_name == 'e' and ('type', 'minecraft:player') in parts:
+			parts.remove(('type', 'minecraft:player'))
+			base_name = 'a'
 		
-		if len(self.parts) > 0:
-			major_parts.append(','.join(['='.join(part) for part in self.parts]))
+		if len(parts) > 0:
+			major_parts.append(','.join(['='.join(part) for part in parts]))
 			
 		if len(self.scores_min) != 0 or len(self.scores_max) != 0:
 			score_parts = []
@@ -194,7 +199,7 @@ class selector_definition(object):
 			
 			major_parts.append('scores={{{0}}}'.format(','.join(score_parts)))
 			
-		return '@{0}[{1}]'.format(self.base_name, ','.join(major_parts))
+		return '@{0}[{1}]'.format(base_name, ','.join(major_parts))
 		
 	def get_type(self):
 		for part in self.parts:

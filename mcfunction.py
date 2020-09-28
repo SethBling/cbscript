@@ -89,9 +89,9 @@ class mcfunction(object):
 				test += '{0} entity {1} '.format(iftype, val)
 			elif type == 'predicate':
 				if ':' in val:
-					test += 'if predicate {} '.format(val)
+					test += '{} predicate {} '.format(iftype, val)
 				elif val in self.predicates:
-					test += 'if predicate {}:{} '.format(self.namespace, val)
+					test += '{} predicate {}:{} '.format(iftype, self.namespace, val)
 				else:
 					raise CompileError('Predicate "{}" does not exist'.format(val))
 			elif type == 'score':

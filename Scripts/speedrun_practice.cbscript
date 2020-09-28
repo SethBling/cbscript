@@ -24,7 +24,7 @@ define @BarsMarker = @Entity[type=area_effect_cloud, tag=BarsMarker]
 		WaitTime:-2147483648
 	}
 end
-define @EnderDragon = @Entity[type=ender_dragon,limit=1]
+define @EnderDragon = @Entity[type=ender_dragon]
 	phase: DragonPhase int 1
 	create {
 		DragonPhase: 0
@@ -230,6 +230,8 @@ end
 
 reset
 	/scoreboard objectives add Practice trigger
+	/scoreboard objectives add deaths deathCount
+	/gamerule keepInventory true
 	@Player.display_options()
 end
 
@@ -249,10 +251,15 @@ $ResetEnd = 13
 $EndPortal = 14
 $TrackCrystalShots = 15
 $ResetEndPerch = 16
+$RestoreDeath = 17
 
 $Plains = 0
 $Savanna = 1
 $Desert = 2
+
+$Overworld = 0
+$Nether = 1
+$End = 2
 
 define @Player = @Player
 	function display_options()
@@ -274,6 +281,7 @@ define @Player = @Player
 		else
 			tell @s '{R[\[Track Crystal Shots (Off)\]](/trigger Practice set $TrackCrystalShots){-'
 		end
+		tell @s '{c[\[Restore from Death\]](/trigger Practice set $RestoreDeath){-'
 	end
 	
 	function perform_practice()
@@ -286,19 +294,21 @@ define @Player = @Player
 			end
 			case $NearestFortress
 				tell @s 'Finding the closest fortress...'
-				in the_nether
+				at @s unless in_the_nether in the_nether
 					/tp @s ~ ~ ~
-					at @s do go_to_fortress()
 				end
+				at @s do go_to_fortress()
 			end
 			case $RandomFortress
 				tell @s 'Finding the random fortress...'
-				at @s in the_nether
+				at @s unless in_the_nether in the_nether
 					/tp @s ~ ~ ~
+				end
+				at @s
 					unless @Position2 do create @Position2
-					randx = randint(-124000000, 124000000)
-					randz = randint(-124000000, 124000000)
-					@Position2.<pos> = <randx, 0, randz>
+					randx = randint(-124000, 124000)
+					randz = randint(-124000, 124000)
+					@Position2.<pos> = <randx, 0, randz> * scale
 					at @Position2 do go_to_fortress()
 				end
 			end
@@ -342,6 +352,9 @@ define @Player = @Player
 			case $NearStronghold
 				in overworld
 					unless @Position do create @Position
+					at @Position
+						/tp @s ~ ~ ~
+					end
 					locate_overworld{'locate stronghold'}()
 					at @Position
 						/spreadplayers ~ ~ 0 212 true @s
@@ -381,6 +394,57 @@ define @Player = @Player
 					@s.track_shots = True
 				end
 				@s.display_options()
+			end
+			case $RestoreDeath
+				if @s.has_restore
+					switch @s.restore_dim
+						case $Overworld
+							at @s unless predicate in_overworld in overworld
+								/tp @s ~ ~ ~
+							end
+							at @s
+								unless @Position do create @Position
+								@Position.<pos> = @s.<restore_pos>
+								@Position.rx = @s.restore_rx
+								@Position.ry = @s.restore_ry
+								at @Position
+									/tp @s ~ ~ ~ ~ ~
+								end
+							end
+						end
+						case $Nether
+							at @s unless predicate in_the_nether in the_nether
+								/tp @s ~ ~ ~
+							end
+							at @s
+								unless @Position2 do create @Position2
+								@Position2.<pos> = @s.<restore_pos>
+								@Position2.rx = @s.restore_rx
+								@Position2.ry = @s.restore_ry
+								at @Position2
+									/tp @s ~ ~ ~ ~ ~
+								end
+							end
+						end
+						case $End
+							at @s unless predicate in_the_end in the_end
+								/tp @s ~ ~ ~
+							end
+							at @s
+								unless @Position3 do create @Position3
+								@Position3.<pos> = @s.<restore_pos>
+								@Position3.rx = @s.restore_rx
+								@Position3.ry = @s.restore_ry
+								at @Position3
+									/tp @s ~ ~ ~ ~ ~
+								end
+							end
+						end
+					end
+					/effect give @s resistance 5 4 true
+				else
+					tell @s "You don't have any restore point."
+				end
 			end
 		end
 		
@@ -461,6 +525,8 @@ clock main
 	
 	track_dragon_damage()
 	
+	track_death()
+	
 	as @Player
 		@s.<prev_pos> = @s.<pos>
 		@s.prev_rx = @s.rx
@@ -482,14 +548,19 @@ clock main
 		/kill @Position2
 		/kill @Position3
 	end
-
+	
 end
 
 function go_to_fortress()
 	locate_nether_structure{'fortress'}()
 
 	at @Position2
-		/spreadplayers ~ ~ 0 30 under 80 true @s
+		for step = 1 to 1000
+			/spreadplayers ~ ~ 0 100 under 80 true @s
+			at @s if block ~ ~-1 ~ nether_bricks
+				step = 1000000
+			end
+		end
 	end
 end
 
@@ -801,8 +872,8 @@ function reset_the_end(perch)
 			/setblock ~ ~ ~ iron_bars
 		end
 		
-		/fill -2 60 -2 2 70 2 air replace end_portal
-		/fill 0 60 0 0 75 0 air replace dragon_egg
+		/fill -2 40 -2 2 70 2 air replace end_portal
+		/fill 0 40 0 0 75 0 air replace dragon_egg
 		
 		/bossbar add dragon "Ender Dragon"
 		/bossbar set dragon max 200
@@ -873,7 +944,7 @@ function track_crystal_shots()
 end
 
 function track_dragon_damage()
-	hp = @EnderDragon.hp
+	hp = @EnderDragon[limit=1].hp
 	
 	if hp < old_hp
 		damage = old_hp - hp
@@ -885,4 +956,29 @@ function track_dragon_damage()
 	end
 	
 	old_hp = hp
+end
+
+function track_death()
+	as @Player at @s
+		if @s.deaths > @s.prev_deaths
+			@s.<restore_pos> = @s.<last_pos>
+			@s.restore_rx = @s.last_rx
+			@s.restore_ry = @s.last_ry
+			@s.restore_dim = @s.last_dim
+			@s.has_restore = True
+		else
+			@s.<last_pos> = @s.<pos>
+			@s.last_rx = @s.rx
+			@s.last_ry = @s.ry
+			if predicate in_overworld
+				@s.last_dim = $Overworld
+			else if predicate in_the_nether
+				@s.last_dim = $Nether
+			else
+				@s.last_dim = $End
+			end
+		end
+		
+		@s.prev_deaths = @s.deaths
+	end
 end
