@@ -1,0 +1,45 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.18\saves\Minedas"
+desc "Test perf question"
+
+import common
+
+define @Tagged: @Marker[tag=yes]
+	create {Tags:["yes"]}
+end
+
+reset
+end
+
+function test()
+	/kill @Marker
+	for i=1 to 10
+		create @Tagged
+	end
+
+	for i=1 to 90
+		create @Marker
+	end
+	
+
+	tell @a "Test A: All entities on each command"
+	count = 0
+	for i=1 to 10000
+		for j=1 to 100
+			if @Tagged then count++
+		end
+	end
+	tell @a "Test A Complete"
+
+	tell @a "Test B: Tests for individual entities"
+	count = 0
+	for i=1 to 10000
+		as @Tagged
+			for j = 1 to 100
+				if @s[tag=yes] then count++
+			end
+		end
+	end
+	tell @a "Test B Complete"
+	
+	/kill @Marker
+end

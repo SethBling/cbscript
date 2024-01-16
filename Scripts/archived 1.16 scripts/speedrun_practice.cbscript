@@ -231,6 +231,7 @@ end
 reset
 	/scoreboard objectives add Practice trigger
 	/scoreboard objectives add deaths deathCount
+	/scoreboard objectives add beds_clicked minecraft.used:minecraft.white_bed
 	/gamerule keepInventory true
 	@Player.display_options()
 end
@@ -252,6 +253,11 @@ $EndPortal = 14
 $TrackCrystalShots = 15
 $ResetEndPerch = 16
 $RestoreDeath = 17
+$NoEndermen = 18
+$RandomBastion = 19
+$EWPerch = 20
+$NSPerch = 21
+$StrongholdEntrance = 22
 
 $Plains = 0
 $Savanna = 1
@@ -272,14 +278,20 @@ define @Player = @Player
 		tell @s '{m[\[To Random Ruined Portal\]](/trigger Practice set $RandomRuinedPortal){-'
 		tell @s '{R[\[Create Lava Pool\]](/trigger Practice set $CreateLavaPool){-'
 		tell @s '{r[\[To Nearest Fortress\]](/trigger Practice set $NearestFortress){- {r[\[To Random Fortress\]](/trigger Practice set $RandomFortress){-'
+		tell @s '{K[\[To Random Bastion\]](/trigger Practice set $RandomBastion){-'
 		tell @s '{C[\[Post-Nether Hotbar\]](/trigger Practice set $PostNetherHotbar){-'
-		tell @s '{w[\[To <300m from Stronghold\]](/trigger Practice set $NearStronghold){- {w[\[In Stronghold\]](/trigger Practice set $InStronghold){-'
+		tell @s '{wStronghold: [\[<300m Away\]](/trigger Practice set $NearStronghold){- {w[\[Inside\]](/trigger Practice set $InStronghold){- {w[\[Entrance\]](/trigger Practice set $StrongholdEntrance){-'
 		tell @s '{m[\[Create End Portal\]](/trigger Practice set $EndPortal){-'
-		tell @s '{M[\[Reset the End\]](/trigger Practice set $ResetEnd){- {M[\[Reset & Perch\]](/trigger Practice set $ResetEndPerch){-'
+		tell @s '{M[\[Reset the End\]](/trigger Practice set $ResetEnd){- {M[\[Reset & Perch\]](/trigger Practice set $ResetEndPerch) {M[\[EW Perch\]](/trigger Practice set $EWPerch) {M[\[NS Perch\]](/trigger Practice set $NSPerch){-'
 		if @s.track_shots
 			tell @s '{G[\[Track Crystal Shots (On)\]](/trigger Practice set $TrackCrystalShots){-'
 		else
 			tell @s '{R[\[Track Crystal Shots (Off)\]](/trigger Practice set $TrackCrystalShots){-'
+		end
+		if @s.no_enders
+			tell @s '{G[\[No Endermen (On)\]](/trigger Practice set $NoEndermen){-'
+		else
+			tell @s '{R[\[No Endermen (Off)\]](/trigger Practice set $NoEndermen){-'
 		end
 		tell @s '{c[\[Restore from Death\]](/trigger Practice set $RestoreDeath){-'
 	end
@@ -300,7 +312,7 @@ define @Player = @Player
 				at @s do go_to_fortress()
 			end
 			case $RandomFortress
-				tell @s 'Finding the random fortress...'
+				tell @s 'Finding a random fortress...'
 				at @s unless in_the_nether in the_nether
 					/tp @s ~ ~ ~
 				end
@@ -310,6 +322,19 @@ define @Player = @Player
 					randz = randint(-124000, 124000)
 					@Position2.<pos> = <randx, 0, randz> * scale
 					at @Position2 do go_to_fortress()
+				end
+			end
+			case $RandomBastion
+				tell @s 'Finding a random bastion...'
+				at @s unless in_the_nether in the_nether
+					/tp @s ~ ~ ~
+				end
+				at @s
+					unless @Position2 do create @Position2
+					randx = randint(-124000, 124000)
+					randz = randint(-124000, 124000)
+					@Position2.<pos> = <randx, 0, randz> * scale
+					at @Position2 do go_to_bastion()
 				end
 			end
 			case $PostVillageHotbar
@@ -378,11 +403,34 @@ define @Player = @Player
 					end
 				end
 			end
+			case $StrongholdEntrance
+				in overworld
+					unless @Position do create @Position
+					at @Position
+						/tp @s ~ ~ ~
+					end
+					locate_overworld{'locate stronghold'}()
+					@Position.x = ((@Position.x / scale) / 16 * 16 + 4) * scale + scale / 2
+					@Position.z = ((@Position.z / scale) / 16 * 16 + 4) * scale + scale / 2
+					@Position.y = 64000
+					at @Position
+						/tp @s ~ ~ ~
+					end
+					@s.strong_entrance = 2
+					/effect give @s resistance 5 4 true
+				end
+			end			
 			case $ResetEnd
-				reset_the_end(False)
+				reset_the_end(0)
 			end
 			case $ResetEndPerch
-				reset_the_end(True)
+				reset_the_end($ResetEndPerch)
+			end
+			case $NSPerch
+				reset_the_end($NSPerch)
+			end
+			case $EWPerch
+				reset_the_end($EWPerch)
 			end
 			case $EndPortal
 				at @s do create_end_portal()
@@ -392,6 +440,14 @@ define @Player = @Player
 					@s.track_shots = False
 				else
 					@s.track_shots = True
+				end
+				@s.display_options()
+			end
+			case $NoEndermen
+				if @s.no_enders
+					@s.no_enders = False
+				else
+					@s.no_enders = True
 				end
 				@s.display_options()
 			end
@@ -448,8 +504,12 @@ define @Player = @Player
 			end
 		end
 		
-		@Player.Practice = 0
-		/scoreboard players enable @Player Practice
+		if @s.Practice > 0
+			@s.display_options()
+		end
+		
+		@s.Practice = 0
+		/scoreboard players enable @s Practice
 	end
 	
 	function random_spot()
@@ -472,12 +532,16 @@ define @Player = @Player
 		/replaceitem entity @s hotbar.5 crafting_table
 		/replaceitem entity @s hotbar.6 oak_planks 16
 		/replaceitem entity @s hotbar.7 cobblestone 16
-		/replaceitem entity @s weapon.offhand bread 64
+		/replaceitem entity @s hotbar.8 bread 64
+		/replaceitem entity @s weapon.offhand shield
 		/replaceitem entity @s inventory.0 stone_hoe
 		/replaceitem entity @s inventory.1 arrow 64
 		for $slot in $range(9, 18)
 			/replaceitem entity @s inventory.$slot white_bed
 		end
+		
+		/effect give @s minecraft:instant_health 1 10
+		/effect give @s minecraft:saturation 1 5
 	end
 	
 	function post_nether_hotbar()
@@ -498,10 +562,15 @@ define @Player = @Player
 		/replaceitem entity @s inventory.2 stone_hoe
 		/replaceitem entity @s inventory.3 arrow 64
 		/replaceitem entity @s inventory.4 flint_and_steel
+		/replaceitem entity @s inventory.5 obsidian 5
+		/replaceitem entity @s inventory.6 respawn_anchor 2
 		
 		for $slot in $range(9, 23)
 			/replaceitem entity @s inventory.$slot white_bed
 		end
+		
+		/effect give @s minecraft:instant_health 1 10
+		/effect give @s minecraft:saturation 1 5
 	end
 end
 
@@ -517,6 +586,10 @@ clock main
 	
 	as @Player[find_village] at @s
 		find_village()
+	end
+	
+	as @Player[strong_entrance] at @s
+		go_to_stronghold_entrance()
 	end
 	
 	mark_end_crystals()
@@ -549,6 +622,12 @@ clock main
 		/kill @Position3
 	end
 	
+	if @Player[no_enders,limit=1]
+		as @e[type=enderman]
+			move @s ~ ~-500 ~
+			/kill @s
+		end
+	end
 end
 
 function go_to_fortress()
@@ -563,6 +642,15 @@ function go_to_fortress()
 		end
 	end
 end
+
+function go_to_bastion()
+	locate_nether_structure{'bastion_remnant'}()
+
+	at @Position2
+		/spreadplayers ~ ~ 0 20 under 100 true @s
+	end
+end
+
 
 function ground_at_cursor{$distance}()
 	unless @Position do create @Position
@@ -788,6 +876,29 @@ macro $locate_overworld_step($dx, $dz)
 	end
 end
 
+function go_to_stronghold_entrance()
+	@s.strong_entrance--
+	
+	if @s.strong_entrance == 0
+		in_stairs = False
+		/tp @s ~ 64 ~
+		for y = 64 to 0 by -1						
+			move @s ~ ~-1 ~
+			at @s
+				for $dx,$dz in [[1,1],[-1,1],[1,-1],[-1,-1]]
+					if block ~$dx ~ ~$dz smooth_stone_slab
+						in_stairs = True
+					end
+				end
+				if in_stairs and block ~ ~ ~ passthrough unless block ~ ~-1 ~ passthrough
+					y = 0
+				end
+			end		
+		end
+	end
+end
+
+
 function find_village()
 	right_biome = False
 	if @s.village_type == $Plains and predicate plains
@@ -859,11 +970,53 @@ function reset_the_end(perch)
 	in the_end
 		/kill @e[type=ender_dragon]
 		/kill @e[type=minecraft:experience_orb]
-		if perch
-			/summon ender_dragon 0 100 0 {DragonPhase: 3}
+		in the_end unless @Position3 do create @Position3
+		if perch == $ResetEndPerch
+			rx = 10*randint(-1, 2)
+			rz = 10*randint(-1, 2)
+			@Position3.<pos> = <rx, 100, rz> * scale
+			at @Position3
+				/summon ender_dragon ~ ~ ~ {DragonPhase: 3}
+			end
+		else if perch == $EWPerch
+			east = randint(0, 2)
+			ry = 100 * scale + randint(-4000, 4000)
+			offset = randint(-2000, 2000)
+			
+			if east
+				@Position3.<pos> = <15000, ry, offset>
+				at @Position3
+					/summon ender_dragon ~ ~ ~ {DragonPhase: 3, Rotation:[-90f, 0f]}
+				end
+			else
+				@Position3.<pos> = <-15000, ry, offset>
+				at @Position3
+					/summon ender_dragon ~ ~ ~ {DragonPhase: 3, Rotation:[90f, 0f]}
+				end
+			end
+		else if perch == $NSPerch
+			north = randint(0, 2)
+			ry = 100 * scale + randint(-4000, 4000)
+			
+			if north
+				@Position3.<pos> = <0, ry, 15000>
+				at @Position3
+					/summon ender_dragon ~ ~ ~ {DragonPhase: 3}
+				end
+			else
+				@Position3.<pos> = <0, ry, -15000>
+				at @Position3
+					/summon ender_dragon ~ ~ ~ {DragonPhase: 3, Rotation:[180f, 0f]}
+				end
+			end
 		else
 			create @EnderDragon 0 100 0
 		end
+		
+		#<rand_offset> = <randint(-20000,20000),0,randint(-20000,20000)>
+		#as @EnderDragon
+		#	@s.<pos> += <rand_offset>
+		#end
 
 		at @CrystalMarker unless @Crystal[distance=..1]
 			/summon end_crystal
@@ -874,11 +1027,14 @@ function reset_the_end(perch)
 		
 		/fill -2 40 -2 2 70 2 air replace end_portal
 		/fill 0 40 0 0 75 0 air replace dragon_egg
+		/fill -10 40 -10 10 75 10 air replace fire
 		
 		/bossbar add dragon "Ender Dragon"
 		/bossbar set dragon max 200
 		/bossbar set dragon color pink
 	end
+	
+	@Player.beds_clicked = 0
 end
 
 function display_dimension()
@@ -952,7 +1108,14 @@ function track_dragon_damage()
 	end
 	
 	if hp <= 0 and old_hp > 0
+		as @Player
+			tell @s "{wUsed {C(@s.beds_clicked) {wBeds"
+			subtitle @s "{wUsed {C(@s.beds_clicked) {wBeds"
+			title @s 10 80 10 ""
+			@s.beds_clicked = 0
+		end
 		@Player.display_options()
+		/fill -10 40 -10 10 75 10 air replace fire
 	end
 	
 	old_hp = hp
@@ -966,6 +1129,7 @@ function track_death()
 			@s.restore_ry = @s.last_ry
 			@s.restore_dim = @s.last_dim
 			@s.has_restore = True
+			@s.display_options()
 		else
 			@s.<last_pos> = @s.<pos>
 			@s.last_rx = @s.rx
