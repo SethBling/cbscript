@@ -1,0 +1,30 @@
+import common
+
+define @Display = @Entity
+    t00: transformation[0] float
+    t01: transformation[1] float
+    t02: transformation[2] float
+    tx: transformation[3] float
+    t10: transformation[4] float
+    t11: transformation[5] float
+    t12: transformation[6] float
+    ty: transformation[7] float
+    t20: transformation[8] float
+    t21: transformation[9] float
+    t22: transformation[10] float
+    tz: transformation[11] float
+end
+
+define @BlockDisplay = @Display[type=block_display]
+    function transform_to_quaternion()
+        @s.w = sqrt((scale + @s.t00 + @s.t11 + @s.t22) * scale)
+        w4 = 4 * @s.w
+        @s.i = (@s.t21 - @s.t12) * scale / w4
+        @s.j = (@s.t02 - @s.t20) * scale / w4
+        @s.k = (@s.t10 - @s.t01) * scale / w4
+    end
+    
+    function rotate(w, i, j, k)
+        
+    end
+end
