@@ -103,6 +103,7 @@ class cbscript(object):
 		global_environment.set_dollarid('namespace', self.namespace)
 		global_environment.set_dollarid('get_num_blocks', self.global_context.get_num_blocks)
 		global_environment.set_dollarid('get_num_block_states', self.global_context.get_num_block_states)
+		global_environment.set_dollarid('global_scale', parsed['scale'])
 		global_func = mcfunction(global_environment)
 		
 		self.global_context.scale = parsed['scale']

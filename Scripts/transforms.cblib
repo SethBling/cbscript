@@ -1,30 +1,42 @@
 import common
+import math
 
 define @Display = @Entity
-    t00: transformation[0] float
-    t01: transformation[1] float
-    t02: transformation[2] float
-    tx: transformation[3] float
-    t10: transformation[4] float
-    t11: transformation[5] float
-    t12: transformation[6] float
-    ty: transformation[7] float
-    t20: transformation[8] float
-    t21: transformation[9] float
-    t22: transformation[10] float
-    tz: transformation[11] float
-end
+    function initialize_transform()
+        @s.t00 = scale
+        @s.t01 = 0
+        @s.t02 = 0
+        @s.t10 = 0
+        @s.t11 = scale
+        @s.t12 = 0
+        @s.t20 = 0
+        @s.t21 = 0
+        @s.t22 = scale
+        @s.tx = -scale / 2
+        @s.ty = -scale / 2
+        @s.tz = -scale / 2
+    end
+    
+    function set_transform()
+        /data modify storage $namespace:global transformation set value [1f,0f,0f,0f,0f,1f,0f,0f,0f,0f,1f,0f,0f,0f,0f,1f]
+        for $pair in [[0,"t00"], [1,"t01"], [2,"t02"], [3,"tx"], [4,"t10"], [5,"t11"], [6,"t12"], [7,"ty"], [8,"t20"], [9,"t21"], [10,"t22"], [11,"tz"]]
+            $idx = $pair[0]
+            $var = $pair[1]
+            $downscale = 1.0 / $global_scale
+            /execute store result storage $namespace:global transformation[$idx] float $downscale run scoreboard players get @s $var
+        end
+        
+        /data modify entity @s transformation set from storage transform_test:global transformation
+    end
 
-define @BlockDisplay = @Display[type=block_display]
     function transform_to_quaternion()
-        @s.w = sqrt((scale + @s.t00 + @s.t11 + @s.t22) * scale)
-        w4 = 4 * @s.w
-        @s.i = (@s.t21 - @s.t12) * scale / w4
-        @s.j = (@s.t02 - @s.t20) * scale / w4
-        @s.k = (@s.t10 - @s.t01) * scale / w4
+        
     end
     
     function rotate(w, i, j, k)
         
     end
+end
+
+define @BlockDisplay = @Display[type=block_display]
 end

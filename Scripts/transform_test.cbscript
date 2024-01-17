@@ -1,20 +1,32 @@
 dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.20\saves\New World"
 desc "Automatically mine the blocks in front of you"
-scale 10000
+scale 1000
 
 import common
 import transforms
+import math
 
 reset
     /kill @BlockDisplay
-    $row1 = "0f,1f,0f,0f"
-    $row2 = "0f,0f,1f,0f"
-    $row3 = "1f,0f,0f,0f"
-    $row4 = "0f,0f,0f,1f"
-    /summon minecraft:block_display 6.0 57.0 1.0 {block_state:{Name:"minecraft:stone",Count:0b},transformation:[$row1,$row2,$row3,$row4],Glowing:1b}
+    /summon minecraft:block_display 6 57 1 {block_state:{Name:"minecraft:stone",Count:0b},Glowing:1b}
     
     as @BlockDisplay
-        @s.transform_to_quaternion()
-        tell @a "{wQuaternion: {C(@s.w), (@s.i), (@s.j), (@s.k)"
+        @s.initialize_transform()
+        @s.set_transform()
+        angle = 0
+    end
+end
+
+clock tick
+    angle += 5
+    as @BlockDisplay
+        @s.t00 = cos(angle)
+        @s.t01 = -sin(angle)
+        @s.t10 = sin(angle)
+        @s.t11 = cos(angle)
+        @s.tx = -cos(angle)
+        @s.ty = -sin(angle) / 2
+        tell @a "(@s.ty)"
+        @s.set_transform()
     end
 end
