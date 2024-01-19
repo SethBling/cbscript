@@ -4,7 +4,7 @@ import math
 $InverseMass = 500
 $InverseRotationalIntertia = 300
 
-define @Display = @Entity
+define @PhysicsDisplay = @Entity
     function initialize_transform()
         @s.t00 = scale
         @s.t01 = 0
@@ -199,9 +199,35 @@ define @Display = @Entity
         
         @s.rotation_impulse(axis_x, axis_y, axis_z)
     end
+    
+    function apply_spring_cable(spring_x, spring_y, spring_z, spring_neutral, spring_constant, local_att_x, local_att_y, local_att_z)
+        @s.local_to_world(local_att_x, local_att_y, local_att_z, True)
+        
+        spring_dx = world_x - spring_x
+        spring_dy = world_y - spring_y
+        spring_dz = world_z - spring_z
+        
+        # Current length of the spring
+        spring_mag = sqrt(spring_dx*spring_dx + spring_dy*spring_dy + spring_dz*spring_dz)
+        
+        # Spring displacement from neutral
+        spring_disp = spring_mag - spring_neutral
+        
+        spring_dir_x = spring_dx * scale / spring_mag
+        spring_dir_y = spring_dy * scale / spring_mag
+        spring_dir_z = spring_dz * scale / spring_mag
+        
+        if spring_mag > spring_neutral
+            force_x = -spring_dir_x * spring_disp / scale * spring_constant / scale
+            force_y = -spring_dir_y * spring_disp / scale * spring_constant / scale
+            force_z = -spring_dir_z * spring_disp / scale * spring_constant / scale
+            
+            @s.apply_impulse(world_x, world_y, world_z, force_x, force_y, force_z)
+        end
+    end
 end
 
-define @PhysicsBlock = @Display[type=block_display,tag=physics_block]
+define @PhysicsBlock = @PhysicsDisplay[type=block_display,tag=physics_block]
     function ray_intersection(x, y, z, dx, dy, dz)
         @s.world_to_local(x, y, z, True)
         local_origin_x = local_x

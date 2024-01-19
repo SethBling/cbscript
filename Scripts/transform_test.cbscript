@@ -79,29 +79,13 @@ clock tick
         # Gravity
         @s.velocity_y -= 40
         
-        $spring_neutral = 7000
-        $spring_constant = 1000
-        
         spring_x = 6500
         spring_y = 65500
         spring_z = 1500
         
-        @s.local_to_world(0, 500, 0, True)
+        @s.apply_spring_cable(spring_x, spring_y, spring_z, 7000, 1000, 0, 500, 0)
         
-        spring_dx = world_x - spring_x
-        spring_dy = world_y - spring_y
-        spring_dz = world_z - spring_z
-        
-        spring_mag_sq = spring_dx*spring_dx + spring_dy*spring_dy + spring_dz*spring_dz
-
-        spring_mag = sqrt(spring_mag_sq)
-        spring_disp = spring_mag - $spring_neutral
-        
-        spring_dir_x = spring_dx * scale / spring_mag
-        spring_dir_y = spring_dy * scale / spring_mag
-        spring_dir_z = spring_dz * scale / spring_mag
-        
-        
+        # This code relies on locals from apply_spring_cable()
         @Position.<pos> = <spring_x, spring_y, spring_z>
         for i = 1 to spring_mag / 200
             @Position.<pos> = <spring_x, spring_y, spring_z> + <spring_dx, spring_dy, spring_dz> * i / (spring_mag / 200)
@@ -120,14 +104,6 @@ clock tick
         end
         
 
-        if spring_mag_sq > $spring_neutral*$spring_neutral
-            force_x = -spring_dir_x * spring_disp / scale * $spring_constant / scale
-            force_y = -spring_dir_y * spring_disp / scale * $spring_constant / scale
-            force_z = -spring_dir_z * spring_disp / scale * $spring_constant / scale
-            
-            @s.apply_impulse(world_x, world_y, world_z, force_x, force_y, force_z)
-        end
-        
     
         # Rotate around axis
         #axis_x = scale
