@@ -1,5 +1,11 @@
 import common
 
+# Requires mode other than Peaceful
+# Call click_detector_reset in reset
+# Running as a player, call create_click to create the click slime
+# Each tick, check for a click with check_clicked(), running as player
+# After check_clicked, call click_detector_tick()
+
 define @ClickDetector = @Entity[type=slime,tag=ClickDetector]
     create {CustomName:"\"ClickDetector\"", Tags:["ClickDetector"], NoGravity:1b, NoAI: 1b, Invisible:1b, Silent:1b, Size:2, AbsorptionAmount: 100f}
 end

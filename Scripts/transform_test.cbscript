@@ -5,28 +5,147 @@ scale 1000
 import common
 import transforms
 import math
+import click_detector
+
+define @ChainLink = @Entity[type=block_display,tag=chain]
+    create {block_state:{Name:"minecraft:stone",Count:0b}, transformation:[0.2f,0f,0f,-0.1f,0f,0.2f,0f,-0.1f,0f,0f,0.2f,-0.1f,0f,0f,0f,1f],Tags:["chain"]}
+end
 
 reset
-    /kill @BlockDisplay
-    /summon minecraft:block_display 6 57 1 {block_state:{Name:"minecraft:stone",Count:0b},Glowing:1b}
+    /kill @PhysicsBlock
+    /summon minecraft:block_display 6.5 57.5 1.5 {block_state:{Name:"minecraft:grass_block",Count:0b}, interpolation_duration: 1b, Tags:["physics_block"]}
     
-    as @BlockDisplay
+    /kill @ChainLink
+    
+    for i = 1 to 50
+        create @ChainLink
+        @ChainLink.id++
+    end
+    
+    /kill @Position
+    create @Position
+    
+    as @PhysicsBlock
         @s.initialize_transform()
         @s.set_transform()
         angle = 0
     end
+    
+    click_detector_reset()
+    as @Player
+        create_click()
+    end
+end
+
+define @nearest_player = @Player[sort=nearest,limit=1]
 end
 
 clock tick
-    angle += 5
-    as @BlockDisplay
-        @s.t00 = cos(angle)
-        @s.t01 = -sin(angle)
-        @s.t10 = sin(angle)
-        @s.t11 = cos(angle)
-        @s.tx = -cos(angle)
-        @s.ty = -sin(angle) / 2
-        tell @a "(@s.ty)"
+    as @PhysicsBlock
+        as @Player at @s eyes
+            /tp @Position ^ ^ ^
+            world_eye_x = @Position.x
+            world_eye_y = @Position.y
+            world_eye_z = @Position.z
+            
+            /tp @Position ^ ^ ^1
+            world_eye_dx = @Position.x - world_eye_x
+            world_eye_dy = @Position.y - world_eye_y
+            world_eye_dz = @Position.z - world_eye_z
+            
+            clicked = check_clicked()
+        end
+        click_detector_tick()
+
+        if clicked
+            @s.ray_intersection(world_eye_x, world_eye_y, world_eye_z, world_eye_dx, world_eye_dy, world_eye_dz)
+            
+            if @s.collision
+                @Position.<pos> = <@s.collision_x, @s.collision_y, @s.collision_z>
+                @Position.<pos> += <@s.collision_nx, @s.collision_ny, @s.collision_nz> / 8
+
+                @s.apply_impulse(@s.collision_x, @s.collision_y, @s.collision_z, world_eye_dx, world_eye_dy, world_eye_dz)
+                
+                at @Position
+                    /particle minecraft:crit ~ ~ ~ 0 0 0 0 1 force
+                end
+            else
+                #@s.glowing = 0
+                
+                #@s.clear_rotation()
+            end
+        end
+        
+        # Gravity
+        @s.velocity_y -= 40
+        
+        $spring_neutral = 7000
+        $spring_constant = 1000
+        
+        spring_x = 6500
+        spring_y = 65500
+        spring_z = 1500
+        
+        @s.local_to_world(0, 500, 0, True)
+        
+        spring_dx = world_x - spring_x
+        spring_dy = world_y - spring_y
+        spring_dz = world_z - spring_z
+        
+        spring_mag_sq = spring_dx*spring_dx + spring_dy*spring_dy + spring_dz*spring_dz
+
+        spring_mag = sqrt(spring_mag_sq)
+        spring_disp = spring_mag - $spring_neutral
+        
+        spring_dir_x = spring_dx * scale / spring_mag
+        spring_dir_y = spring_dy * scale / spring_mag
+        spring_dir_z = spring_dz * scale / spring_mag
+        
+        
+        @Position.<pos> = <spring_x, spring_y, spring_z>
+        for i = 1 to spring_mag / 200
+            @Position.<pos> = <spring_x, spring_y, spring_z> + <spring_dx, spring_dy, spring_dz> * i / (spring_mag / 200)
+            at @Position
+                #/particle minecraft:bubble_pop ~ ~ ~
+                @ChainLink.id -= i
+                /tp @ChainLink[id == 0] ~ ~ ~
+                @ChainLink.id += i
+            end
+        end
+        
+        for i = (spring_mag / 200) + 1 to 50
+            @ChainLink.id -= i
+            /tp @ChainLink[id == 0] 0 0 0
+            @ChainLink.id += i
+        end
+        
+
+        if spring_mag_sq > $spring_neutral*$spring_neutral
+            force_x = -spring_dir_x * spring_disp / scale * $spring_constant / scale
+            force_y = -spring_dir_y * spring_disp / scale * $spring_constant / scale
+            force_z = -spring_dir_z * spring_disp / scale * $spring_constant / scale
+            
+            @s.apply_impulse(world_x, world_y, world_z, force_x, force_y, force_z)
+        end
+        
+    
+        # Rotate around axis
+        #axis_x = scale
+        #axis_y = scale * 2
+        #axis_z = scale * 3
+        #axis_x = world_eye_x - @s.x
+        #axis_y = world_eye_y - @s.y
+        #axis_z = world_eye_z - @s.z
+        
+        #@s.set_rotation_axis_angle(axis_x, axis_y, axis_z, -3)
+        
+        @s.integrate()
+        
+        @s.quaternion_to_transform()
+        @s.scale_transform()
+        
+        @s.center_transform()
+
         @s.set_transform()
     end
 end

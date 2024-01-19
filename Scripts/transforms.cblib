@@ -1,6 +1,9 @@
 import common
 import math
 
+$InverseMass = 500
+$InverseRotationalIntertia = 300
+
 define @Display = @Entity
     function initialize_transform()
         @s.t00 = scale
@@ -12,9 +15,94 @@ define @Display = @Entity
         @s.t20 = 0
         @s.t21 = 0
         @s.t22 = scale
-        @s.tx = -scale / 2
-        @s.ty = -scale / 2
-        @s.tz = -scale / 2
+        @s.tx = 0
+        @s.ty = 0
+        @s.tz = 0
+        
+        @s.w = scale
+        @s.i = 0
+        @s.j = 0
+        @s.k = 0
+        
+        @s.clear_velocity()
+        @s.clear_rotation()
+    end
+    
+    function clear_velocity()
+        @s.velocity_x = 0
+        @s.velocity_y = 0
+        @s.velocity_z = 0
+    end
+    
+    function clear_rotation()
+        @s.rotation_x = 0
+        @s.rotation_y = 0
+        @s.rotation_z = 0
+    end
+    
+    function center_transform()
+        @s.tx = (@s.t00 + @s.t01 + @s.t02) / -2
+        @s.ty = (@s.t10 + @s.t11 + @s.t12) / -2
+        @s.tz = (@s.t20 + @s.t21 + @s.t22) / -2
+    end
+    
+    function rotation_impulse(x, y, z)
+        @s.rotation_x += x * $InverseRotationalIntertia / scale
+        @s.rotation_y += y * $InverseRotationalIntertia / scale
+        @s.rotation_z += z * $InverseRotationalIntertia / scale
+    end
+    
+    function integrate()
+        @s.integrate_velocity()
+        @s.integrate_rotation()
+    end
+    
+    function integrate_velocity()
+        @s.velocity_x *= 980
+        @s.velocity_x /= scale
+        @s.velocity_y *= 980
+        @s.velocity_y /= scale
+        @s.velocity_z *= 980
+        @s.velocity_z /= scale
+        
+    
+        @s.x += @s.velocity_x
+        @s.y += @s.velocity_y
+        @s.z += @s.velocity_z
+    end
+    
+    function integrate_rotation()
+        @s.rotation_x *= 980
+        @s.rotation_x /= scale
+        @s.rotation_y *= 980
+        @s.rotation_y /= scale
+        @s.rotation_z *= 980
+        @s.rotation_z /= scale
+
+        i = @s.rotation_x
+        j = @s.rotation_y
+        k = @s.rotation_z
+        
+        new_w = (-i * @s.i - j * @s.j - k * @s.k) / scale / 2
+        new_i = ( i * @s.w + j * @s.k - k * @s.j) / scale / 2
+        new_j = (-i * @s.k + j * @s.w + k * @s.i) / scale / 2
+        new_k = ( i * @s.j - j * @s.i + k * @s.w) / scale / 2
+        
+        @s.w += new_w
+        @s.i += new_i
+        @s.j += new_j
+        @s.k += new_k
+        
+        mag = sqrt(@s.w*@s.w + @s.i*@s.i + @s.j*@s.j + @s.k*@s.k)
+        
+        @s.w *= scale
+        @s.w /= mag
+        @s.i *= scale
+        @s.i /= mag
+        @s.j *= scale
+        @s.j /= mag
+        @s.k *= scale
+        @s.k /= mag
     end
     
     function set_transform()
@@ -27,16 +115,212 @@ define @Display = @Entity
         end
         
         /data modify entity @s transformation set from storage transform_test:global transformation
+        /data modify entity @s start_interpolation set value 0b
     end
 
-    function transform_to_quaternion()
+    function multiply_quaternion_right(w, i, j, k)
+        new_w = (@s.w * w - @s.i * i - @s.j * j - @s.k * k) / scale
+        new_i = (@s.w * i + @s.i * w + @s.j * k - @s.k * j) / scale
+        new_j = (@s.w * j - @s.i * k + @s.j * w + @s.k * i) / scale
+        new_k = (@s.w * k + @s.i * j - @s.j * i + @s.k * w) / scale
+
+        mag = sqrt(new_w*new_w + new_i*new_i + new_j*new_j + new_k*new_k)
         
+        @s.w = new_w * scale / mag
+        @s.i = new_i * scale / mag
+        @s.j = new_j * scale / mag
+        @s.k = new_k * scale / mag
     end
     
-    function rotate(w, i, j, k)
+    function multiply_quaternion_left(w, i, j, k)
+        new_w = (w * @s.w - i * @s.i - j * @s.j - k * @s.k) / scale
+        new_i = (w * @s.i + i * @s.w + j * @s.k - k * @s.j) / scale
+        new_j = (w * @s.j - i * @s.k + j * @s.w + k * @s.i) / scale
+        new_k = (w * @s.k + i * @s.j - j * @s.i + k * @s.w) / scale
         
+        mag = sqrt(new_w*new_w + new_i*new_i + new_j*new_j + new_k*new_k)
+        
+        @s.w = new_w * scale / mag
+        @s.i = new_i * scale / mag
+        @s.j = new_j * scale / mag
+        @s.k = new_k * scale / mag
+    end
+    
+    function quaternion_to_transform()
+        @s.t00 = scale - (2 * @s.j * @s.j) / scale - (2 * @s.k * @s.k) / scale
+        @s.t01 = (2 * @s.i * @s.j) / scale - (2 * @s.k * @s.w) / scale
+        @s.t02 = (2 * @s.i * @s.k) / scale + (2 * @s.j * @s.w) / scale
+
+        @s.t10 = (2 * @s.i * @s.j) / scale + (2 * @s.k * @s.w) / scale
+        @s.t11 = scale - (2 * @s.i * @s.i) / scale - (2 * @s.k * @s.k) / scale
+        @s.t12 = (2 * @s.j * @s.k) / scale - (2 * @s.i * @s.w) / scale
+
+        @s.t20 = (2 * @s.i * @s.k) / scale - (2 * @s.j * @s.w) / scale
+        @s.t21 = (2 * @s.j * @s.k) / scale + (2 * @s.i * @s.w) / scale
+        @s.t22 = scale - (2 * @s.i * @s.i) / scale - (2 * @s.j * @s.j) / scale
+    end
+    
+    function local_to_world(x, y, z, translation)
+        world_x = (@s.t00 * x + @s.t01 * y + @s.t02 * z) / scale
+        world_y = (@s.t10 * x + @s.t11 * y + @s.t12 * z) / scale
+        world_z = (@s.t20 * x + @s.t21 * y + @s.t22 * z) / scale
+        
+        if translation
+            world_x += @s.x
+            world_y += @s.y
+            world_z += @s.z
+        end
+    end
+    
+    function world_to_local(x, y, z, translation)
+        if translation
+            x -= @s.x
+            y -= @s.y
+            z -= @s.z
+        end
+        
+        local_x = (@s.t00 * x + @s.t10 * y + @s.t20 * z) / scale
+        local_y = (@s.t01 * x + @s.t11 * y + @s.t21 * z) / scale
+        local_z = (@s.t02 * x + @s.t12 * y + @s.t22 * z) / scale
+    end
+    
+    function apply_impulse(x, y, z, ix, iy, iz)
+        @s.velocity_x += ix * $InverseMass / scale
+        @s.velocity_y += iy * $InverseMass / scale
+        @s.velocity_z += iz * $InverseMass / scale
+
+        dx = x - @s.x
+        dy = y - @s.y
+        dz = z - @s.z
+        
+        axis_x = (dy * iz - dz * iy) / scale
+        axis_y = (dz * ix - dx * iz) / scale
+        axis_z = (dx * iy - dy * ix) / scale
+        
+        @s.rotation_impulse(axis_x, axis_y, axis_z)
     end
 end
 
-define @BlockDisplay = @Display[type=block_display]
+define @PhysicsBlock = @Display[type=block_display,tag=physics_block]
+    function ray_intersection(x, y, z, dx, dy, dz)
+        @s.world_to_local(x, y, z, True)
+        local_origin_x = local_x
+        local_origin_y = local_y
+        local_origin_z = local_z
+        
+        @s.world_to_local(dx, dy, dz, False)
+        local_dx = local_x
+        local_dy = local_y
+        local_dz = local_z
+        
+        if local_dx == 0
+            local_dx = 1
+        end
+        if local_dy == 0
+            local_dy = 1
+        end
+        if local_dz == 0
+            local_dz = 1
+        end
+        
+        # Calculate the times of entry/exit along each axis
+        txn = (-scale/2 - local_origin_x) * scale / local_dx
+        txp = (scale/2 - local_origin_x) * scale / local_dx
+        tyn = (-scale/2 - local_origin_y) * scale / local_dy
+        typ = (scale/2 - local_origin_y) * scale / local_dy
+        tzn = (-scale/2 - local_origin_z) * scale / local_dz
+        tzp = (scale/2 - local_origin_z) * scale / local_dz
+        
+        # Figure out the minimum and maximum time along the x axis
+        if txn > txp
+            min_tx = txp
+            max_tx = txn
+            x_normal = scale
+        else
+            min_tx = txn
+            max_tx = txp
+            x_normal = -scale
+        end
+        
+        # Figure out the minimum and maximum time along the y axis
+        if tyn > typ
+            min_ty = typ
+            max_ty = tyn
+            y_normal = scale
+        else
+            min_ty = tyn
+            max_ty = typ
+            y_normal = -scale
+        end
+        
+        # Figure out the minimum and maximum time along the z axis
+        if tzn > tzp
+            min_tz = tzp
+            max_tz = tzn
+            z_normal = scale
+        else
+            min_tz = tzn
+            max_tz = tzp
+            z_normal = -scale
+        end
+        
+        # Figure out which axis we enter the cube last. Once the ray
+        # has entered the cube along all 3 axes, it can collide.
+        if min_tx > min_ty and min_tx > min_tz
+            min_t = min_tx
+            local_cnx = x_normal
+            local_cny = 0
+            local_cnz = 0
+        else if min_ty > min_tz
+            min_t = min_ty
+            local_cnx = 0
+            local_cny = y_normal
+            local_cnz = 0
+        else
+            min_t = min_tz
+            local_cnx = 0
+            local_cny = 0
+            local_cnz = z_normal
+        end
+
+        # Figure out which axis we exited the cube first. Once the ray
+        # has exited the cube along any axis, it's no longer colliding.
+        if max_tx < max_ty and max_tx < max_tz
+            max_t = max_tx
+        else if max_ty < max_tz
+            max_t = max_ty
+        else
+            max_t = max_tz
+        end
+        
+        # If the ray entered the cube along all three axes before it
+        # exited along any axis, and it exited in front of us and not
+        # behind us, then the ray intersections the cube, first hitting
+        # it at t=min_t.
+        if min_t < max_t and max_t > 0
+            t = min_t
+            
+            if t < 0
+                t = 0
+            end
+            
+            local_cx = local_origin_x + t * local_dx / scale
+            local_cy = local_origin_y + t * local_dy / scale
+            local_cz = local_origin_z + t * local_dz / scale
+            
+            @s.collision = True
+            
+            @s.local_to_world(local_cx, local_cy, local_cz, True)            
+            @s.collision_x = world_x
+            @s.collision_y = world_y
+            @s.collision_z = world_z
+            
+            @s.local_to_world(local_cnx, local_cny, local_cnz, False)
+            @s.collision_nx = world_x
+            @s.collision_ny = world_y
+            @s.collision_nz = world_z
+        else
+            @s.collision = False
+        end
+    end
 end
