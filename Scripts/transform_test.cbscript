@@ -15,13 +15,6 @@ reset
     /kill @PhysicsBlock
     /summon minecraft:block_display 6.5 57.5 1.5 {block_state:{Name:"minecraft:grass_block",Count:0b}, interpolation_duration: 1b, Tags:["physics_block"]}
     
-    /kill @ChainLink
-    
-    for i = 1 to 50
-        create @ChainLink
-        @ChainLink.id++
-    end
-    
     /kill @Position
     create @Position
     
@@ -64,7 +57,9 @@ clock tick
                 @Position.<pos> = <@s.collision_x, @s.collision_y, @s.collision_z>
                 @Position.<pos> += <@s.collision_nx, @s.collision_ny, @s.collision_nz> / 8
 
-                @s.apply_impulse(@s.collision_x, @s.collision_y, @s.collision_z, world_eye_dx, world_eye_dy, world_eye_dz)
+                $PunchPower = 2000
+
+                @s.apply_impulse(@s.collision_x, @s.collision_y, @s.collision_z, world_eye_dx * $PunchPower / scale, world_eye_dy * $PunchPower / scale, world_eye_dz * $PunchPower / scale)
                 
                 at @Position
                     /particle minecraft:crit ~ ~ ~ 0 0 0 0 1 force
@@ -76,44 +71,65 @@ clock tick
             end
         end
         
-        # Gravity
-        @s.velocity_y -= 40
+        max_penetration = 0
         
-        spring_x = 6500
-        spring_y = 65500
-        spring_z = 1500
-        
-        @s.apply_spring_cable(spring_x, spring_y, spring_z, 7000, 1000, 0, 500, 0)
-        
-        # This code relies on locals from apply_spring_cable()
-        @Position.<pos> = <spring_x, spring_y, spring_z>
-        for i = 1 to spring_mag / 200
-            @Position.<pos> = <spring_x, spring_y, spring_z> + <spring_dx, spring_dy, spring_dz> * i / (spring_mag / 200)
-            at @Position
-                #/particle minecraft:bubble_pop ~ ~ ~
-                @ChainLink.id -= i
-                /tp @ChainLink[id == 0] ~ ~ ~
-                @ChainLink.id += i
+        for dx = -500 to 500 by 1000
+            for dy = -500 to 500 by 1000
+                for dz = -500 to 500 by 1000
+                    @s.local_to_world(dx, dy, dz, True)
+                    
+                    penetration = 56000 - world_y
+                    
+                    if penetration > max_penetration
+                        max_penetration = penetration
+                        pen_x = world_x
+                        pen_y = world_y
+                        pen_z = world_z
+                    end
+                end
             end
         end
         
-        for i = (spring_mag / 200) + 1 to 50
-            @ChainLink.id -= i
-            /tp @ChainLink[id == 0] 0 0 0
-            @ChainLink.id += i
-        end
+        if max_penetration > 0
+            dx = pen_x - @s.x
+            dy = pen_y - @s.y
+            dz = pen_z - @s.z
+            
         
+            rot_lin_vel_x = (@s.rotation_y * dz - @s.rotation_z * dy) / scale
+            rot_lin_vel_y = (@s.rotation_z * dx - @s.rotation_x * dz) / scale
+            rot_lin_vel_z = (@s.rotation_x * dy - @s.rotation_y * dx) / scale
+            
+            vel_x = @s.velocity_x + rot_lin_vel_x
+            vel_y = @s.velocity_y + rot_lin_vel_y
+            vel_z = @s.velocity_z + rot_lin_vel_z
+            
+            hor_mag = sqrt(vel_x*vel_x + vel_z*vel_z)
+            dir_x = vel_x * scale / hor_mag
+            dir_z = vel_z * scale / hor_mag
+            
+            $Friction = 100
+            
+            if hor_mag > 50
+                fx = -dir_x * scale / $InverseMass * $Friction / scale
+                fz = -dir_z * scale / $InverseMass * $Friction / scale
+            else
+                fx = 0
+                fz = 0
+                @s.velocity_x = 0
+                @s.velocity_z = 0
+            end
+            
+            fy = -vel_y * scale / $InverseMass
+            
+            @s.apply_impulse(pen_x, pen_y, pen_z, fx, fy, fz)
+            @s.y += max_penetration
 
+            # Gravity
+            @s.velocity_y -= 40
+        end
     
-        # Rotate around axis
-        #axis_x = scale
-        #axis_y = scale * 2
-        #axis_z = scale * 3
-        #axis_x = world_eye_x - @s.x
-        #axis_y = world_eye_y - @s.y
-        #axis_z = world_eye_z - @s.z
-        
-        #@s.set_rotation_axis_angle(axis_x, axis_y, axis_z, -3)
+        @s.velocity_y -= 40
         
         @s.integrate()
         
