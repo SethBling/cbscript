@@ -4,7 +4,19 @@ function sqrt(n)
 		val = (n / guess + guess) / 2
 		guess = val
 	end
-	
+
+    guess_iter = 0
+    while guess*guess > n and guess_iter < 50
+        guess--
+        guess_iter++
+    end
+    
+    guess_iter = 0
+    while (guess+1)*(guess+1) <= n and guess_iter < 50
+        guess++
+        guess_iter++
+    end
+    
 	return guess
 end
 
@@ -23,11 +35,32 @@ function sin(_sin_angle)
 		_sin_angle -= 180
 		mult = -1
 	end
+    
 	return 4000*_sin_angle*(180-_sin_angle)/(40500-_sin_angle*(180-_sin_angle)) * mult
+end
+
+# Input: angle * 100
+# Output: sin * 100
+function sin_precise(_sin_angle)
+	_sin_angle %= 36000
+	mult = 1
+	if _sin_angle > 18000
+		_sin_angle -= 18000
+		mult = -1
+	end
+    
+    _angle_sq = _sin_angle * (18000 - _sin_angle) / 100
+    
+    
+	return 4 * _angle_sq * 100 / (4050000 - _angle_sq) * mult
 end
 
 function cos(_cos_angle)
 	return sin(_cos_angle+90)
+end
+
+function cos_precise(_cos_angle)
+    return sin_precise(_cos_angle + 9000)
 end
 
 function sign(n)

@@ -2,30 +2,53 @@ import common
 import math
 
 $InverseMass = 500
-$InverseRotationalIntertia = 300
+$InverseRotationalIntertia = 500
+$Precision = 1000
+
+function quaternion_multiply(w1, i1, j1, k1, w2, i2, j2, k2)
+    new_w = (w1*w2 - i1*i2 - j1*j2 - k1*k2) / $Precision
+    new_i = (w1*i2 + i1*w2 + j1*k2 - k1*j2) / $Precision
+    new_j = (w1*j2 - i1*k2 + j1*w2 + k1*i2) / $Precision
+    new_k = (w1*k2 + i1*j2 - j1*i2 + k1*w2) / $Precision
+end
 
 define @PhysicsDisplay = @Entity
     function initialize_transform()
-        @s.t00 = scale
+        @s.t00 = $Precision
         @s.t01 = 0
         @s.t02 = 0
         @s.t10 = 0
-        @s.t11 = scale
+        @s.t11 = $Precision
         @s.t12 = 0
         @s.t20 = 0
         @s.t21 = 0
-        @s.t22 = scale
+        @s.t22 = $Precision
         @s.tx = 0
         @s.ty = 0
         @s.tz = 0
         
-        @s.w = scale
+        @s.w = $Precision
         @s.i = 0
         @s.j = 0
         @s.k = 0
         
         @s.clear_velocity()
         @s.clear_rotation()
+        
+        @s.size = 1000
+        @s.inv_mass = $InverseMass
+        @s.inv_rot_int = $InverseRotationalIntertia
+    end
+    
+    function set_size(size)
+        for iter = 1 to 3
+            @s.inv_mass *= @s.size
+            @s.inv_mass /= size
+        end
+        @s.inv_rot_int *= @s.size
+        @s.inv_rot_int /= size
+        
+        @s.size = size
     end
     
     function clear_velocity()
@@ -47,9 +70,9 @@ define @PhysicsDisplay = @Entity
     end
     
     function rotation_impulse(x, y, z)
-        @s.rotation_x += x * $InverseRotationalIntertia / scale
-        @s.rotation_y += y * $InverseRotationalIntertia / scale
-        @s.rotation_z += z * $InverseRotationalIntertia / scale
+        @s.rotation_x += x * @s.inv_rot_int / $Precision
+        @s.rotation_y += y * @s.inv_rot_int / $Precision
+        @s.rotation_z += z * @s.inv_rot_int / $Precision
     end
     
     function integrate()
@@ -59,11 +82,14 @@ define @PhysicsDisplay = @Entity
     
     function integrate_velocity()
         @s.velocity_x *= 980
-        @s.velocity_x /= scale
+        @s.velocity_x += 500
+        @s.velocity_x /= $Precision
         @s.velocity_y *= 980
-        @s.velocity_y /= scale
+        @s.velocity_y += 500
+        @s.velocity_y /= $Precision
         @s.velocity_z *= 980
-        @s.velocity_z /= scale
+        @s.velocity_z += 500
+        @s.velocity_z /= $Precision
         
     
         @s.x += @s.velocity_x
@@ -73,97 +99,108 @@ define @PhysicsDisplay = @Entity
     
     function integrate_rotation()
         @s.rotation_x *= 980
-        @s.rotation_x /= scale
+        @s.rotation_x += 500
+        @s.rotation_x /= $Precision
         @s.rotation_y *= 980
-        @s.rotation_y /= scale
+        @s.rotation_y += 500
+        @s.rotation_y /= $Precision
         @s.rotation_z *= 980
-        @s.rotation_z /= scale
+        @s.rotation_z += 500
+        @s.rotation_z /= $Precision
 
-        i = @s.rotation_x
-        j = @s.rotation_y
-        k = @s.rotation_z
+        quaternion_multiply(0, @s.rotation_x, @s.rotation_y, @s.rotation_z, @s.w, @s.i, @s.j, @s.k)
         
-        new_w = (-i * @s.i - j * @s.j - k * @s.k) / scale / 2
-        new_i = ( i * @s.w + j * @s.k - k * @s.j) / scale / 2
-        new_j = (-i * @s.k + j * @s.w + k * @s.i) / scale / 2
-        new_k = ( i * @s.j - j * @s.i + k * @s.w) / scale / 2
-        
-        @s.w += new_w
-        @s.i += new_i
-        @s.j += new_j
-        @s.k += new_k
-        
-        mag = sqrt(@s.w*@s.w + @s.i*@s.i + @s.j*@s.j + @s.k*@s.k)
-        
-        @s.w *= scale
-        @s.w /= mag
-        @s.i *= scale
-        @s.i /= mag
-        @s.j *= scale
-        @s.j /= mag
-        @s.k *= scale
-        @s.k /= mag
+        @s.w += new_w / 2
+        @s.i += new_i / 2
+        @s.j += new_j / 2
+        @s.k += new_k / 2
+
+        @s.normalize_quaternion()
     end
     
     function set_transform()
         /data modify storage $namespace:global transformation set value [1f,0f,0f,0f,0f,1f,0f,0f,0f,0f,1f,0f,0f,0f,0f,1f]
-        for $pair in [[0,"t00"], [1,"t01"], [2,"t02"], [3,"tx"], [4,"t10"], [5,"t11"], [6,"t12"], [7,"ty"], [8,"t20"], [9,"t21"], [10,"t22"], [11,"tz"]]
+        @s.d00 = @s.t00 * @s.size / $Precision
+        @s.d01 = @s.t01 * @s.size / $Precision
+        @s.d02 = @s.t02 * @s.size / $Precision
+        @s.d10 = @s.t10 * @s.size / $Precision
+        @s.d11 = @s.t11 * @s.size / $Precision
+        @s.d12 = @s.t12 * @s.size / $Precision
+        @s.d20 = @s.t20 * @s.size / $Precision
+        @s.d21 = @s.t21 * @s.size / $Precision
+        @s.d22 = @s.t22 * @s.size / $Precision
+        @s.dx = (@s.d00 + @s.d01 + @s.d02) / -2
+        @s.dy = (@s.d10 + @s.d11 + @s.d12) / -2
+        @s.dz = (@s.d20 + @s.d21 + @s.d22) / -2
+        
+        for $pair in [[0,"d00"], [1,"d01"], [2,"d02"], [3,"dx"], [4,"d10"], [5,"d11"], [6,"d12"], [7,"dy"], [8,"d20"], [9,"d21"], [10,"d22"], [11,"dz"]]
             $idx = $pair[0]
             $var = $pair[1]
-            $downscale = 1.0 / $global_scale
+            $downscale = 1.0 / $Precision
             /execute store result storage $namespace:global transformation[$idx] float $downscale run scoreboard players get @s $var
         end
         
         /data modify entity @s transformation set from storage transform_test:global transformation
         /data modify entity @s start_interpolation set value 0b
     end
+    
+    function normalize_quaternion()
+        mag = sqrt(@s.w*@s.w + @s.i*@s.i + @s.j*@s.j + @s.k*@s.k)
+        
+        @s.w *= $Precision
+        @s.w += 500
+        @s.w /= mag
+        @s.i *= $Precision
+        @s.i += 500
+        @s.i /= mag
+        @s.j *= $Precision
+        @s.j += 500
+        @s.j /= mag
+        @s.k *= $Precision
+        @s.k += 500
+        @s.k /= mag
+    end
 
     function multiply_quaternion_right(w, i, j, k)
-        new_w = (@s.w * w - @s.i * i - @s.j * j - @s.k * k) / scale
-        new_i = (@s.w * i + @s.i * w + @s.j * k - @s.k * j) / scale
-        new_j = (@s.w * j - @s.i * k + @s.j * w + @s.k * i) / scale
-        new_k = (@s.w * k + @s.i * j - @s.j * i + @s.k * w) / scale
-
-        mag = sqrt(new_w*new_w + new_i*new_i + new_j*new_j + new_k*new_k)
+        quaternion_multiply(@s.w, @s.i, @s.j, @s.k, w, i, j, k)
         
-        @s.w = new_w * scale / mag
-        @s.i = new_i * scale / mag
-        @s.j = new_j * scale / mag
-        @s.k = new_k * scale / mag
+        @s.w = new_w
+        @s.i = new_i
+        @s.j = new_j
+        @s.k = new_k
+
+        @s.normalize_quaternion()
     end
     
     function multiply_quaternion_left(w, i, j, k)
-        new_w = (w * @s.w - i * @s.i - j * @s.j - k * @s.k) / scale
-        new_i = (w * @s.i + i * @s.w + j * @s.k - k * @s.j) / scale
-        new_j = (w * @s.j - i * @s.k + j * @s.w + k * @s.i) / scale
-        new_k = (w * @s.k + i * @s.j - j * @s.i + k * @s.w) / scale
-        
-        mag = sqrt(new_w*new_w + new_i*new_i + new_j*new_j + new_k*new_k)
-        
-        @s.w = new_w * scale / mag
-        @s.i = new_i * scale / mag
-        @s.j = new_j * scale / mag
-        @s.k = new_k * scale / mag
+        quaternion_multiply(w, i, j, k, @s.w, @s.i, @s.j, @s.k)
+    
+        @s.w = new_w
+        @s.i = new_i
+        @s.j = new_j
+        @s.k = new_k
+
+        @s.normalize_quaternion()
     end
     
     function quaternion_to_transform()
-        @s.t00 = scale - (2 * @s.j * @s.j) / scale - (2 * @s.k * @s.k) / scale
-        @s.t01 = (2 * @s.i * @s.j) / scale - (2 * @s.k * @s.w) / scale
-        @s.t02 = (2 * @s.i * @s.k) / scale + (2 * @s.j * @s.w) / scale
+        @s.t00 = $Precision - (2 * @s.j * @s.j) / $Precision - (2 * @s.k * @s.k) / $Precision
+        @s.t01 = (2 * @s.i * @s.j) / $Precision - (2 * @s.k * @s.w) / $Precision
+        @s.t02 = (2 * @s.i * @s.k) / $Precision + (2 * @s.j * @s.w) / $Precision
 
-        @s.t10 = (2 * @s.i * @s.j) / scale + (2 * @s.k * @s.w) / scale
-        @s.t11 = scale - (2 * @s.i * @s.i) / scale - (2 * @s.k * @s.k) / scale
-        @s.t12 = (2 * @s.j * @s.k) / scale - (2 * @s.i * @s.w) / scale
+        @s.t10 = (2 * @s.i * @s.j) / $Precision + (2 * @s.k * @s.w) / $Precision
+        @s.t11 = $Precision - (2 * @s.i * @s.i) / $Precision - (2 * @s.k * @s.k) / $Precision
+        @s.t12 = (2 * @s.j * @s.k) / $Precision - (2 * @s.i * @s.w) / $Precision
 
-        @s.t20 = (2 * @s.i * @s.k) / scale - (2 * @s.j * @s.w) / scale
-        @s.t21 = (2 * @s.j * @s.k) / scale + (2 * @s.i * @s.w) / scale
-        @s.t22 = scale - (2 * @s.i * @s.i) / scale - (2 * @s.j * @s.j) / scale
+        @s.t20 = (2 * @s.i * @s.k) / $Precision - (2 * @s.j * @s.w) / $Precision
+        @s.t21 = (2 * @s.j * @s.k) / $Precision + (2 * @s.i * @s.w) / $Precision
+        @s.t22 = $Precision - (2 * @s.i * @s.i) / $Precision - (2 * @s.j * @s.j) / $Precision
     end
     
     function local_to_world(x, y, z, translation)
-        world_x = (@s.t00 * x + @s.t01 * y + @s.t02 * z) / scale
-        world_y = (@s.t10 * x + @s.t11 * y + @s.t12 * z) / scale
-        world_z = (@s.t20 * x + @s.t21 * y + @s.t22 * z) / scale
+        world_x = (@s.t00 * x + @s.t01 * y + @s.t02 * z) / $Precision
+        world_y = (@s.t10 * x + @s.t11 * y + @s.t12 * z) / $Precision
+        world_z = (@s.t20 * x + @s.t21 * y + @s.t22 * z) / $Precision
         
         if translation
             world_x += @s.x
@@ -179,23 +216,23 @@ define @PhysicsDisplay = @Entity
             z -= @s.z
         end
         
-        local_x = (@s.t00 * x + @s.t10 * y + @s.t20 * z) / scale
-        local_y = (@s.t01 * x + @s.t11 * y + @s.t21 * z) / scale
-        local_z = (@s.t02 * x + @s.t12 * y + @s.t22 * z) / scale
+        local_x = (@s.t00 * x + @s.t10 * y + @s.t20 * z) / $Precision
+        local_y = (@s.t01 * x + @s.t11 * y + @s.t21 * z) / $Precision
+        local_z = (@s.t02 * x + @s.t12 * y + @s.t22 * z) / $Precision
     end
     
     function apply_impulse(x, y, z, ix, iy, iz)
-        @s.velocity_x += ix * $InverseMass / scale
-        @s.velocity_y += iy * $InverseMass / scale
-        @s.velocity_z += iz * $InverseMass / scale
+        @s.velocity_x += ix * @s.inv_mass / $Precision
+        @s.velocity_y += iy * @s.inv_mass / $Precision
+        @s.velocity_z += iz * @s.inv_mass / $Precision
 
         dx = x - @s.x
         dy = y - @s.y
         dz = z - @s.z
         
-        axis_x = (dy * iz - dz * iy) / scale
-        axis_y = (dz * ix - dx * iz) / scale
-        axis_z = (dx * iy - dy * ix) / scale
+        axis_x = (dy * iz - dz * iy) / $Precision
+        axis_y = (dz * ix - dx * iz) / $Precision
+        axis_z = (dx * iy - dy * ix) / $Precision
         
         @s.rotation_impulse(axis_x, axis_y, axis_z)
     end
@@ -213,14 +250,14 @@ define @PhysicsDisplay = @Entity
         # Spring displacement from neutral
         spring_disp = spring_mag - spring_neutral
         
-        spring_dir_x = spring_dx * scale / spring_mag
-        spring_dir_y = spring_dy * scale / spring_mag
-        spring_dir_z = spring_dz * scale / spring_mag
+        spring_dir_x = spring_dx * $Precision / spring_mag
+        spring_dir_y = spring_dy * $Precision / spring_mag
+        spring_dir_z = spring_dz * $Precision / spring_mag
         
         if spring_mag > spring_neutral
-            force_x = -spring_dir_x * spring_disp / scale * spring_constant / scale
-            force_y = -spring_dir_y * spring_disp / scale * spring_constant / scale
-            force_z = -spring_dir_z * spring_disp / scale * spring_constant / scale
+            force_x = -spring_dir_x * spring_disp / $Precision * spring_constant / $Precision
+            force_y = -spring_dir_y * spring_disp / $Precision * spring_constant / $Precision
+            force_z = -spring_dir_z * spring_disp / $Precision * spring_constant / $Precision
             
             @s.apply_impulse(world_x, world_y, world_z, force_x, force_y, force_z)
         end
@@ -249,45 +286,47 @@ define @PhysicsBlock = @PhysicsDisplay[type=block_display,tag=physics_block]
             local_dz = 1
         end
         
+        halfsize = @s.size / 2
+        
         # Calculate the times of entry/exit along each axis
-        txn = (-scale/2 - local_origin_x) * scale / local_dx
-        txp = (scale/2 - local_origin_x) * scale / local_dx
-        tyn = (-scale/2 - local_origin_y) * scale / local_dy
-        typ = (scale/2 - local_origin_y) * scale / local_dy
-        tzn = (-scale/2 - local_origin_z) * scale / local_dz
-        tzp = (scale/2 - local_origin_z) * scale / local_dz
+        txn = (-halfsize - local_origin_x) * $Precision / local_dx
+        txp = (halfsize - local_origin_x) * $Precision / local_dx
+        tyn = (-halfsize - local_origin_y) * $Precision / local_dy
+        typ = (halfsize - local_origin_y) * $Precision / local_dy
+        tzn = (-halfsize - local_origin_z) * $Precision / local_dz
+        tzp = (halfsize - local_origin_z) * $Precision / local_dz
         
         # Figure out the minimum and maximum time along the x axis
         if txn > txp
             min_tx = txp
             max_tx = txn
-            x_normal = scale
+            x_normal = $Precision
         else
             min_tx = txn
             max_tx = txp
-            x_normal = -scale
+            x_normal = -$Precision
         end
         
         # Figure out the minimum and maximum time along the y axis
         if tyn > typ
             min_ty = typ
             max_ty = tyn
-            y_normal = scale
+            y_normal = $Precision
         else
             min_ty = tyn
             max_ty = typ
-            y_normal = -scale
+            y_normal = -$Precision
         end
         
         # Figure out the minimum and maximum time along the z axis
         if tzn > tzp
             min_tz = tzp
             max_tz = tzn
-            z_normal = scale
+            z_normal = $Precision
         else
             min_tz = tzn
             max_tz = tzp
-            z_normal = -scale
+            z_normal = -$Precision
         end
         
         # Figure out which axis we enter the cube last. Once the ray
@@ -330,9 +369,9 @@ define @PhysicsBlock = @PhysicsDisplay[type=block_display,tag=physics_block]
                 t = 0
             end
             
-            local_cx = local_origin_x + t * local_dx / scale
-            local_cy = local_origin_y + t * local_dy / scale
-            local_cz = local_origin_z + t * local_dz / scale
+            local_cx = local_origin_x + t * local_dx / $Precision
+            local_cy = local_origin_y + t * local_dy / $Precision
+            local_cz = local_origin_z + t * local_dz / $Precision
             
             @s.collision = True
             
