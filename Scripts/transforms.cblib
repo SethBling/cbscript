@@ -6,10 +6,10 @@ $InverseRotationalIntertia = 500
 $Precision = 1000
 
 function quaternion_multiply(w1, i1, j1, k1, w2, i2, j2, k2)
-    new_w = (w1*w2 - i1*i2 - j1*j2 - k1*k2) / $Precision
-    new_i = (w1*i2 + i1*w2 + j1*k2 - k1*j2) / $Precision
-    new_j = (w1*j2 - i1*k2 + j1*w2 + k1*i2) / $Precision
-    new_k = (w1*k2 + i1*j2 - j1*i2 + k1*w2) / $Precision
+    new_w = (w1*w2 - i1*i2 - j1*j2 - k1*k2 + 500) / $Precision
+    new_i = (w1*i2 + i1*w2 + j1*k2 - k1*j2 + 500) / $Precision
+    new_j = (w1*j2 - i1*k2 + j1*w2 + k1*i2 + 500) / $Precision
+    new_k = (w1*k2 + i1*j2 - j1*i2 + k1*w2 + 500) / $Precision
 end
 
 define @PhysicsDisplay = @Entity
@@ -70,9 +70,9 @@ define @PhysicsDisplay = @Entity
     end
     
     function rotation_impulse(x, y, z)
-        @s.rotation_x += x * @s.inv_rot_int / $Precision
-        @s.rotation_y += y * @s.inv_rot_int / $Precision
-        @s.rotation_z += z * @s.inv_rot_int / $Precision
+        @s.rotation_x += (x * @s.inv_rot_int + 500) / $Precision
+        @s.rotation_y += (y * @s.inv_rot_int + 500) / $Precision
+        @s.rotation_z += (z * @s.inv_rot_int + 500) / $Precision
     end
     
     function integrate()
@@ -91,6 +91,24 @@ define @PhysicsDisplay = @Entity
         @s.velocity_z += 500
         @s.velocity_z /= $Precision
         
+        if velocity_x < 0 and velocity_x > -25
+            velocity_x++
+        end
+        if velocity_x > 0 and velocity_x < 25
+            velocity_x--
+        end
+        if velocity_y < 0 and velocity_y > -25
+            velocity_y++
+        end
+        if velocity_y > 0 and velocity_y < 25
+            velocity_y--
+        end
+        if velocity_z < 0 and velocity_z > -25
+            velocity_z++
+        end
+        if velocity_z > 0 and velocity_z < 25
+            velocity_z--
+        end
     
         @s.x += @s.velocity_x
         @s.y += @s.velocity_y
@@ -107,6 +125,25 @@ define @PhysicsDisplay = @Entity
         @s.rotation_z *= 980
         @s.rotation_z += 500
         @s.rotation_z /= $Precision
+        
+        if rotation_x < 0 and rotation_x > -25
+            rotation_x++
+        end
+        if rotation_x > 0 and rotation_x < 25
+            rotation_x--
+        end
+        if rotation_y < 0 and rotation_y > -25
+            rotation_y++
+        end
+        if rotation_y > 0 and rotation_y < 25
+            rotation_y--
+        end
+        if rotation_z < 0 and rotation_z > -25
+            rotation_z++
+        end
+        if rotation_z > 0 and rotation_z < 25
+            rotation_z--
+        end
 
         quaternion_multiply(0, @s.rotation_x, @s.rotation_y, @s.rotation_z, @s.w, @s.i, @s.j, @s.k)
         
@@ -198,9 +235,9 @@ define @PhysicsDisplay = @Entity
     end
     
     function local_to_world(x, y, z, translation)
-        world_x = (@s.t00 * x + @s.t01 * y + @s.t02 * z) / $Precision
-        world_y = (@s.t10 * x + @s.t11 * y + @s.t12 * z) / $Precision
-        world_z = (@s.t20 * x + @s.t21 * y + @s.t22 * z) / $Precision
+        world_x = (@s.t00 * x + @s.t01 * y + @s.t02 * z + 500) / $Precision
+        world_y = (@s.t10 * x + @s.t11 * y + @s.t12 * z + 500) / $Precision
+        world_z = (@s.t20 * x + @s.t21 * y + @s.t22 * z + 500) / $Precision
         
         if translation
             world_x += @s.x
@@ -216,23 +253,23 @@ define @PhysicsDisplay = @Entity
             z -= @s.z
         end
         
-        local_x = (@s.t00 * x + @s.t10 * y + @s.t20 * z) / $Precision
-        local_y = (@s.t01 * x + @s.t11 * y + @s.t21 * z) / $Precision
-        local_z = (@s.t02 * x + @s.t12 * y + @s.t22 * z) / $Precision
+        local_x = (@s.t00 * x + @s.t10 * y + @s.t20 * z + 500) / $Precision
+        local_y = (@s.t01 * x + @s.t11 * y + @s.t21 * z + 500) / $Precision
+        local_z = (@s.t02 * x + @s.t12 * y + @s.t22 * z + 500) / $Precision
     end
     
     function apply_impulse(x, y, z, ix, iy, iz)
-        @s.velocity_x += ix * @s.inv_mass / $Precision
-        @s.velocity_y += iy * @s.inv_mass / $Precision
-        @s.velocity_z += iz * @s.inv_mass / $Precision
+        @s.velocity_x += (ix * @s.inv_mass + 500) / $Precision
+        @s.velocity_y += (iy * @s.inv_mass + 500) / $Precision
+        @s.velocity_z += (iz * @s.inv_mass + 500) / $Precision
 
         dx = x - @s.x
         dy = y - @s.y
         dz = z - @s.z
         
-        axis_x = (dy * iz - dz * iy) / $Precision
-        axis_y = (dz * ix - dx * iz) / $Precision
-        axis_z = (dx * iy - dy * ix) / $Precision
+        axis_x = (dy * iz - dz * iy + 500) / $Precision
+        axis_y = (dz * ix - dx * iz + 500) / $Precision
+        axis_z = (dx * iy - dy * ix + 500) / $Precision
         
         @s.rotation_impulse(axis_x, axis_y, axis_z)
     end

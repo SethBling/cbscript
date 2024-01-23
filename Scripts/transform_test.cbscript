@@ -21,9 +21,9 @@ reset
     as @PhysicsBlock
         @s.initialize_transform()
         @s.set_transform()
-        @s.set_size(2000)
+        @s.set_size(3000)
         @s.inv_mass = 400
-        @s.inv_rot_int = 500
+        @s.inv_rot_int = 300
         angle = 0
     end
     
@@ -60,7 +60,7 @@ clock tick
                 @Position.<pos> = <@s.collision_x, @s.collision_y, @s.collision_z>
                 @Position.<pos> += <@s.collision_nx, @s.collision_ny, @s.collision_nz> / 8
 
-                $PunchPower = 1500
+                $PunchPower = 750
 
                 @s.apply_impulse(@s.collision_x, @s.collision_y, @s.collision_z, world_eye_dx * $PunchPower / scale, world_eye_dy * $PunchPower / scale, world_eye_dz * $PunchPower / scale)
                 
@@ -75,7 +75,7 @@ clock tick
         end
         
         # Apply Gravity
-        $Gravity = 75
+        $Gravity = 5
         @s.velocity_y -= $Gravity
 
         @s.integrate()
@@ -100,9 +100,9 @@ clock tick
                             dy = world_y - @s.y
                             dz = world_z - @s.z
                         
-                            rot_lin_vel_x = (@s.rotation_y * dz - @s.rotation_z * dy) / scale
-                            rot_lin_vel_y = (@s.rotation_z * dx - @s.rotation_x * dz) / scale
-                            rot_lin_vel_z = (@s.rotation_x * dy - @s.rotation_y * dx) / scale
+                            rot_lin_vel_x = (@s.rotation_y * dz - @s.rotation_z * dy + 500) / scale
+                            rot_lin_vel_y = (@s.rotation_z * dx - @s.rotation_x * dz + 500) / scale
+                            rot_lin_vel_z = (@s.rotation_x * dy - @s.rotation_y * dx + 500) / scale
                             
                             vel_x = @s.velocity_x + rot_lin_vel_x
                             vel_y = @s.velocity_y + rot_lin_vel_y
@@ -127,9 +127,9 @@ clock tick
                 dy = pen_y - @s.y
                 dz = pen_z - @s.z
                 
-                rot_lin_vel_x = (@s.rotation_y * dz - @s.rotation_z * dy) / scale
-                rot_lin_vel_y = (@s.rotation_z * dx - @s.rotation_x * dz) / scale
-                rot_lin_vel_z = (@s.rotation_x * dy - @s.rotation_y * dx) / scale
+                rot_lin_vel_x = (@s.rotation_y * dz - @s.rotation_z * dy + 500) / scale
+                rot_lin_vel_y = (@s.rotation_z * dx - @s.rotation_x * dz + 500) / scale
+                rot_lin_vel_z = (@s.rotation_x * dy - @s.rotation_y * dx + 500) / scale
                 
                 vel_x = @s.velocity_x + rot_lin_vel_x
                 vel_y = @s.velocity_y + rot_lin_vel_y
@@ -150,17 +150,17 @@ clock tick
                 
                 # Impulse to velocity transform
                 # Formula: -(i_to_t^2) * InverseRotationalIntertia
-                i_to_v_00 = (dz * dz + dy * dy) / scale * @s.inv_rot_int / scale
-                i_to_v_01 = -dy * dx / scale * @s.inv_rot_int / scale
-                i_to_v_02 = -dz * dx / scale * @s.inv_rot_int / scale
+                i_to_v_00 = ((dz * dz + dy * dy + 500) / scale * @s.inv_rot_int + 500) / scale
+                i_to_v_01 = ((-dy * dx + 500) / scale * @s.inv_rot_int + 500) / scale
+                i_to_v_02 = ((-dz * dx + 500) / scale * @s.inv_rot_int + 500) / scale
 
-                i_to_v_10 = -dx * dy / scale * @s.inv_rot_int / scale
-                i_to_v_11 = (dz * dz + dx * dx) / scale * @s.inv_rot_int / scale
-                i_to_v_12 = -dz * dy / scale * @s.inv_rot_int / scale
+                i_to_v_10 = ((-dx * dy + 500) / scale * @s.inv_rot_int + 500) / scale
+                i_to_v_11 = ((dz * dz + dx * dx + 500) / scale * @s.inv_rot_int + 500) / scale
+                i_to_v_12 = ((-dz * dy + 500) / scale * @s.inv_rot_int + 500) / scale
 
-                i_to_v_20 = -dx * dz / scale * @s.inv_rot_int / scale
-                i_to_v_21 = -dy * dz / scale * @s.inv_rot_int / scale
-                i_to_v_22 = (dy * dy + dx * dx) / scale * @s.inv_rot_int / scale
+                i_to_v_20 = ((-dx * dz + 500) / scale * @s.inv_rot_int + 500) / scale
+                i_to_v_21 = ((-dy * dz + 500) / scale * @s.inv_rot_int + 500) / scale
+                i_to_v_22 = ((dy * dy + dx * dx + 500) / scale * @s.inv_rot_int + 500) / scale
                 
                 i_to_v_00 += @s.inv_mass
                 i_to_v_11 += @s.inv_mass
@@ -179,7 +179,7 @@ clock tick
                 i = i_to_v_22
                 
                 # Inverse impulse to velocity
-                det = (a * e / scale * i + d * h / scale * c + g * b / scale * f - a * h / scale * f - g * e / scale * c - d * b / scale * i) / scale
+                det = ((a * e + 500) / scale * i + (d * h + 500) / scale * c + (g * b + 500) / scale * f - (a * h + 500) / scale * f - (g * e + 500) / scale * c - (d * b + 500) / scale * i + 500) / scale
 
                 v_to_i_00 = (e * i - f * h) / det
                 v_to_i_01 = (c * h - b * i) / det
@@ -193,39 +193,39 @@ clock tick
                 v_to_i_21 = (b * g - a * h) / det
                 v_to_i_22 = (a * e - b * d) / det
                 
-                $Restitution = 400
+                $Restitution = 600
                 restitution = $Restitution
-                if vel_y > -100 and vel_y < 100
+                if vel_y > -2 * $Gravity and vel_y < 2 * $Gravity
                     restitution = 0
                 end
                 
                 desired_vx = 0
-                desired_vy = -(vel_y + $Gravity) * restitution / scale
+                desired_vy = (-(vel_y + $Gravity) * restitution + 500) / scale
                 desired_vz = 0
 
                 desired_dvx = desired_vx - vel_x
                 desired_dvy = desired_vy - vel_y
                 desired_dvz = desired_vz - vel_z
                 
-                ix = (v_to_i_00 * desired_dvx + v_to_i_01 * desired_dvy + v_to_i_02 * desired_dvz) / scale
-                iy = (v_to_i_10 * desired_dvx + v_to_i_11 * desired_dvy + v_to_i_12 * desired_dvz) / scale
-                iz = (v_to_i_20 * desired_dvx + v_to_i_21 * desired_dvy + v_to_i_22 * desired_dvz) / scale
+                ix = (v_to_i_00 * desired_dvx + v_to_i_01 * desired_dvy + v_to_i_02 * desired_dvz + 500) / scale
+                iy = (v_to_i_10 * desired_dvx + v_to_i_11 * desired_dvy + v_to_i_12 * desired_dvz + 500) / scale
+                iz = (v_to_i_20 * desired_dvx + v_to_i_21 * desired_dvy + v_to_i_22 * desired_dvz + 500) / scale
                 
                 planar_impulse = sqrt(ix*ix + iz*iz)
                 
-                $Friction = 600
-                max_fric_impulse = iy * $Friction / scale
+                $Friction = 500
+                max_fric_impulse = (iy * $Friction + 500) / scale
                 
                 if planar_impulse > max_fric_impulse
                     dir_ix = ix * scale / planar_impulse
                     dir_iz = iz * scale / planar_impulse
                 
-                    v_per_i_y = i_to_v_11 + (i_to_v_10 * dir_ix + i_to_v_12 * dir_iz) / scale * $Friction / scale
+                    v_per_i_y = i_to_v_11 + ((i_to_v_10 * dir_ix + i_to_v_12 * dir_iz + 500) / scale * $Friction + 500) / scale
                     
                     iy = desired_dvy * scale / v_per_i_y
                     
-                    ix = dir_ix * $Friction / scale * iy / scale
-                    iz = dir_iz * $Friction / scale * iy / scale
+                    ix = ((dir_ix * $Friction + 500) / scale * iy + 500) / scale
+                    iz = ((dir_iz * $Friction + 500) / scale * iy + 500) / scale
                 end
                 
                 @s.apply_impulse(pen_x, pen_y, pen_z, ix, iy, iz)
