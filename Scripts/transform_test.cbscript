@@ -1,4 +1,4 @@
-dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.20\saves\New World"
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.20\saves\Physics - One Wall"
 desc "Automatically mine the blocks in front of you"
 scale 1000
 
@@ -84,7 +84,7 @@ clock tick
         max_penetration = 0
         
         for iter = 1 to 4
-            max_vel_y = 0
+            max_col_v = 0
             
             halfsize = @s.size / 2
             
@@ -108,21 +108,134 @@ clock tick
                             vel_y = @s.velocity_y + rot_lin_vel_y
                             vel_z = @s.velocity_z + rot_lin_vel_z
                             
-                            if vel_y < max_vel_y
-                                max_vel_y = vel_y
+                            if -vel_y > max_col_v
+                                max_col_v = -vel_y
                                 pen_x = world_x
                                 pen_y = world_y
                                 pen_z = world_z
+                                
+                                norm_x = 0
+                                norm_y = scale
+                                norm_z = 0
                             end
                             if penetration > max_penetration
                                 max_penetration = penetration
+                                max_pen_norm_x = norm_x
+                                max_pen_norm_y = norm_y
+                                max_pen_norm_z = norm_z
+                            end
+                        end
+                        
+                        penetration = world_x - 10000
+                        
+                        if penetration > 0
+                            dx = world_x - @s.x
+                            dy = world_y - @s.y
+                            dz = world_z - @s.z
+                        
+                            rot_lin_vel_x = (@s.rotation_y * dz - @s.rotation_z * dy + 500) / scale
+                            rot_lin_vel_y = (@s.rotation_z * dx - @s.rotation_x * dz + 500) / scale
+                            rot_lin_vel_z = (@s.rotation_x * dy - @s.rotation_y * dx + 500) / scale
+                            
+                            vel_x = @s.velocity_x + rot_lin_vel_x
+                            vel_y = @s.velocity_y + rot_lin_vel_y
+                            vel_z = @s.velocity_z + rot_lin_vel_z
+                            
+                            if vel_x > max_col_v
+                                max_col_v = vel_x
+                                pen_x = world_x
+                                pen_y = world_y
+                                pen_z = world_z
+                                
+                                norm_x = -scale
+                                norm_y = 0
+                                norm_z = 0
+                            end
+                            if penetration > max_penetration
+                                max_penetration = penetration
+                                max_pen_norm_x = norm_x
+                                max_pen_norm_y = norm_y
+                                max_pen_norm_z = norm_z
+                            end
+                        end
+                        
+                        penetration = world_z - 10000
+                        
+                        if penetration > 0
+                            dx = world_x - @s.x
+                            dy = world_y - @s.y
+                            dz = world_z - @s.z
+                        
+                            rot_lin_vel_x = (@s.rotation_y * dz - @s.rotation_z * dy + 500) / scale
+                            rot_lin_vel_y = (@s.rotation_z * dx - @s.rotation_x * dz + 500) / scale
+                            rot_lin_vel_z = (@s.rotation_x * dy - @s.rotation_y * dx + 500) / scale
+                            
+                            vel_x = @s.velocity_x + rot_lin_vel_x
+                            vel_y = @s.velocity_y + rot_lin_vel_y
+                            vel_z = @s.velocity_z + rot_lin_vel_z
+                            
+                            if vel_z > max_col_v
+                                max_col_v = vel_z
+                                pen_x = world_x
+                                pen_y = world_y
+                                pen_z = world_z
+                                
+                                norm_x = 0
+                                norm_y = 0
+                                norm_z = -scale
+                            end
+                            if penetration > max_penetration
+                                max_penetration = penetration
+                                max_pen_norm_x = norm_x
+                                max_pen_norm_y = norm_y
+                                max_pen_norm_z = norm_z
                             end
                         end
                     end
                 end
             end
             
-            if max_vel_y < -1
+            if max_col_v > 1
+                # Create contact basis/transform
+                ct_01 = norm_x
+                ct_11 = norm_y
+                ct_21 = norm_z
+                
+                absx = abs(norm_x)
+                absz = abs(norm_z)
+                
+                if absx < absz
+                    # The norm isn't pointing toward x, so
+                    # cross the norm with 1,0,0
+                    s = sqrt(norm_y*norm_y + norm_z*norm_z)
+                    ct_00 = 0
+                    ct_10 = -norm_z * scale / s
+                    ct_20 = norm_y * scale / s
+
+                    # Cross the norm with the new vector
+                    ct_02 = (ct_10*ct_21 - ct_20*ct_11 + 500) / scale
+                    ct_12 = (ct_20*ct_01 + 500) / scale
+                    ct_22 = (ct_10*ct_01 + 500) / scale
+                else
+                    # The norm isn't pointing toward z, so
+                    # cross the norm with 0,0,1
+                    s = sqrt(norm_y*norm_y + norm_x*norm_x)
+                    ct_00 = norm_y * scale / s
+                    ct_10 = -norm_x * scale / s
+                    ct_20 = 0
+
+                    # Cross the norm with the new vector
+                    ct_02 = (ct_10*ct_21 + 500) / scale
+                    ct_12 = (ct_00*ct_21 + 500) / scale
+                    ct_22 = (ct_00*ct_11 - ct_10*ct_01 + 500) / scale
+                end
+                
+                # Full cross product would be:
+                #ct_20 = (ct_10*ct_21 - ct_20*ct_11 + 500) / scale
+                #ct_21 = (ct_20*ct_01 - ct_00*ct_21 + 500) / scale
+                #ct_22 = (ct_00*ct_11 - ct_10*ct_01 + 500) / scale
+
+                
                 dx = pen_x - @s.x
                 dy = pen_y - @s.y
                 dz = pen_z - @s.z
@@ -131,9 +244,14 @@ clock tick
                 rot_lin_vel_y = (@s.rotation_z * dx - @s.rotation_x * dz + 500) / scale
                 rot_lin_vel_z = (@s.rotation_x * dy - @s.rotation_y * dx + 500) / scale
                 
-                vel_x = @s.velocity_x + rot_lin_vel_x
-                vel_y = @s.velocity_y + rot_lin_vel_y
-                vel_z = @s.velocity_z + rot_lin_vel_z
+                w_vel_x = @s.velocity_x + rot_lin_vel_x
+                w_vel_y = @s.velocity_y + rot_lin_vel_y
+                w_vel_z = @s.velocity_z + rot_lin_vel_z
+                
+                # Transform by the ct transpose matrix to get contact coordinates
+                c_vel_x = (ct_00 * w_vel_x + ct_10 * w_vel_y + ct_20 * w_vel_z + 500) / scale
+                c_vel_y = (ct_01 * w_vel_x + ct_11 * w_vel_y + ct_21 * w_vel_z + 500) / scale
+                c_vel_z = (ct_02 * w_vel_x + ct_12 * w_vel_y + ct_22 * w_vel_z + 500) / scale
 
                 # Impulse to torque skew symmetric matrix
                 #i_to_t_00 = 0
@@ -166,17 +284,47 @@ clock tick
                 i_to_v_11 += @s.inv_mass
                 i_to_v_22 += @s.inv_mass
                 
-                a = i_to_v_00
-                b = i_to_v_01
-                c = i_to_v_02
+                # Transform i_to_v into contact coordinates before inverting,
+                # using change of basis formula
                 
-                d = i_to_v_10
-                e = i_to_v_11
-                f = i_to_v_12
+                # First, ct^transpose * i_to_v
+                m_00 = (ct_00 * i_to_v_00 + ct_10 * i_to_v_10 + ct_20 * i_to_v_20 + 500) / scale
+                m_01 = (ct_00 * i_to_v_01 + ct_10 * i_to_v_11 + ct_20 * i_to_v_21 + 500) / scale
+                m_02 = (ct_00 * i_to_v_02 + ct_10 * i_to_v_12 + ct_20 * i_to_v_22 + 500) / scale
+
+                m_10 = (ct_01 * i_to_v_00 + ct_11 * i_to_v_10 + ct_21 * i_to_v_20 + 500) / scale
+                m_11 = (ct_01 * i_to_v_01 + ct_11 * i_to_v_11 + ct_21 * i_to_v_21 + 500) / scale
+                m_12 = (ct_01 * i_to_v_02 + ct_11 * i_to_v_12 + ct_21 * i_to_v_22 + 500) / scale
+
+                m_20 = (ct_02 * i_to_v_00 + ct_12 * i_to_v_10 + ct_22 * i_to_v_20 + 500) / scale
+                m_21 = (ct_02 * i_to_v_01 + ct_12 * i_to_v_11 + ct_22 * i_to_v_21 + 500) / scale
+                m_22 = (ct_02 * i_to_v_02 + ct_12 * i_to_v_12 + ct_22 * i_to_v_22 + 500) / scale
                 
-                g = i_to_v_20
-                h = i_to_v_21
-                i = i_to_v_22
+                # Then, multiply by ct
+                c_i_to_v_00 = (m_00 * ct_00 + m_01 * ct_10 + m_02 * ct_20 + 500) / scale
+                c_i_to_v_01 = (m_00 * ct_01 + m_01 * ct_11 + m_02 * ct_21 + 500) / scale
+                c_i_to_v_02 = (m_00 * ct_02 + m_01 * ct_12 + m_02 * ct_22 + 500) / scale
+
+                c_i_to_v_10 = (m_10 * ct_00 + m_11 * ct_10 + m_12 * ct_20 + 500) / scale
+                c_i_to_v_11 = (m_10 * ct_01 + m_11 * ct_11 + m_12 * ct_21 + 500) / scale
+                c_i_to_v_12 = (m_10 * ct_02 + m_11 * ct_12 + m_12 * ct_22 + 500) / scale
+
+                c_i_to_v_20 = (m_20 * ct_00 + m_21 * ct_10 + m_22 * ct_20 + 500) / scale
+                c_i_to_v_21 = (m_20 * ct_01 + m_21 * ct_11 + m_22 * ct_21 + 500) / scale
+                c_i_to_v_22 = (m_20 * ct_02 + m_21 * ct_12 + m_22 * ct_22 + 500) / scale
+                
+                
+                a = c_i_to_v_00
+                b = c_i_to_v_01
+                c = c_i_to_v_02
+                
+                d = c_i_to_v_10
+                e = c_i_to_v_11
+                f = c_i_to_v_12
+                
+                g = c_i_to_v_20
+                h = c_i_to_v_21
+                i = c_i_to_v_22
                 
                 # Inverse impulse to velocity
                 det = ((a * e + 500) / scale * i + (d * h + 500) / scale * c + (g * b + 500) / scale * f - (a * h + 500) / scale * f - (g * e + 500) / scale * c - (d * b + 500) / scale * i + 500) / scale
@@ -193,46 +341,54 @@ clock tick
                 v_to_i_21 = (b * g - a * h) / det
                 v_to_i_22 = (a * e - b * d) / det
                 
-                $Restitution = 600
+                $Restitution = 400
                 restitution = $Restitution
-                if vel_y > -2 * $Gravity and vel_y < 2 * $Gravity
+                if c_vel_y > -5 * $Gravity
                     restitution = 0
                 end
                 
                 desired_vx = 0
-                desired_vy = (-(vel_y + $Gravity) * restitution + 500) / scale
+                # TODO: Add gravity in the positive Y world direction
+                desired_vy = (-(c_vel_y) * restitution + 500) / scale
                 desired_vz = 0
 
-                desired_dvx = desired_vx - vel_x
-                desired_dvy = desired_vy - vel_y
-                desired_dvz = desired_vz - vel_z
+                desired_dvx = desired_vx - c_vel_x
+                desired_dvy = desired_vy - c_vel_y
+                desired_dvz = desired_vz - c_vel_z
                 
-                ix = (v_to_i_00 * desired_dvx + v_to_i_01 * desired_dvy + v_to_i_02 * desired_dvz + 500) / scale
-                iy = (v_to_i_10 * desired_dvx + v_to_i_11 * desired_dvy + v_to_i_12 * desired_dvz + 500) / scale
-                iz = (v_to_i_20 * desired_dvx + v_to_i_21 * desired_dvy + v_to_i_22 * desired_dvz + 500) / scale
+                cix = (v_to_i_00 * desired_dvx + v_to_i_01 * desired_dvy + v_to_i_02 * desired_dvz + 500) / scale
+                ciy = (v_to_i_10 * desired_dvx + v_to_i_11 * desired_dvy + v_to_i_12 * desired_dvz + 500) / scale
+                ciz = (v_to_i_20 * desired_dvx + v_to_i_21 * desired_dvy + v_to_i_22 * desired_dvz + 500) / scale
                 
-                planar_impulse = sqrt(ix*ix + iz*iz)
+                planar_impulse = sqrt(cix*cix + ciz*ciz)
                 
-                $Friction = 500
-                max_fric_impulse = (iy * $Friction + 500) / scale
+                $Friction = 800
+                max_fric_impulse = (ciy * $Friction + 500) / scale
                 
                 if planar_impulse > max_fric_impulse
-                    dir_ix = ix * scale / planar_impulse
-                    dir_iz = iz * scale / planar_impulse
+                    dir_ix = cix * scale / planar_impulse
+                    dir_iz = ciz * scale / planar_impulse
                 
-                    v_per_i_y = i_to_v_11 + ((i_to_v_10 * dir_ix + i_to_v_12 * dir_iz + 500) / scale * $Friction + 500) / scale
+                    v_per_i_y = c_i_to_v_11 + ((c_i_to_v_10 * dir_ix + c_i_to_v_12 * dir_iz + 500) / scale * $Friction + 500) / scale
                     
-                    iy = desired_dvy * scale / v_per_i_y
+                    ciy = desired_dvy * scale / v_per_i_y
                     
-                    ix = ((dir_ix * $Friction + 500) / scale * iy + 500) / scale
-                    iz = ((dir_iz * $Friction + 500) / scale * iy + 500) / scale
+                    cix = ((dir_ix * $Friction + 500) / scale * ciy + 500) / scale
+                    ciz = ((dir_iz * $Friction + 500) / scale * ciy + 500) / scale
                 end
+                
+                # Transform impulse vector out of contact coordinates
+                ix = (ct_00 * cix + ct_01 * ciy + ct_02 * ciz + 500) / scale
+                iy = (ct_10 * cix + ct_11 * ciy + ct_12 * ciz + 500) / scale
+                iz = (ct_20 * cix + ct_21 * ciy + ct_22 * ciz + 500) / scale
                 
                 @s.apply_impulse(pen_x, pen_y, pen_z, ix, iy, iz)
             end
         end
         if max_penetration > 0
-            @s.y += max_penetration
+            @s.x += max_penetration * max_pen_norm_x / scale
+            @s.y += max_penetration * max_pen_norm_y / scale
+            @s.z += max_penetration * max_pen_norm_z / scale
         end
         
         @s.center_transform()
