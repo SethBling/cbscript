@@ -12,8 +12,6 @@ define @ChainLink = @Entity[type=block_display,tag=chain]
 end
 
 reset
-    register_transform_variables()
-    
     /kill @PhysicsBlock
     /summon minecraft:block_display 6.5 57.5 1.5 {block_state:{Name:"minecraft:grass_block",Count:0b}, interpolation_duration: 1b, Tags:["physics_block"]}
 
