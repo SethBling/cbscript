@@ -5,11 +5,57 @@ $InverseMass = 500
 $InverseRotationalIntertia = 500
 $Precision = 1000
 
+function register_transform_variables()
+    # These lines register the variables for the matrix_multiply functions
+    accum = 0
+    Thousand = 1000
+end
+
 function quaternion_multiply(w1, i1, j1, k1, w2, i2, j2, k2)
     new_w = (w1*w2 - i1*i2 - j1*j2 - k1*k2 + 500) / $Precision
     new_i = (w1*i2 + i1*w2 + j1*k2 - k1*j2 + 500) / $Precision
     new_j = (w1*j2 - i1*k2 + j1*w2 + k1*i2 + 500) / $Precision
     new_k = (w1*k2 + i1*j2 - j1*i2 + k1*w2 + 500) / $Precision
+end
+
+# Assumes $namespace:global args contains
+# $(m1) $(m2) and $(out), which contain the names of matrices, where a matrix
+# has indexed values like m_00, m_01
+#/data merge storage $namespace:global {args:{m1:"m",m2:"n",out:"o"}}
+#/function $namespace:matrix_multiply with storage $namespace:global args
+function matrix_multiply()
+    for $row in [0, 1, 2]
+        for $col in [0, 1, 2]
+            /$execute store result score Global $(out)_$row$col run scoreboard players get Global $(m1)_$row0
+            /$scoreboard players operation Global $(out)_$row$col *= Global $(m2)_0$col
+            /$execute store result score Global accum run scoreboard players get Global $(m1)_$row1
+            /$scoreboard players operation Global accum *= Global $(m2)_1$col
+            /$scoreboard players operation Global $(out)_$row$col += Global accum
+            /$execute store result score Global accum run scoreboard players get Global $(m1)_$row2
+            /$scoreboard players operation Global accum *= Global $(m2)_2$col
+            /$scoreboard players operation Global $(out)_$row$col += Global accum
+            /$scoreboard players operation Global $(out)_$row$col /= Global Thousand
+        end
+    end
+end
+
+# Transposes m1 before multiplying by m2
+#/data merge storage $namespace:global {args:{m1:"m",m2:"n",out:"o"}}
+#/function $namespace:transpose_matrix_multiply with storage $namespace:global args
+function transpose_matrix_multiply()
+    for $row in [0, 1, 2]
+        for $col in [0, 1, 2]
+            /$execute store result score Global $(out)_$row$col run scoreboard players get Global $(m1)_0$row
+            /$scoreboard players operation Global $(out)_$row$col *= Global $(m2)_0$col
+            /$execute store result score Global accum run scoreboard players get Global $(m1)_1$row
+            /$scoreboard players operation Global accum *= Global $(m2)_1$col
+            /$scoreboard players operation Global $(out)_$row$col += Global accum
+            /$execute store result score Global accum run scoreboard players get Global $(m1)_2$row
+            /$scoreboard players operation Global accum *= Global $(m2)_2$col
+            /$scoreboard players operation Global $(out)_$row$col += Global accum
+            /$scoreboard players operation Global $(out)_$row$col /= Global Thousand
+        end
+    end
 end
 
 define @PhysicsDisplay = @Entity

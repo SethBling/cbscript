@@ -12,9 +12,11 @@ define @ChainLink = @Entity[type=block_display,tag=chain]
 end
 
 reset
+    register_transform_variables()
+    
     /kill @PhysicsBlock
     /summon minecraft:block_display 6.5 57.5 1.5 {block_state:{Name:"minecraft:grass_block",Count:0b}, interpolation_duration: 1b, Tags:["physics_block"]}
-    
+
     /kill @Position
     create @Position
     
@@ -37,22 +39,22 @@ define @nearest_player = @Player[sort=nearest,limit=1]
 end
 
 clock tick
-    as @PhysicsBlock
-        as @Player at @s eyes
-            /tp @Position ^ ^ ^
-            world_eye_x = @Position.x
-            world_eye_y = @Position.y
-            world_eye_z = @Position.z
-            
-            /tp @Position ^ ^ ^1
-            world_eye_dx = @Position.x - world_eye_x
-            world_eye_dy = @Position.y - world_eye_y
-            world_eye_dz = @Position.z - world_eye_z
-            
-            clicked = check_clicked()
-        end
-        click_detector_tick()
+    as @Player at @s eyes
+        /tp @Position ^ ^ ^
+        world_eye_x = @Position.x
+        world_eye_y = @Position.y
+        world_eye_z = @Position.z
+        
+        /tp @Position ^ ^ ^1
+        world_eye_dx = @Position.x - world_eye_x
+        world_eye_dy = @Position.y - world_eye_y
+        world_eye_dz = @Position.z - world_eye_z
+        
+        clicked = check_clicked()
+    end
+    click_detector_tick()
 
+    as @PhysicsBlock
         if clicked
             @s.ray_intersection(world_eye_x, world_eye_y, world_eye_z, world_eye_dx, world_eye_dy, world_eye_dz)
             
@@ -288,31 +290,12 @@ clock tick
                 # using change of basis formula
                 
                 # First, ct^transpose * i_to_v
-                m_00 = (ct_00 * i_to_v_00 + ct_10 * i_to_v_10 + ct_20 * i_to_v_20 + 500) / scale
-                m_01 = (ct_00 * i_to_v_01 + ct_10 * i_to_v_11 + ct_20 * i_to_v_21 + 500) / scale
-                m_02 = (ct_00 * i_to_v_02 + ct_10 * i_to_v_12 + ct_20 * i_to_v_22 + 500) / scale
+                /data merge storage $namespace:global {args:{m1:"ct",m2:"i_to_v",out:"m"}}
+                /function $namespace:transpose_matrix_multiply with storage $namespace:global args
 
-                m_10 = (ct_01 * i_to_v_00 + ct_11 * i_to_v_10 + ct_21 * i_to_v_20 + 500) / scale
-                m_11 = (ct_01 * i_to_v_01 + ct_11 * i_to_v_11 + ct_21 * i_to_v_21 + 500) / scale
-                m_12 = (ct_01 * i_to_v_02 + ct_11 * i_to_v_12 + ct_21 * i_to_v_22 + 500) / scale
-
-                m_20 = (ct_02 * i_to_v_00 + ct_12 * i_to_v_10 + ct_22 * i_to_v_20 + 500) / scale
-                m_21 = (ct_02 * i_to_v_01 + ct_12 * i_to_v_11 + ct_22 * i_to_v_21 + 500) / scale
-                m_22 = (ct_02 * i_to_v_02 + ct_12 * i_to_v_12 + ct_22 * i_to_v_22 + 500) / scale
-                
                 # Then, multiply by ct
-                c_i_to_v_00 = (m_00 * ct_00 + m_01 * ct_10 + m_02 * ct_20 + 500) / scale
-                c_i_to_v_01 = (m_00 * ct_01 + m_01 * ct_11 + m_02 * ct_21 + 500) / scale
-                c_i_to_v_02 = (m_00 * ct_02 + m_01 * ct_12 + m_02 * ct_22 + 500) / scale
-
-                c_i_to_v_10 = (m_10 * ct_00 + m_11 * ct_10 + m_12 * ct_20 + 500) / scale
-                c_i_to_v_11 = (m_10 * ct_01 + m_11 * ct_11 + m_12 * ct_21 + 500) / scale
-                c_i_to_v_12 = (m_10 * ct_02 + m_11 * ct_12 + m_12 * ct_22 + 500) / scale
-
-                c_i_to_v_20 = (m_20 * ct_00 + m_21 * ct_10 + m_22 * ct_20 + 500) / scale
-                c_i_to_v_21 = (m_20 * ct_01 + m_21 * ct_11 + m_22 * ct_21 + 500) / scale
-                c_i_to_v_22 = (m_20 * ct_02 + m_21 * ct_12 + m_22 * ct_22 + 500) / scale
-                
+                /data merge storage $namespace:global {args:{m1:"m",m2:"ct",out:"c_i_to_v"}}
+                /function $namespace:matrix_multiply with storage $namespace:global args
                 
                 a = c_i_to_v_00
                 b = c_i_to_v_01
@@ -341,7 +324,7 @@ clock tick
                 v_to_i_21 = (b * g - a * h) / det
                 v_to_i_22 = (a * e - b * d) / det
                 
-                $Restitution = 400
+                $Restitution = 200
                 restitution = $Restitution
                 if c_vel_y > -5 * $Gravity
                     restitution = 0
