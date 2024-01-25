@@ -386,7 +386,10 @@ class mcfunction(object):
 					else:
 						vrange = '{}..{}'.format(vmin, vmax)
 						
-					self.add_command('execute if score {} {} matches {} run {}'.format(var.selector, var.objective, vrange, single_command))
+					if len(single_command) >= 1 and single_command[0] == '$':
+						self.add_command('$execute if score {} {} matches {} run {}'.format(var.selector, var.objective, vrange, single_command[1:]))
+					else:
+						self.add_command('execute if score {} {} matches {} run {}'.format(var.selector, var.objective, vrange, single_command))
 				else:
 					unique = self.get_unique_id()
 
@@ -866,7 +869,10 @@ class mcfunction(object):
 		single_command = sub_func.single_command()
 		
 		if single_command:
-			self.add_command('{}{}'.format(prefix, single_command))
+			if single_command.startswith('$'):
+				self.add_command('${}{}'.format(prefix, single_command[1:]))
+			else:
+				self.add_command('{}{}'.format(prefix, single_command))
 		else:
 			unique = self.get_unique_id()
 			sub_name = '{}_{:03}'.format(sub_name, unique)

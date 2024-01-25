@@ -227,27 +227,37 @@ def p_macro_params_empty(p):
 	'''macro_params : empty'''
 	p[0] = []
 
-#### Function call
-def p_function_call_namespace(p):
-	'''function_call : ID COLON FUNCTIONID exprlist RPAREN opt_with_macros'''
-	p[0] = function_call_block(p.lineno(1), p[1]+p[2]+p[3], p[4], p[6])
+#### Macro decorators
+#### With macro items list
+def p_with_macro_item_expr(p):
+	'''with_macro_item : DOLLAR LPAREN ID RPAREN EQUALS expr newlines'''
+	p[0] = ('expr', p[3], p[6])
 
-def p_function_call(p):
-	'''function_call : FUNCTIONID exprlist RPAREN opt_with_macros'''
-	p[0] = function_call_block(p.lineno(1), p[1], p[2], p[4])
+def p_with_macro_item_str(p):
+	'''with_macro_item : DOLLAR LPAREN ID RPAREN EQUALS NORMSTRING newlines'''
+	p[0] = ('string', p[3], p[6])
 
-def p_method_call(p):
-	'''method_call : fullselector DOT FUNCTIONID exprlist RPAREN opt_with_macros'''
-	p[0] = method_call_block(p.lineno(1), p[1], p[3], p[4], [6])
+def p_with_macro_items_one(p):
+	'''with_macro_items : with_macro_item'''
+	p[0] = [p[1]]
 
+def p_with_macro_items(p):
+	'''with_macro_items : with_macro_item with_macro_items'''
+	p[0] = [p[1]] + p[2]
+
+def p_with_macro_items_prefix(p):
+	'''with_macro_items_prefix : with newlines with_macro_items'''
+	p[0] = p[3]
+
+#### With macros suffix decorator
 def p_opt_with_macros_true(p):
 	'''opt_with_macros : with macros'''
-	p[0] = True
+	p[0] = []
 
 def p_opt_with_macros_false(p):
 	'''opt_with_macros : empty'''
-	p[0] = False
-	
+	p[0] = None
+
 #### Expression list
 def p_exprlist_multiple(p):
 	'''exprlist : exprlist COMMA expr'''
@@ -262,11 +272,52 @@ def p_exprlist_empty(p):
 	'''exprlist : empty'''
 	p[0] = []
 
+#### Function call
+def p_function_call_namespace(p):
+	'''function_call : ID COLON FUNCTIONID exprlist RPAREN opt_with_macros'''
+	p[0] = function_call_block(p.lineno(1), p[1]+p[2]+p[3], p[4], p[6])
+
+def p_function_call(p):
+	'''function_call : FUNCTIONID exprlist RPAREN opt_with_macros'''
+	p[0] = function_call_block(p.lineno(1), p[1], p[2], p[4])
+
+def p_function_call_block(p):
+	'''function_call_block : function_call'''
+	p[0] = p[1]
+
+def p_function_call_block_with_macro_items(p):
+	'''function_call_block : with_macro_items_prefix function_call'''
+	p[2].with_macro_items = p[1]
+	p[0] = p[2]
+
+#### Method call	
+def p_method_call(p):
+	'''method_call : fullselector DOT FUNCTIONID exprlist RPAREN opt_with_macros'''
+	p[0] = method_call_block(p.lineno(1), p[1], p[3], p[4], p[6])
+
+def p_method_call_block(p):
+	'''method_call_block : method_call'''
+	p[0] = p[1]
+
+def p_method_call_block_with_macro_items(p):
+	'''method_call_block : with_macro_items_prefix method_call'''
+	p[2].with_macro_items = p[1]
+	p[0] = p[2]
+
 #### Template Function Call
 def p_template_function_call(p):
 	'''template_function_call : ID LCURLY macro_call_params RCURLY LPAREN exprlist RPAREN opt_with_macros'''
 	p[0] = template_function_call_block(p.lineno(1), p[1], p[3], p[6], p[8])
-	
+
+def p_template_function_call_block(p):
+	'''template_function_call_block : template_function_call'''
+	p[0] = p[1]
+
+def p_template_function_call_block_with_macro_items(p):
+	'''template_function_call_block : with_macro_items_prefix template_function_call'''
+	p[2].with_macro_items = p[1]
+	p[0] = p[2]
+
 #### Macro call	
 def p_macro_call(p):
 	'''macro_call : DOLLAR FUNCTIONID macro_call_args'''
@@ -839,10 +890,10 @@ def p_block_selector_assignment(p):
 	p[0] = p[1]
 	
 def p_block_function_call(p):
-	'''codeblock : function_call
-				 | method_call
+	'''codeblock : function_call_block
+				 | method_call_block
+				 | template_function_call_block
 				 | macro_call
-				 | template_function_call
 				 | pythonassignment
 				 | python_tuple_assignment'''
 	p[0] = p[1]

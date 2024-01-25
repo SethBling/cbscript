@@ -1,14 +1,16 @@
-from block_base import block_base
+from call_block_base import call_block_base
 
-class function_call_block(block_base):
-	def __init__(self, line, dest, args, with_macros):
+class function_call_block(call_block_base):
+	def __init__(self, line, dest, args, with_macro_items):
 		self.line = line
-		self.dest, self.args, self.with_macros = dest, args, with_macros
+		self.dest, self.args, self.with_macro_items = dest, args, with_macro_items
 		
 	def compile(self, func):
 		if self.dest == func.name:
 			locals = func.get_local_variables()
 			func.push_locals(locals)
+
+		self.compile_with_macro_items(func)
 			
 		if not func.evaluate_params(self.args):
 			raise Exception('Unable to evaluate function call parameters at line {}'.format(self.line))
@@ -19,10 +21,9 @@ class function_call_block(block_base):
 			cmd = 'function {}'.format(self.dest)
 		else:
 			# Default to this datapack's namespace
-			# TODO: Make this handle macro arguments
 			cmd = 'function {}:{}'.format(func.namespace, self.dest)
 
-		if self.with_macros:
+		if self.with_macro_items != None:
 			cmd += ' with storage {}:global args'.format(func.namespace)
 
 		func.add_command(cmd)

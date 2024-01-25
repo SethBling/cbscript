@@ -38,14 +38,22 @@ reset
         create_click()
     end
     
-    for i = 1 to 10000
+    for i = 1 to 10
         /execute store result storage transform_test:global args.i int 1 run scoreboard players get Global i
-        macro_test() with macros
+        with
+            $(i) = i
+            $(word) = "test"
+        macro_test()
     end
 end
 
 function macro_test()
     define name v = "v_$(i)"
+
+    if i == 1
+        /say $(word)
+    end
+
     
     for k = 0 to i by i
         v.x = i

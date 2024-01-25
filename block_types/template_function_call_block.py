@@ -1,15 +1,15 @@
-from block_base import block_base
+from call_block_base import call_block_base
 from mcfunction import mcfunction
 from environment import isNumber, isInt
 from variable_types.scoreboard_var import scoreboard_var
 
-class template_function_call_block(block_base):
-	def __init__(self, line, function, template_args, args, with_macros):
+class template_function_call_block(call_block_base):
+	def __init__(self, line, function, template_args, args, with_macro_items):
 		self.line = line
 		self.function = function
 		self.template_args = template_args
 		self.args = args
-		self.with_macros = with_macros
+		self.with_macro_items = with_macro_items
 		
 	def compile(self, func):
 		function, template_args, args = self.function, self.template_args, self.args
@@ -36,6 +36,9 @@ class template_function_call_block(block_base):
 		if func_name == func.name:
 			locals = func.get_all_locals()
 			func.push_locals(locals)
+
+		# Compile macro items if there are any
+		self.compile_with_macro_items(func)
 		
 		# Calculate function arguments
 		for i in range(len(args)):
@@ -69,10 +72,9 @@ class template_function_call_block(block_base):
 			
 		cmd = 'function {}:{}'.format(func.namespace, func_name)
 
-		if self.with_macros:
+		if self.with_macro_items != None:
 			cmd = cmd + 'with storage {}:global args'.format(func.namespace)
 
-		# TODO: Make this handle macro arguments
 		func.add_command(cmd)
 
 		if func_name == func.name:

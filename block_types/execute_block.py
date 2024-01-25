@@ -63,10 +63,18 @@ class execute_block(execute_base):
 			else:
 				if single.startswith('/'):
 					single = single[1:]
+
+				cmd = ""
+
+				if single.startswith('$'):
+					single = single[1:]
+					cmd = "$"
 					
 				if single.startswith('execute '):
-					func.add_command(prefix + single[len('execute '):])
+					cmd = cmd + prefix + single[len('execute '):]
 				else:
-					func.add_command(prefix + 'run ' + single)
+					cmd = cmd + prefix + 'run ' + single
+
+				func.add_command(cmd)
 				
 		func.free_scratch(self.scratch)

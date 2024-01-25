@@ -43,11 +43,21 @@ class execute_base(block_base):
 		else:
 			if single.startswith('/'):
 				single = single[1:]
-				
+
+			macro = False
+			if single.startswith('$'):
+				single = single[1:]
+				macro = True
+
 			if single.startswith('execute '):
-				func.add_command(cmd + single[len('execute '):])
+				cmd = cmd + single[len('execute '):]
 			else:
-				func.add_command(cmd + 'run ' + single)
+				cmd = cmd + 'run ' + single
+
+			if macro:
+				cmd = '$' + cmd
+
+			func.add_command(cmd)
 				
 		self.compile_else(func)
 				
