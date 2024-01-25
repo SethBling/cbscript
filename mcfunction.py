@@ -45,9 +45,25 @@ class mcfunction(object):
 		self.params = params
 		self.callable = callable
 		self.environment_stack = []
+		self.has_macros = False
+		self.filename = None
 		
 		for param in params:
 			self.register_local(param)
+
+	def set_filename(self, filename):
+		self.filename = filename
+
+	# Returns the command to call this function
+	def get_call(self, caller):
+		if self.filename == None:
+			raise CompileError('Tried to call function with no registered filename.')
+		
+		if self.has_macros:
+			caller.has_macros = True
+			return 'function {}:{} with storage {}:global args'.format(self.namespace, self.filename, self.namespace)
+		else:
+			return 'function {}:{}'.format(self.namespace, self.filename)
 
 	# Takes a scoreboard objective and returns a (potentially different)
 	# scoreboard objective which can be freely modified.
@@ -379,13 +395,13 @@ class mcfunction(object):
 					else:
 						case_name = 'line{:03}/{}{}-{}_{:03}'.format(line, case_func_name, vmin, vmax, unique)
 						
-					self.add_command('execute if score {} {} matches {}..{} run function {}:{}'.format(var.selector, var.objective, vmin, vmax, self.namespace, case_name))
 					self.register_function(case_name, case_func)
+					self.add_command('execute if score {} {} matches {}..{} run {}'.format(var.selector, var.objective, vmin, vmax, case_func.get_call(self)))
 			else:
 				unique = self.get_unique_id()
 				case_name = 'line{:03}/{}{}-{}_{:03}'.format(line, switch_func_name, vmin, vmax, unique)
-				self.add_command('execute if score {} {} matches {}..{} run function {}:{}'.format(var.selector, var.objective, vmin, vmax, self.namespace, case_name))
 				self.register_function(case_name, case_func)
+				self.add_command('execute if score {} {} matches {}..{} run {}'.format(var.selector, var.objective, vmin, vmax, case_func.get_call(self)))
 			
 				if not case_func.switch_cases(var, sub_cases):
 					return False
@@ -413,6 +429,13 @@ class mcfunction(object):
 				command = command[1:]
 		
 			command = self.environment.apply(command)
+
+			if '$(' in command:
+				if command[0] != '$':
+					command = '$' + command
+
+				self.has_macros = True
+				
 			
 		self.commands.insert(index, command)
 		
@@ -739,6 +762,12 @@ class mcfunction(object):
 			self.add_command('summon {0} {1} {2}'.format(entity_type, relcoords.get_value(self), tag))
 			
 		return True
+	
+	def register_name_definition(self, id, str):
+		self.environment.register_name_definition(id, str)
+
+	def get_name_definition(self, id):
+		return self.environment.get_name_definition(id)
 		
 	# Creates an empty function with a copy of the current environment
 	def create_child_function(self, new_function_name = None, callable = False, params = []):
@@ -842,10 +871,10 @@ class mcfunction(object):
 			unique = self.get_unique_id()
 			sub_name = '{}_{:03}'.format(sub_name, unique)
 			
-			cmd = '{}function {}:{}'.format(prefix, self.namespace, sub_name)
+			self.register_function(sub_name, sub_func)
+			cmd = prefix + sub_func.get_call(self)
 				
 			self.add_command(cmd)
-			self.register_function(sub_name, sub_func)
 			
 	def get_reset_function(self):
 		return self.environment.get_reset_function()

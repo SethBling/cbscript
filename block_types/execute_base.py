@@ -39,7 +39,7 @@ class execute_base(block_base):
 			
 			self.add_continuation_command(func, func_name, exec_func)
 			
-			func.add_command('{0}run function {1}:{2}'.format(cmd, func.namespace, func_name))			
+			func.add_command('{}run {}'.format(cmd, exec_func.get_call(func)))			
 		else:
 			if single.startswith('/'):
 				single = single[1:]

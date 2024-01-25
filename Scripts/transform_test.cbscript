@@ -37,6 +37,36 @@ reset
     as @Player
         create_click()
     end
+    
+    for i = 1 to 10000
+        /execute store result storage transform_test:global args.i int 1 run scoreboard players get Global i
+        /function $namespace:macro_test with storage $namespace:global args
+    end
+end
+
+function macro_test()
+    define name v = "v_$(i)"
+    
+    for k = 0 to i by i
+        v.x = i
+        v.y = k * 2
+        
+        if i%2 == 0
+            v.x = -i
+            v.y = -i * 2
+        end
+    end
+    
+    if k % 2 == 0
+        k++
+        k++
+    end
+    
+    j = 0
+    while j < i
+        j += i
+        v.z = j
+    end
 end
 
 define @nearest_player = @Player[sort=nearest,limit=1]
@@ -126,9 +156,9 @@ clock tick
                             end
                             if penetration > max_penetration
                                 max_penetration = penetration
-                                max_pen_norm_x = norm_x
-                                max_pen_norm_y = norm_y
-                                max_pen_norm_z = norm_z
+                                max_pen_norm_x = 0
+                                max_pen_norm_y = scale
+                                max_pen_norm_z = 0
                             end
                         end
                         
@@ -159,9 +189,9 @@ clock tick
                             end
                             if penetration > max_penetration
                                 max_penetration = penetration
-                                max_pen_norm_x = norm_x
-                                max_pen_norm_y = norm_y
-                                max_pen_norm_z = norm_z
+                                max_pen_norm_x = -scale
+                                max_pen_norm_y = 0
+                                max_pen_norm_z = 0
                             end
                         end
                         
@@ -192,9 +222,9 @@ clock tick
                             end
                             if penetration > max_penetration
                                 max_penetration = penetration
-                                max_pen_norm_x = norm_x
-                                max_pen_norm_y = norm_y
-                                max_pen_norm_z = norm_z
+                                max_pen_norm_x = 0
+                                max_pen_norm_y = 0
+                                max_pen_norm_z = -scale
                             end
                         end
                     end
@@ -217,15 +247,16 @@ clock tick
                 collider1.inv_mass = @s.inv_mass
                 collider1.inv_rot_int = @s.inv_rot_int
                 
-                collision.norm_x = norm_x
-                collision.norm_y = norm_y
-                collision.norm_z = norm_z
+                collision1.norm_x = norm_x
+                collision1.norm_y = norm_y
+                collision1.norm_z = norm_z
 
-                collision.pen_x = pen_x
-                collision.pen_y = pen_y
-                collision.pen_z = pen_z
+                collision1.pen_x = pen_x
+                collision1.pen_y = pen_y
+                collision1.pen_z = pen_z
                 
-                handle_collision_1body()
+                /data merge storage transform_test:global {args:{collider1:1,collision:1}}
+                /function $namespace:handle_collision_1body with storage $namespace:global args
                 
                 @s.apply_impulse(pen_x, pen_y, pen_z, collider1.ix, collider1.iy, collider1.iz)
             end

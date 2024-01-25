@@ -40,4 +40,4 @@ class for_selector_block(block_base):
 		exec_name = 'for{0:03}_ln{1}'.format(unique, self.line)
 		func.register_function(exec_name, exec_func)
 		
-		func.add_command('execute as {0} run function {1}:{2}'.format(self.selector, func.namespace, exec_name))
+		func.add_command('execute as {} run {}'.format(self.selector, exec_func.get_call(func)))

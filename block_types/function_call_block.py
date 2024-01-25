@@ -17,6 +17,7 @@ class function_call_block(block_base):
 			func.add_command('function {}'.format(self.dest))
 		else:
 			# Default to this datapack's namespace
+			# TODO: Make this handle macro arguments
 			func.add_command('function {}:{}'.format(func.namespace, self.dest))
 
 		if self.dest == func.name:

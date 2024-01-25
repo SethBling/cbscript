@@ -66,6 +66,7 @@ class template_function_call_block(block_base):
 			# Register the new function
 			func.register_function(func_name, new_func)
 			
+		# TODO: Make this handle macro arguments
 		func.add_command('function {}:{}'.format(func.namespace, func_name))
 
 		if func_name == func.name:

@@ -39,6 +39,7 @@ class environment(object):
 		self.locals = []
 		self.selectors = {}
 		self.self_selector = None
+		self.name_definitions = {}
 		self.pointers = {}
 		self.block_definitions = {}
 		self.function_name = None
@@ -57,6 +58,9 @@ class environment(object):
 		
 		for id in self.dollarid:
 			new_env.dollarid[id] = self.dollarid[id]
+
+		for id in self.name_definitions:
+			new_env.name_definitions[id] = self.name_definitions[id]
 			
 		#new_env.dollarid = copy.deepcopy(self.dollarid)
 		if new_function_name == None:
@@ -148,6 +152,15 @@ class environment(object):
 		self.selectors[id] = selector_definition(fullselector, self)
 		
 		return self.selectors[id]
+	
+	def register_name_definition(self, id, str):
+		self.name_definitions[id] = str
+
+	def get_name_definition(self, id):
+		if id in self.name_definitions:
+			return self.name_definitions[id]
+		else:
+			return None
 	
 	def compile_selectors(self, command):
 		ret = ""

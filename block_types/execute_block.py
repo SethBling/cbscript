@@ -59,7 +59,7 @@ class execute_block(execute_base):
 				func_name = 'line{:03}/else{:03}'.format(self.line, unique)
 				func.register_function(func_name, exec_func)
 				
-				func.add_command('{}run function {}:{}'.format(prefix, func.namespace, func_name))
+				func.add_command('{}run {}'.format(prefix, exec_func.get_call(func)))
 			else:
 				if single.startswith('/'):
 					single = single[1:]

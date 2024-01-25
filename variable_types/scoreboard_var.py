@@ -33,6 +33,10 @@ class scoreboard_var(var_base):
 			return scoreboard_var('Global', assignto)
 		else:
 			func.register_objective(self.objective)
+
+			name_def = func.get_name_definition(self.selector)
+			if name_def != None:
+				return scoreboard_var(name_def, self.objective)
 			
 			return self
 	
@@ -44,8 +48,13 @@ class scoreboard_var(var_base):
 			return 'data get entity {} {} {}'.format(self.selector, path, scale)
 		else:		
 			func.register_objective(self.objective)
+
+			selector = self.selector
+			name_def = func.get_name_definition(self.selector)
+			if name_def != None:
+				selector = name_def
 			
-			return 'scoreboard players get {} {}'.format(self.selector, self.objective)
+			return 'scoreboard players get {} {}'.format(selector, self.objective)
 	
 	# Returns an execute prefix that can be used to set this variable's value when paired with a get_command() command
 	def set_command(self, func):
@@ -55,8 +64,13 @@ class scoreboard_var(var_base):
 			return 'execute store result entity {} {} {} {}'.format(self.selector, path, data_type, 1/float(scale))
 		else:		
 			func.register_objective(self.objective)
+
+			selector = self.selector
+			name_def = func.get_name_definition(self.selector)
+			if name_def != None:
+				selector = name_def
 		
-			return 'execute store result score {} {}'.format(self.selector, self.objective)
+			return 'execute store result score {} {}'.format(selector, self.objective)
 			
 	# Gets a constant integer value for this variable if there is one, otherwise returns None.
 	def get_const_value(self, func):
@@ -66,7 +80,13 @@ class scoreboard_var(var_base):
 	# to reduce extranious copies.
 	def is_objective(self, func, selector, objective):
 		path_data = self.get_path(func)
-		if path_data == None and self.selector == selector and self.objective == objective:
+		
+		myselector = self.selector
+		name_def = func.get_name_definition(self.selector)
+		if name_def != None:
+			myselector = name_def
+
+		if path_data == None and myselector == selector and self.objective == objective:
 			return True
 		else:
 			return False
@@ -138,6 +158,8 @@ class scoreboard_var(var_base):
 	def free_scratch(self, func):
 		func.free_scratch(self.objective)
 		
+	# This should only be used for scoreboard variables that are known to
+	# be Global
 	@property
 	def selvar(self):
 		return '{} {}'.format(self.selector, self.objective)

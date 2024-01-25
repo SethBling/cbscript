@@ -69,6 +69,7 @@ class global_context(object):
 		
 	def register_function(self, name, func):
 		self.functions[name] = func
+		func.set_filename(name)
 		
 	def register_function_params(self, name, params):
 		self.function_params[name] = params

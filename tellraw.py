@@ -16,7 +16,7 @@ from CompileError import CompileError
 
 def getPropertiesText(properties):
 	text = ""
-	if properties["color"] <> None:
+	if properties["color"] != None:
 		text = text + ',"color":"' + properties["color"] + '"'
 	if properties["bold"]:
 		text = text + ',"bold":true'

@@ -475,6 +475,9 @@ define @PhysicsBlock = @PhysicsDisplay[type=block_display,tag=physics_block]
 end
 
 function handle_collision_1body()
+    define name collider1 = "collider$(collider1)"
+    define name collision = "collision$(collision)"
+
     # Create contact basis/transform
     ct_01 = collision.norm_x
     ct_11 = collision.norm_y

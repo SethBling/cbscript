@@ -11,6 +11,7 @@ from block_types.clock_section import clock_section
 from block_types.command_block import command_block
 from block_types.comment_block import comment_block
 from block_types.create_block import create_block
+from block_types.define_name_block import define_name_block
 from block_types.entity_tag_block import entity_tag_block
 from block_types.execute_block import execute_block
 from block_types.for_index_block import for_index_block
@@ -908,6 +909,7 @@ def p_qualifiers(p):
 def p_qualifier_binop(p):
 	'''qualifier : ID EQUALS virtualinteger
 				 | ID EQUALS ID
+				 | name EQUALS ID
 				 | ID EQUALEQUAL virtualinteger
 				 | ID GEQ virtualinteger
 				 | ID LEQ virtualinteger
@@ -1315,6 +1317,11 @@ def p_create_index(p):
 def p_create_index_nocoords(p):
 	'''create_block : create ATID LBRACK const_value RBRACK'''
 	p[0] = create_block(p.lineno(1), p[2], relcoords(), p[4])
+
+#### Define name
+def p_define_name(p):
+	'''codeblock : define name ID EQUALS NORMSTRING'''
+	p[0] = define_name_block(p.lineno(1), p[3], p[5])
 	
 #### Python Assignment
 def p_pythonassignment_interpreted_string(p):
