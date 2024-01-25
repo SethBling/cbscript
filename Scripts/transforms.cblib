@@ -570,12 +570,18 @@ function handle_collision_1body()
     # using change of basis formula
     
     # First, ct^transpose * i_to_v
-    /data merge storage $namespace:global {args:{m1:"ct",m2:"i_to_v",out:"m"}}
-    /function $namespace:transpose_matrix_multiply with storage $namespace:global args
+    with
+        $(m1) = "ct"
+        $(m2) = "i_to_v"
+        $(out) = "m"
+    transpose_matrix_multiply()
 
     # Then, multiply by ct
-    /data merge storage $namespace:global {args:{m1:"m",m2:"ct",out:"c_i_to_v"}}
-    /function $namespace:matrix_multiply with storage $namespace:global args
+    with
+        $(m1) = "m"
+        $(m2) = "ct"
+        $(out) = "c_i_to_v"
+    matrix_multiply()
     
     a = c_i_to_v_00
     b = c_i_to_v_01

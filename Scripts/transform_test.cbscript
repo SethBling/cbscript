@@ -38,42 +38,7 @@ reset
         create_click()
     end
     
-    for i = 1 to 10
-        with
-            $(i) = i * 1000
-            $(word) = "test"
-        macro_test()
-    end
-end
-
-function macro_test()
-    define name v = "v_$(i)"
-
-    if i == 1
-        /say $(word)
-    end
-
-    
-    for k = 0 to i by i
-        v.x = i
-        v.y = k * 2
-        
-        if i%2 == 0
-            v.x = -i
-            v.y = -i * 2
-        end
-    end
-    
-    if k % 2 == 0
-        k++
-        k++
-    end
-    
-    j = 0
-    while j < i
-        j += i
-        v.z = j
-    end
+    test_call_macro()
 end
 
 define @nearest_player = @Player[sort=nearest,limit=1]
