@@ -4,6 +4,7 @@ import math
 $InverseMass = 500
 $InverseRotationalIntertia = 500
 $Precision = 1000
+$CancelRestitution = -25
 
 # These lines register the variables for the matrix_multiply functions
 # It doesn't actually need to be called.
@@ -471,4 +472,173 @@ define @PhysicsBlock = @PhysicsDisplay[type=block_display,tag=physics_block]
             @s.collision = False
         end
     end
+end
+
+function handle_collision_1body()
+    # Create contact basis/transform
+    ct_01 = collision.norm_x
+    ct_11 = collision.norm_y
+    ct_21 = collision.norm_z
+    
+    absx = abs(collision.norm_x)
+    absz = abs(collision.norm_z)
+    
+    if absx < absz
+        # The norm isn't pointing toward x, so
+        # cross the norm with 1,0,0
+        s = sqrt(collision.norm_y*collision.norm_y + collision.norm_z*collision.norm_z)
+        ct_00 = 0
+        ct_10 = -collision.norm_z * $Precision / s
+        ct_20 = collision.norm_y * $Precision / s
+
+        # Cross the norm with the new vector
+        ct_02 = (ct_10*ct_21 - ct_20*ct_11 + 500) / $Precision
+        ct_12 = (ct_20*ct_01 + 500) / $Precision
+        ct_22 = (ct_10*ct_01 + 500) / $Precision
+    else
+        # The norm isn't pointing toward z, so
+        # cross the norm with 0,0,1
+        s = sqrt(collision.norm_y*collision.norm_y + collision.norm_x*collision.norm_x)
+        ct_00 = collision.norm_y * $Precision / s
+        ct_10 = -collision.norm_x * $Precision / s
+        ct_20 = 0
+
+        # Cross the norm with the new vector
+        ct_02 = (ct_10*ct_21 + 500) / $Precision
+        ct_12 = (ct_00*ct_21 + 500) / $Precision
+        ct_22 = (ct_00*ct_11 - ct_10*ct_01 + 500) / $Precision
+    end
+    
+    # Full cross product would be:
+    #ct_20 = (ct_10*ct_21 - ct_20*ct_11 + 500) / $Precision
+    #ct_21 = (ct_20*ct_01 - ct_00*ct_21 + 500) / $Precision
+    #ct_22 = (ct_00*ct_11 - ct_10*ct_01 + 500) / $Precision
+
+    
+    dx = collision.pen_x - collider1.x
+    dy = collision.pen_y - collider1.y
+    dz = collision.pen_z - collider1.z
+    
+    rot_lin_vel_x = (collider1.rotation_y * dz - collider1.rotation_z * dy + 500) / $Precision
+    rot_lin_vel_y = (collider1.rotation_z * dx - collider1.rotation_x * dz + 500) / $Precision
+    rot_lin_vel_z = (collider1.rotation_x * dy - collider1.rotation_y * dx + 500) / $Precision
+    
+    w_vel_x = collider1.velocity_x + rot_lin_vel_x
+    w_vel_y = collider1.velocity_y + rot_lin_vel_y
+    w_vel_z = collider1.velocity_z + rot_lin_vel_z
+    
+    # Transform by the ct transpose matrix to get contact coordinates
+    c_vel_x = (ct_00 * w_vel_x + ct_10 * w_vel_y + ct_20 * w_vel_z + 500) / $Precision
+    c_vel_y = (ct_01 * w_vel_x + ct_11 * w_vel_y + ct_21 * w_vel_z + 500) / $Precision
+    c_vel_z = (ct_02 * w_vel_x + ct_12 * w_vel_y + ct_22 * w_vel_z + 500) / $Precision
+
+    # Impulse to torque skew symmetric matrix
+    #i_to_t_00 = 0
+    #i_to_t_01 = -dz
+    #i_to_t_02 = dy
+         
+    #i_to_t_10 = dz
+    #i_to_t_11 = 0
+    #i_to_t_12 = -dx
+         
+    #i_to_t_20 = -dy
+    #i_to_t_21 = dx
+    #i_to_t_22 = 0
+    
+    # Impulse to velocity transform
+    # Formula: -(i_to_t^2) * InverseRotationalIntertia
+    i_to_v_00 = ((dz * dz + dy * dy + 500) / $Precision * collider1.inv_rot_int + 500) / $Precision
+    i_to_v_01 = ((-dy * dx + 500) / $Precision * collider1.inv_rot_int + 500) / $Precision
+    i_to_v_02 = ((-dz * dx + 500) / $Precision * collider1.inv_rot_int + 500) / $Precision
+
+    i_to_v_10 = ((-dx * dy + 500) / $Precision * collider1.inv_rot_int + 500) / $Precision
+    i_to_v_11 = ((dz * dz + dx * dx + 500) / $Precision * collider1.inv_rot_int + 500) / $Precision
+    i_to_v_12 = ((-dz * dy + 500) / $Precision * collider1.inv_rot_int + 500) / $Precision
+
+    i_to_v_20 = ((-dx * dz + 500) / $Precision * collider1.inv_rot_int + 500) / $Precision
+    i_to_v_21 = ((-dy * dz + 500) / $Precision * collider1.inv_rot_int + 500) / $Precision
+    i_to_v_22 = ((dy * dy + dx * dx + 500) / $Precision * collider1.inv_rot_int + 500) / $Precision
+    
+    i_to_v_00 += collider1.inv_mass
+    i_to_v_11 += collider1.inv_mass
+    i_to_v_22 += collider1.inv_mass
+    
+    # Transform i_to_v into contact coordinates before inverting,
+    # using change of basis formula
+    
+    # First, ct^transpose * i_to_v
+    /data merge storage $namespace:global {args:{m1:"ct",m2:"i_to_v",out:"m"}}
+    /function $namespace:transpose_matrix_multiply with storage $namespace:global args
+
+    # Then, multiply by ct
+    /data merge storage $namespace:global {args:{m1:"m",m2:"ct",out:"c_i_to_v"}}
+    /function $namespace:matrix_multiply with storage $namespace:global args
+    
+    a = c_i_to_v_00
+    b = c_i_to_v_01
+    c = c_i_to_v_02
+    
+    d = c_i_to_v_10
+    e = c_i_to_v_11
+    f = c_i_to_v_12
+    
+    g = c_i_to_v_20
+    h = c_i_to_v_21
+    i = c_i_to_v_22
+    
+    # Inverse impulse to velocity
+    det = ((a * e + 500) / $Precision * i + (d * h + 500) / $Precision * c + (g * b + 500) / $Precision * f - (a * h + 500) / $Precision * f - (g * e + 500) / $Precision * c - (d * b + 500) / $Precision * i + 500) / $Precision
+
+    v_to_i_00 = (e * i - f * h) / det
+    v_to_i_01 = (c * h - b * i) / det
+    v_to_i_02 = (b * f - c * e) / det
+
+    v_to_i_10 = (f * g - d * i) / det
+    v_to_i_11 = (a * i - c * g) / det
+    v_to_i_12 = (c * d - a * f) / det
+    
+    v_to_i_20 = (d * h - e * g) / det
+    v_to_i_21 = (b * g - a * h) / det
+    v_to_i_22 = (a * e - b * d) / det
+    
+    $Restitution = 200
+    restitution = $Restitution
+    if c_vel_y > $CancelRestitution
+        restitution = 0
+    end
+    
+    desired_vx = 0
+    # TODO: Add gravity in the positive Y world direction
+    desired_vy = (-(c_vel_y) * restitution + 500) / $Precision
+    desired_vz = 0
+
+    desired_dvx = desired_vx - c_vel_x
+    desired_dvy = desired_vy - c_vel_y
+    desired_dvz = desired_vz - c_vel_z
+    
+    cix = (v_to_i_00 * desired_dvx + v_to_i_01 * desired_dvy + v_to_i_02 * desired_dvz + 500) / $Precision
+    ciy = (v_to_i_10 * desired_dvx + v_to_i_11 * desired_dvy + v_to_i_12 * desired_dvz + 500) / $Precision
+    ciz = (v_to_i_20 * desired_dvx + v_to_i_21 * desired_dvy + v_to_i_22 * desired_dvz + 500) / $Precision
+    
+    planar_impulse = sqrt(cix*cix + ciz*ciz)
+    
+    $Friction = 800
+    max_fric_impulse = (ciy * $Friction + 500) / $Precision
+    
+    if planar_impulse > max_fric_impulse
+        dir_ix = cix * $Precision / planar_impulse
+        dir_iz = ciz * $Precision / planar_impulse
+    
+        v_per_i_y = c_i_to_v_11 + ((c_i_to_v_10 * dir_ix + c_i_to_v_12 * dir_iz + 500) / $Precision * $Friction + 500) / $Precision
+        
+        ciy = desired_dvy * $Precision / v_per_i_y
+        
+        cix = ((dir_ix * $Friction + 500) / $Precision * ciy + 500) / $Precision
+        ciz = ((dir_iz * $Friction + 500) / $Precision * ciy + 500) / $Precision
+    end
+    
+    # Transform impulse vector out of contact coordinates
+    collider1.ix = (ct_00 * cix + ct_01 * ciy + ct_02 * ciz + 500) / $Precision
+    collider1.iy = (ct_10 * cix + ct_11 * ciy + ct_12 * ciz + 500) / $Precision
+    collider1.iz = (ct_20 * cix + ct_21 * ciy + ct_22 * ciz + 500) / $Precision
 end
