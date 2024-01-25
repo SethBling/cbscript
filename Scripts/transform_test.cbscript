@@ -40,7 +40,7 @@ reset
     
     for i = 1 to 10000
         /execute store result storage transform_test:global args.i int 1 run scoreboard players get Global i
-        /function $namespace:macro_test with storage $namespace:global args
+        macro_test() with macros
     end
 end
 

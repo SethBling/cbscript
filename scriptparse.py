@@ -229,16 +229,24 @@ def p_macro_params_empty(p):
 
 #### Function call
 def p_function_call_namespace(p):
-	'''function_call : ID COLON FUNCTIONID exprlist RPAREN'''
-	p[0] = function_call_block(p.lineno(1), p[1]+p[2]+p[3], p[4])
+	'''function_call : ID COLON FUNCTIONID exprlist RPAREN opt_with_macros'''
+	p[0] = function_call_block(p.lineno(1), p[1]+p[2]+p[3], p[4], p[6])
 
 def p_function_call(p):
-	'''function_call : FUNCTIONID exprlist RPAREN'''
-	p[0] = function_call_block(p.lineno(1), p[1], p[2])
+	'''function_call : FUNCTIONID exprlist RPAREN opt_with_macros'''
+	p[0] = function_call_block(p.lineno(1), p[1], p[2], p[4])
 
 def p_method_call(p):
-	'''method_call : fullselector DOT FUNCTIONID exprlist RPAREN'''
-	p[0] = method_call_block(p.lineno(1), p[1], p[3], p[4])
+	'''method_call : fullselector DOT FUNCTIONID exprlist RPAREN opt_with_macros'''
+	p[0] = method_call_block(p.lineno(1), p[1], p[3], p[4], [6])
+
+def p_opt_with_macros_true(p):
+	'''opt_with_macros : with macros'''
+	p[0] = True
+
+def p_opt_with_macros_false(p):
+	'''opt_with_macros : empty'''
+	p[0] = False
 	
 #### Expression list
 def p_exprlist_multiple(p):
@@ -256,8 +264,8 @@ def p_exprlist_empty(p):
 
 #### Template Function Call
 def p_template_function_call(p):
-	'''template_function_call : ID LCURLY macro_call_params RCURLY LPAREN exprlist RPAREN'''
-	p[0] = template_function_call_block(p.lineno(1), p[1], p[3], p[6])
+	'''template_function_call : ID LCURLY macro_call_params RCURLY LPAREN exprlist RPAREN opt_with_macros'''
+	p[0] = template_function_call_block(p.lineno(1), p[1], p[3], p[6], p[8])
 	
 #### Macro call	
 def p_macro_call(p):

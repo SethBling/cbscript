@@ -1,9 +1,9 @@
 from block_base import block_base
 
 class function_call_block(block_base):
-	def __init__(self, line, dest, args):
+	def __init__(self, line, dest, args, with_macros):
 		self.line = line
-		self.dest, self.args = dest, args
+		self.dest, self.args, self.with_macros = dest, args, with_macros
 		
 	def compile(self, func):
 		if self.dest == func.name:
@@ -13,12 +13,19 @@ class function_call_block(block_base):
 		if not func.evaluate_params(self.args):
 			raise Exception('Unable to evaluate function call parameters at line {}'.format(self.line))
 		
+		cmd = ""
+
 		if ':' in self.dest:
-			func.add_command('function {}'.format(self.dest))
+			cmd = 'function {}'.format(self.dest)
 		else:
 			# Default to this datapack's namespace
 			# TODO: Make this handle macro arguments
-			func.add_command('function {}:{}'.format(func.namespace, self.dest))
+			cmd = 'function {}:{}'.format(func.namespace, self.dest)
+
+		if self.with_macros:
+			cmd += ' with storage {}:global args'.format(func.namespace)
+
+		func.add_command(cmd)
 
 		if self.dest == func.name:
 			func.pop_locals(locals)

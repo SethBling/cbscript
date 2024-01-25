@@ -94,7 +94,7 @@ class cbscript(object):
 		
 		type, parsed = result
 		
-		if type <> 'program':
+		if type != 'program':
 			self.log('Script does not contain a full program.')
 			return False
 			

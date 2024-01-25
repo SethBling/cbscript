@@ -4,11 +4,12 @@ from environment import isNumber, isInt
 from variable_types.scoreboard_var import scoreboard_var
 
 class template_function_call_block(block_base):
-	def __init__(self, line, function, template_args, args):
+	def __init__(self, line, function, template_args, args, with_macros):
 		self.line = line
 		self.function = function
 		self.template_args = template_args
 		self.args = args
+		self.with_macros = with_macros
 		
 	def compile(self, func):
 		function, template_args, args = self.function, self.template_args, self.args
@@ -66,8 +67,13 @@ class template_function_call_block(block_base):
 			# Register the new function
 			func.register_function(func_name, new_func)
 			
+		cmd = 'function {}:{}'.format(func.namespace, func_name)
+
+		if self.with_macros:
+			cmd = cmd + 'with storage {}:global args'.format(func.namespace)
+
 		# TODO: Make this handle macro arguments
-		func.add_command('function {}:{}'.format(func.namespace, func_name))
+		func.add_command(cmd)
 
 		if func_name == func.name:
 			func.pop_locals(locals)		
