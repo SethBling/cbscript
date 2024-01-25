@@ -1,23 +1,30 @@
-function sqrt(n)
-	guess = 20
-	for guess_iter = 1 to 15
-		val = (n / guess + guess) / 2
-		guess = val
-	end
-
-    guess_iter = 0
-    while guess*guess > n and guess_iter < 50
-        guess--
-        guess_iter++
+# Adapted from code by Triton365
+function sqrt(_x)
+    if _x >= 0 and _x <= 19310
+        sqrt.t1 = _x + 4095
+        sqrt.y = -594039 / sqrt.t1 + 149
+    else if _x >= 19311 and _x <= 1705544
+        sqrt.t1 = _x + 903167
+        sqrt.y = -1568669636 / sqrt.t1 + 1857
+    else if _x >= 1705545 and _x <= 39400514
+        sqrt.t1 = _x / 141 + 224767
+        sqrt.y = -2147483648 / sqrt.t1 + 10425
+    else if _x >= 39400515 and _x <= 455779650
+        sqrt.t1 = _x / 7775 + 60419
+        sqrt.y = -2147483648 / sqrt.t1 + 39184
+    else if _x >= 455779651 and _x <= 2147483647
+        sqrt.t1 = _x / 100000 + 26111
+        sqrt.y = -2147483648 / sqrt.t1 + 91181
     end
     
-    guess_iter = 0
-    while (guess+1)*(guess+1) <= n and guess_iter < 50
-        guess++
-        guess_iter++
+    sqrt.t2 = _x / sqrt.y
+    sqrt.y = (sqrt.y + sqrt.t2) / 2
+    
+    if sqrt.y * sqrt.y > _x
+        sqrt.y--
     end
     
-	return guess
+    return sqrt.y
 end
 
 function abs(n)

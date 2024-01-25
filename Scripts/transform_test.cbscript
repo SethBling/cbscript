@@ -12,6 +12,12 @@ define @ChainLink = @Entity[type=block_display,tag=chain]
 end
 
 reset
+    for $row in $range(3)
+        for $col in $range(3)
+            /scoreboard objectives add m_$row$col dummy
+        end
+    end
+
     /kill @PhysicsBlock
     /summon minecraft:block_display 6.5 57.5 1.5 {block_state:{Name:"minecraft:grass_block",Count:0b}, interpolation_duration: 1b, Tags:["physics_block"]}
 
@@ -375,4 +381,59 @@ clock tick
         @s.center_transform()
         @s.set_transform()
     end
+end
+
+function get_unused_collision()
+    # TODO: Iterate through collision ids until an unallocated collision is found
+end
+
+# Assumes $(collision) contains the collision id
+function store_collision()
+    # If the collision id isn't in the global collision list, allocate it
+    /$execute if score collision_$(collision) allocated < c1 Constant run function allocate_collision with $namespace:global args
+    /$execute store result score c1 dx run scoreboard players get collision_$(collision) c1dx
+end
+
+function allocate_collision()
+    /$scoreboard players set Global collision $(i)
+    /$scoreboard players set collision_$(i) allocated 1
+    # Add collision to list
+    /execute store result storage $namespace:global contacts[-1] int 1 run scoreboard players get Global collision
+    # TODO: Set the variable for the object-feature pair
+end
+
+function deallocate_collision()
+    /$scoreboard players set collision_$(i) allocated 0
+    # TODO: Remove collision from list
+    # TODO: Clear the variable for the object-feature pair
+end
+
+# Checks if an object-feature collision pair exists
+function collision_exists()
+
+end
+
+# Removes the last element of contacts and appends it to contacts_processed
+# Returns the collision id, or -1 if there aren't any more collisions
+function get_next_collision()
+    contact = -1
+    /execute store result score Global contact run data get storage $namespace:global contacts[-1]
+    if contact >= 0
+        /execute store result storage $namespace:global contacts_processed[-1] int 1 run scoreboard players get Global contact
+    end
+    
+    return contact
+end
+
+function reset_collision_list()
+    /data modify storage $namespace:global contacts set from storage $namespace:global contacts_processed
+end
+
+# Assumes $(collider) contains the collider id.
+function create_collider(x, y, z)
+    /$execute store result score collider_$(collider) x run scoreboard players get Global x
+    /$execute store result score collider_$(collider) x run scoreboard players get Global y
+    /$execute store result score collider_$(collider) x run scoreboard players get Global z
+    
+    
 end

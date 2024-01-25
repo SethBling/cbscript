@@ -5,9 +5,9 @@ $InverseMass = 500
 $InverseRotationalIntertia = 500
 $Precision = 1000
 
-# This doesn't actually need to be called
+# These lines register the variables for the matrix_multiply functions
+# It doesn't actually need to be called.
 function register_transform_variables()
-    # These lines register the variables for the matrix_multiply functions
     accum = 0
 end
 
@@ -34,7 +34,7 @@ function matrix_multiply()
             /$execute store result score Global accum run scoreboard players get Global $(m1)_$row2
             /$scoreboard players operation Global accum *= Global $(m2)_2$col
             /$scoreboard players operation Global $(out)_$row$col += Global accum
-            /$scoreboard players operation Global $(out)_$row$col /= Constant c1000
+            /$scoreboard players operation Global $(out)_$row$col /= c1000 Constant
         end
     end
 end
@@ -53,7 +53,7 @@ function transpose_matrix_multiply()
             /$execute store result score Global accum run scoreboard players get Global $(m1)_2$row
             /$scoreboard players operation Global accum *= Global $(m2)_2$col
             /$scoreboard players operation Global $(out)_$row$col += Global accum
-            /$scoreboard players operation Global $(out)_$row$col /= Global Thousand
+            /$scoreboard players operation Global $(out)_$row$col /= c1000 Constant
         end
     end
 end
