@@ -24,5 +24,5 @@ class unary_expr(scalar_expression_base):
 			
 			return temp_var
 		
-		print "Unary operation '{0}' isn't implemented.".format(self.type)
+		print("Unary operation '{}' isn't implemented.".format(self.type))
 		return None

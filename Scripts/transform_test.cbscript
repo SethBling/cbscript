@@ -39,9 +39,8 @@ reset
     end
     
     for i = 1 to 10
-        /execute store result storage transform_test:global args.i int 1 run scoreboard players get Global i
         with
-            $(i) = i
+            $(i) = i * 1000
             $(word) = "test"
         macro_test()
     end
@@ -263,8 +262,10 @@ clock tick
                 collision1.pen_y = pen_y
                 collision1.pen_z = pen_z
                 
-                /data merge storage transform_test:global {args:{collider1:1,collision:1}}
-                /function $namespace:handle_collision_1body with storage $namespace:global args
+                with
+                    $(collision) = 1
+                    $(collider1) = 1
+                handle_collision_1body()
                 
                 @s.apply_impulse(pen_x, pen_y, pen_z, collider1.ix, collider1.iy, collider1.iz)
             end
