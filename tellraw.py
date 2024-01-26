@@ -60,7 +60,11 @@ def formatJsonText(func, text):
 					else:
 						formatted = formatted + ',{{"score":{{"name":"Global","objective":"{0}"}}{1}}}'.format(parts[0], getPropertiesText(properties))
 				if len(parts) == 2:
-					formatted = formatted + ',{{"score":{{"name":"{}","objective":"{}"}}{}}}'.format(parts[0], parts[1], getPropertiesText(properties))
+					name = parts[0]
+					name_def = func.get_name_definition(parts[0])
+					if name_def:
+						name = name_def
+					formatted = formatted + ',{{"score":{{"name":"{}","objective":"{}"}}{}}}'.format(name, parts[1], getPropertiesText(properties))
 			elif command == None:
 				formatted = formatted + ',{{"text":"{0}"{1}}}'.format(unformatted.replace('"', '\\"'), getPropertiesText(properties))
 			else:

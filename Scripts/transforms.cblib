@@ -6,6 +6,11 @@ $InverseRotationalIntertia = 500
 $Precision = 1000
 $CancelRestitution = -25
 
+define @PhysicsBlock = @Entity[type=block_display,tag=physics_block]
+
+end
+
+
 # These lines register the variables for the matrix_multiply functions
 # It doesn't actually need to be called.
 function register_transform_variables()
@@ -59,425 +64,390 @@ function transpose_matrix_multiply()
     end
 end
 
-define @PhysicsDisplay = @Entity
-    function initialize_transform()
-        @s.t00 = $Precision
-        @s.t01 = 0
-        @s.t02 = 0
-        @s.t10 = 0
-        @s.t11 = $Precision
-        @s.t12 = 0
-        @s.t20 = 0
-        @s.t21 = 0
-        @s.t22 = $Precision
-        @s.tx = 0
-        @s.ty = 0
-        @s.tz = 0
-        
-        @s.w = $Precision
-        @s.i = 0
-        @s.j = 0
-        @s.k = 0
-        
-        @s.clear_velocity()
-        @s.clear_rotation()
-        
-        @s.size = 1000
-        @s.inv_mass = $InverseMass
-        @s.inv_rot_int = $InverseRotationalIntertia
-    end
+function create_collider(x, y, z, size, inv_mass, inv_rot_int)
+    define name collider = "collider_$(collider)"
     
-    function set_size(size)
-        for iter = 1 to 3
-            @s.inv_mass *= @s.size
-            @s.inv_mass /= size
-        end
-        @s.inv_rot_int *= @s.size
-        @s.inv_rot_int /= size
-        
-        @s.size = size
-    end
+    /scoreboard players set collider_$(collider) id $(collider)
     
-    function clear_velocity()
-        @s.velocity_x = 0
-        @s.velocity_y = 0
-        @s.velocity_z = 0
-    end
+    collider.x = x
+    collider.y = y
+    collider.z = z
+    collider.size = size
+    collider.inv_mass = inv_mass
+    collider.inv_rot_int = inv_rot_int
     
-    function clear_rotation()
-        @s.rotation_x = 0
-        @s.rotation_y = 0
-        @s.rotation_z = 0
-    end
+    collider.w = $Precision
+    collider.i = 0
+    collider.j = 0
+    collider.k = 0
     
-    function center_transform()
-        @s.tx = (@s.t00 + @s.t01 + @s.t02) / -2
-        @s.ty = (@s.t10 + @s.t11 + @s.t12) / -2
-        @s.tz = (@s.t20 + @s.t21 + @s.t22) / -2
-    end
+    collider_clear_velocity() with macros
+    collider_clear_rotation() with macros
     
-    function rotation_impulse(x, y, z)
-        @s.rotation_x += (x * @s.inv_rot_int + 500) / $Precision
-        @s.rotation_y += (y * @s.inv_rot_int + 500) / $Precision
-        @s.rotation_z += (z * @s.inv_rot_int + 500) / $Precision
-    end
-    
-    function integrate()
-        @s.integrate_velocity()
-        @s.integrate_rotation()
-    end
-    
-    function integrate_velocity()
-        @s.velocity_x *= 980
-        @s.velocity_x += 500
-        @s.velocity_x /= $Precision
-        @s.velocity_y *= 980
-        @s.velocity_y += 500
-        @s.velocity_y /= $Precision
-        @s.velocity_z *= 980
-        @s.velocity_z += 500
-        @s.velocity_z /= $Precision
-        
-        if velocity_x < 0 and velocity_x > -25
-            velocity_x++
-        end
-        if velocity_x > 0 and velocity_x < 25
-            velocity_x--
-        end
-        if velocity_y < 0 and velocity_y > -25
-            velocity_y++
-        end
-        if velocity_y > 0 and velocity_y < 25
-            velocity_y--
-        end
-        if velocity_z < 0 and velocity_z > -25
-            velocity_z++
-        end
-        if velocity_z > 0 and velocity_z < 25
-            velocity_z--
-        end
-    
-        @s.x += @s.velocity_x
-        @s.y += @s.velocity_y
-        @s.z += @s.velocity_z
-    end
-    
-    function integrate_rotation()
-        @s.rotation_x *= 980
-        @s.rotation_x += 500
-        @s.rotation_x /= $Precision
-        @s.rotation_y *= 980
-        @s.rotation_y += 500
-        @s.rotation_y /= $Precision
-        @s.rotation_z *= 980
-        @s.rotation_z += 500
-        @s.rotation_z /= $Precision
-        
-        if rotation_x < 0 and rotation_x > -25
-            rotation_x++
-        end
-        if rotation_x > 0 and rotation_x < 25
-            rotation_x--
-        end
-        if rotation_y < 0 and rotation_y > -25
-            rotation_y++
-        end
-        if rotation_y > 0 and rotation_y < 25
-            rotation_y--
-        end
-        if rotation_z < 0 and rotation_z > -25
-            rotation_z++
-        end
-        if rotation_z > 0 and rotation_z < 25
-            rotation_z--
-        end
+    collider_quaternion_to_transform() with macros
 
-        quaternion_multiply(0, @s.rotation_x, @s.rotation_y, @s.rotation_z, @s.w, @s.i, @s.j, @s.k)
-        
-        @s.w += new_w / 2
-        @s.i += new_i / 2
-        @s.j += new_j / 2
-        @s.k += new_k / 2
+    /summon minecraft:block_display ~ ~ ~ {block_state:{Name:"minecraft:grass_block",Count:0b}, interpolation_duration: 1b, Tags:["physics_block"]}
+    @PhysicsBlock.age++
+    as @PhysicsBlock[age == 1]
+        /scoreboard players set @s collider_id $(collider)
+        @s.x = x
+        @s.y = y
+        @s.z = z
+    end
+end
 
-        @s.normalize_quaternion()
-    end
-    
-    function set_transform()
-        /data modify storage $namespace:global transformation set value [1f,0f,0f,0f,0f,1f,0f,0f,0f,0f,1f,0f,0f,0f,0f,1f]
-        @s.d00 = @s.t00 * @s.size / $Precision
-        @s.d01 = @s.t01 * @s.size / $Precision
-        @s.d02 = @s.t02 * @s.size / $Precision
-        @s.d10 = @s.t10 * @s.size / $Precision
-        @s.d11 = @s.t11 * @s.size / $Precision
-        @s.d12 = @s.t12 * @s.size / $Precision
-        @s.d20 = @s.t20 * @s.size / $Precision
-        @s.d21 = @s.t21 * @s.size / $Precision
-        @s.d22 = @s.t22 * @s.size / $Precision
-        @s.dx = (@s.d00 + @s.d01 + @s.d02) / -2
-        @s.dy = (@s.d10 + @s.d11 + @s.d12) / -2
-        @s.dz = (@s.d20 + @s.d21 + @s.d22) / -2
-        
-        for $pair in [[0,"d00"], [1,"d01"], [2,"d02"], [3,"dx"], [4,"d10"], [5,"d11"], [6,"d12"], [7,"dy"], [8,"d20"], [9,"d21"], [10,"d22"], [11,"dz"]]
-            $idx = $pair[0]
-            $var = $pair[1]
-            $downscale = 1.0 / $Precision
-            /execute store result storage $namespace:global transformation[$idx] float $downscale run scoreboard players get @s $var
-        end
-        
-        /data modify entity @s transformation set from storage transform_test:global transformation
-        /data modify entity @s start_interpolation set value 0b
-    end
-    
-    function normalize_quaternion()
-        mag = sqrt(@s.w*@s.w + @s.i*@s.i + @s.j*@s.j + @s.k*@s.k)
-        
-        @s.w *= $Precision
-        @s.w += 500
-        @s.w /= mag
-        @s.i *= $Precision
-        @s.i += 500
-        @s.i /= mag
-        @s.j *= $Precision
-        @s.j += 500
-        @s.j /= mag
-        @s.k *= $Precision
-        @s.k += 500
-        @s.k /= mag
-    end
+function collider_clear_velocity()
+    define name collider = "collider_$(collider)"
 
-    function multiply_quaternion_right(w, i, j, k)
-        quaternion_multiply(@s.w, @s.i, @s.j, @s.k, w, i, j, k)
-        
-        @s.w = new_w
-        @s.i = new_i
-        @s.j = new_j
-        @s.k = new_k
+    collider.velocity_x = 0
+    collider.velocity_y = 0
+    collider.velocity_z = 0
+end
 
-        @s.normalize_quaternion()
-    end
-    
-    function multiply_quaternion_left(w, i, j, k)
-        quaternion_multiply(w, i, j, k, @s.w, @s.i, @s.j, @s.k)
-    
-        @s.w = new_w
-        @s.i = new_i
-        @s.j = new_j
-        @s.k = new_k
+function collider_clear_rotation()
+    define name collider = "collider_$(collider)"
 
-        @s.normalize_quaternion()
-    end
-    
-    function quaternion_to_transform()
-        @s.t00 = $Precision - (2 * @s.j * @s.j) / $Precision - (2 * @s.k * @s.k) / $Precision
-        @s.t01 = (2 * @s.i * @s.j) / $Precision - (2 * @s.k * @s.w) / $Precision
-        @s.t02 = (2 * @s.i * @s.k) / $Precision + (2 * @s.j * @s.w) / $Precision
+    collider.rotation_x = 0
+    collider.rotation_y = 0
+    collider.rotation_z = 0
+end
 
-        @s.t10 = (2 * @s.i * @s.j) / $Precision + (2 * @s.k * @s.w) / $Precision
-        @s.t11 = $Precision - (2 * @s.i * @s.i) / $Precision - (2 * @s.k * @s.k) / $Precision
-        @s.t12 = (2 * @s.j * @s.k) / $Precision - (2 * @s.i * @s.w) / $Precision
+function collider_integrate()
+    collider_integrate_velocity() with macros
+    collider_integrate_rotation() with macros
+end
 
-        @s.t20 = (2 * @s.i * @s.k) / $Precision - (2 * @s.j * @s.w) / $Precision
-        @s.t21 = (2 * @s.j * @s.k) / $Precision + (2 * @s.i * @s.w) / $Precision
-        @s.t22 = $Precision - (2 * @s.i * @s.i) / $Precision - (2 * @s.j * @s.j) / $Precision
-    end
+function collider_integrate_velocity()
+    define name collider = "collider_$(collider)"
     
-    function local_to_world(x, y, z, translation)
-        world_x = (@s.t00 * x + @s.t01 * y + @s.t02 * z + 500) / $Precision
-        world_y = (@s.t10 * x + @s.t11 * y + @s.t12 * z + 500) / $Precision
-        world_z = (@s.t20 * x + @s.t21 * y + @s.t22 * z + 500) / $Precision
-        
-        if translation
-            world_x += @s.x
-            world_y += @s.y
-            world_z += @s.z
-        end
-    end
+    collider.velocity_x = (collider.velocity_x * 980 + 500) / $Precision
+    collider.velocity_y = (collider.velocity_y * 980 + 500) / $Precision
+    collider.velocity_z = (collider.velocity_z * 980 + 500) / $Precision
     
-    function world_to_local(x, y, z, translation)
-        if translation
-            x -= @s.x
-            y -= @s.y
-            z -= @s.z
-        end
-        
-        local_x = (@s.t00 * x + @s.t10 * y + @s.t20 * z + 500) / $Precision
-        local_y = (@s.t01 * x + @s.t11 * y + @s.t21 * z + 500) / $Precision
-        local_z = (@s.t02 * x + @s.t12 * y + @s.t22 * z + 500) / $Precision
-    end
-    
-    function apply_impulse(x, y, z, ix, iy, iz)
-        @s.velocity_x += (ix * @s.inv_mass + 500) / $Precision
-        @s.velocity_y += (iy * @s.inv_mass + 500) / $Precision
-        @s.velocity_z += (iz * @s.inv_mass + 500) / $Precision
+    collider.x += collider.velocity_x
+    collider.y += collider.velocity_y
+    collider.z += collider.velocity_z
+end
 
-        dx = x - @s.x
-        dy = y - @s.y
-        dz = z - @s.z
-        
-        axis_x = (dy * iz - dz * iy + 500) / $Precision
-        axis_y = (dz * ix - dx * iz + 500) / $Precision
-        axis_z = (dx * iy - dy * ix + 500) / $Precision
-        
-        @s.rotation_impulse(axis_x, axis_y, axis_z)
+function collider_integrate_rotation()
+    define name collider = "collider_$(collider)"
+    
+    collider.rotation_x = (collider.rotation_x * 980 + 500) / $Precision
+    collider.rotation_y = (collider.rotation_y * 980 + 500) / $Precision
+    collider.rotation_z = (collider.rotation_z * 980 + 500) / $Precision
+    
+    quaternion_multiply(0, collider.rotation_x, collider.rotation_y, collider.rotation_z, collider.w, collider.i, collider.j, collider.k)
+    
+    collider.w += new_w / 2
+    collider.i += new_i / 2
+    collider.j += new_j / 2
+    collider.k += new_k / 2
+
+    collider_normalize_quaternion() with macros
+end
+
+function collider_set_transform()
+    define name collider = "collider_$(collider)"
+
+    /data modify storage $namespace:global transformation set value [1f,0f,0f,0f,0f,1f,0f,0f,0f,0f,1f,0f,0f,0f,0f,1f]
+    d00 = collider.t00 * collider.size / $Precision
+    d01 = collider.t01 * collider.size / $Precision
+    d02 = collider.t02 * collider.size / $Precision
+    d10 = collider.t10 * collider.size / $Precision
+    d11 = collider.t11 * collider.size / $Precision
+    d12 = collider.t12 * collider.size / $Precision
+    d20 = collider.t20 * collider.size / $Precision
+    d21 = collider.t21 * collider.size / $Precision
+    d22 = collider.t22 * collider.size / $Precision
+    dx = (d00 + d01 + d02) / -2
+    dy = (d10 + d11 + d12) / -2
+    dz = (d20 + d21 + d22) / -2
+    
+    for $pair in [[0,"d00"], [1,"d01"], [2,"d02"], [3,"dx"], [4,"d10"], [5,"d11"], [6,"d12"], [7,"dy"], [8,"d20"], [9,"d21"], [10,"d22"], [11,"dz"]]
+        $idx = $pair[0]
+        $var = $pair[1]
+        $downscale = 1.0 / $Precision
+        /execute store result storage $namespace:global transformation[$idx] float $downscale run scoreboard players get Global $var
     end
     
-    function apply_spring_cable(spring_x, spring_y, spring_z, spring_neutral, spring_constant, local_att_x, local_att_y, local_att_z)
-        @s.local_to_world(local_att_x, local_att_y, local_att_z, True)
-        
-        spring_dx = world_x - spring_x
-        spring_dy = world_y - spring_y
-        spring_dz = world_z - spring_z
-        
-        # Current length of the spring
-        spring_mag = sqrt(spring_dx*spring_dx + spring_dy*spring_dy + spring_dz*spring_dz)
-        
-        # Spring displacement from neutral
-        spring_disp = spring_mag - spring_neutral
-        
-        spring_dir_x = spring_dx * $Precision / spring_mag
-        spring_dir_y = spring_dy * $Precision / spring_mag
-        spring_dir_z = spring_dz * $Precision / spring_mag
-        
-        if spring_mag > spring_neutral
-            force_x = -spring_dir_x * spring_disp / $Precision * spring_constant / $Precision
-            force_y = -spring_dir_y * spring_disp / $Precision * spring_constant / $Precision
-            force_z = -spring_dir_z * spring_disp / $Precision * spring_constant / $Precision
-            
-            @s.apply_impulse(world_x, world_y, world_z, force_x, force_y, force_z)
+    as @PhysicsBlock
+        if @s.collider_id == collider.id
+            @s.x = collider.x
+            @s.y = collider.y
+            @s.z = collider.z
+            /data modify entity @s transformation set from storage transform_test:global transformation
+            /data modify entity @s start_interpolation set value 0b
         end
     end
 end
 
-define @PhysicsBlock = @PhysicsDisplay[type=block_display,tag=physics_block]
-    function ray_intersection(x, y, z, dx, dy, dz)
-        @s.world_to_local(x, y, z, True)
-        local_origin_x = local_x
-        local_origin_y = local_y
-        local_origin_z = local_z
-        
-        @s.world_to_local(dx, dy, dz, False)
-        local_dx = local_x
-        local_dy = local_y
-        local_dz = local_z
-        
-        if local_dx == 0
-            local_dx = 1
-        end
-        if local_dy == 0
-            local_dy = 1
-        end
-        if local_dz == 0
-            local_dz = 1
-        end
-        
-        halfsize = @s.size / 2
-        
-        # Calculate the times of entry/exit along each axis
-        txn = (-halfsize - local_origin_x) * $Precision / local_dx
-        txp = (halfsize - local_origin_x) * $Precision / local_dx
-        tyn = (-halfsize - local_origin_y) * $Precision / local_dy
-        typ = (halfsize - local_origin_y) * $Precision / local_dy
-        tzn = (-halfsize - local_origin_z) * $Precision / local_dz
-        tzp = (halfsize - local_origin_z) * $Precision / local_dz
-        
-        # Figure out the minimum and maximum time along the x axis
-        if txn > txp
-            min_tx = txp
-            max_tx = txn
-            x_normal = $Precision
-        else
-            min_tx = txn
-            max_tx = txp
-            x_normal = -$Precision
-        end
-        
-        # Figure out the minimum and maximum time along the y axis
-        if tyn > typ
-            min_ty = typ
-            max_ty = tyn
-            y_normal = $Precision
-        else
-            min_ty = tyn
-            max_ty = typ
-            y_normal = -$Precision
-        end
-        
-        # Figure out the minimum and maximum time along the z axis
-        if tzn > tzp
-            min_tz = tzp
-            max_tz = tzn
-            z_normal = $Precision
-        else
-            min_tz = tzn
-            max_tz = tzp
-            z_normal = -$Precision
-        end
-        
-        # Figure out which axis we enter the cube last. Once the ray
-        # has entered the cube along all 3 axes, it can collide.
-        if min_tx > min_ty and min_tx > min_tz
-            min_t = min_tx
-            local_cnx = x_normal
-            local_cny = 0
-            local_cnz = 0
-        else if min_ty > min_tz
-            min_t = min_ty
-            local_cnx = 0
-            local_cny = y_normal
-            local_cnz = 0
-        else
-            min_t = min_tz
-            local_cnx = 0
-            local_cny = 0
-            local_cnz = z_normal
-        end
+function collider_normalize_quaternion()
+    define name collider = "collider_$(collider)"
 
-        # Figure out which axis we exited the cube first. Once the ray
-        # has exited the cube along any axis, it's no longer colliding.
-        if max_tx < max_ty and max_tx < max_tz
-            max_t = max_tx
-        else if max_ty < max_tz
-            max_t = max_ty
-        else
-            max_t = max_tz
+    mag = sqrt(collider.w*collider.w + collider.i*collider.i + collider.j*collider.j + collider.k*collider.k)
+    
+    collider.w *= $Precision
+    collider.w += 500
+    collider.w /= mag
+    collider.i *= $Precision
+    collider.i += 500
+    collider.i /= mag
+    collider.j *= $Precision
+    collider.j += 500
+    collider.j /= mag
+    collider.k *= $Precision
+    collider.k += 500
+    collider.k /= mag
+end
+
+function collider_multiply_quaternion_right(w, i, j, k)
+    define name collider = "collider_$(collider)"
+
+    quaternion_multiply(collider.w, collider.i, collider.j, collider.k, w, i, j, k)
+    
+    collider.w = new_w
+    collider.i = new_i
+    collider.j = new_j
+    collider.k = new_k
+
+    collider_normalize_quaternion() with macros
+end
+
+function collider_multiply_quaternion_left(w, i, j, k)
+    define name collider = "collider_$(collider)"
+
+    quaternion_multiply(w, i, j, k, collider.w, collider.i, collider.j, collider.k)
+
+    collider.w = new_w
+    collider.i = new_i
+    collider.j = new_j
+    collider.k = new_k
+
+    collider_normalize_quaternion() with macros
+end
+
+function collider_quaternion_to_transform()
+    define name collider = "collider_$(collider)"
+
+    collider.t00 = $Precision - (2 * collider.j * collider.j) / $Precision - (2 * collider.k * collider.k) / $Precision
+    collider.t01 = (2 * collider.i * collider.j) / $Precision - (2 * collider.k * collider.w) / $Precision
+    collider.t02 = (2 * collider.i * collider.k) / $Precision + (2 * collider.j * collider.w) / $Precision
+
+    collider.t10 = (2 * collider.i * collider.j) / $Precision + (2 * collider.k * collider.w) / $Precision
+    collider.t11 = $Precision - (2 * collider.i * collider.i) / $Precision - (2 * collider.k * collider.k) / $Precision
+    collider.t12 = (2 * collider.j * collider.k) / $Precision - (2 * collider.i * collider.w) / $Precision
+
+    collider.t20 = (2 * collider.i * collider.k) / $Precision - (2 * collider.j * collider.w) / $Precision
+    collider.t21 = (2 * collider.j * collider.k) / $Precision + (2 * collider.i * collider.w) / $Precision
+    collider.t22 = $Precision - (2 * collider.i * collider.i) / $Precision - (2 * collider.j * collider.j) / $Precision
+end
+
+function collider_local_to_world(x, y, z, translation)
+    define name collider = "collider_$(collider)"
+
+    world_x = (collider.t00 * x + collider.t01 * y + collider.t02 * z + 500) / $Precision
+    world_y = (collider.t10 * x + collider.t11 * y + collider.t12 * z + 500) / $Precision
+    world_z = (collider.t20 * x + collider.t21 * y + collider.t22 * z + 500) / $Precision
+    
+    if translation
+        world_x += collider.x
+        world_y += collider.y
+        world_z += collider.z
+    end
+end
+
+function collider_world_to_local(x, y, z, translation)
+    define name collider = "collider_$(collider)"
+
+    if translation
+        x -= collider.x
+        y -= collider.y
+        z -= collider.z
+    end
+    
+    local_x = (collider.t00 * x + collider.t10 * y + collider.t20 * z + 500) / $Precision
+    local_y = (collider.t01 * x + collider.t11 * y + collider.t21 * z + 500) / $Precision
+    local_z = (collider.t02 * x + collider.t12 * y + collider.t22 * z + 500) / $Precision
+end
+
+function collider_apply_impulse(x, y, z, ix, iy, iz)
+    define name collider = "collider_$(collider)"
+    
+    collider.velocity_x += (ix * collider.inv_mass + 500) / $Precision
+    collider.velocity_y += (iy * collider.inv_mass + 500) / $Precision
+    collider.velocity_z += (iz * collider.inv_mass + 500) / $Precision
+
+    dx = x - collider.x
+    dy = y - collider.y
+    dz = z - collider.z
+    
+    axis_x = (dy * iz - dz * iy + 500) / $Precision
+    axis_y = (dz * ix - dx * iz + 500) / $Precision
+    axis_z = (dx * iy - dy * ix + 500) / $Precision
+    
+    collider.rotation_x += (axis_x * collider.inv_rot_int + 500) / $Precision
+    collider.rotation_y += (axis_y * collider.inv_rot_int + 500) / $Precision
+    collider.rotation_z += (axis_z * collider.inv_rot_int + 500) / $Precision
+end
+
+function collider_apply_spring_cable(spring_x, spring_y, spring_z, spring_neutral, spring_constant, local_att_x, local_att_y, local_att_z)
+    define name collider = "collider_$(collider)"
+
+    collider_local_to_world(local_att_x, local_att_y, local_att_z, True) with macros
+    
+    spring_dx = world_x - spring_x
+    spring_dy = world_y - spring_y
+    spring_dz = world_z - spring_z
+    
+    # Current length of the spring
+    spring_mag = sqrt(spring_dx*spring_dx + spring_dy*spring_dy + spring_dz*spring_dz)
+    
+    # Spring displacement from neutral
+    spring_disp = spring_mag - spring_neutral
+    
+    spring_dir_x = spring_dx * $Precision / spring_mag
+    spring_dir_y = spring_dy * $Precision / spring_mag
+    spring_dir_z = spring_dz * $Precision / spring_mag
+    
+    if spring_mag > spring_neutral
+        force_x = -spring_dir_x * spring_disp / $Precision * spring_constant / $Precision
+        force_y = -spring_dir_y * spring_disp / $Precision * spring_constant / $Precision
+        force_z = -spring_dir_z * spring_disp / $Precision * spring_constant / $Precision
+        
+        collider_apply_impulse(world_x, world_y, world_z, force_x, force_y, force_z) with macros
+    end
+end
+
+function collider_ray_intersection(x, y, z, dx, dy, dz)
+    define name collider = "collider_$(collider)"
+
+    collider_world_to_local(x, y, z, True) with macros
+    local_origin_x = local_x
+    local_origin_y = local_y
+    local_origin_z = local_z
+    
+    collider_world_to_local(dx, dy, dz, False) with macros
+    local_dx = local_x
+    local_dy = local_y
+    local_dz = local_z
+    
+    if local_dx == 0
+        local_dx = 1
+    end
+    if local_dy == 0
+        local_dy = 1
+    end
+    if local_dz == 0
+        local_dz = 1
+    end
+    
+    halfsize = collider.size / 2
+    
+    # Calculate the times of entry/exit along each axis
+    txn = (-halfsize - local_origin_x) * $Precision / local_dx
+    txp = (halfsize - local_origin_x) * $Precision / local_dx
+    tyn = (-halfsize - local_origin_y) * $Precision / local_dy
+    typ = (halfsize - local_origin_y) * $Precision / local_dy
+    tzn = (-halfsize - local_origin_z) * $Precision / local_dz
+    tzp = (halfsize - local_origin_z) * $Precision / local_dz
+    
+    # Figure out the minimum and maximum time along the x axis
+    if txn > txp
+        min_tx = txp
+        max_tx = txn
+        x_normal = $Precision
+    else
+        min_tx = txn
+        max_tx = txp
+        x_normal = -$Precision
+    end
+    
+    # Figure out the minimum and maximum time along the y axis
+    if tyn > typ
+        min_ty = typ
+        max_ty = tyn
+        y_normal = $Precision
+    else
+        min_ty = tyn
+        max_ty = typ
+        y_normal = -$Precision
+    end
+    
+    # Figure out the minimum and maximum time along the z axis
+    if tzn > tzp
+        min_tz = tzp
+        max_tz = tzn
+        z_normal = $Precision
+    else
+        min_tz = tzn
+        max_tz = tzp
+        z_normal = -$Precision
+    end
+    
+    # Figure out which axis we enter the cube last. Once the ray
+    # has entered the cube along all 3 axes, it can collide.
+    if min_tx > min_ty and min_tx > min_tz
+        min_t = min_tx
+        local_cnx = x_normal
+        local_cny = 0
+        local_cnz = 0
+    else if min_ty > min_tz
+        min_t = min_ty
+        local_cnx = 0
+        local_cny = y_normal
+        local_cnz = 0
+    else
+        min_t = min_tz
+        local_cnx = 0
+        local_cny = 0
+        local_cnz = z_normal
+    end
+
+    # Figure out which axis we exited the cube first. Once the ray
+    # has exited the cube along any axis, it's no longer colliding.
+    if max_tx < max_ty and max_tx < max_tz
+        max_t = max_tx
+    else if max_ty < max_tz
+        max_t = max_ty
+    else
+        max_t = max_tz
+    end
+    
+    # If the ray entered the cube along all three axes before it
+    # exited along any axis, and it exited in front of us and not
+    # behind us, then the ray intersections the cube, first hitting
+    # it at t=min_t.
+    if min_t < max_t and max_t > 0
+        t = min_t
+        
+        if t < 0
+            t = 0
         end
         
-        # If the ray entered the cube along all three axes before it
-        # exited along any axis, and it exited in front of us and not
-        # behind us, then the ray intersections the cube, first hitting
-        # it at t=min_t.
-        if min_t < max_t and max_t > 0
-            t = min_t
-            
-            if t < 0
-                t = 0
-            end
-            
-            local_cx = local_origin_x + t * local_dx / $Precision
-            local_cy = local_origin_y + t * local_dy / $Precision
-            local_cz = local_origin_z + t * local_dz / $Precision
-            
-            @s.collision = True
-            
-            @s.local_to_world(local_cx, local_cy, local_cz, True)            
-            @s.collision_x = world_x
-            @s.collision_y = world_y
-            @s.collision_z = world_z
-            
-            @s.local_to_world(local_cnx, local_cny, local_cnz, False)
-            @s.collision_nx = world_x
-            @s.collision_ny = world_y
-            @s.collision_nz = world_z
-        else
-            @s.collision = False
-        end
+        local_cx = local_origin_x + t * local_dx / $Precision
+        local_cy = local_origin_y + t * local_dy / $Precision
+        local_cz = local_origin_z + t * local_dz / $Precision
+        
+        collider_local_to_world(local_cx, local_cy, local_cz, True) with macros
+        collision_x = world_x
+        collision_y = world_y
+        collision_z = world_z
+        
+        collider_local_to_world(local_cnx, local_cny, local_cnz, False) with macros
+        collision_nx = world_x
+        collision_ny = world_y
+        collision_nz = world_z
+        
+        return True
+    else
+        return False
     end
 end
 
 function handle_collision_1body()
-    define name collider1 = "collider$(collider1)"
-    define name collision = "collision$(collision)"
-
+    define name collider1 = "collider_$(collider1)"
+    define name collision = "collision_$(collision)"
+    
     # Create contact basis/transform
     ct_01 = collision.norm_x
     ct_11 = collision.norm_y
@@ -647,7 +617,12 @@ function handle_collision_1body()
     end
     
     # Transform impulse vector out of contact coordinates
-    collider1.ix = (ct_00 * cix + ct_01 * ciy + ct_02 * ciz + 500) / $Precision
-    collider1.iy = (ct_10 * cix + ct_11 * ciy + ct_12 * ciz + 500) / $Precision
-    collider1.iz = (ct_20 * cix + ct_21 * ciy + ct_22 * ciz + 500) / $Precision
+    ix = (ct_00 * cix + ct_01 * ciy + ct_02 * ciz + 500) / $Precision
+    iy = (ct_10 * cix + ct_11 * ciy + ct_12 * ciz + 500) / $Precision
+    iz = (ct_20 * cix + ct_21 * ciy + ct_22 * ciz + 500) / $Precision
+
+    # collider1.id isn't using define name
+    with
+        $(collider) = collider1.id
+    collider_apply_impulse(collision.pen_x, collision.pen_y, collision.pen_z, ix, iy, iz)
 end

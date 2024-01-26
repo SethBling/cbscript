@@ -20,18 +20,16 @@ reset
 
     /kill @PhysicsBlock
     /summon minecraft:block_display 6.5 57.5 1.5 {block_state:{Name:"minecraft:grass_block",Count:0b}, interpolation_duration: 1b, Tags:["physics_block"]}
+    with
+        $(collider) = 1
+    create_collider(6500, 57500, 1500, 3000, 400, 300)
+
+    with
+        $(collider) = 2
+    create_collider(-6500, 67500, 1500, 3000, 400, 300)
 
     /kill @Position
     create @Position
-    
-    as @PhysicsBlock
-        @s.initialize_transform()
-        @s.set_transform()
-        @s.set_size(3000)
-        @s.inv_mass = 400
-        @s.inv_rot_int = 300
-        angle = 0
-    end
     
     click_detector_reset()
     as @Player
@@ -59,191 +57,175 @@ clock tick
         clicked = check_clicked()
     end
     click_detector_tick()
+    
+    for collider = 1 to 2
+        with
+            $(collider) = collider
+        collider_physics_tick()
+    end
+end
 
-    as @PhysicsBlock
-        if clicked
-            @s.ray_intersection(world_eye_x, world_eye_y, world_eye_z, world_eye_dx, world_eye_dy, world_eye_dz)
+function collider_physics_tick()
+    define name collider = "collider_$(collider)"
+
+    if clicked
+        if collider_ray_intersection(world_eye_x, world_eye_y, world_eye_z, world_eye_dx, world_eye_dy, world_eye_dz) with macros
+            @Position.<pos> = <collision_x, collision_y, collision_z>
+            @Position.<pos> += <collision_nx, collision_ny, collision_nz> / 8
+
+            $PunchPower = 750
+
+            collider_apply_impulse(collision_x, collision_y, collision_z, world_eye_dx * $PunchPower / scale, world_eye_dy * $PunchPower / scale, world_eye_dz * $PunchPower / scale) with macros
             
-            if @s.collision
-                @Position.<pos> = <@s.collision_x, @s.collision_y, @s.collision_z>
-                @Position.<pos> += <@s.collision_nx, @s.collision_ny, @s.collision_nz> / 8
-
-                $PunchPower = 750
-
-                @s.apply_impulse(@s.collision_x, @s.collision_y, @s.collision_z, world_eye_dx * $PunchPower / scale, world_eye_dy * $PunchPower / scale, world_eye_dz * $PunchPower / scale)
-                
-                at @Position
-                    /particle minecraft:crit ~ ~ ~ 0 0 0 0 1 force
-                end
-            else
-                #@s.glowing = 0
-                
-                #@s.clear_rotation()
+            at @Position
+                /particle minecraft:crit ~ ~ ~ 0 0 0 0 1 force
             end
         end
+    end
+    
+    # Apply Gravity
+    $Gravity = 5
+    collider.velocity_y -= $Gravity
+    
+    collider_integrate() with macros
+    collider_quaternion_to_transform() with macros
+    
+    max_penetration = 0
+    
+    for iter = 1 to 4
+        max_col_v = 0
         
-        # Apply Gravity
-        $Gravity = 5
-        @s.velocity_y -= $Gravity
-
-        @s.integrate()
-        @s.quaternion_to_transform()
+        halfsize = collider.size / 2
         
-        max_penetration = 0
-        
-        for iter = 1 to 4
-            max_col_v = 0
-            
-            halfsize = @s.size / 2
-            
-            for px = -halfsize to halfsize by @s.size
-                for py = -halfsize to halfsize by @s.size
-                    for pz = -halfsize to halfsize by @s.size
-                        @s.local_to_world(px, py, pz, True)
+        for px = -halfsize to halfsize by collider.size
+            for py = -halfsize to halfsize by collider.size
+                for pz = -halfsize to halfsize by collider.size
+                    collider_local_to_world(px, py, pz, True) with macros
+                    
+                    penetration = 56000 - world_y
+                    
+                    if penetration > 0
+                        dx = world_x - collider.x
+                        dy = world_y - collider.y
+                        dz = world_z - collider.z
+                    
+                        rot_lin_vel_x = (collider.rotation_y * dz - collider.rotation_z * dy + 500) / scale
+                        rot_lin_vel_y = (collider.rotation_z * dx - collider.rotation_x * dz + 500) / scale
+                        rot_lin_vel_z = (collider.rotation_x * dy - collider.rotation_y * dx + 500) / scale
                         
-                        penetration = 56000 - world_y
+                        vel_x = collider.velocity_x + rot_lin_vel_x
+                        vel_y = collider.velocity_y + rot_lin_vel_y
+                        vel_z = collider.velocity_z + rot_lin_vel_z
                         
-                        if penetration > 0
-                            dx = world_x - @s.x
-                            dy = world_y - @s.y
-                            dz = world_z - @s.z
-                        
-                            rot_lin_vel_x = (@s.rotation_y * dz - @s.rotation_z * dy + 500) / scale
-                            rot_lin_vel_y = (@s.rotation_z * dx - @s.rotation_x * dz + 500) / scale
-                            rot_lin_vel_z = (@s.rotation_x * dy - @s.rotation_y * dx + 500) / scale
+                        if -vel_y > max_col_v
+                            max_col_v = -vel_y
+                            pen_x = world_x
+                            pen_y = world_y
+                            pen_z = world_z
                             
-                            vel_x = @s.velocity_x + rot_lin_vel_x
-                            vel_y = @s.velocity_y + rot_lin_vel_y
-                            vel_z = @s.velocity_z + rot_lin_vel_z
-                            
-                            if -vel_y > max_col_v
-                                max_col_v = -vel_y
-                                pen_x = world_x
-                                pen_y = world_y
-                                pen_z = world_z
-                                
-                                norm_x = 0
-                                norm_y = scale
-                                norm_z = 0
-                            end
-                            if penetration > max_penetration
-                                max_penetration = penetration
-                                max_pen_norm_x = 0
-                                max_pen_norm_y = scale
-                                max_pen_norm_z = 0
-                            end
+                            norm_x = 0
+                            norm_y = scale
+                            norm_z = 0
                         end
-                        
-                        penetration = world_x - 10000
-                        
-                        if penetration > 0
-                            dx = world_x - @s.x
-                            dy = world_y - @s.y
-                            dz = world_z - @s.z
-                        
-                            rot_lin_vel_x = (@s.rotation_y * dz - @s.rotation_z * dy + 500) / scale
-                            rot_lin_vel_y = (@s.rotation_z * dx - @s.rotation_x * dz + 500) / scale
-                            rot_lin_vel_z = (@s.rotation_x * dy - @s.rotation_y * dx + 500) / scale
-                            
-                            vel_x = @s.velocity_x + rot_lin_vel_x
-                            vel_y = @s.velocity_y + rot_lin_vel_y
-                            vel_z = @s.velocity_z + rot_lin_vel_z
-                            
-                            if vel_x > max_col_v
-                                max_col_v = vel_x
-                                pen_x = world_x
-                                pen_y = world_y
-                                pen_z = world_z
-                                
-                                norm_x = -scale
-                                norm_y = 0
-                                norm_z = 0
-                            end
-                            if penetration > max_penetration
-                                max_penetration = penetration
-                                max_pen_norm_x = -scale
-                                max_pen_norm_y = 0
-                                max_pen_norm_z = 0
-                            end
+                        if penetration > max_penetration
+                            max_penetration = penetration
+                            max_pen_norm_x = 0
+                            max_pen_norm_y = scale
+                            max_pen_norm_z = 0
                         end
+                    end
+                    
+                    penetration = world_x - 10000
+                    
+                    if penetration > 0
+                        dx = world_x - collider.x
+                        dy = world_y - collider.y
+                        dz = world_z - collider.z
+                    
+                        rot_lin_vel_x = (collider.rotation_y * dz - collider.rotation_z * dy + 500) / scale
+                        rot_lin_vel_y = (collider.rotation_z * dx - collider.rotation_x * dz + 500) / scale
+                        rot_lin_vel_z = (collider.rotation_x * dy - collider.rotation_y * dx + 500) / scale
                         
-                        penetration = world_z - 10000
+                        vel_x = collider.velocity_x + rot_lin_vel_x
+                        vel_y = collider.velocity_y + rot_lin_vel_y
+                        vel_z = collider.velocity_z + rot_lin_vel_z
                         
-                        if penetration > 0
-                            dx = world_x - @s.x
-                            dy = world_y - @s.y
-                            dz = world_z - @s.z
-                        
-                            rot_lin_vel_x = (@s.rotation_y * dz - @s.rotation_z * dy + 500) / scale
-                            rot_lin_vel_y = (@s.rotation_z * dx - @s.rotation_x * dz + 500) / scale
-                            rot_lin_vel_z = (@s.rotation_x * dy - @s.rotation_y * dx + 500) / scale
+                        if vel_x > max_col_v
+                            max_col_v = vel_x
+                            pen_x = world_x
+                            pen_y = world_y
+                            pen_z = world_z
                             
-                            vel_x = @s.velocity_x + rot_lin_vel_x
-                            vel_y = @s.velocity_y + rot_lin_vel_y
-                            vel_z = @s.velocity_z + rot_lin_vel_z
+                            norm_x = -scale
+                            norm_y = 0
+                            norm_z = 0
+                        end
+                        if penetration > max_penetration
+                            max_penetration = penetration
+                            max_pen_norm_x = -scale
+                            max_pen_norm_y = 0
+                            max_pen_norm_z = 0
+                        end
+                    end
+                    
+                    penetration = world_z - 10000
+                    
+                    if penetration > 0
+                        dx = world_x - collider.x
+                        dy = world_y - collider.y
+                        dz = world_z - collider.z
+                    
+                        rot_lin_vel_x = (collider.rotation_y * dz - collider.rotation_z * dy + 500) / scale
+                        rot_lin_vel_y = (collider.rotation_z * dx - collider.rotation_x * dz + 500) / scale
+                        rot_lin_vel_z = (collider.rotation_x * dy - collider.rotation_y * dx + 500) / scale
+                        
+                        vel_x = collider.velocity_x + rot_lin_vel_x
+                        vel_y = collider.velocity_y + rot_lin_vel_y
+                        vel_z = collider.velocity_z + rot_lin_vel_z
+                        
+                        if vel_z > max_col_v
+                            max_col_v = vel_z
+                            pen_x = world_x
+                            pen_y = world_y
+                            pen_z = world_z
                             
-                            if vel_z > max_col_v
-                                max_col_v = vel_z
-                                pen_x = world_x
-                                pen_y = world_y
-                                pen_z = world_z
-                                
-                                norm_x = 0
-                                norm_y = 0
-                                norm_z = -scale
-                            end
-                            if penetration > max_penetration
-                                max_penetration = penetration
-                                max_pen_norm_x = 0
-                                max_pen_norm_y = 0
-                                max_pen_norm_z = -scale
-                            end
+                            norm_x = 0
+                            norm_y = 0
+                            norm_z = -scale
+                        end
+                        if penetration > max_penetration
+                            max_penetration = penetration
+                            max_pen_norm_x = 0
+                            max_pen_norm_y = 0
+                            max_pen_norm_z = -scale
                         end
                     end
                 end
             end
-            
-            if max_col_v > 1
-                collider1.x = @s.x
-                collider1.y = @s.y
-                collider1.z = @s.z
-                
-                collider1.velocity_x = @s.velocity_x
-                collider1.velocity_y = @s.velocity_y
-                collider1.velocity_z = @s.velocity_z
-                
-                collider1.rotation_x = @s.rotation_x
-                collider1.rotation_y = @s.rotation_y
-                collider1.rotation_z = @s.rotation_z
-
-                collider1.inv_mass = @s.inv_mass
-                collider1.inv_rot_int = @s.inv_rot_int
-                
-                collision1.norm_x = norm_x
-                collision1.norm_y = norm_y
-                collision1.norm_z = norm_z
-
-                collision1.pen_x = pen_x
-                collision1.pen_y = pen_y
-                collision1.pen_z = pen_z
-                
-                with
-                    $(collision) = 1
-                    $(collider1) = 1
-                handle_collision_1body()
-                
-                @s.apply_impulse(pen_x, pen_y, pen_z, collider1.ix, collider1.iy, collider1.iz)
-            end
-        end
-        if max_penetration > 0
-            @s.x += max_penetration * max_pen_norm_x / scale
-            @s.y += max_penetration * max_pen_norm_y / scale
-            @s.z += max_penetration * max_pen_norm_z / scale
         end
         
-        @s.center_transform()
-        @s.set_transform()
+        if max_col_v > 1
+            collision_1.norm_x = norm_x
+            collision_1.norm_y = norm_y
+            collision_1.norm_z = norm_z
+
+            collision_1.pen_x = pen_x
+            collision_1.pen_y = pen_y
+            collision_1.pen_z = pen_z
+            
+            with
+                $(collision) = 1
+                $(collider1) = collider.id
+            handle_collision_1body()
+        end
     end
+    if max_penetration > 0
+        collider.x += max_penetration * max_pen_norm_x / scale
+        collider.y += max_penetration * max_pen_norm_y / scale
+        collider.z += max_penetration * max_pen_norm_z / scale
+    end
+    
+    collider_set_transform() with macros
 end
 
 function get_unused_collision_id()
@@ -290,12 +272,4 @@ end
 
 function reset_collision_list()
     /data modify storage $namespace:global contacts set from storage $namespace:global contacts_processed
-end
-
-# Assumes $(collider) contains the collider id.
-function create_collider(x, y, z)
-    /$execute store result score collider_$(collider) x run scoreboard players get Global x
-    /$execute store result score collider_$(collider) x run scoreboard players get Global y
-    /$execute store result score collider_$(collider) x run scoreboard players get Global z
-    
 end

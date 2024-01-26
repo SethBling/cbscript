@@ -39,6 +39,13 @@ class scoreboard_var(var_base):
 				return scoreboard_var(name_def, self.objective)
 			
 			return self
+		
+	def compile(self, func, assignto=None):
+		name_def = func.get_name_definition(self.selector)
+		if name_def != None:
+			return scoreboard_var(name_def, self.objective)
+		else:
+			return self
 	
 	# Returns a command that will get this variable's value to be used with "execute store result"
 	def get_command(self, func):
@@ -129,10 +136,15 @@ class scoreboard_var(var_base):
 				func.add_command('{} run {}'.format(self.set_command(func), var.get_command(func)))
 		else:
 			func.register_objective(self.objective)
+
+			selector = self.selector
+			name_def = func.get_name_definition(self.selector)
+			if name_def != None:
+				selector = name_def
 			
 			if var_const != None:
-				func.add_command('scoreboard players set {} {} {}'.format(self.selector, self.objective, var_const))
-			elif not var.is_objective(func, self.selector, self.objective):
+				func.add_command('scoreboard players set {} {} {}'.format(selector, self.objective, var_const))
+			elif not var.is_objective(func, selector, self.objective):
 				func.add_command('{} run {}'.format(self.set_command(func), var.get_command(func)))
 
 	# Returns a scoreboard_var which can be modified as needed without side effects

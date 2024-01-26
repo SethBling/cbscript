@@ -20,5 +20,6 @@ class method_call_block(call_block_base):
 
 		if self.with_macro_items != None:
 			cmd += ' with storage {}:global args'.format(func.namespace)
+			self.has_macros = True
 
 		func.add_command(cmd)
