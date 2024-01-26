@@ -20,13 +20,13 @@ reset
 
     /kill @PhysicsBlock
     /summon minecraft:block_display 6.5 57.5 1.5 {block_state:{Name:"minecraft:grass_block",Count:0b}, interpolation_duration: 1b, Tags:["physics_block"]}
-    with
-        $(collider) = 1
-    create_collider(6500, 57500, 1500, 3000, 400, 300)
-
-    with
-        $(collider) = 2
-    create_collider(-6500, 67500, 1500, 3000, 400, 300)
+    
+    for collider = 1 to 2
+        with
+            $(collider) = collider
+        create_collider(6500 - 4000*collider, 57500, 1500, 3000, 400, 300)
+    end
+    
 
     /kill @Position
     create @Position

@@ -55,12 +55,11 @@ class mcfunction(object):
 		self.filename = filename
 
 	# Returns the command to call this function
-	def get_call(self, caller):
+	def get_call(self):
 		if self.filename == None:
 			raise CompileError('Tried to call function with no registered filename.')
 		
 		if self.has_macros:
-			caller.has_macros = True
 			return 'function {}:{} with storage {}:global args'.format(self.namespace, self.filename, self.namespace)
 		else:
 			return 'function {}:{}'.format(self.namespace, self.filename)
@@ -399,12 +398,12 @@ class mcfunction(object):
 						case_name = 'line{:03}/{}{}-{}_{:03}'.format(line, case_func_name, vmin, vmax, unique)
 						
 					self.register_function(case_name, case_func)
-					self.add_command('execute if score {} {} matches {}..{} run {}'.format(var.selector, var.objective, vmin, vmax, case_func.get_call(self)))
+					self.add_command('execute if score {} {} matches {}..{} run {}'.format(var.selector, var.objective, vmin, vmax, case_func.get_call()))
 			else:
 				unique = self.get_unique_id()
 				case_name = 'line{:03}/{}{}-{}_{:03}'.format(line, switch_func_name, vmin, vmax, unique)
 				self.register_function(case_name, case_func)
-				self.add_command('execute if score {} {} matches {}..{} run {}'.format(var.selector, var.objective, vmin, vmax, case_func.get_call(self)))
+				self.add_command('execute if score {} {} matches {}..{} run {}'.format(var.selector, var.objective, vmin, vmax, case_func.get_call()))
 			
 				if not case_func.switch_cases(var, sub_cases):
 					return False
@@ -878,7 +877,7 @@ class mcfunction(object):
 			sub_name = '{}_{:03}'.format(sub_name, unique)
 			
 			self.register_function(sub_name, sub_func)
-			cmd = prefix + sub_func.get_call(self)
+			cmd = prefix + sub_func.get_call()
 				
 			self.add_command(cmd)
 			

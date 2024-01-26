@@ -46,7 +46,7 @@ class for_index_block(block_base):
 		if by == None:
 			# Use a temporary version of the counting var to work with the scoreboard
 			temp_var = var.get_scoreboard_var(func)
-			continue_command = 'execute if score {} <= {} run {}'.format(temp_var.selvar, to_var.selvar, loop_func.get_call(func))
+			continue_command = 'execute if score {} <= {} run {}'.format(temp_var.selvar, to_var.selvar, loop_func.get_call())
 			func.add_command(continue_command)
 			
 			# Add 1 to the counter variable
@@ -59,13 +59,13 @@ class for_index_block(block_base):
 			temp_var = var.get_scoreboard_var(func)
 			
 			if by_const:
-				continue_command = 'execute if score {} {} {} run {}}'.format(temp_var.selvar, '>=' if by_const < 0 else '<=', to_var.selvar, loop_func.get_call(func))
+				continue_command = 'execute if score {} {} {} run {}}'.format(temp_var.selvar, '>=' if by_const < 0 else '<=', to_var.selvar, loop_func.get_call())
 				func.add_command(continue_command)
 
 				loop_func.add_command('scoreboard players {} {} {}'.format('add' if by_const > 0 else 'remove', temp_var.selvar, abs(by_const)))
 			else:
-				continue_negative_command = 'execute if score {} matches ..-1 if score {} >= {} run {}'.format(by_var.selvar, temp_var.selvar, to_var.selvar, loop_func.get_call(func))
-				continue_positive_command = 'execute if score {} matches 1.. if score {} <= {} run {}'.format(by_var.selvar, temp_var.selvar, to_var.selvar, loop_func.get_call(func))
+				continue_negative_command = 'execute if score {} matches ..-1 if score {} >= {} run {}'.format(by_var.selvar, temp_var.selvar, to_var.selvar, loop_func.get_call())
+				continue_positive_command = 'execute if score {} matches 1.. if score {} <= {} run {}'.format(by_var.selvar, temp_var.selvar, to_var.selvar, loop_func.get_call())
 				func.add_command(continue_negative_command)
 				func.add_command(continue_positive_command)
 

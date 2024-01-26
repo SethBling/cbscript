@@ -20,7 +20,7 @@ class while_block(execute_base):
 		if sub_cmd == None:
 			raise Exception('Unable to compile continuation command for while block at line {}'.format(self.line))
 
-		exec_func.add_command('{}run {}'.format(sub_cmd, exec_func.get_call(func)))
+		exec_func.add_command('{}run {}'.format(sub_cmd, exec_func.get_call()))
 		
 	def display_name(self):
 		return 'while'
