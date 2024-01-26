@@ -11,6 +11,9 @@ define @ChainLink = @Entity[type=block_display,tag=chain]
     create {block_state:{Name:"minecraft:stone",Count:0b}, transformation:[0.2f,0f,0f,-0.1f,0f,0.2f,0f,-0.1f,0f,0f,0.2f,-0.1f,0f,0f,0f,1f],Tags:["chain"]}
 end
 
+$Precision = 1000
+$NumCubes = 2
+
 reset
     for $row in $range(3)
         for $col in $range(3)
@@ -19,9 +22,8 @@ reset
     end
 
     /kill @PhysicsBlock
-    /summon minecraft:block_display 6.5 57.5 1.5 {block_state:{Name:"minecraft:grass_block",Count:0b}, interpolation_duration: 1b, Tags:["physics_block"]}
     
-    for collider = 1 to 2
+    for collider = 1 to $NumCubes
         with
             $(collider) = collider
         create_collider(6500 - 4000*collider, 57500, 1500, 3000, 400, 300)
@@ -58,10 +60,21 @@ clock tick
     end
     click_detector_tick()
     
-    for collider = 1 to 2
+    delete_collisions()
+
+    for collider = 1 to $NumCubes
         with
             $(collider) = collider
         collider_physics_tick()
+    end
+    
+    resolve_collision_velocity()
+    resolve_collision_penetration()
+    
+    for collider = 1 to $NumCubes
+        with
+            $(collider) = collider
+        collider_set_transform()
     end
 end
 
@@ -73,7 +86,7 @@ function collider_physics_tick()
             @Position.<pos> = <collision_x, collision_y, collision_z>
             @Position.<pos> += <collision_nx, collision_ny, collision_nz> / 8
 
-            $PunchPower = 750
+            $PunchPower = 3000
 
             collider_apply_impulse(collision_x, collision_y, collision_z, world_eye_dx * $PunchPower / scale, world_eye_dy * $PunchPower / scale, world_eye_dz * $PunchPower / scale) with macros
             
@@ -84,192 +97,259 @@ function collider_physics_tick()
     end
     
     # Apply Gravity
-    $Gravity = 5
+    $Gravity = 45
     collider.velocity_y -= $Gravity
     
     collider_integrate() with macros
     collider_quaternion_to_transform() with macros
     
-    max_penetration = 0
-    
-    for iter = 1 to 4
-        max_col_v = 0
-        
-        halfsize = collider.size / 2
-        
-        for px = -halfsize to halfsize by collider.size
-            for py = -halfsize to halfsize by collider.size
-                for pz = -halfsize to halfsize by collider.size
-                    collider_local_to_world(px, py, pz, True) with macros
-                    
-                    penetration = 56000 - world_y
-                    
-                    if penetration > 0
-                        dx = world_x - collider.x
-                        dy = world_y - collider.y
-                        dz = world_z - collider.z
-                    
-                        rot_lin_vel_x = (collider.rotation_y * dz - collider.rotation_z * dy + 500) / scale
-                        rot_lin_vel_y = (collider.rotation_z * dx - collider.rotation_x * dz + 500) / scale
-                        rot_lin_vel_z = (collider.rotation_x * dy - collider.rotation_y * dx + 500) / scale
-                        
-                        vel_x = collider.velocity_x + rot_lin_vel_x
-                        vel_y = collider.velocity_y + rot_lin_vel_y
-                        vel_z = collider.velocity_z + rot_lin_vel_z
-                        
-                        if -vel_y > max_col_v
-                            max_col_v = -vel_y
-                            pen_x = world_x
-                            pen_y = world_y
-                            pen_z = world_z
-                            
-                            norm_x = 0
-                            norm_y = scale
-                            norm_z = 0
-                        end
-                        if penetration > max_penetration
-                            max_penetration = penetration
-                            max_pen_norm_x = 0
-                            max_pen_norm_y = scale
-                            max_pen_norm_z = 0
-                        end
-                    end
-                    
-                    penetration = world_x - 10000
-                    
-                    if penetration > 0
-                        dx = world_x - collider.x
-                        dy = world_y - collider.y
-                        dz = world_z - collider.z
-                    
-                        rot_lin_vel_x = (collider.rotation_y * dz - collider.rotation_z * dy + 500) / scale
-                        rot_lin_vel_y = (collider.rotation_z * dx - collider.rotation_x * dz + 500) / scale
-                        rot_lin_vel_z = (collider.rotation_x * dy - collider.rotation_y * dx + 500) / scale
-                        
-                        vel_x = collider.velocity_x + rot_lin_vel_x
-                        vel_y = collider.velocity_y + rot_lin_vel_y
-                        vel_z = collider.velocity_z + rot_lin_vel_z
-                        
-                        if vel_x > max_col_v
-                            max_col_v = vel_x
-                            pen_x = world_x
-                            pen_y = world_y
-                            pen_z = world_z
-                            
-                            norm_x = -scale
-                            norm_y = 0
-                            norm_z = 0
-                        end
-                        if penetration > max_penetration
-                            max_penetration = penetration
-                            max_pen_norm_x = -scale
-                            max_pen_norm_y = 0
-                            max_pen_norm_z = 0
-                        end
-                    end
-                    
-                    penetration = world_z - 10000
-                    
-                    if penetration > 0
-                        dx = world_x - collider.x
-                        dy = world_y - collider.y
-                        dz = world_z - collider.z
-                    
-                        rot_lin_vel_x = (collider.rotation_y * dz - collider.rotation_z * dy + 500) / scale
-                        rot_lin_vel_y = (collider.rotation_z * dx - collider.rotation_x * dz + 500) / scale
-                        rot_lin_vel_z = (collider.rotation_x * dy - collider.rotation_y * dx + 500) / scale
-                        
-                        vel_x = collider.velocity_x + rot_lin_vel_x
-                        vel_y = collider.velocity_y + rot_lin_vel_y
-                        vel_z = collider.velocity_z + rot_lin_vel_z
-                        
-                        if vel_z > max_col_v
-                            max_col_v = vel_z
-                            pen_x = world_x
-                            pen_y = world_y
-                            pen_z = world_z
-                            
-                            norm_x = 0
-                            norm_y = 0
-                            norm_z = -scale
-                        end
-                        if penetration > max_penetration
-                            max_penetration = penetration
-                            max_pen_norm_x = 0
-                            max_pen_norm_y = 0
-                            max_pen_norm_z = -scale
-                        end
-                    end
-                end
-            end
-        end
-        
-        if max_col_v > 1
-            collision_1.norm_x = norm_x
-            collision_1.norm_y = norm_y
-            collision_1.norm_z = norm_z
+    get_collisions() with macros
+end
 
-            collision_1.pen_x = pen_x
-            collision_1.pen_y = pen_y
-            collision_1.pen_z = pen_z
-            
+function resolve_collision_velocity()
+    for vel_iter = 1 to 10
+        max_closing = 0
+        
+        check_collisions_closing()
+        
+        if max_closing <= 5
+            vel_iter = 1000000
+        else
             with
-                $(collision) = 1
-                $(collider1) = collider.id
+                $(collision) = max_closing_id
+                $(collider1) = max_closing_col1
+                $(collider2) = max_closing_col2
             handle_collision_1body()
         end
     end
-    if max_penetration > 0
-        collider.x += max_penetration * max_pen_norm_x / scale
-        collider.y += max_penetration * max_pen_norm_y / scale
-        collider.z += max_penetration * max_pen_norm_z / scale
+end
+
+function check_collisions_closing()
+    for collision = 1 to max_collision
+        with
+            $(collision) = collision
+        check_collision_closing()
     end
+end
+
+function check_collision_closing()
+    define name collision = "collision_$(collision)"
     
-    collider_set_transform() with macros
+    if collision.exists
+        with
+            $(collider1) = collision.collider1
+        update_closing_velocity()
+        
+        if collision.closing > max_closing
+            max_closing = collision.closing
+            max_closing_id = collision.id
+            max_closing_col1 = collision.collider1
+            max_closing_col2 = collision.collider2
+        end
+    end
+end
+
+function update_closing_velocity()
+    define name collision = "collision_$(collision)"
+    define name collider1 = "collider_$(collider1)"
+    
+    dx = collision.x - collider1.x
+    dy = collision.y - collider1.y
+    dz = collision.z - collider1.z
+
+    rot_lin_vel_x = (collider1.rotation_y * dz - collider1.rotation_z * dy + 500) / $Precision
+    rot_lin_vel_y = (collider1.rotation_z * dx - collider1.rotation_x * dz + 500) / $Precision
+    rot_lin_vel_z = (collider1.rotation_x * dy - collider1.rotation_y * dx + 500) / $Precision
+    
+    collision.vel_x = collider1.velocity_x + rot_lin_vel_x
+    collision.vel_y = collider1.velocity_y + rot_lin_vel_y
+    collision.vel_z = collider1.velocity_z + rot_lin_vel_z
+
+    collision.closing = -(collision.vel_x * collision.nx + collision.vel_y * collision.ny + collision.vel_z * collision.nz + 500) / $Precision
+end
+
+function resolve_collision_penetration()
+    for pen_iter = 1 to 10
+        max_pen = 0
+        
+        for collision = 1 to max_collision
+            with
+                $(collision) = collision
+            check_collision_penetration()
+        end
+        
+        if max_pen <= 5
+            pen_iter = 1000000
+        else
+            mx = (max_pen_nx * max_pen + 500) / $Precision
+            my = (max_pen_ny * max_pen + 500) / $Precision
+            mz = (max_pen_nz * max_pen + 500) / $Precision
+            
+            with
+                $(collider) = max_pen_col1
+            move_collider(mx, my, mz)
+            
+            move_collisions(mx, my, mz)
+        end
+    end
+end
+
+function move_collider(dx, dy, dz)
+    define name collider = "collider_$(collider)"
+    
+    collider.x += dx
+    collider.y += dy
+    collider.z += dz
+end
+
+function move_collisions(dx, dy, dz)
+    for collision = 1 to max_collision
+        with
+            $(collision) = collision
+        move_collision(dx, dy, dz)
+    end
+end
+
+function move_collision(dx, dy, dz)
+    define name collision = "collision_$(collision)"
+    
+    if collision.exists
+        do_move = False
+        if collision.collider1 == max_pen_col1
+            do_move = True
+        end
+        if collision.collider1 == max_pen_col2
+            do_move = True
+        end
+        if max_pen_col2 >= 0
+            if collision.collider2 == max_pen_col1
+                do_move = True
+            end
+            if collision.collider2 == max_pen_col2
+                do_move = True
+            end
+        end
+        
+        if do_move
+            collision.pen -= (dx*collision.nx + dy*collision.ny + dz*collision.nz + 500) / $Precision
+        end
+    end
+end
+
+function check_collision_penetration()
+    define name collision = "collision_$(collision)"
+
+    if collision.exists and collision.pen > max_pen
+        max_pen = collision.pen
+        max_pen_nx = collision.nx
+        max_pen_ny = collision.ny
+        max_pen_nz = collision.nz
+        max_pen_col1 = collision.collider1
+        max_pen_col2 = collision.collider2
+    end
+end
+
+function get_collisions()
+    define name collider = "collider_$(collider)"
+    halfsize = collider.size / 2
+        
+    for px = -halfsize to halfsize by collider.size
+        for py = -halfsize to halfsize by collider.size
+            for pz = -halfsize to halfsize by collider.size
+                collider_local_to_world(px, py, pz, True) with macros
+                
+                penetration = world_x - 10000                
+                if penetration > -50
+                    create_collision(world_x, world_y, world_z, -$Precision, 0, 0, penetration, collider.id, -1)
+                end
+                
+                penetration = world_z - 10000                
+                if penetration > -50
+                    create_collision(world_x, world_y, world_z, 0, 0, -$Precision, penetration, collider.id, -1)
+                end
+
+                penetration = 56000 - world_y
+                if penetration > -50
+                    create_collision(world_x, world_y, world_z, 0, $Precision, 0, penetration, collider.id, -1)
+                end
+            end
+        end
+    end
+end
+
+function create_collision(x, y, z, nx, ny, nz, pen, collider1, collider2)
+    id = get_unused_collision_id()
+
+    with
+        $(collision) = id
+    initialize_collision(x, y, z, nx, ny, nz, pen, collider1, collider2)
 end
 
 function get_unused_collision_id()
-    # TODO: Iterate through collision ids until an unallocated collision is found
-end
+    unused_id = -1
 
-# Assumes $(collision) contains the collision id
-function store_collision()
-    # If the collision id isn't in the global collision list, allocate it
-    /$execute if score collision_$(collision) allocated < c1 Constant run function allocate_collision with $namespace:global args
-    /$execute store result score c1 dx run scoreboard players get collision_$(collision) c1dx
-end
-
-function allocate_collision()
-    /$scoreboard players set Global collision $(i)
-    /$scoreboard players set collision_$(i) allocated 1
-    # Add collision to list
-    /execute store result storage $namespace:global contacts[-1] int 1 run scoreboard players get Global collision
-    # TODO: Set the variable for the object-feature pair
-end
-
-function deallocate_collision()
-    /$scoreboard players set collision_$(i) allocated 0
-    # TODO: Remove collision from list
-    # TODO: Clear the variable for the object-feature pair
-end
-
-# Checks if an object-feature collision pair exists
-function collision_exists()
-
-end
-
-# Removes the last element of contacts and appends it to contacts_processed
-# Returns the collision id, or -1 if there aren't any more collisions
-function get_next_collision()
-    contact = -1
-    /execute store result score Global contact run data get storage $namespace:global contacts[-1]
-    if contact >= 0
-        /execute store result storage $namespace:global contacts_processed[-1] int 1 run scoreboard players get Global contact
+    for collision = collision_start to 200
+        with
+            $(collision) = collision
+        get_collision_id_exists()
+        
+        if not exists
+            collision_start = collision + 1
+            unused_id = collision
+            collision = 1000000
+        end
     end
     
-    return contact
+    return unused_id
 end
 
-function reset_collision_list()
-    /data modify storage $namespace:global contacts set from storage $namespace:global contacts_processed
+function get_collision_id_exists()
+    define name collision = "collision_$(collision)"
+    exists = collision.exists
+end
+
+function delete_collisions()
+    for collision = 1 to max_collision
+        with
+            $(collision) = collision
+        delete_collision()
+    end
+    
+    max_collision = 0
+    collision_start = 1
+end
+
+function delete_collision()
+    define name collision = "collision_$(collision)"
+
+    if collision.exists
+        if collision.id < collision_start
+            collision_start = collision.id
+        end
+
+        /scoreboard players reset collision_$(collision)
+    end        
+end
+
+function initialize_collision(x, y, z, nx, ny, nz, pen, collider1, collider2)
+    define name collision = "collision_$(collision)"
+    
+    /scoreboard players set collision_$(collision) id $(collision)
+    collision.exists = True
+    collision.x = x
+    collision.y = y
+    collision.z = z
+    
+    collision.nx = nx
+    collision.ny = ny
+    collision.nz = nz
+    
+    collision.pen = pen
+    
+    collision.collider1 = collider1
+    collision.collider2 = collider2
+    
+    if collision.id > max_collision
+        max_collision = collision.id
+    end
 end

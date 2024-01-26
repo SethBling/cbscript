@@ -4,7 +4,7 @@ import math
 $InverseMass = 500
 $InverseRotationalIntertia = 500
 $Precision = 1000
-$CancelRestitution = -25
+$CancelRestitution = -100
 
 define @PhysicsBlock = @Entity[type=block_display,tag=physics_block]
 
@@ -449,20 +449,20 @@ function handle_collision_1body()
     define name collision = "collision_$(collision)"
     
     # Create contact basis/transform
-    ct_01 = collision.norm_x
-    ct_11 = collision.norm_y
-    ct_21 = collision.norm_z
+    ct_01 = collision.nx
+    ct_11 = collision.ny
+    ct_21 = collision.nz
     
-    absx = abs(collision.norm_x)
-    absz = abs(collision.norm_z)
+    absx = abs(collision.nx)
+    absz = abs(collision.nz)
     
     if absx < absz
         # The norm isn't pointing toward x, so
         # cross the norm with 1,0,0
-        s = sqrt(collision.norm_y*collision.norm_y + collision.norm_z*collision.norm_z)
+        s = sqrt(collision.ny*collision.ny + collision.nz*collision.nz)
         ct_00 = 0
-        ct_10 = -collision.norm_z * $Precision / s
-        ct_20 = collision.norm_y * $Precision / s
+        ct_10 = -collision.nz * $Precision / s
+        ct_20 = collision.ny * $Precision / s
 
         # Cross the norm with the new vector
         ct_02 = (ct_10*ct_21 - ct_20*ct_11 + 500) / $Precision
@@ -471,9 +471,9 @@ function handle_collision_1body()
     else
         # The norm isn't pointing toward z, so
         # cross the norm with 0,0,1
-        s = sqrt(collision.norm_y*collision.norm_y + collision.norm_x*collision.norm_x)
-        ct_00 = collision.norm_y * $Precision / s
-        ct_10 = -collision.norm_x * $Precision / s
+        s = sqrt(collision.ny*collision.ny + collision.nx*collision.nx)
+        ct_00 = collision.ny * $Precision / s
+        ct_10 = -collision.nx * $Precision / s
         ct_20 = 0
 
         # Cross the norm with the new vector
@@ -488,22 +488,10 @@ function handle_collision_1body()
     #ct_22 = (ct_00*ct_11 - ct_10*ct_01 + 500) / $Precision
 
     
-    dx = collision.pen_x - collider1.x
-    dy = collision.pen_y - collider1.y
-    dz = collision.pen_z - collider1.z
-    
-    rot_lin_vel_x = (collider1.rotation_y * dz - collider1.rotation_z * dy + 500) / $Precision
-    rot_lin_vel_y = (collider1.rotation_z * dx - collider1.rotation_x * dz + 500) / $Precision
-    rot_lin_vel_z = (collider1.rotation_x * dy - collider1.rotation_y * dx + 500) / $Precision
-    
-    w_vel_x = collider1.velocity_x + rot_lin_vel_x
-    w_vel_y = collider1.velocity_y + rot_lin_vel_y
-    w_vel_z = collider1.velocity_z + rot_lin_vel_z
-    
     # Transform by the ct transpose matrix to get contact coordinates
-    c_vel_x = (ct_00 * w_vel_x + ct_10 * w_vel_y + ct_20 * w_vel_z + 500) / $Precision
-    c_vel_y = (ct_01 * w_vel_x + ct_11 * w_vel_y + ct_21 * w_vel_z + 500) / $Precision
-    c_vel_z = (ct_02 * w_vel_x + ct_12 * w_vel_y + ct_22 * w_vel_z + 500) / $Precision
+    c_vel_x = (ct_00 * collision.vel_x + ct_10 * collision.vel_y + ct_20 * collision.vel_z + 500) / $Precision
+    c_vel_y = (ct_01 * collision.vel_x + ct_11 * collision.vel_y + ct_21 * collision.vel_z + 500) / $Precision
+    c_vel_z = (ct_02 * collision.vel_x + ct_12 * collision.vel_y + ct_22 * collision.vel_z + 500) / $Precision
 
     # Impulse to torque skew symmetric matrix
     #i_to_t_00 = 0
@@ -517,6 +505,10 @@ function handle_collision_1body()
     #i_to_t_20 = -dy
     #i_to_t_21 = dx
     #i_to_t_22 = 0
+    
+    dx = collision.x - collider1.x
+    dy = collision.y - collider1.y
+    dz = collision.z - collider1.z
     
     # Impulse to velocity transform
     # Formula: -(i_to_t^2) * InverseRotationalIntertia
@@ -566,7 +558,14 @@ function handle_collision_1body()
     i = c_i_to_v_22
     
     # Inverse impulse to velocity
-    det = ((a * e + 500) / $Precision * i + (d * h + 500) / $Precision * c + (g * b + 500) / $Precision * f - (a * h + 500) / $Precision * f - (g * e + 500) / $Precision * c - (d * b + 500) / $Precision * i + 500) / $Precision
+    det =  (a * e + 500) / $Precision * i
+    det += (d * h + 500) / $Precision * c
+    det += (g * b + 500) / $Precision * f
+    det -= (a * h + 500) / $Precision * f
+    det -= (g * e + 500) / $Precision * c
+    det -= (d * b + 500) / $Precision * i
+    det += 500
+    det /= $Precision
 
     v_to_i_00 = (e * i - f * h) / det
     v_to_i_01 = (c * h - b * i) / det
@@ -580,7 +579,7 @@ function handle_collision_1body()
     v_to_i_21 = (b * g - a * h) / det
     v_to_i_22 = (a * e - b * d) / det
     
-    $Restitution = 200
+    $Restitution = 600
     restitution = $Restitution
     if c_vel_y > $CancelRestitution
         restitution = 0
@@ -624,5 +623,5 @@ function handle_collision_1body()
     # collider1.id isn't using define name
     with
         $(collider) = collider1.id
-    collider_apply_impulse(collision.pen_x, collision.pen_y, collision.pen_z, ix, iy, iz)
+    collider_apply_impulse(collision.x, collision.y, collision.z, ix, iy, iz)
 end
