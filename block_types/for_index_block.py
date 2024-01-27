@@ -59,7 +59,7 @@ class for_index_block(block_base):
 			temp_var = var.get_scoreboard_var(func)
 			
 			if by_const:
-				continue_command = 'execute if score {} {} {} run {}}'.format(temp_var.selvar, '>=' if by_const < 0 else '<=', to_var.selvar, loop_func.get_call())
+				continue_command = 'execute if score {} {} {} run {}'.format(temp_var.selvar, '>=' if by_const < 0 else '<=', to_var.selvar, loop_func.get_call())
 				func.add_command(continue_command)
 
 				loop_func.add_command('scoreboard players {} {} {}'.format('add' if by_const > 0 else 'remove', temp_var.selvar, abs(by_const)))
