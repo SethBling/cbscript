@@ -12,7 +12,7 @@ define @ChainLink = @Entity[type=block_display,tag=chain]
 end
 
 $Precision = 1000
-$NumCubes = 2
+$NumCubes = 1
 
 reset
     for $row in $range(3)
@@ -27,9 +27,9 @@ reset
         $(collider) = 1
     create_collider(6500, 57500, 1500, 3000, 400, 300)
     
-    with
-        $(collider) = 2
-    create_collider(1500, 57500, 1500, 1000, 800, 600)
+    #with
+    #    $(collider) = 2
+    #create_collider(1500, 57500, 1500, 1000, 800, 600)
     
 
     /kill @Position
