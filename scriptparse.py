@@ -50,6 +50,8 @@ from block_types.title_block import title_block
 from block_types.vector_assignment_block import vector_assignment_block
 from block_types.vector_assignment_scalar_block import vector_assignment_scalar_block
 from block_types.while_block import while_block
+from block_types.with_anonymous_block import with_anonymous_block
+from block_types.with_items import with_items
 from data_types.block_case import block_case
 from data_types.const_number import const_number
 from data_types.const_string import const_string
@@ -247,12 +249,12 @@ def p_with_macro_items(p):
 
 def p_with_macro_items_prefix(p):
 	'''with_macro_items_prefix : with newlines with_macro_items'''
-	p[0] = p[3]
+	p[0] = with_items(p.lineno(1), p[3])
 
 #### With macros suffix decorator
 def p_opt_with_macros_true(p):
 	'''opt_with_macros : with macros'''
-	p[0] = []
+	p[0] = with_items(p.lineno(1), [])
 
 def p_opt_with_macros_false(p):
 	'''opt_with_macros : empty'''
@@ -271,6 +273,11 @@ def p_exprlist_single(p):
 def p_exprlist_empty(p):
 	'''exprlist : empty'''
 	p[0] = []
+
+#### With Anonymouse
+def p_with_anonymous_block(p):
+	'''with_anonymous_block : with_macro_items_prefix do newlines blocklist end'''
+	p[0] = with_anonymous_block(p.lineno(1), p[1], p[4])
 
 #### Function call
 def p_function_call_namespace(p):
@@ -507,7 +514,7 @@ def p_block_comment(p):
 def p_block_command(p):
 	'''codeblock : COMMAND'''
 	p[0] = command_block(p.lineno(1), p[1])
-	
+
 def p_block_move(p):
 	'''codeblock : move fullselector relcoords'''
 	p[0] = move_block(p.lineno(1), p[2], p[3])
@@ -889,6 +896,11 @@ def p_block_selector_assignment(p):
 				 | selector_define_block'''
 	p[0] = p[1]
 	
+	
+def p_block_with_anonymous_block(p):
+	'''codeblock : with_anonymous_block'''
+	p[0] = p[1]
+
 def p_block_function_call(p):
 	'''codeblock : function_call_block
 				 | method_call_block

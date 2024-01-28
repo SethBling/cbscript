@@ -39,8 +39,6 @@ reset
     as @Player
         create_click()
     end
-    
-    test_call_macro()
 end
 
 define @nearest_player = @Player[sort=nearest,limit=1]
@@ -112,7 +110,26 @@ function resolve_collision_velocity()
     for vel_iter = 1 to 10
         max_closing = 0
         
-        check_collisions_closing()
+        for collision = 1 to max_collision
+            with
+                $(collision) = collision
+            do
+                define name collision = "collision_$(collision)"
+            
+                if collision.exists
+                    with
+                        $(collider1) = collision.collider1
+                    update_closing_velocity()
+                    
+                    if collision.closing > max_closing
+                        max_closing = collision.closing
+                        max_closing_id = collision.id
+                        max_closing_col1 = collision.collider1
+                        max_closing_col2 = collision.collider2
+                    end
+                end
+            end
+        end
         
         if max_closing <= 5
             vel_iter = 1000000
@@ -122,31 +139,6 @@ function resolve_collision_velocity()
                 $(collider1) = max_closing_col1
                 $(collider2) = max_closing_col2
             handle_collision_1body()
-        end
-    end
-end
-
-function check_collisions_closing()
-    for collision = 1 to max_collision
-        with
-            $(collision) = collision
-        check_collision_closing()
-    end
-end
-
-function check_collision_closing()
-    define name collision = "collision_$(collision)"
-    
-    if collision.exists
-        with
-            $(collider1) = collision.collider1
-        update_closing_velocity()
-        
-        if collision.closing > max_closing
-            max_closing = collision.closing
-            max_closing_id = collision.id
-            max_closing_col1 = collision.collider1
-            max_closing_col2 = collision.collider2
         end
     end
 end
@@ -177,7 +169,18 @@ function resolve_collision_penetration()
         for collision = 1 to max_collision
             with
                 $(collision) = collision
-            check_collision_penetration()
+            do
+                define name collision = "collision_$(collision)"
+
+                if collision.exists and collision.pen > max_pen
+                    max_pen = collision.pen
+                    max_pen_nx = collision.nx
+                    max_pen_ny = collision.ny
+                    max_pen_nz = collision.nz
+                    max_pen_col1 = collision.collider1
+                    max_pen_col2 = collision.collider2
+                end
+            end
         end
         
         if max_pen <= 5
@@ -189,65 +192,49 @@ function resolve_collision_penetration()
             
             with
                 $(collider) = max_pen_col1
-            move_collider(mx, my, mz)
+            do
+                define name collider = "collider_$(collider)"
+    
+                collider.x += mx
+                collider.y += my
+                collider.z += mz
+            end
             
             move_collisions(mx, my, mz)
         end
     end
 end
 
-function move_collider(dx, dy, dz)
-    define name collider = "collider_$(collider)"
-    
-    collider.x += dx
-    collider.y += dy
-    collider.z += dz
-end
-
 function move_collisions(dx, dy, dz)
     for collision = 1 to max_collision
         with
             $(collision) = collision
-        move_collision(dx, dy, dz)
-    end
-end
-
-function move_collision(dx, dy, dz)
-    define name collision = "collision_$(collision)"
+        do
+            define name collision = "collision_$(collision)"
     
-    if collision.exists
-        do_move = False
-        if collision.collider1 == max_pen_col1
-            do_move = True
-        end
-        if collision.collider1 == max_pen_col2
-            do_move = True
-        end
-        if max_pen_col2 >= 0
-            if collision.collider2 == max_pen_col1
-                do_move = True
+            # TODO: Make this move the right direction depending on which collider matches
+            if collision.exists
+                do_move = False
+                if collision.collider1 == max_pen_col1
+                    do_move = True
+                end
+                if collision.collider1 == max_pen_col2
+                    do_move = True
+                end
+                if max_pen_col2 >= 0
+                    if collision.collider2 == max_pen_col1
+                        do_move = True
+                    end
+                    if collision.collider2 == max_pen_col2
+                        do_move = True
+                    end
+                end
+                
+                if do_move
+                    collision.pen -= (dx*collision.nx + dy*collision.ny + dz*collision.nz + 500) / $Precision
+                end
             end
-            if collision.collider2 == max_pen_col2
-                do_move = True
-            end
         end
-        
-        if do_move
-            collision.pen -= (dx*collision.nx + dy*collision.ny + dz*collision.nz + 500) / $Precision
-        end
-    end
-end
-
-function check_collision_penetration()
-    define name collision = "collision_$(collision)"
-
-    if collision.exists and collision.pen > max_pen
-        max_pen = collision.pen
-        max_pen_nx = collision.nx
-        max_pen_ny = collision.ny
-        max_pen_nz = collision.nz
-        max_pen_col1 = collision.collider1
-        max_pen_col2 = collision.collider2
     end
 end
 
@@ -445,16 +432,42 @@ function create_collision(x, y, z, nx, ny, nz, pen, collider1, collider2)
 
     with
         $(collision) = id
-    initialize_collision(x, y, z, nx, ny, nz, pen, collider1, collider2)
+    do
+        define name collision = "collision_$(collision)"
+        
+        /scoreboard players set collision_$(collision) id $(collision)
+        collision.exists = True
+        collision.x = x
+        collision.y = y
+        collision.z = z
+        
+        collision.nx = nx
+        collision.ny = ny
+        collision.nz = nz
+        
+        collision.pen = pen
+        
+        collision.collider1 = collider1
+        collision.collider2 = collider2
+        
+        if collision.id > max_collision
+            max_collision = collision.id
+        end    
+    end
 end
 
 function get_unused_collision_id()
     unused_id = -1
 
     for collision = collision_start to 200
+        exists = False
+
         with
             $(collision) = collision
-        get_collision_id_exists()
+        do
+            define name collision = "collision_$(collision)"
+            exists = collision.exists
+        end
         
         if not exists
             collision_start = collision + 1
@@ -466,53 +479,23 @@ function get_unused_collision_id()
     return unused_id
 end
 
-function get_collision_id_exists()
-    define name collision = "collision_$(collision)"
-    exists = collision.exists
-end
-
 function delete_collisions()
     for collision = 1 to max_collision
         with
             $(collision) = collision
-        delete_collision()
+        do
+            define name collision = "collision_$(collision)"
+            if collision.exists
+                if collision.id < collision_start
+                    collision_start = collision.id
+                end
+
+                /scoreboard players reset collision_$(collision)
+            end
+        end        
+        
     end
     
     max_collision = 0
     collision_start = 1
-end
-
-function delete_collision()
-    define name collision = "collision_$(collision)"
-
-    if collision.exists
-        if collision.id < collision_start
-            collision_start = collision.id
-        end
-
-        /scoreboard players reset collision_$(collision)
-    end        
-end
-
-function initialize_collision(x, y, z, nx, ny, nz, pen, collider1, collider2)
-    define name collision = "collision_$(collision)"
-    
-    /scoreboard players set collision_$(collision) id $(collision)
-    collision.exists = True
-    collision.x = x
-    collision.y = y
-    collision.z = z
-    
-    collision.nx = nx
-    collision.ny = ny
-    collision.nz = nz
-    
-    collision.pen = pen
-    
-    collision.collider1 = collider1
-    collision.collider2 = collider2
-    
-    if collision.id > max_collision
-        max_collision = collision.id
-    end
 end
