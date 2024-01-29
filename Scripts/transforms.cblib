@@ -83,6 +83,7 @@ function create_collider(x, y, z, size, inv_mass, inv_rot_int)
     
     collider_clear_velocity() with macros
     collider_clear_rotation() with macros
+    collider_wake_up() with macros
     
     collider_quaternion_to_transform() with macros
 
@@ -112,7 +113,33 @@ function collider_clear_rotation()
     collider.rotation_z = 0
 end
 
+function collider_wake_up()
+    define name collider = "collider_$(collider)"
+
+    collider.recent_motion = 10000
+    collider.recent_rotation = 10000
+    collider.sleeping = False
+end
+
+function collider_sleep()
+    define name collider = "collider_$(collider)"
+    
+    collider_clear_velocity() with macros
+    collider_clear_rotation() with macros
+    collider.sleeping = True
+end
+
+function collider_check_sleep()
+    define name collider = "collider_$(collider)"
+    
+    if collider.recent_motion < 2200 and collider.recent_rotation < 2200
+        collider_sleep() with macros
+    end
+end
+
 function collider_integrate()
+    define name collider = "collider_$(collider)"
+    
     collider_integrate_velocity() with macros
     collider_integrate_rotation() with macros
 end
@@ -127,6 +154,11 @@ function collider_integrate_velocity()
     collider.x += collider.velocity_x
     collider.y += collider.velocity_y
     collider.z += collider.velocity_z
+    
+    motion = (collider.velocity_x * collider.velocity_x + collider.velocity_y * collider.velocity_y + collider.velocity_z * collider.velocity_z) / 10
+    collider.recent_motion *= 9
+    collider.recent_motion /= 10
+    collider.recent_motion += motion
 end
 
 function collider_integrate_rotation()
@@ -144,6 +176,11 @@ function collider_integrate_rotation()
     collider.k += new_k / 2
 
     collider_normalize_quaternion() with macros
+
+    rotation = (collider.rotation_x * collider.rotation_x + collider.rotation_y * collider.rotation_y + collider.rotation_z * collider.rotation_z) / 10
+    collider.recent_rotation *= 9
+    collider.recent_rotation /= 10
+    collider.recent_rotation += motion
 end
 
 function collider_set_transform()
@@ -288,6 +325,10 @@ function collider_apply_impulse(x, y, z, ix, iy, iz)
     collider.rotation_x += (axis_x * collider.inv_rot_int + 500) / $Precision
     collider.rotation_y += (axis_y * collider.inv_rot_int + 500) / $Precision
     collider.rotation_z += (axis_z * collider.inv_rot_int + 500) / $Precision
+    
+    if collider.sleeping
+        collider_wake_up() with macros
+    end
 end
 
 function collider_apply_spring_cable(spring_x, spring_y, spring_z, spring_neutral, spring_constant, local_att_x, local_att_y, local_att_z)

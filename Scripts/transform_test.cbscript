@@ -65,7 +65,27 @@ clock tick
     for collider = 1 to $NumCubes
         with
             $(collider) = collider
-        collider_physics_tick()
+        do
+            define name collider = "collider_$(collider)"
+            
+            if not collider.sleeping
+                collider_physics_tick() with macros
+            end
+        end
+    end
+    
+    for collider = 1 to $NumCubes
+        with
+            $(collider) = collider
+        do
+            define name collider = "collider_$(collider)"
+            
+            collider_check_clicked() with macros
+            
+            if not collider.sleeping
+                get_collisions() with macros
+            end
+        end
     end
     
     resolve_collision_velocity()
@@ -75,10 +95,11 @@ clock tick
         with
             $(collider) = collider
         collider_set_transform()
+        collider_check_sleep() with macros
     end
 end
 
-function collider_physics_tick()
+function collider_check_clicked()
     define name collider = "collider_$(collider)"
 
     if clicked
@@ -95,6 +116,10 @@ function collider_physics_tick()
             end
         end
     end
+end
+
+function collider_physics_tick()
+    define name collider = "collider_$(collider)"
     
     # Apply Gravity
     $Gravity = 45
@@ -102,8 +127,6 @@ function collider_physics_tick()
     
     collider_integrate() with macros
     collider_quaternion_to_transform() with macros
-    
-    get_collisions() with macros
 end
 
 function resolve_collision_velocity()
