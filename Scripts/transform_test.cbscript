@@ -275,7 +275,7 @@ function get_collisions()
     define name collider = "collider_$(collider)"
     halfsize = collider.size / 2
     
-    collider_calculate_vertix_world_positions() with macros
+    collider_calculate_vertex_world_positions() with macros
 
     for vertex = 0 to 7
         with

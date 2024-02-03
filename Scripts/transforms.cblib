@@ -485,7 +485,7 @@ function collider_ray_intersection(x, y, z, dx, dy, dz)
     end
 end
 
-function collider_calculate_vertix_world_positions()
+function collider_calculate_vertex_world_positions()
     define name collider = "collider_$(collider)"
     
     halfsize = collider.size / 2

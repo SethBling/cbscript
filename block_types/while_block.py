@@ -17,6 +17,10 @@ class while_block(execute_base):
 	def add_continuation_command(self, func, func_name, exec_func):
 		dummy_func = exec_func.create_child_function()
 		sub_cmd = 'execute ' + exec_func.get_execute_items(self.exec_items, dummy_func)
+
+		if "$(" in sub_cmd:
+			exec_func.has_macros = True
+
 		if sub_cmd == None:
 			raise Exception('Unable to compile continuation command for while block at line {}'.format(self.line))
 
