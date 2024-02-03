@@ -367,13 +367,9 @@ function get_collisions()
     start_z = (collider.min_z/$Precision+1)*$Precision
     
     for block_x = start_x to collider.max_x by $Precision
-        tell @a "block_x = (block_x)"
         for block_y = start_y to collider.max_y by $Precision
-            tell @a "block_y = (block_y)"
             for block_z = start_z to collider.max_z by $Precision
-                tell @a "block_z = (block_z)"
                 @Position.<pos> = <block_x, block_y, block_z>
-                tell @a "Checking (block_x), (block_y), (block_z)"
                 at @Position
                     if block ~ ~ ~ air and block ~ ~ ~-1 air and block ~ ~-1 ~ air and block ~ ~-1 ~-1 air and block ~-1 ~ ~ air and block ~-1 ~ ~-1 air and block ~-1 ~-1 ~ air and block ~-1 ~-1 ~-1 air
                     
