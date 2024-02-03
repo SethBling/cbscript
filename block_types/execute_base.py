@@ -8,7 +8,7 @@ class execute_base(block_base):
 		return False
 		
 	# By default, no continuation is added to the end of the sub function
-	def add_continuation_command(self, func, func_name, exec_func):
+	def add_continuation_command(self, func, exec_func):
 		None
 		
 	def prepare_scratch(self, func):
@@ -37,7 +37,7 @@ class execute_base(block_base):
 			func_name = 'line{:03}/{}{:03}'.format(self.line, self.display_name(), unique)
 			func.register_function(func_name, exec_func)
 			
-			self.add_continuation_command(func, func_name, exec_func)
+			self.add_continuation_command(func, exec_func)
 			
 			func.add_command('{}run {}'.format(cmd, exec_func.get_call()))			
 		else:

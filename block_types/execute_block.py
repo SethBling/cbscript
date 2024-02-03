@@ -15,7 +15,7 @@ class execute_block(execute_base):
 	def display_name(self):
 		return 'execute'
 		
-	def add_continuation_command(self, func, func_name, exec_func):
+	def add_continuation_command(self, func, exec_func):
 		if len(self.else_list) > 0:
 			func.add_command('scoreboard players set Global {} 1'.format(self.scratch))
 			exec_func.add_command('scoreboard players set Global {} 0'.format(self.scratch))
