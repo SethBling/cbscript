@@ -30,6 +30,14 @@ reset
     #with
     #    $(collider) = 2
     #create_collider(1500, 57500, 1500, 1000, 800, 600)
+
+    #with
+    #    $(collider) = 3
+    #create_collider(-2500, 57500, 1500, 2000, 600, 400)
+
+    #with
+    #    $(collider) = 4
+    #create_collider(-7500, 57500, 1500, 6000, 200, 200)
     
 
     /kill @Position
@@ -45,6 +53,8 @@ define @nearest_player = @Player[sort=nearest,limit=1]
 end
 
 clock tick
+    define name collider = "collider_$(collider)"
+
     as @Player at @s eyes
         /tp @Position ^ ^ ^
         world_eye_x = @Position.x
@@ -66,8 +76,6 @@ clock tick
         with
             $(collider) = collider
         do
-            define name collider = "collider_$(collider)"
-            
             if not collider.sleeping
                 collider_physics_tick() with macros
             end
@@ -78,8 +86,6 @@ clock tick
         with
             $(collider) = collider
         do
-            define name collider = "collider_$(collider)"
-            
             collider_check_clicked() with macros
             
             if not collider.sleeping
@@ -94,8 +100,12 @@ clock tick
     for collider = 1 to $NumCubes
         with
             $(collider) = collider
-        collider_set_transform()
-        collider_check_sleep() with macros
+        do
+            if not collider.sleeping
+                collider_set_transform() with macros
+                collider_check_sleep() with macros
+            end
+        end
     end
 end
 
@@ -265,111 +275,86 @@ function get_collisions()
     define name collider = "collider_$(collider)"
     halfsize = collider.size / 2
     
-    min_x = collider.x
-    min_y = collider.y
-    min_z = collider.z
-    max_x = collider.x
-    max_y = collider.y
-    max_z = collider.z
+    collider_calculate_vertix_world_positions() with macros
 
-    # Check each corner of the collider for a collision.
-    for px = -halfsize to halfsize by collider.size
-        for py = -halfsize to halfsize by collider.size
-            for pz = -halfsize to halfsize by collider.size
-                collider_local_to_world(px, py, pz, True) with macros
-                
-                @Position.<pos> = <world_x, world_y, world_z>
-                at @Position
-                    unless block ~ ~ ~ air
-                        block_x = world_x % $Precision
-                        block_y = world_y % $Precision
-                        block_z = world_z % $Precision
-                        
-                        min_pen = 1000
-                        
-                        if block ~1 ~ ~ air
-                            pen = $Precision - block_x
-                            if pen < min_pen
-                                min_pen = pen
-                                nx = $Precision
-                                ny = 0
-                                nz = 0
-                            end
-                        end
-                        
-                        if block ~ ~1 ~ air
-                            pen = $Precision - block_y
-                            if pen < min_pen
-                                min_pen = pen
-                                nx = 0
-                                ny = $Precision
-                                nz = 0
-                            end
-                        end
-                        
-                        if block ~ ~ ~1 air
-                            pen = $Precision - block_z
-                            if pen < min_pen
-                                min_pen = pen
-                                nx = 0
-                                ny = 0
-                                nz = $Precision
-                            end
-                        end
-                        
-                        if block ~-1 ~ ~ air
-                            pen = block_x
-                            if pen < min_pen
-                                min_pen = pen
-                                nx = -$Precision
-                                ny = 0
-                                nz = 0
-                            end
-                        end
-                        
-                        if block ~ ~-1 ~ air
-                            pen = block_y
-                            if pen < min_pen
-                                min_pen = pen
-                                nx = 0
-                                ny = -$Precision
-                                nz = 0
-                            end
-                        end
-                        
-                        if block ~ ~ ~-1 air
-                            pen = block_z
-                            if pen < min_pen
-                                min_pen = pen
-                                nx = 0
-                                ny = 0
-                                nz = -$Precision
-                            end
-                        end
-                        
-                        if min_pen < 1000
-                            create_collision(world_x, world_y, world_z, nx, ny, nz, min_pen, collider.id, -1)
+    for vertex = 0 to 7
+        with
+            $(vertex) = vertex
+        do
+            define name v = "collider_$(collider)_v$(vertex)"
+            
+            @Position.<pos> = <v.x, v.y, v.z>
+            at @Position
+                unless block ~ ~ ~ air
+                    block_x = v.x % $Precision
+                    block_y = v.y % $Precision
+                    block_z = v.z % $Precision
+                    
+                    min_pen = 1000
+                    
+                    if block ~1 ~ ~ air
+                        pen = $Precision - block_x
+                        if pen < min_pen
+                            min_pen = pen
+                            nx = $Precision
+                            ny = 0
+                            nz = 0
                         end
                     end
-                end
-                
-                if world_x < min_x
-                    min_x = world_x
-                end
-                if world_y < min_y
-                    min_y = world_y
-                end
-                if world_z < min_z
-                    min_z = world_z
-                end
-                if world_x > max_x
-                    max_x = world_x
-                end
-                if world_y > max_y
-                    max_y = world_y
-                end
-                if world_z > max_z
-                    max_z = world_z
+                    
+                    if block ~ ~1 ~ air
+                        pen = $Precision - block_y
+                        if pen < min_pen
+                            min_pen = pen
+                            nx = 0
+                            ny = $Precision
+                            nz = 0
+                        end
+                    end
+                    
+                    if block ~ ~ ~1 air
+                        pen = $Precision - block_z
+                        if pen < min_pen
+                            min_pen = pen
+                            nx = 0
+                            ny = 0
+                            nz = $Precision
+                        end
+                    end
+                    
+                    if block ~-1 ~ ~ air
+                        pen = block_x
+                        if pen < min_pen
+                            min_pen = pen
+                            nx = -$Precision
+                            ny = 0
+                            nz = 0
+                        end
+                    end
+                    
+                    if block ~ ~-1 ~ air
+                        pen = block_y
+                        if pen < min_pen
+                            min_pen = pen
+                            nx = 0
+                            ny = -$Precision
+                            nz = 0
+                        end
+                    end
+                    
+                    if block ~ ~ ~-1 air
+                        pen = block_z
+                        if pen < min_pen
+                            min_pen = pen
+                            nx = 0
+                            ny = 0
+                            nz = -$Precision
+                        end
+                    end
+                    
+                    if min_pen < 1000
+                        create_collision(v.x, v.y, v.z, nx, ny, nz, min_pen, collider.id, -1)
+                    end
                 end
             end
         end
@@ -377,10 +362,18 @@ function get_collisions()
     
     # Check each world geometry block corner to see if there's a block there,
     # and if so, whether it collides.
-    for block_x = (min_x/$Precision+1)*$Precision to max_x/$Precision*$Precision by $Precision
-        for block_y = (min_y/$Precision+1)*$Precision to max_y/$Precision*$Precision by $Precision
-            for block_z = (min_z/$Precision+1)*$Precision to max_z/$Precision*$Precision by $Precision
+    start_x = (collider.min_x/$Precision+1)*$Precision
+    start_y = (collider.min_y/$Precision+1)*$Precision
+    start_z = (collider.min_z/$Precision+1)*$Precision
+    
+    for block_x = start_x to collider.max_x by $Precision
+        tell @a "block_x = (block_x)"
+        for block_y = start_y to collider.max_y by $Precision
+            tell @a "block_y = (block_y)"
+            for block_z = start_z to collider.max_z by $Precision
+                tell @a "block_z = (block_z)"
                 @Position.<pos> = <block_x, block_y, block_z>
+                tell @a "Checking (block_x), (block_y), (block_z)"
                 at @Position
                     if block ~ ~ ~ air and block ~ ~ ~-1 air and block ~ ~-1 ~ air and block ~ ~-1 ~-1 air and block ~-1 ~ ~ air and block ~-1 ~ ~-1 air and block ~-1 ~-1 ~ air and block ~-1 ~-1 ~-1 air
                     

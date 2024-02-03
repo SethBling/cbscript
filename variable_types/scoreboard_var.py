@@ -169,7 +169,18 @@ class scoreboard_var(var_base):
 	# If this is a scratch variable, free it up
 	def free_scratch(self, func):
 		func.free_scratch(self.objective)
+
+	def uses_macro(self, func):
+		return func.get_name_definition(self.selector) != None or "$(" in self.selector
 		
+	def get_selvar(self, func):
+		name_def = func.get_name_definition(self.selector)
+
+		if name_def != None:
+			return '{} {}'.format(name_def, self.objective)
+		else:
+			return '{} {}'.format(self.selector, self.objective)
+
 	# This should only be used for scoreboard variables that are known to
 	# be Global
 	@property

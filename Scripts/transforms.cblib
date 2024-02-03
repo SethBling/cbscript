@@ -485,6 +485,83 @@ function collider_ray_intersection(x, y, z, dx, dy, dz)
     end
 end
 
+function collider_calculate_vertix_world_positions()
+    define name collider = "collider_$(collider)"
+    
+    halfsize = collider.size / 2
+    
+    # Initialized AABB
+    collider.min_x = collider.x
+    collider.min_y = collider.y
+    collider.min_z = collider.z
+    collider.max_x = collider.x
+    collider.max_y = collider.y
+    collider.max_z = collider.z
+    
+    for $vertex_pair in [[0, 1, 1, 1], [2, 1, -1, 1], [4, 1, 1, -1], [6, 1, -1, -1]]
+        $i = $vertex_pair[0]
+        $mx = $vertex_pair[1]
+        $my = $vertex_pair[2]
+        $mz = $vertex_pair[3]
+        
+        with
+            $(vertex_pos) = $i
+            $(vertex_neg) = $i + 1
+        do
+            define name collider_vertex_pos = "collider_$(collider)_v$(vertex_pos)"
+            define name collider_vertex_neg = "collider_$(collider)_v$(vertex_neg)"
+            
+            collider_local_to_world(halfsize * $mx, halfsize * $my, halfsize * $mz, False) with macros
+            collider_vertex_pos.x = collider.x + world_x
+            collider_vertex_pos.y = collider.y + world_y
+            collider_vertex_pos.z = collider.z + world_z
+            
+            collider_vertex_neg.x = collider.x - world_x
+            collider_vertex_neg.y = collider.y - world_y
+            collider_vertex_neg.z = collider.z - world_z
+            
+            # Expand AABB
+            if collider_vertex_pos.x < collider.min_x
+                collider.min_x = collider_vertex_pos.x
+            end
+            if collider_vertex_pos.y < collider.min_y
+                collider.min_y = collider_vertex_pos.y
+            end
+            if collider_vertex_pos.z < collider.min_z
+                collider.min_z = collider_vertex_pos.z
+            end
+            if collider_vertex_pos.x > collider.max_x
+                collider.max_x = collider_vertex_pos.x
+            end
+            if collider_vertex_pos.y > collider.max_y
+                collider.max_y = collider_vertex_pos.y
+            end
+            if collider_vertex_pos.z > collider.max_z
+                collider.max_z = collider_vertex_pos.z
+            end
+            
+            if collider_vertex_neg.x < collider.min_x
+                collider.min_x = collider_vertex_neg.x
+            end
+            if collider_vertex_neg.y < collider.min_y
+                collider.min_y = collider_vertex_neg.y
+            end
+            if collider_vertex_neg.z < collider.min_z
+                collider.min_z = collider_vertex_neg.z
+            end
+            if collider_vertex_neg.x > collider.max_x
+                collider.max_x = collider_vertex_neg.x
+            end
+            if collider_vertex_neg.y > collider.max_y
+                collider.max_y = collider_vertex_neg.y
+            end
+            if collider_vertex_neg.z > collider.max_z
+                collider.max_z = collider_vertex_neg.z
+            end
+        end
+    end
+end
+
 function handle_collision_1body()
     define name collider1 = "collider_$(collider1)"
     define name collision = "collision_$(collision)"
