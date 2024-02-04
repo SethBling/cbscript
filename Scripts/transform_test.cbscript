@@ -141,6 +141,8 @@ clock tick
             if not collider.sleeping
                 get_collisions() with macros
             end
+            
+            get_edge_world_collisions() with macros
         end
     end
     
@@ -483,6 +485,122 @@ function get_collisions()
                             end
                         end
                     end
+                end
+            end
+        end
+    end
+end
+
+function get_edge_world_collisions()
+    define name collider = "collider_$(collider)"
+    
+    for $edge in [[0, 2], [1, 3], [0, 4], [1, 5], [2, 6], [3, 7], [4, 6], [5, 7], [0, 7], [2, 5], [4, 3], [6, 1]]
+        $vertex1 = $edge[0]
+        $vertex2 = $edge[1]
+        with
+            $(vertex) = $vertex1
+        do
+            define name v = "collider_$(collider)_v$(vertex)"
+            ox = v.x
+            oy = v.y
+            oz = v.z
+        end
+        
+        with
+            $(vertex) = $vertex2
+        do
+            define name v = "collider_$(collider)_v$(vertex)"
+            destx = v.x
+            desty = v.y
+            destz = v.z
+        end
+        
+        ex = (destx - ox) * $Precision / collider.size
+        ey = (desty - oy) * $Precision / collider.size
+        ez = (destz - oz) * $Precision / collider.size
+        
+        if ex == 0
+            ex = 1
+        end
+        if ey == 0
+            ey = 1
+        end
+        if ez == 0
+            ez = 1
+        end
+        
+        t = 0
+        x = ox
+        y = oy
+        z = oz
+        
+        
+        if ex < 0
+            next_x = x / $Precision * $Precision
+        else
+            next_x = (x / $Precision + 1) * $Precision
+        end
+        if ey < 0
+            next_y = y / $Precision * $Precision
+        else
+            next_y = (y / $Precision + 1) * $Precision
+        end
+        if ez < 0
+            next_z = z / $Precision * $Precision
+        else
+            next_z = (z / $Precision + 1) * $Precision
+        end
+        
+        failsafe = 0
+        while t < collider.size and failsafe < 50
+            failsafe++
+            next_x_t = (next_x - ox) * $Precision / ex
+            next_y_t = (next_y - oy) * $Precision / ey
+            next_z_t = (next_z - oz) * $Precision / ez
+            
+            if next_x_t < next_y_t and next_x_t < next_z_t
+                # Crosses at x next
+                t = next_x_t
+                
+                if ex < 0
+                    next_x -= $Precision
+                else
+                    next_x += $Precision
+                end
+                
+                next_x_t = (next_x - ox) * $Precision / ex
+            else if next_y_t < next_z_t
+                # Crosses at y next
+                t = next_y_t
+                
+                if ey < 0
+                    next_y -= $Precision
+                else
+                    next_y += $Precision
+                end
+                
+                next_y_t = (next_y - oy) * $Precision / ey
+            else
+                # Crosses at z next
+                t = next_z_t
+                
+                if ez < 0
+                    next_z -= $Precision
+                else
+                    next_z += $Precision
+                end
+                
+                next_z_t = (next_z - oz) * $Precision / ez
+            end
+            
+            if t < collider.size            
+                x = ox + t * ex / $Precision
+                y = oy + t * ey / $Precision
+                z = oz + t * ez / $Precision
+            
+                @Position.<pos> = <x, y, z>
+                at @Position
+                    /particle minecraft:bubble_pop ~ ~ ~ 0 0 0 0 1 force
                 end
             end
         end
