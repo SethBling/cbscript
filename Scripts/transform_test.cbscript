@@ -47,6 +47,56 @@ reset
     as @Player
         create_click()
     end
+    
+    # Point 1 starts at origin and goes in positive x
+    # Point 2 starts at -0.5, -1.5, -0.5 and goes in positive x and positive y
+    get_edge_edge_penetration(0, 0, 0, 1000, 0, 0, -1500, -500, -500, 707, 707, 0)
+    
+    tell @a "norm: (nx), (ny), (nz)"
+    tell @a "dist: (d)"
+    tell @a "pen point 2: (p1x), (p1y), (p1z)"
+end
+
+function get_edge_edge_penetration(o1x, o1y, o1z, d1x, d1y, d1z, o2x, o2y, o2z, d2x, d2y, d2z)
+    # Cross the two directions to get the normal
+    nx = (d1y * d2z - d1z * d2y) / $Precision
+    ny = (d1z * d2x - d1x * d2z) / $Precision
+    nz = (d1x * d2y - d1y * d2x) / $Precision
+
+    # Get the magnitude and square magnitude
+    nmagsq = nx*nx + ny*ny + nz*nz
+    nmag = sqrt(nmagsq)
+    
+    # Difference of origins
+    odx = o2x - o1x
+    ody = o2y - o1y
+    odz = o2z - o1z
+
+    # Get the distance
+    d = (nx * odx + ny * ody + nz * odz) / nmag
+    
+    # Get a vector perpendicular to the normal and the second ray
+    # These are scaled up by the Precision because it'll be divided
+    # out in the next step
+    perpx_big = d2y * nz - d2z * ny
+    perpy_big = d2z * nx - d2x * nz
+    perpz_big = d2x * ny - d2y * nx
+    
+    # Get the projected distance along the first ray
+    t = (perpx_big * odx + perpy_big * ody + perpz_big * odz) / nmagsq
+    
+    # Get the point on the first ray
+    p1x = o1x + t * d1x / $Precision
+    p1y = o1y + t * d1y / $Precision
+    p1z = o1z + t * d1z / $Precision
+
+    # Normalize the normal
+    nx *= $Precision
+    ny *= $Precision
+    nz *= $Precision
+    nx /= nmag
+    ny /= nmag
+    nz /= nmag
 end
 
 define @nearest_player = @Player[sort=nearest,limit=1]
