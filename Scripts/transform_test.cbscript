@@ -140,9 +140,8 @@ clock tick
             
             if not collider.sleeping
                 get_collisions() with macros
+                get_edge_world_collisions() with macros
             end
-            
-            get_edge_world_collisions() with macros
         end
     end
     
@@ -610,23 +609,25 @@ function get_edge_world_collisions()
             
             if t < collider.size and prev_t > 0
                 if x < prev_x
-                    @Position.x = x
+                    block_x = x / $Precision * $Precision
                 end                    
                 if x >= prev_x
-                    @Position.x = prev_x
+                    block_x = prev_x / $Precision * $Precision
                 end
                 if y < prev_y
-                    @Position.y = y
+                    block_y = y / $Precision * $Precision
                 end                    
                 if y >= prev_y
-                    @Position.y = prev_y
+                    block_y = prev_y / $Precision * $Precision
                 end
                 if z < prev_z
-                    @Position.z = z
+                    block_z = z / $Precision * $Precision
                 end                    
                 if z >= prev_z
-                    @Position.z = prev_z
+                    block_z = prev_z / $Precision * $Precision
                 end
+                
+                @Position.<pos> = <block_x, block_y, block_z>
                 
                 at @Position
                     unless block ~ ~ ~ air
@@ -955,17 +956,46 @@ function get_edge_world_collisions()
                         end
                         
                         if closest < $Precision
-                            @Position.<pos> = <cox, coy, coz>
-                            for i = 1 to 11
-                                at @Position
-                                    /particle minecraft:bubble_pop ~ ~ ~ 0 0 0 0 1 force
-                                end
-                                @Position.x += cex / 10
-                                @Position.y += cey / 10
-                                @Position.z += cez / 10
+                            get_edge_edge_penetration(ox, oy, oz, ex, ey, ez, cox, coy, coz, cex, cey, cez)
+                            
+                            dx = p1x - collider.x
+                            dy = p1y - collider.y
+                            dz = p1z - collider.z
+                            
+                            normdir = dx*nx + dy*ny + dz*nz
+                            
+                            if normdir > 0
+                                nx *= -1
+                                ny *= -1
+                                nz *= -1
                             end
                             
-                            #tell @a "Edge from (cox), (coy), (coz) by (cex), (cey), (cez). Prev (prev_x), (prev_y), (prev_z), cur (x), (y), (z)"
+                            if d < 0
+                                d *= -1
+                            end
+                            
+                            if d > 200
+                                d = 200
+                            end
+                            
+                            create_collision(p1x, p1y, p1z, nx, ny, nz, d, collider.id, -1)
+                            
+                            if p1x >= block_x and p1x < block_x + $Precision and p1y >= block_y and p1y < block_y + $Precision and p1z >= block_z and p1z < block_x + $Precision
+                            
+                                @Position.<pos> = <cox, coy, coz>
+                                for i = 1 to 11
+                                    at @Position
+                                        /particle minecraft:bubble_pop ~ ~ ~ 0 0 0 0 1 force
+                                    end
+                                    @Position.x += cex / 10
+                                    @Position.y += cey / 10
+                                    @Position.z += cez / 10
+                                end
+                                
+                                #tell @a "Edge from (cox), (coy), (coz) by (cex), (cey), (cez). Prev (prev_x), (prev_y), (prev_z), cur (x), (y), (z)"
+                            
+                            end
+                            
                         end
                     end
                 end
