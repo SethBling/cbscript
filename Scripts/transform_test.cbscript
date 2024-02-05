@@ -11,7 +11,12 @@ define @ChainLink = @Entity[type=block_display,tag=chain]
     create {block_state:{Name:"minecraft:stone",Count:0b}, transformation:[0.2f,0f,0f,-0.1f,0f,0.2f,0f,-0.1f,0f,0f,0.2f,-0.1f,0f,0f,0f,1f],Tags:["chain"]}
 end
 
+define @nearest_player = @Player[sort=nearest,limit=1]
+end
+
+
 $Precision = 1000
+$Half = 500
 $NumCubes = 1
 
 reset
@@ -21,11 +26,22 @@ reset
         end
     end
 
+    at @nearest_player
+        /kill @Position
+        create @Position
+    end
+
     /kill @PhysicsBlock
+    
+    at @nearest_player ^ ^1.6 ^5
+        create @Position
+        /tp @Position ~ ~ ~
+        <x, y, z> = @Position.<pos>
+    end
     
     with
         $(collider) = 1
-    create_collider(6500, 57500, 1500, 3000, 400, 300)
+    create_collider(x, y, z, 3000, 400, 300)
     
     #with
     #    $(collider) = 2
@@ -40,9 +56,6 @@ reset
     #create_collider(-7500, 57500, 1500, 6000, 200, 200)
     
 
-    /kill @Position
-    create @Position
-    
     click_detector_reset()
     as @Player
         create_click()
@@ -57,6 +70,7 @@ reset
     #tell @a "pen point 2: (p1x), (p1y), (p1z)"
 end
 
+# Source for the math: https://math.stackexchange.com/questions/2213165/find-shortest-distance-between-lines-in-3d
 function get_edge_edge_penetration(o1x, o1y, o1z, d1x, d1y, d1z, o2x, o2y, o2z, d2x, d2y, d2z)
     # Cross the two directions to get the normal
     nx = (d1y * d2z - d1z * d2y) / $Precision
@@ -99,9 +113,6 @@ function get_edge_edge_penetration(o1x, o1y, o1z, d1x, d1y, d1z, o2x, o2y, o2z, 
     nz /= nmag
 end
 
-define @nearest_player = @Player[sort=nearest,limit=1]
-end
-
 clock tick
     define name collider = "collider_$(collider)"
 
@@ -119,6 +130,17 @@ clock tick
         clicked = check_clicked()
     end
     click_detector_tick()
+    
+    if clicked unless @PhysicsBlock
+        at @nearest_player ^ ^1.6 ^5
+            /tp @Position ~ ~ ~
+            <x, y, z> = @Position.<pos>
+        end
+        
+        with
+            $(collider) = 1
+        create_collider(x, y, z, 3000, 400, 300)
+    end
     
     delete_collisions()
 
@@ -205,6 +227,8 @@ function resolve_collision_velocity()
                         $(collider1) = collision.collider1
                     update_closing_velocity()
                     
+                    # TODO: Account for collider2
+                    
                     if collision.closing > max_closing
                         max_closing = collision.closing
                         max_closing_id = collision.id
@@ -235,15 +259,15 @@ function update_closing_velocity()
     dy = collision.y - collider1.y
     dz = collision.z - collider1.z
 
-    rot_lin_vel_x = (collider1.rotation_y * dz - collider1.rotation_z * dy + 500) / $Precision
-    rot_lin_vel_y = (collider1.rotation_z * dx - collider1.rotation_x * dz + 500) / $Precision
-    rot_lin_vel_z = (collider1.rotation_x * dy - collider1.rotation_y * dx + 500) / $Precision
+    rot_lin_vel_x = (collider1.rotation_y * dz - collider1.rotation_z * dy + $Half) / $Precision
+    rot_lin_vel_y = (collider1.rotation_z * dx - collider1.rotation_x * dz + $Half) / $Precision
+    rot_lin_vel_z = (collider1.rotation_x * dy - collider1.rotation_y * dx + $Half) / $Precision
     
     collision.vel_x = collider1.velocity_x + rot_lin_vel_x
     collision.vel_y = collider1.velocity_y + rot_lin_vel_y
     collision.vel_z = collider1.velocity_z + rot_lin_vel_z
 
-    collision.closing = -(collision.vel_x * collision.nx + collision.vel_y * collision.ny + collision.vel_z * collision.nz + 500) / $Precision
+    collision.closing = -(collision.vel_x * collision.nx + collision.vel_y * collision.ny + collision.vel_z * collision.nz + $Half) / $Precision
 end
 
 function resolve_collision_penetration()
@@ -270,9 +294,9 @@ function resolve_collision_penetration()
         if max_pen <= 5
             pen_iter = 1000000
         else
-            mx = (max_pen_nx * max_pen + 500) / $Precision
-            my = (max_pen_ny * max_pen + 500) / $Precision
-            mz = (max_pen_nz * max_pen + 500) / $Precision
+            mx = (max_pen_nx * max_pen + $Half) / $Precision
+            my = (max_pen_ny * max_pen + $Half) / $Precision
+            mz = (max_pen_nz * max_pen + $Half) / $Precision
             
             with
                 $(collider) = max_pen_col1
@@ -315,7 +339,7 @@ function move_collisions(dx, dy, dz)
                 end
                 
                 if do_move
-                    collision.pen -= (dx*collision.nx + dy*collision.ny + dz*collision.nz + 500) / $Precision
+                    collision.pen -= (dx*collision.nx + dy*collision.ny + dz*collision.nz + $Half) / $Precision
                 end
             end
         end

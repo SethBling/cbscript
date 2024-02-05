@@ -4,6 +4,7 @@ import math
 $InverseMass = 500
 $InverseRotationalIntertia = 500
 $Precision = 1000
+$Half = 500
 $CancelRestitution = -100
 
 define @PhysicsBlock = @Entity[type=block_display,tag=physics_block]
@@ -18,10 +19,10 @@ function register_transform_variables()
 end
 
 function quaternion_multiply(w1, i1, j1, k1, w2, i2, j2, k2)
-    new_w = (w1*w2 - i1*i2 - j1*j2 - k1*k2 + 500) / $Precision
-    new_i = (w1*i2 + i1*w2 + j1*k2 - k1*j2 + 500) / $Precision
-    new_j = (w1*j2 - i1*k2 + j1*w2 + k1*i2 + 500) / $Precision
-    new_k = (w1*k2 + i1*j2 - j1*i2 + k1*w2 + 500) / $Precision
+    new_w = (w1*w2 - i1*i2 - j1*j2 - k1*k2 + $Half) / $Precision
+    new_i = (w1*i2 + i1*w2 + j1*k2 - k1*j2 + $Half) / $Precision
+    new_j = (w1*j2 - i1*k2 + j1*w2 + k1*i2 + $Half) / $Precision
+    new_k = (w1*k2 + i1*j2 - j1*i2 + k1*w2 + $Half) / $Precision
 end
 
 # Assumes $namespace:global args contains
@@ -147,9 +148,9 @@ end
 function collider_integrate_velocity()
     define name collider = "collider_$(collider)"
     
-    collider.velocity_x = (collider.velocity_x * 980 + 500) / $Precision
-    collider.velocity_y = (collider.velocity_y * 980 + 500) / $Precision
-    collider.velocity_z = (collider.velocity_z * 980 + 500) / $Precision
+    collider.velocity_x = (collider.velocity_x * 980 + $Half) / $Precision
+    collider.velocity_y = (collider.velocity_y * 980 + $Half) / $Precision
+    collider.velocity_z = (collider.velocity_z * 980 + $Half) / $Precision
     
     collider.x += collider.velocity_x
     collider.y += collider.velocity_y
@@ -164,9 +165,9 @@ end
 function collider_integrate_rotation()
     define name collider = "collider_$(collider)"
     
-    collider.rotation_x = (collider.rotation_x * 980 + 500) / $Precision
-    collider.rotation_y = (collider.rotation_y * 980 + 500) / $Precision
-    collider.rotation_z = (collider.rotation_z * 980 + 500) / $Precision
+    collider.rotation_x = (collider.rotation_x * 980 + $Half) / $Precision
+    collider.rotation_y = (collider.rotation_y * 980 + $Half) / $Precision
+    collider.rotation_z = (collider.rotation_z * 980 + $Half) / $Precision
     
     quaternion_multiply(0, collider.rotation_x, collider.rotation_y, collider.rotation_z, collider.w, collider.i, collider.j, collider.k)
     
@@ -224,16 +225,16 @@ function collider_normalize_quaternion()
     mag = sqrt(collider.w*collider.w + collider.i*collider.i + collider.j*collider.j + collider.k*collider.k)
     
     collider.w *= $Precision
-    collider.w += 500
+    collider.w += $Half
     collider.w /= mag
     collider.i *= $Precision
-    collider.i += 500
+    collider.i += $Half
     collider.i /= mag
     collider.j *= $Precision
-    collider.j += 500
+    collider.j += $Half
     collider.j /= mag
     collider.k *= $Precision
-    collider.k += 500
+    collider.k += $Half
     collider.k /= mag
 end
 
@@ -282,9 +283,9 @@ end
 function collider_local_to_world(x, y, z, translation)
     define name collider = "collider_$(collider)"
 
-    world_x = (collider.t00 * x + collider.t01 * y + collider.t02 * z + 500) / $Precision
-    world_y = (collider.t10 * x + collider.t11 * y + collider.t12 * z + 500) / $Precision
-    world_z = (collider.t20 * x + collider.t21 * y + collider.t22 * z + 500) / $Precision
+    world_x = (collider.t00 * x + collider.t01 * y + collider.t02 * z + $Half) / $Precision
+    world_y = (collider.t10 * x + collider.t11 * y + collider.t12 * z + $Half) / $Precision
+    world_z = (collider.t20 * x + collider.t21 * y + collider.t22 * z + $Half) / $Precision
     
     if translation
         world_x += collider.x
@@ -302,29 +303,29 @@ function collider_world_to_local(x, y, z, translation)
         z -= collider.z
     end
     
-    local_x = (collider.t00 * x + collider.t10 * y + collider.t20 * z + 500) / $Precision
-    local_y = (collider.t01 * x + collider.t11 * y + collider.t21 * z + 500) / $Precision
-    local_z = (collider.t02 * x + collider.t12 * y + collider.t22 * z + 500) / $Precision
+    local_x = (collider.t00 * x + collider.t10 * y + collider.t20 * z + $Half) / $Precision
+    local_y = (collider.t01 * x + collider.t11 * y + collider.t21 * z + $Half) / $Precision
+    local_z = (collider.t02 * x + collider.t12 * y + collider.t22 * z + $Half) / $Precision
 end
 
 function collider_apply_impulse(x, y, z, ix, iy, iz)
     define name collider = "collider_$(collider)"
     
-    collider.velocity_x += (ix * collider.inv_mass + 500) / $Precision
-    collider.velocity_y += (iy * collider.inv_mass + 500) / $Precision
-    collider.velocity_z += (iz * collider.inv_mass + 500) / $Precision
+    collider.velocity_x += (ix * collider.inv_mass + $Half) / $Precision
+    collider.velocity_y += (iy * collider.inv_mass + $Half) / $Precision
+    collider.velocity_z += (iz * collider.inv_mass + $Half) / $Precision
 
     dx = x - collider.x
     dy = y - collider.y
     dz = z - collider.z
     
-    axis_x = (dy * iz - dz * iy + 500) / $Precision
-    axis_y = (dz * ix - dx * iz + 500) / $Precision
-    axis_z = (dx * iy - dy * ix + 500) / $Precision
+    axis_x = (dy * iz - dz * iy + $Half) / $Precision
+    axis_y = (dz * ix - dx * iz + $Half) / $Precision
+    axis_z = (dx * iy - dy * ix + $Half) / $Precision
     
-    collider.rotation_x += (axis_x * collider.inv_rot_int + 500) / $Precision
-    collider.rotation_y += (axis_y * collider.inv_rot_int + 500) / $Precision
-    collider.rotation_z += (axis_z * collider.inv_rot_int + 500) / $Precision
+    collider.rotation_x += (axis_x * collider.inv_rot_int + $Half) / $Precision
+    collider.rotation_y += (axis_y * collider.inv_rot_int + $Half) / $Precision
+    collider.rotation_z += (axis_z * collider.inv_rot_int + $Half) / $Precision
     
     if collider.sleeping
         collider_wake_up() with macros
@@ -583,9 +584,9 @@ function handle_collision_1body()
         ct_20 = collision.ny * $Precision / s
 
         # Cross the norm with the new vector
-        ct_02 = (ct_10*ct_21 - ct_20*ct_11 + 500) / $Precision
-        ct_12 = (ct_20*ct_01 + 500) / $Precision
-        ct_22 = (ct_10*ct_01 + 500) / $Precision
+        ct_02 = (ct_10*ct_21 - ct_20*ct_11 + $Half) / $Precision
+        ct_12 = (ct_20*ct_01 + $Half) / $Precision
+        ct_22 = (ct_10*ct_01 + $Half) / $Precision
     else
         # The norm isn't pointing toward z, so
         # cross the norm with 0,0,1
@@ -595,21 +596,21 @@ function handle_collision_1body()
         ct_20 = 0
 
         # Cross the norm with the new vector
-        ct_02 = (ct_10*ct_21 + 500) / $Precision
-        ct_12 = (ct_00*ct_21 + 500) / $Precision
-        ct_22 = (ct_00*ct_11 - ct_10*ct_01 + 500) / $Precision
+        ct_02 = (ct_10*ct_21 + $Half) / $Precision
+        ct_12 = (ct_00*ct_21 + $Half) / $Precision
+        ct_22 = (ct_00*ct_11 - ct_10*ct_01 + $Half) / $Precision
     end
     
     # Full cross product would be:
-    #ct_20 = (ct_10*ct_21 - ct_20*ct_11 + 500) / $Precision
-    #ct_21 = (ct_20*ct_01 - ct_00*ct_21 + 500) / $Precision
-    #ct_22 = (ct_00*ct_11 - ct_10*ct_01 + 500) / $Precision
+    #ct_20 = (ct_10*ct_21 - ct_20*ct_11 + $Half) / $Precision
+    #ct_21 = (ct_20*ct_01 - ct_00*ct_21 + $Half) / $Precision
+    #ct_22 = (ct_00*ct_11 - ct_10*ct_01 + $Half) / $Precision
 
     
     # Transform by the ct transpose matrix to get contact coordinates
-    c_vel_x = (ct_00 * collision.vel_x + ct_10 * collision.vel_y + ct_20 * collision.vel_z + 500) / $Precision
-    c_vel_y = (ct_01 * collision.vel_x + ct_11 * collision.vel_y + ct_21 * collision.vel_z + 500) / $Precision
-    c_vel_z = (ct_02 * collision.vel_x + ct_12 * collision.vel_y + ct_22 * collision.vel_z + 500) / $Precision
+    c_vel_x = (ct_00 * collision.vel_x + ct_10 * collision.vel_y + ct_20 * collision.vel_z + $Half) / $Precision
+    c_vel_y = (ct_01 * collision.vel_x + ct_11 * collision.vel_y + ct_21 * collision.vel_z + $Half) / $Precision
+    c_vel_z = (ct_02 * collision.vel_x + ct_12 * collision.vel_y + ct_22 * collision.vel_z + $Half) / $Precision
 
     # Impulse to torque skew symmetric matrix
     #i_to_t_00 = 0
@@ -630,17 +631,17 @@ function handle_collision_1body()
     
     # Impulse to velocity transform
     # Formula: -(i_to_t^2) * InverseRotationalIntertia
-    i_to_v_00 = ((dz * dz + dy * dy + 500) / $Precision * collider1.inv_rot_int + 500) / $Precision
-    i_to_v_01 = ((-dy * dx + 500) / $Precision * collider1.inv_rot_int + 500) / $Precision
-    i_to_v_02 = ((-dz * dx + 500) / $Precision * collider1.inv_rot_int + 500) / $Precision
+    i_to_v_00 = ((dz * dz + dy * dy + $Half) / $Precision * collider1.inv_rot_int + $Half) / $Precision
+    i_to_v_01 = ((-dy * dx + $Half) / $Precision * collider1.inv_rot_int + $Half) / $Precision
+    i_to_v_02 = ((-dz * dx + $Half) / $Precision * collider1.inv_rot_int + $Half) / $Precision
 
-    i_to_v_10 = ((-dx * dy + 500) / $Precision * collider1.inv_rot_int + 500) / $Precision
-    i_to_v_11 = ((dz * dz + dx * dx + 500) / $Precision * collider1.inv_rot_int + 500) / $Precision
-    i_to_v_12 = ((-dz * dy + 500) / $Precision * collider1.inv_rot_int + 500) / $Precision
+    i_to_v_10 = ((-dx * dy + $Half) / $Precision * collider1.inv_rot_int + $Half) / $Precision
+    i_to_v_11 = ((dz * dz + dx * dx + $Half) / $Precision * collider1.inv_rot_int + $Half) / $Precision
+    i_to_v_12 = ((-dz * dy + $Half) / $Precision * collider1.inv_rot_int + $Half) / $Precision
 
-    i_to_v_20 = ((-dx * dz + 500) / $Precision * collider1.inv_rot_int + 500) / $Precision
-    i_to_v_21 = ((-dy * dz + 500) / $Precision * collider1.inv_rot_int + 500) / $Precision
-    i_to_v_22 = ((dy * dy + dx * dx + 500) / $Precision * collider1.inv_rot_int + 500) / $Precision
+    i_to_v_20 = ((-dx * dz + $Half) / $Precision * collider1.inv_rot_int + $Half) / $Precision
+    i_to_v_21 = ((-dy * dz + $Half) / $Precision * collider1.inv_rot_int + $Half) / $Precision
+    i_to_v_22 = ((dy * dy + dx * dx + $Half) / $Precision * collider1.inv_rot_int + $Half) / $Precision
     
     i_to_v_00 += collider1.inv_mass
     i_to_v_11 += collider1.inv_mass
@@ -676,13 +677,13 @@ function handle_collision_1body()
     i = c_i_to_v_22
     
     # Inverse impulse to velocity
-    det =  (a * e + 500) / $Precision * i
-    det += (d * h + 500) / $Precision * c
-    det += (g * b + 500) / $Precision * f
-    det -= (a * h + 500) / $Precision * f
-    det -= (g * e + 500) / $Precision * c
-    det -= (d * b + 500) / $Precision * i
-    det += 500
+    det =  (a * e + $Half) / $Precision * i
+    det += (d * h + $Half) / $Precision * c
+    det += (g * b + $Half) / $Precision * f
+    det -= (a * h + $Half) / $Precision * f
+    det -= (g * e + $Half) / $Precision * c
+    det -= (d * b + $Half) / $Precision * i
+    det += $Half
     det /= $Precision
 
     v_to_i_00 = (e * i - f * h) / det
@@ -705,38 +706,38 @@ function handle_collision_1body()
     
     desired_vx = 0
     # TODO: Add gravity in the positive Y world direction
-    desired_vy = (-(c_vel_y) * restitution + 500) / $Precision
+    desired_vy = (-(c_vel_y) * restitution + $Half) / $Precision
     desired_vz = 0
 
     desired_dvx = desired_vx - c_vel_x
     desired_dvy = desired_vy - c_vel_y
     desired_dvz = desired_vz - c_vel_z
     
-    cix = (v_to_i_00 * desired_dvx + v_to_i_01 * desired_dvy + v_to_i_02 * desired_dvz + 500) / $Precision
-    ciy = (v_to_i_10 * desired_dvx + v_to_i_11 * desired_dvy + v_to_i_12 * desired_dvz + 500) / $Precision
-    ciz = (v_to_i_20 * desired_dvx + v_to_i_21 * desired_dvy + v_to_i_22 * desired_dvz + 500) / $Precision
+    cix = (v_to_i_00 * desired_dvx + v_to_i_01 * desired_dvy + v_to_i_02 * desired_dvz + $Half) / $Precision
+    ciy = (v_to_i_10 * desired_dvx + v_to_i_11 * desired_dvy + v_to_i_12 * desired_dvz + $Half) / $Precision
+    ciz = (v_to_i_20 * desired_dvx + v_to_i_21 * desired_dvy + v_to_i_22 * desired_dvz + $Half) / $Precision
     
     planar_impulse = sqrt(cix*cix + ciz*ciz)
     
     $Friction = 800
-    max_fric_impulse = (ciy * $Friction + 500) / $Precision
+    max_fric_impulse = (ciy * $Friction + $Half) / $Precision
     
     if planar_impulse > max_fric_impulse
         dir_ix = cix * $Precision / planar_impulse
         dir_iz = ciz * $Precision / planar_impulse
     
-        v_per_i_y = c_i_to_v_11 + ((c_i_to_v_10 * dir_ix + c_i_to_v_12 * dir_iz + 500) / $Precision * $Friction + 500) / $Precision
+        v_per_i_y = c_i_to_v_11 + ((c_i_to_v_10 * dir_ix + c_i_to_v_12 * dir_iz + $Half) / $Precision * $Friction + $Half) / $Precision
         
         ciy = desired_dvy * $Precision / v_per_i_y
         
-        cix = ((dir_ix * $Friction + 500) / $Precision * ciy + 500) / $Precision
-        ciz = ((dir_iz * $Friction + 500) / $Precision * ciy + 500) / $Precision
+        cix = ((dir_ix * $Friction + $Half) / $Precision * ciy + $Half) / $Precision
+        ciz = ((dir_iz * $Friction + $Half) / $Precision * ciy + $Half) / $Precision
     end
     
     # Transform impulse vector out of contact coordinates
-    ix = (ct_00 * cix + ct_01 * ciy + ct_02 * ciz + 500) / $Precision
-    iy = (ct_10 * cix + ct_11 * ciy + ct_12 * ciz + 500) / $Precision
-    iz = (ct_20 * cix + ct_21 * ciy + ct_22 * ciz + 500) / $Precision
+    ix = (ct_00 * cix + ct_01 * ciy + ct_02 * ciz + $Half) / $Precision
+    iy = (ct_10 * cix + ct_11 * ciy + ct_12 * ciz + $Half) / $Precision
+    iz = (ct_20 * cix + ct_21 * ciy + ct_22 * ciz + $Half) / $Precision
 
     # collider1.id isn't using define name
     with
