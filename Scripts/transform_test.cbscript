@@ -52,9 +52,9 @@ reset
     # Point 2 starts at -0.5, -1.5, -0.5 and goes in positive x and positive y
     get_edge_edge_penetration(0, 0, 0, 1000, 0, 0, -1500, -500, -500, 707, 707, 0)
     
-    tell @a "norm: (nx), (ny), (nz)"
-    tell @a "dist: (d)"
-    tell @a "pen point 2: (p1x), (p1y), (p1z)"
+    #tell @a "norm: (nx), (ny), (nz)"
+    #tell @a "dist: (d)"
+    #tell @a "pen point 2: (p1x), (p1y), (p1z)"
 end
 
 function get_edge_edge_penetration(o1x, o1y, o1z, d1x, d1y, d1z, o2x, o2y, o2z, d2x, d2y, d2z)
@@ -529,29 +529,32 @@ function get_edge_world_collisions()
             ez = 1
         end
         
+        if ex < 0
+            next_x = ox / $Precision * $Precision
+        else
+            next_x = (ox / $Precision + 1) * $Precision
+        end
+        if ey < 0
+            next_y = oy / $Precision * $Precision
+        else
+            next_y = (oy / $Precision + 1) * $Precision
+        end
+        if ez < 0
+            next_z = oz / $Precision * $Precision
+        else
+            next_z = (oz / $Precision + 1) * $Precision
+        end
+        
         t = 0
         x = ox
         y = oy
         z = oz
-        
-        
-        if ex < 0
-            next_x = x / $Precision * $Precision
-        else
-            next_x = (x / $Precision + 1) * $Precision
-        end
-        if ey < 0
-            next_y = y / $Precision * $Precision
-        else
-            next_y = (y / $Precision + 1) * $Precision
-        end
-        if ez < 0
-            next_z = z / $Precision * $Precision
-        else
-            next_z = (z / $Precision + 1) * $Precision
-        end
-        
+        prev_t = 0
         failsafe = 0
+        $X_Axis = 0
+        $Y_Axis = 1
+        $Z_Axis = 2
+        
         while t < collider.size and failsafe < 50
             failsafe++
             next_x_t = (next_x - ox) * $Precision / ex
@@ -561,6 +564,10 @@ function get_edge_world_collisions()
             if next_x_t < next_y_t and next_x_t < next_z_t
                 # Crosses at x next
                 t = next_x_t
+                x = next_x
+                y = oy + t * ey / $Precision
+                z = oz + t * ez / $Precision
+                crossing = $X_Axis
                 
                 if ex < 0
                     next_x -= $Precision
@@ -572,6 +579,10 @@ function get_edge_world_collisions()
             else if next_y_t < next_z_t
                 # Crosses at y next
                 t = next_y_t
+                x = ox + t * ex / $Precision
+                y = next_y
+                z = oz + t * ez / $Precision
+                crossing = $Y_Axis
                 
                 if ey < 0
                     next_y -= $Precision
@@ -583,6 +594,10 @@ function get_edge_world_collisions()
             else
                 # Crosses at z next
                 t = next_z_t
+                x = ox + t * ex / $Precision
+                y = oy + t * ey / $Precision
+                z = next_z
+                crossing = $Z_Axis
                 
                 if ez < 0
                     next_z -= $Precision
@@ -593,16 +608,374 @@ function get_edge_world_collisions()
                 next_z_t = (next_z - oz) * $Precision / ez
             end
             
-            if t < collider.size            
-                x = ox + t * ex / $Precision
-                y = oy + t * ey / $Precision
-                z = oz + t * ez / $Precision
-            
-                @Position.<pos> = <x, y, z>
+            if t < collider.size and prev_t > 0
+                if x < prev_x
+                    @Position.x = x
+                end                    
+                if x >= prev_x
+                    @Position.x = prev_x
+                end
+                if y < prev_y
+                    @Position.y = y
+                end                    
+                if y >= prev_y
+                    @Position.y = prev_y
+                end
+                if z < prev_z
+                    @Position.z = z
+                end                    
+                if z >= prev_z
+                    @Position.z = prev_z
+                end
+                
                 at @Position
-                    /particle minecraft:bubble_pop ~ ~ ~ 0 0 0 0 1 force
+                    unless block ~ ~ ~ air
+                        # Edge is penetrating a block                            
+                        closest = $Precision
+                        
+                        if prev_crossing == $X_Axis
+                            empty = False
+                            if ex > 0 and block ~-1 ~ ~ air
+                                empty = True
+                            end
+                            if ex <= 0 and block ~1 ~ ~ air
+                                empty = True
+                            end
+                            
+                            if empty
+                                offy = prev_y % $Precision
+                                offz = prev_z % $Precision
+                                noffy = $Precision - offy
+                                noffz = $Precision - offz
+                                
+                                if offy < closest and block ~ ~-1 ~ air
+                                    closest = offy
+                                    cox = prev_x
+                                    coy = prev_y / $Precision * $Precision
+                                    coz = prev_z / $Precision * $Precision
+                                    cex = 0
+                                    cey = 0
+                                    cez = $Precision
+                                end
+                                if noffy < closest and block ~ ~1 ~ air
+                                    closest = noffy
+                                    cox = prev_x
+                                    coy = (prev_y / $Precision + 1) * $Precision
+                                    coz = prev_z / $Precision * $Precision
+                                    cex = 0
+                                    cey = 0
+                                    cez = $Precision
+                                end
+                                if offz < closest and block ~ ~ ~-1 air
+                                    closest = offz
+                                    cox = prev_x
+                                    coy = prev_y / $Precision * $Precision
+                                    coz = prev_z / $Precision * $Precision
+                                    cex = 0
+                                    cey = $Precision
+                                    cez = 0
+                                end
+                                if noffz < closest and block ~ ~ ~1 air
+                                    closest = noffz
+                                    cox = prev_x
+                                    coy = prev_y / $Precision * $Precision
+                                    coz = (prev_z / $Precision + 1) * $Precision
+                                    cex = 0
+                                    cey = $Precision
+                                    cez = 0
+                                end
+                            end
+                        end
+                        if crossing == $X_Axis
+                            empty = False
+                            if ex > 0 and block ~1 ~ ~ air
+                                empty = True
+                            end
+                            if ex <= 0 and block ~-1 ~ ~ air
+                                empty = True
+                            end
+                            
+                            if empty
+                                offy = y % $Precision
+                                offz = z % $Precision
+                                noffy = $Precision - offy
+                                noffz = $Precision - offz
+                                
+                                if offy < closest and block ~ ~-1 ~ air
+                                    closest = offy
+                                    cox = x
+                                    coy = y / $Precision * $Precision
+                                    coz = z / $Precision * $Precision
+                                    cex = 0
+                                    cey = 0
+                                    cez = $Precision
+                                end
+                                if noffy < closest and block ~ ~1 ~ air
+                                    closest = noffy
+                                    cox = x
+                                    coy = (y / $Precision + 1) * $Precision
+                                    coz = z / $Precision * $Precision
+                                    cex = 0
+                                    cey = 0
+                                    cez = $Precision
+                                end
+                                if offz < closest and block ~ ~ ~-1 air
+                                    closest = offz
+                                    cox = x
+                                    coy = y / $Precision * $Precision
+                                    coz = z / $Precision * $Precision
+                                    cex = 0
+                                    cey = $Precision
+                                    cez = 0
+                                end
+                                if noffz < closest and block ~ ~ ~1 air
+                                    closest = noffz
+                                    cox = x
+                                    coy = y / $Precision * $Precision
+                                    coz = (z / $Precision + 1) * $Precision
+                                    cex = 0
+                                    cey = $Precision
+                                    cez = 0
+                                end
+                            end
+                        end
+
+                        if prev_crossing == $Y_Axis
+                            empty = False
+                            if ey > 0 and block ~ ~-1 ~ air
+                                empty = True
+                            end
+                            if ey <= 0 and block ~ ~1 ~ air
+                                empty = True
+                            end
+                            
+                            if empty
+                                offx = prev_x % $Precision
+                                offz = prev_z % $Precision
+                                noffx = $Precision - offx
+                                noffz = $Precision - offz
+                                
+                                if offx < closest and block ~-1 ~ ~ air
+                                    closest = offx
+                                    cox = prev_x / $Precision * $Precision
+                                    coy = prev_y
+                                    coz = prev_z / $Precision * $Precision
+                                    cex = 0
+                                    cey = 0
+                                    cez = $Precision
+                                end
+                                if noffx < closest and block ~1 ~ ~ air
+                                    closest = noffx
+                                    cox = (prev_x / $Precision + 1) * $Precision
+                                    coy = prev_y
+                                    coz = prev_z / $Precision * $Precision
+                                    cex = 0
+                                    cey = 0
+                                    cez = $Precision
+                                end
+                                if offz < closest and block ~ ~ ~-1 air
+                                    closest = offz
+                                    cox = prev_x / $Precision * $Precision
+                                    coy = prev_y
+                                    coz = prev_z / $Precision * $Precision
+                                    cex = $Precision
+                                    cey = 0
+                                    cez = 0
+                                end
+                                if noffz < closest and block ~ ~ ~1 air
+                                    closest = noffz
+                                    cox = prev_x / $Precision * $Precision
+                                    coy = prev_y
+                                    coz = (prev_z / $Precision + 1) * $Precision
+                                    cex = $Precision
+                                    cey = 0
+                                    cez = 0
+                                end
+                            end
+                        end
+                        if crossing == $Y_Axis
+                            empty = False
+                            if ey > 0 and block ~ ~1 ~ air
+                                empty = True
+                            end
+                            if ey <= 0 and block ~ ~-1 ~ air
+                                empty = True
+                            end
+                            
+                            if empty
+                                offx = x % $Precision
+                                offz = z % $Precision
+                                noffx = $Precision - offx
+                                noffz = $Precision - offz
+                                
+                                if offx < closest and block ~-1 ~ ~ air
+                                    closest = offx
+                                    cox = x / $Precision * $Precision
+                                    coy = y
+                                    coz = z / $Precision * $Precision
+                                    cex = 0
+                                    cey = 0
+                                    cez = $Precision
+                                end
+                                if noffx < closest and block ~1 ~ ~ air
+                                    closest = noffx
+                                    cox = (x / $Precision + 1) * $Precision
+                                    coy = y
+                                    coz = z / $Precision * $Precision
+                                    cex = 0
+                                    cey = 0
+                                    cez = $Precision
+                                end
+                                if offz < closest and block ~ ~ ~-1 air
+                                    closest = offz
+                                    cox = x / $Precision * $Precision
+                                    coy = y
+                                    coz = z / $Precision * $Precision
+                                    cex = $Precision
+                                    cey = 0
+                                    cez = 0
+                                end
+                                if noffz < closest and block ~ ~ ~1 air
+                                    closest = noffz
+                                    cox = x / $Precision * $Precision
+                                    coy = y
+                                    coz = (z / $Precision + 1) * $Precision
+                                    cex = $Precision
+                                    cey = 0
+                                    cez = 0
+                                end
+                            end
+                        end
+                        
+                        if prev_crossing == $Z_Axis
+                            empty = False
+                            if ez > 0 and block ~ ~ ~-1 air
+                                empty = True
+                            end
+                            if ez <= 0 and block ~ ~ ~1 air
+                                empty = True
+                            end
+                            
+                            if empty
+                                offx = prev_x % $Precision
+                                offy = prev_y % $Precision
+                                noffx = $Precision - offx
+                                noffy = $Precision - offy
+                                
+                                if offx < closest and block ~-1 ~ ~ air
+                                    closest = offx
+                                    cox = prev_x / $Precision * $Precision
+                                    coy = prev_y / $Precision * $Precision
+                                    coz = prev_z
+                                    cex = 0
+                                    cey = $Precision
+                                    cez = 0
+                                end
+                                if noffx < closest and block ~1 ~ ~ air
+                                    closest = noffx
+                                    cox = (prev_x / $Precision + 1) * $Precision
+                                    coy = prev_y / $Precision * $Precision
+                                    coz = prev_z
+                                    cex = 0
+                                    cey = $Precision
+                                    cez = 0
+                                end
+                                if offy < closest and block ~ ~-1 ~ air
+                                    closest = offy
+                                    cox = prev_x / $Precision * $Precision
+                                    coy = prev_y / $Precision * $Precision
+                                    coz = prev_z
+                                    cex = $Precision
+                                    cey = 0
+                                    cez = 0
+                                end
+                                if noffy < closest and block ~ ~1 ~ air
+                                    closest = noffy
+                                    cox = prev_x / $Precision * $Precision
+                                    coy = (prev_y / $Precision + 1) * $Precision
+                                    coz = prev_z
+                                    cex = $Precision
+                                    cey = 0
+                                    cez = 0
+                                end
+                            end
+                        end
+                        if crossing == $Z_Axis
+                            empty = False
+                            if ez > 0 and block ~ ~ ~1 air
+                                empty = True
+                            end
+                            if ez <= 0 and block ~ ~ ~-1 air
+                                empty = True
+                            end
+                            
+                            if empty
+                                offx = x % $Precision
+                                offy = y % $Precision
+                                noffx = $Precision - offx
+                                noffy = $Precision - offy
+                                
+                                if offx < closest and block ~-1 ~ ~ air
+                                    closest = offx
+                                    cox = x / $Precision * $Precision
+                                    coy = y / $Precision * $Precision
+                                    coz = z
+                                    cex = 0
+                                    cey = $Precision
+                                    cez = 0
+                                end
+                                if noffx < closest and block ~1 ~ ~ air
+                                    closest = noffx
+                                    cox = (x / $Precision + 1) * $Precision
+                                    coy = y / $Precision * $Precision
+                                    coz = z
+                                    cex = 0
+                                    cey = $Precision
+                                    cez = 0
+                                end
+                                if offy < closest and block ~ ~-1 ~ air
+                                    closest = offy
+                                    cox = x / $Precision * $Precision
+                                    coy = y / $Precision * $Precision
+                                    coz = z
+                                    cex = $Precision
+                                    cey = 0
+                                    cez = 0
+                                end
+                                if noffy < closest and block ~ ~1 ~ air
+                                    closest = noffy
+                                    cox = x / $Precision * $Precision
+                                    coy = (y / $Precision + 1) * $Precision
+                                    coz = z
+                                    cex = $Precision
+                                    cey = 0
+                                    cez = 0
+                                end
+                            end
+                        end
+                        
+                        if closest < $Precision
+                            @Position.<pos> = <cox, coy, coz>
+                            for i = 1 to 11
+                                at @Position
+                                    /particle minecraft:bubble_pop ~ ~ ~ 0 0 0 0 1 force
+                                end
+                                @Position.x += cex / 10
+                                @Position.y += cey / 10
+                                @Position.z += cez / 10
+                            end
+                            
+                            #tell @a "Edge from (cox), (coy), (coz) by (cex), (cey), (cez). Prev (prev_x), (prev_y), (prev_z), cur (x), (y), (z)"
+                        end
+                    end
                 end
             end
+            
+            prev_t = t
+            prev_x = x
+            prev_y = y
+            prev_z = z
+            prev_crossing = crossing
         end
     end
 end
