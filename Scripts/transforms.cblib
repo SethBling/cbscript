@@ -74,6 +74,7 @@ function create_collider(x, y, z, size, inv_mass, inv_rot_int)
     collider.y = y
     collider.z = z
     collider.size = size
+    collider.halfsize = size / 2
     collider.inv_mass = inv_mass
     collider.inv_rot_int = inv_rot_int
     
@@ -563,9 +564,12 @@ function collider_calculate_vertex_world_positions()
     end
 end
 
-function handle_collision_1body()
+function handle_collision_impulse()
     define name collider1 = "collider_$(collider1)"
+    define name collider2 = "collider_$(collider2)"
     define name collision = "collision_$(collision)"
+    
+    /scoreboard players set Global twobody $(collider2)
     
     # Create contact basis/transform
     ct_01 = collision.nx
@@ -643,10 +647,6 @@ function handle_collision_1body()
     i_to_v_21 = ((-dy * dz + $Half) / $Precision * collider1.inv_rot_int + $Half) / $Precision
     i_to_v_22 = ((dy * dy + dx * dx + $Half) / $Precision * collider1.inv_rot_int + $Half) / $Precision
     
-    i_to_v_00 += collider1.inv_mass
-    i_to_v_11 += collider1.inv_mass
-    i_to_v_22 += collider1.inv_mass
-    
     # Transform i_to_v into contact coordinates before inverting,
     # using change of basis formula
     
@@ -664,6 +664,58 @@ function handle_collision_1body()
         $(out) = "c_i_to_v"
     matrix_multiply()
     
+    inv_mass = collider1.inv_mass
+    
+    if twobody
+        # Impulse to velocity transform
+        # Formula: -(i_to_t^2) * InverseRotationalIntertia
+        i_to_v_00 = ((dz * dz + dy * dy + $Half) / $Precision * collider2.inv_rot_int + $Half) / $Precision
+        i_to_v_01 = ((-dy * dx + $Half) / $Precision * collider2.inv_rot_int + $Half) / $Precision
+        i_to_v_02 = ((-dz * dx + $Half) / $Precision * collider2.inv_rot_int + $Half) / $Precision
+
+        i_to_v_10 = ((-dx * dy + $Half) / $Precision * collider2.inv_rot_int + $Half) / $Precision
+        i_to_v_11 = ((dz * dz + dx * dx + $Half) / $Precision * collider2.inv_rot_int + $Half) / $Precision
+        i_to_v_12 = ((-dz * dy + $Half) / $Precision * collider2.inv_rot_int + $Half) / $Precision
+
+        i_to_v_20 = ((-dx * dz + $Half) / $Precision * collider2.inv_rot_int + $Half) / $Precision
+        i_to_v_21 = ((-dy * dz + $Half) / $Precision * collider2.inv_rot_int + $Half) / $Precision
+        i_to_v_22 = ((dy * dy + dx * dx + $Half) / $Precision * collider2.inv_rot_int + $Half) / $Precision
+        
+        # Transform i_to_v into contact coordinates before inverting,
+        # using change of basis formula
+        
+        # First, ct^transpose * i_to_v
+        with
+            $(m1) = "ct"
+            $(m2) = "i_to_v"
+            $(out) = "m"
+        transpose_matrix_multiply()
+
+        # Then, multiply by ct
+        with
+            $(m1) = "m"
+            $(m2) = "ct"
+            $(out) = "c_i_to_v_2"
+        matrix_multiply()
+        
+        c_i_to_v_00 += c_i_to_v_2_00
+        c_i_to_v_01 += c_i_to_v_2_01
+        c_i_to_v_02 += c_i_to_v_2_02
+        c_i_to_v_10 += c_i_to_v_2_10
+        c_i_to_v_11 += c_i_to_v_2_11
+        c_i_to_v_12 += c_i_to_v_2_12
+        c_i_to_v_20 += c_i_to_v_2_20
+        c_i_to_v_21 += c_i_to_v_2_21
+        c_i_to_v_22 += c_i_to_v_2_22
+        
+        inv_mass += collider2.inv_mass
+    end
+    
+    # In contact space, add the inverse mass to the diagonal
+    c_i_to_v_00 += inv_mass
+    c_i_to_v_11 += inv_mass
+    c_i_to_v_22 += inv_mass
+
     a = c_i_to_v_00
     b = c_i_to_v_01
     c = c_i_to_v_02
@@ -743,4 +795,14 @@ function handle_collision_1body()
     with
         $(collider) = collider1.id
     collider_apply_impulse(collision.x, collision.y, collision.z, ix, iy, iz)
+    
+    if twobody
+        ix *= -1
+        iy *= -1
+        iz *= -1
+        
+        with
+            $(collider) = collider2.id
+        collider_apply_impulse(collision.x, collision.y, collision.z, ix, iy, iz)
+    end
 end
