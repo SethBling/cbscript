@@ -982,44 +982,35 @@ function get_edge_world_collisions()
                         if closest < $Precision
                             get_edge_edge_penetration(ox, oy, oz, ex, ey, ez, cox, coy, coz, cex, cey, cez)
                             
-                            dx = p1x - collider.x
-                            dy = p1y - collider.y
-                            dz = p1z - collider.z
-                            
-                            normdir = dx*nx + dy*ny + dz*nz
-                            
-                            if normdir > 0
-                                nx *= -1
-                                ny *= -1
-                                nz *= -1
-                            end
-                            
-                            if d < 0
-                                d *= -1
-                            end
-                            
-                            if d > 200
-                                d = 200
-                            end
-                            
-                            create_collision(p1x, p1y, p1z, nx, ny, nz, d, collider.id, -1)
-                            
-                            if p1x >= block_x and p1x < block_x + $Precision and p1y >= block_y and p1y < block_y + $Precision and p1z >= block_z and p1z < block_x + $Precision
-                            
-                                @Position.<pos> = <cox, coy, coz>
-                                for i = 1 to 11
-                                    at @Position
-                                        /particle minecraft:bubble_pop ~ ~ ~ 0 0 0 0 1 force
-                                    end
-                                    @Position.x += cex / 10
-                                    @Position.y += cey / 10
-                                    @Position.z += cez / 10
-                                end
+                            # Check if the collision point is inside the block
+                            if p1x >= block_x and p1x < block_x + $Precision and p1y >= block_y and p1y < block_y + $Precision and p1z >= block_z and p1z < block_z + $Precision
+                                # Direction from collider center to the collision point
+                                dx = p1x - collider.x
+                                dy = p1y - collider.y
+                                dz = p1z - collider.z
+
+                                # Dot product of that direction and the collision normal
+                                normdir = dx*nx + dy*ny + dz*nz
                                 
-                                #tell @a "Edge from (cox), (coy), (coz) by (cex), (cey), (cez). Prev (prev_x), (prev_y), (prev_z), cur (x), (y), (z)"
+                                if normdir > 0
+                                    # Make sure the collision normal points towards the collider (away from the block)
+                                    nx *= -1
+                                    ny *= -1
+                                    nz *= -1
+                                end
+
+                                # Make sure the penetration is positive
+                                if d < 0
+                                    d *= -1
+                                end
+
+                                # Cap the penetration
+                                if d > 200
+                                    d = 200
+                                end
                             
+                                create_collision(p1x, p1y, p1z, nx, ny, nz, d, collider.id, -1)
                             end
-                            
                         end
                     end
                 end
