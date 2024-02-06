@@ -11,6 +11,16 @@ define @PhysicsBlock = @Entity[type=block_display,tag=physics_block]
 
 end
 
+function initialize_transforms()
+    initialize_vertex_adjacency()
+    
+    for $row in $range(3)
+        for $col in $range(3)
+            /scoreboard objectives add m_$row$col dummy
+        end
+    end
+end
+
 
 # These lines register the variables for the matrix_multiply functions
 # It doesn't actually need to be called.
@@ -485,6 +495,40 @@ function collider_ray_intersection(x, y, z, dx, dy, dz)
     else
         return False
     end
+end
+
+function initialize_vertex_adjacency()
+    vertex_0_adj_1.val = 2
+    vertex_0_adj_2.val = 4
+    vertex_0_adj_3.val = 7
+
+    vertex_1_adj_1.val = 3
+    vertex_1_adj_2.val = 5
+    vertex_1_adj_3.val = 6
+
+    vertex_2_adj_1.val = 0
+    vertex_2_adj_2.val = 5
+    vertex_2_adj_3.val = 6
+
+    vertex_3_adj_1.val = 1
+    vertex_3_adj_2.val = 4
+    vertex_3_adj_3.val = 7
+
+    vertex_4_adj_1.val = 0
+    vertex_4_adj_2.val = 3
+    vertex_4_adj_3.val = 6
+
+    vertex_5_adj_1.val = 1
+    vertex_5_adj_2.val = 2
+    vertex_5_adj_3.val = 7
+
+    vertex_6_adj_1.val = 1
+    vertex_6_adj_2.val = 2
+    vertex_6_adj_3.val = 4
+
+    vertex_7_adj_1.val = 0
+    vertex_7_adj_2.val = 3
+    vertex_7_adj_3.val = 5
 end
 
 function collider_calculate_vertex_world_positions()

@@ -20,11 +20,7 @@ $Half = 500
 $NumCubes = 2
 
 reset
-    for $row in $range(3)
-        for $col in $range(3)
-            /scoreboard objectives add m_$row$col dummy
-        end
-    end
+    initialize_transforms()
 
     at @nearest_player
         /kill @Position
@@ -41,7 +37,7 @@ reset
     
     with
         $(collider) = 1
-    create_collider(6500, 57500, 1500, 3000, 400, 300)
+    create_collider(6500, 57500, 1500, 2000, 600, 400)
     
     with
         $(collider) = 2
@@ -1227,7 +1223,169 @@ function get_collider_edge_collider_edge_collisions()
     define name collider1 = "collider_$(col1)"
     define name collider2 = "collider_$(col2)"
     
+    with
+        $(ncol1) = collider1.id
+        $(ncol2) = collider2.id
+    get_nearest_vertex()
+    vertex1 = vertex
     
+    with
+        $(ncol1) = collider2.id
+        $(ncol2) = collider1.id
+    get_nearest_vertex()
+    vertex2 = vertex
+    
+    with
+        $(vertex) = vertex1
+    do
+        define name vertex = "collider_$(col1)_v$(vertex)"
+        o1x = vertex.x
+        o1y = vertex.y
+        o1z = vertex.z
+    end
+
+    with
+        $(vertex) = vertex2
+    do
+        define name vertex = "collider_$(col2)_v$(vertex)"
+        o2x = vertex.x
+        o2y = vertex.y
+        o2z = vertex.z
+    end
+    
+    min_pen = $Precision
+    
+    for neighbor1 = 1 to 3
+        with
+            $(neighbor) = neighbor1
+            $(vertex) = vertex1
+        do
+            define name neighbor = "vertex_$(vertex)_adj_$(neighbor)"
+            nvert = neighbor.val
+        end
+        with
+            $(vertex) = nvert
+        do
+            define name vertex = "collider_$(col1)_v$(vertex)"
+            d1x = vertex.x - o1x
+            d1y = vertex.y - o1y
+            d1z = vertex.z - o1z
+        end
+    
+        for neighbor2 = 1 to 3
+            with
+                $(neighbor) = neighbor2
+                $(vertex) = vertex2
+            do
+                define name neighbor = "vertex_$(vertex)_adj_$(neighbor)"
+                nvert = neighbor.val
+            end
+            with
+                $(vertex) = nvert
+            do
+                define name vertex = "collider_$(col2)_v$(vertex)"
+                d2x = vertex.x - o2x
+                d2y = vertex.y - o2y
+                d2z = vertex.z - o2z
+            end
+            
+            get_edge_edge_penetration(o1x, o1y, o1z, d1x, d1y, d1z, o2x, o2y, o2z, d2x, d2y, d2z)
+            
+            if t >= 0 and t <= $Precision
+                # The collision falls along the collider1 edge
+                
+                dx = p1x - collider1.x
+                dy = p1y - collider1.y
+                dz = p1z - collider1.z
+                
+                # Check if the normal vector is pointing in the same
+                # direction as the collision point from the origin
+                dot = dx*nx + dy*ny + dz*nz
+                
+                penetrating = False
+                if dot < 0 and d > 0
+                    # Normal vector pointing toward origin, and positive distance
+                    penetrating = True
+                end
+                
+                if dot > 0 and d < 0
+                    # Normal vector pointing away from origin, and negative distance
+                    penetrating = True
+                    nx *= -1
+                    ny *= -1
+                    nz *= -1
+                    d *= -1
+                end
+                
+                with
+                    $(collider) = collider2.id
+                collider_world_to_local(p1x, p1y, p1z, True)
+                if local_x >= -collider2.halfsize and local_x <= collider2.halfsize and local_y >= -collider2.halfsize and local_y <= collider2.halfsize and local_z >= -collider2.halfsize and local_z <= collider2.halfsize                
+                    # The collision point falls within collider2
+                    if penetrating and d < min_pen
+                        min_pen = d
+                        min_x = p1x
+                        min_y = p1y
+                        min_z = p1z
+                        min_nx = nx
+                        min_ny = ny
+                        min_nz = nz
+                    end
+                end
+            end
+        end        
+    end
+    
+    if min_pen < $Precision
+        #tell @a "(collider1.id) hit (collider2.id) at (min_x), (min_y), (min_z) norm (min_nx), (min_ny), (min_nz) pen (min_pen)"
+        create_collision(min_x, min_y, min_z, min_nx, min_ny, min_nz, min_pen, collider1.id, collider2.id)
+    end
+end
+
+function get_nearest_vertex()
+    define name collider1 = "collider_$(ncol1)"
+    define name collider2 = "collider_$(ncol2)"
+    
+    with
+        $(collider) = collider1.id
+    collider_world_to_local(collider2.x, collider2.y, collider2.z, True)
+    
+    if local_x > 0
+        if local_y > 0
+            if local_z > 0
+                vertex = 0
+            end
+            if local_z < 0
+                vertex = 4
+            end
+        end
+        if local_y < 0
+            if local_z > 0
+                vertex = 2
+            end
+            if local_z < 0
+                vertex = 6
+            end
+        end
+    end
+    if local_x < 0
+        if local_y > 0
+            if local_z > 0
+                vertex = 7
+            end
+            if local_z < 0
+                vertex = 3
+            end
+        end
+        if local_y < 0
+            if local_z > 0
+                vertex = 5
+            end
+            if local_z < 0
+                vertex = 1
+            end
+        end
+    end
 end
 
 function create_collision(x, y, z, nx, ny, nz, pen, collider1, collider2)
