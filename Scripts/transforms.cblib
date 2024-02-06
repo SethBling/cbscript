@@ -99,7 +99,7 @@ function create_collider(x, y, z, size, inv_mass, inv_rot_int)
     
     collider_quaternion_to_transform() with macros
 
-    /summon minecraft:block_display ~ ~ ~ {block_state:{Name:"minecraft:grass_block",Count:0b}, interpolation_duration: 1, teleport_duration: 1, Tags:["physics_block"]}
+    /$summon minecraft:block_display ~ ~ ~ {block_state:{Name:"minecraft:$(block_name)",Count:0b}, interpolation_duration: 1, teleport_duration: 1, Tags:["physics_block"]}
     @PhysicsBlock.age++
     as @PhysicsBlock[age == 1]
         /scoreboard players set @s collider_id $(collider)

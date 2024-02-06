@@ -17,7 +17,7 @@ end
 
 $Precision = 1000
 $Half = 500
-$NumCubes = 2
+$NumCubes = 3
 
 reset
     initialize_transforms()
@@ -37,15 +37,18 @@ reset
     
     with
         $(collider) = 1
-    create_collider(6500, 57500, 1500, 2000, 600, 400)
+        $(block_name) = "grass_block"
+    create_collider(6500, 57500, 1500, 1500, 800, 400)
     
     with
         $(collider) = 2
-    create_collider(-500, 57500, 1500, 2000, 600, 400)
+        $(block_name) = "command_block"
+    create_collider(-500, 57500, 1500, 1500, 800, 400)
 
-    #with
-    #    $(collider) = 3
-    #create_collider(-2500, 57500, 1500, 2000, 600, 400)
+    with
+        $(collider) = 3
+        $(block_name) = "redstone_block"
+    create_collider(-500, 57500, -2500, 1500, 800, 400)
 
     #with
     #    $(collider) = 4
@@ -186,7 +189,7 @@ function collider_physics_tick()
 end
 
 function resolve_collision_velocity()
-    for vel_iter = 1 to 10
+    for vel_iter = 1 to 20
         max_closing = 0
         
         for collision = 1 to max_collision
@@ -261,7 +264,7 @@ function update_closing_velocity()
 end
 
 function resolve_collision_penetration()
-    for pen_iter = 1 to 10
+    for pen_iter = 1 to 20
         max_pen = 0
         
         for collision = 1 to max_collision
