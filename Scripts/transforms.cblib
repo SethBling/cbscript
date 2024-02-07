@@ -608,6 +608,1293 @@ function collider_calculate_vertex_world_positions()
     end
 end
 
+function collider_physics_tick()
+    define name collider = "collider_$(collider)"
+    
+    # Apply Gravity
+    $Gravity = 45
+    collider.velocity_y -= $Gravity
+    
+    collider_integrate() with macros
+    collider_quaternion_to_transform() with macros
+end
+
+function resolve_collision_velocity()
+    for vel_iter = 1 to 20
+        max_closing = 0
+        
+        for collision = 1 to max_collision
+            with
+                $(collision) = collision
+            do
+                define name collision = "collision_$(collision)"
+            
+                if collision.exists
+                    with
+                        $(collider1) = collision.collider1
+                        $(collider2) = collision.collider2
+                    update_closing_velocity()
+                    
+                    if collision.closing > max_closing
+                        max_closing = collision.closing
+                        max_closing_id = collision.id
+                        max_closing_col1 = collision.collider1
+                        max_closing_col2 = collision.collider2
+                    end
+                end
+            end
+        end
+        
+        if max_closing <= 5
+            vel_iter = 1000000
+        else
+            with
+                $(collision) = max_closing_id
+                $(collider1) = max_closing_col1
+                $(collider2) = max_closing_col2
+            handle_collision_impulse()
+        end
+    end
+end
+
+function update_closing_velocity()
+    define name collision = "collision_$(collision)"
+    define name collider1 = "collider_$(collider1)"
+    define name collider2 = "collider_$(collider2)"
+    
+    /scoreboard players set Global twobody $(collider2)
+    
+    dx = collision.x - collider1.x
+    dy = collision.y - collider1.y
+    dz = collision.z - collider1.z
+
+    rot_lin_vel_x = (collider1.rotation_y * dz - collider1.rotation_z * dy + $Half) / $Precision
+    rot_lin_vel_y = (collider1.rotation_z * dx - collider1.rotation_x * dz + $Half) / $Precision
+    rot_lin_vel_z = (collider1.rotation_x * dy - collider1.rotation_y * dx + $Half) / $Precision
+    
+    collision.vel_x = collider1.velocity_x + rot_lin_vel_x
+    collision.vel_y = collider1.velocity_y + rot_lin_vel_y
+    collision.vel_z = collider1.velocity_z + rot_lin_vel_z
+
+    if twobody
+        dx = collision.x - collider2.x
+        dy = collision.y - collider2.y
+        dz = collision.z - collider2.z
+
+        rot_lin_vel_x = (collider2.rotation_y * dz - collider2.rotation_z * dy + $Half) / $Precision
+        rot_lin_vel_y = (collider2.rotation_z * dx - collider2.rotation_x * dz + $Half) / $Precision
+        rot_lin_vel_z = (collider2.rotation_x * dy - collider2.rotation_y * dx + $Half) / $Precision
+        
+        collision.vel_x -= collider2.velocity_x + rot_lin_vel_x
+        collision.vel_y -= collider2.velocity_y + rot_lin_vel_y
+        collision.vel_z -= collider2.velocity_z + rot_lin_vel_z
+
+    end
+    
+    collision.closing = -(collision.vel_x * collision.nx + collision.vel_y * collision.ny + collision.vel_z * collision.nz + $Half) / $Precision
+end
+
+function resolve_collision_penetration()
+    for pen_iter = 1 to 20
+        max_pen = 0
+        
+        for collision = 1 to max_collision
+            with
+                $(collision) = collision
+            do
+                define name collision = "collision_$(collision)"
+
+                if collision.exists and collision.pen > max_pen
+                    max_pen = collision.pen
+                    max_pen_nx = collision.nx
+                    max_pen_ny = collision.ny
+                    max_pen_nz = collision.nz
+                    max_pen_col1 = collision.collider1
+                    max_pen_col2 = collision.collider2
+                end
+            end
+        end
+        
+        if max_pen <= 5
+            pen_iter = 1000000
+        else
+            mx = (max_pen_nx * max_pen + $Half) / $Precision
+            my = (max_pen_ny * max_pen + $Half) / $Precision
+            mz = (max_pen_nz * max_pen + $Half) / $Precision
+            
+            #tell @a "Resolving (max_pen_col1) and (max_pen_col2) with pen (max_pen), moving (mx), (my), (mz)"
+            
+            if max_pen_col2 == -1
+                with
+                    $(collider) = max_pen_col1
+                do
+                    define name collider = "collider_$(collider)"
+        
+                    collider.x += mx
+                    collider.y += my
+                    collider.z += mz
+                    
+                    move_collisions(mx, my, mz, collider.id)
+                end
+            else
+                with
+                    $(collider1) = max_pen_col1
+                    $(collider2) = max_pen_col2
+                do
+                    define name collider1 = "collider_$(collider1)"
+                    define name collider2 = "collider_$(collider2)"
+                    
+                    inv_mass = collider1.inv_mass + collider2.inv_mass
+
+                    p1 = collider1.inv_mass * $Precision / inv_mass
+                    
+                    m1x = p1 * mx / $Precision
+                    m1y = p1 * my / $Precision
+                    m1z = p1 * mz / $Precision
+        
+                    collider1.x += m1x 
+                    collider1.y += m1y
+                    collider1.z += m1z
+                    if collider1.sleeping
+                        with
+                            $(collider) = collider1.id
+                        collider_wake_up()
+                    end
+                    
+                    move_collisions(m1x, m1y, m1z, collider1.id)
+                    
+                    p2 = -collider2.inv_mass * $Precision / inv_mass
+                    
+                    m2x = p2 * mx / $Precision
+                    m2y = p2 * my / $Precision
+                    m2z = p2 * mz / $Precision
+        
+                    collider2.x += m2x 
+                    collider2.y += m2y
+                    collider2.z += m2z
+                    if collider2.sleeping
+                        with
+                            $(collider) = collider2.id
+                        collider_wake_up()
+                    end
+                    
+                    move_collisions(m2x, m2y, m2z, collider2.id)
+                end
+            end
+        end
+    end
+end
+
+function move_collisions(dx, dy, dz, collider)
+    for collision = 1 to max_collision
+        with
+            $(collision) = collision
+        do
+            define name collision = "collision_$(collision)"
+    
+            if collision.exists
+                do_move = False
+                if collision.collider1 == collider
+                    do_move = True
+                    sign = 1
+                end
+                if collision.collider2 == collider
+                    do_move = True
+                    sign = -1
+                end
+                
+                if do_move
+                    collision.pen -= sign * (dx*collision.nx + dy*collision.ny + dz*collision.nz + $Half) / $Precision
+                end
+            end
+        end
+    end
+end
+
+function get_collisions()
+    define name collider = "collider_$(collider)"
+    
+    collider_calculate_vertex_world_positions() with macros
+
+    for vertex = 0 to 7
+        with
+            $(vertex) = vertex
+        do
+            define name v = "collider_$(collider)_v$(vertex)"
+            
+            @Position.<pos> = <v.x, v.y, v.z>
+            at @Position
+                unless block ~ ~ ~ air
+                    block_x = v.x % $Precision
+                    block_y = v.y % $Precision
+                    block_z = v.z % $Precision
+                    
+                    min_pen = 1000
+                    
+                    if block ~1 ~ ~ air
+                        pen = $Precision - block_x
+                        if pen < min_pen
+                            min_pen = pen
+                            nx = $Precision
+                            ny = 0
+                            nz = 0
+                        end
+                    end
+                    
+                    if block ~ ~1 ~ air
+                        pen = $Precision - block_y
+                        if pen < min_pen
+                            min_pen = pen
+                            nx = 0
+                            ny = $Precision
+                            nz = 0
+                        end
+                    end
+                    
+                    if block ~ ~ ~1 air
+                        pen = $Precision - block_z
+                        if pen < min_pen
+                            min_pen = pen
+                            nx = 0
+                            ny = 0
+                            nz = $Precision
+                        end
+                    end
+                    
+                    if block ~-1 ~ ~ air
+                        pen = block_x
+                        if pen < min_pen
+                            min_pen = pen
+                            nx = -$Precision
+                            ny = 0
+                            nz = 0
+                        end
+                    end
+                    
+                    if block ~ ~-1 ~ air
+                        pen = block_y
+                        if pen < min_pen
+                            min_pen = pen
+                            nx = 0
+                            ny = -$Precision
+                            nz = 0
+                        end
+                    end
+                    
+                    if block ~ ~ ~-1 air
+                        pen = block_z
+                        if pen < min_pen
+                            min_pen = pen
+                            nx = 0
+                            ny = 0
+                            nz = -$Precision
+                        end
+                    end
+                    
+                    if min_pen < 1000
+                        create_collision(v.x, v.y, v.z, nx, ny, nz, min_pen, collider.id, -1)
+                    end
+                end
+            end
+        end
+    end
+    
+    # Check each world geometry block corner to see if there's a block there,
+    # and if so, whether it collides.
+    start_x = (collider.min_x/$Precision+1)*$Precision
+    start_y = (collider.min_y/$Precision+1)*$Precision
+    start_z = (collider.min_z/$Precision+1)*$Precision
+    
+    for block_x = start_x to collider.max_x by $Precision
+        for block_y = start_y to collider.max_y by $Precision
+            for block_z = start_z to collider.max_z by $Precision
+                @Position.<pos> = <block_x, block_y, block_z>
+                at @Position
+                    if block ~ ~ ~ air and block ~ ~ ~-1 air and block ~ ~-1 ~ air and block ~ ~-1 ~-1 air and block ~-1 ~ ~ air and block ~-1 ~ ~-1 air and block ~-1 ~-1 ~ air and block ~-1 ~-1 ~-1 air
+                    
+                    else
+                        collider_world_to_local(block_x, block_y, block_z, True) with macros
+                        if local_x > -collider.halfsize and local_x < collider.halfsize and local_y > -collider.halfsize and local_y < collider.halfsize and local_z > -collider.halfsize and local_z < collider.halfsize
+                            min_pen = collider.halfsize
+                            
+                            pen = collider.halfsize + local_x
+                            if pen < min_pen
+                                min_pen = pen
+                                lnx = $Precision
+                                lny = 0
+                                lnz = 0
+                            end
+                            
+                            pen = collider.halfsize - local_x
+                            if pen < min_pen
+                                min_pen = pen
+                                lnx = -$Precision
+                                lny = 0
+                                lnz = 0
+                            end
+                            
+                            pen = collider.halfsize + local_y
+                            if pen < min_pen
+                                min_pen = pen
+                                lnx = 0
+                                lny = $Precision
+                                lnz = 0
+                            end
+                            
+                            pen = collider.halfsize - local_y
+                            if pen < min_pen
+                                min_pen = pen
+                                lnx = 0
+                                lny = -$Precision
+                                lnz = 0
+                            end
+                            
+                            pen = collider.halfsize + local_z
+                            if pen < min_pen
+                                min_pen = pen
+                                lnx = 0
+                                lny = 0
+                                lnz = $Precision
+                            end
+                            
+                            pen = collider.halfsize - local_z
+                            if pen < min_pen
+                                min_pen = pen
+                                lnx = 0
+                                lny = 0
+                                lnz = -$Precision
+                            end
+
+                            if min_pen < collider.halfsize
+                                collider_local_to_world(lnx, lny, lnz, False) with macros
+                                
+                                create_collision(block_x, block_y, block_z, world_x, world_y, world_z, min_pen, collider.id, -1)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+function get_edge_world_collisions()
+    for $edge in [[0, 2], [1, 3], [0, 4], [1, 5], [2, 6], [3, 7], [4, 6], [5, 7], [0, 7], [2, 5], [4, 3], [6, 1]]
+        $vertex1 = $edge[0]
+        $vertex2 = $edge[1]
+        with
+            $(vertex) = $vertex1
+        get_origin_vertex()
+        
+        with
+            $(vertex) = $vertex2
+        get_dest_vertex()
+        
+        raymarch_edge() with macros
+    end
+end
+
+function get_origin_vertex()
+    define name v = "collider_$(collider)_v$(vertex)"
+    ox = v.x
+    oy = v.y
+    oz = v.z
+end
+
+function get_dest_vertex()
+    define name v = "collider_$(collider)_v$(vertex)"
+    destx = v.x
+    desty = v.y
+    destz = v.z
+end
+
+# Assumes ox, oy, oz and destx, desty, destz are the two vertices in world coordinates.        
+function raymarch_edge()
+    define name collider = "collider_$(collider)"
+    
+    ex = (destx - ox) * $Precision / collider.size
+    ey = (desty - oy) * $Precision / collider.size
+    ez = (destz - oz) * $Precision / collider.size
+    
+    if ex == 0
+        ex = 1
+    end
+    if ey == 0
+        ey = 1
+    end
+    if ez == 0
+        ez = 1
+    end
+    
+    if ex < 0
+        next_x = ox / $Precision * $Precision
+    else
+        next_x = (ox / $Precision + 1) * $Precision
+    end
+    if ey < 0
+        next_y = oy / $Precision * $Precision
+    else
+        next_y = (oy / $Precision + 1) * $Precision
+    end
+    if ez < 0
+        next_z = oz / $Precision * $Precision
+    else
+        next_z = (oz / $Precision + 1) * $Precision
+    end
+    
+    t = 0
+    x = ox
+    y = oy
+    z = oz
+    prev_t = 0
+    failsafe = 0
+    $X_Axis = 0
+    $Y_Axis = 1
+    $Z_Axis = 2
+    
+    while t < collider.size and failsafe < 50
+        failsafe++
+        next_x_t = (next_x - ox) * $Precision / ex
+        next_y_t = (next_y - oy) * $Precision / ey
+        next_z_t = (next_z - oz) * $Precision / ez
+        
+        if next_x_t < next_y_t and next_x_t < next_z_t
+            # Crosses at x next
+            t = next_x_t
+            x = next_x
+            y = oy + t * ey / $Precision
+            z = oz + t * ez / $Precision
+            crossing = $X_Axis
+            
+            if ex < 0
+                next_x -= $Precision
+            else
+                next_x += $Precision
+            end
+            
+            next_x_t = (next_x - ox) * $Precision / ex
+        else if next_y_t < next_z_t
+            # Crosses at y next
+            t = next_y_t
+            x = ox + t * ex / $Precision
+            y = next_y
+            z = oz + t * ez / $Precision
+            crossing = $Y_Axis
+            
+            if ey < 0
+                next_y -= $Precision
+            else
+                next_y += $Precision
+            end
+            
+            next_y_t = (next_y - oy) * $Precision / ey
+        else
+            # Crosses at z next
+            t = next_z_t
+            x = ox + t * ex / $Precision
+            y = oy + t * ey / $Precision
+            z = next_z
+            crossing = $Z_Axis
+            
+            if ez < 0
+                next_z -= $Precision
+            else
+                next_z += $Precision
+            end
+            
+            next_z_t = (next_z - oz) * $Precision / ez
+        end
+        
+        if t < collider.size and prev_t > 0
+            if x < prev_x
+                block_x = x / $Precision * $Precision
+            end                    
+            if x >= prev_x
+                block_x = prev_x / $Precision * $Precision
+            end
+            if y < prev_y
+                block_y = y / $Precision * $Precision
+            end                    
+            if y >= prev_y
+                block_y = prev_y / $Precision * $Precision
+            end
+            if z < prev_z
+                block_z = z / $Precision * $Precision
+            end                    
+            if z >= prev_z
+                block_z = prev_z / $Precision * $Precision
+            end
+            
+            @Position.<pos> = <block_x, block_y, block_z>
+            
+            at @Position
+                unless block ~ ~ ~ air
+                    # Edge is penetrating a block                            
+                    closest = $Precision
+                    
+                    if prev_crossing == $X_Axis
+                        empty = False
+                        if ex > 0 and block ~-1 ~ ~ air
+                            empty = True
+                        end
+                        if ex <= 0 and block ~1 ~ ~ air
+                            empty = True
+                        end
+                        
+                        if empty
+                            offy = prev_y % $Precision
+                            offz = prev_z % $Precision
+                            noffy = $Precision - offy
+                            noffz = $Precision - offz
+                            
+                            if offy < closest and block ~ ~-1 ~ air
+                                closest = offy
+                                cox = prev_x
+                                coy = prev_y / $Precision * $Precision
+                                coz = prev_z / $Precision * $Precision
+                                cex = 0
+                                cey = 0
+                                cez = $Precision
+                            end
+                            if noffy < closest and block ~ ~1 ~ air
+                                closest = noffy
+                                cox = prev_x
+                                coy = (prev_y / $Precision + 1) * $Precision
+                                coz = prev_z / $Precision * $Precision
+                                cex = 0
+                                cey = 0
+                                cez = $Precision
+                            end
+                            if offz < closest and block ~ ~ ~-1 air
+                                closest = offz
+                                cox = prev_x
+                                coy = prev_y / $Precision * $Precision
+                                coz = prev_z / $Precision * $Precision
+                                cex = 0
+                                cey = $Precision
+                                cez = 0
+                            end
+                            if noffz < closest and block ~ ~ ~1 air
+                                closest = noffz
+                                cox = prev_x
+                                coy = prev_y / $Precision * $Precision
+                                coz = (prev_z / $Precision + 1) * $Precision
+                                cex = 0
+                                cey = $Precision
+                                cez = 0
+                            end
+                        end
+                    end
+                    if crossing == $X_Axis
+                        empty = False
+                        if ex > 0 and block ~1 ~ ~ air
+                            empty = True
+                        end
+                        if ex <= 0 and block ~-1 ~ ~ air
+                            empty = True
+                        end
+                        
+                        if empty
+                            offy = y % $Precision
+                            offz = z % $Precision
+                            noffy = $Precision - offy
+                            noffz = $Precision - offz
+                            
+                            if offy < closest and block ~ ~-1 ~ air
+                                closest = offy
+                                cox = x
+                                coy = y / $Precision * $Precision
+                                coz = z / $Precision * $Precision
+                                cex = 0
+                                cey = 0
+                                cez = $Precision
+                            end
+                            if noffy < closest and block ~ ~1 ~ air
+                                closest = noffy
+                                cox = x
+                                coy = (y / $Precision + 1) * $Precision
+                                coz = z / $Precision * $Precision
+                                cex = 0
+                                cey = 0
+                                cez = $Precision
+                            end
+                            if offz < closest and block ~ ~ ~-1 air
+                                closest = offz
+                                cox = x
+                                coy = y / $Precision * $Precision
+                                coz = z / $Precision * $Precision
+                                cex = 0
+                                cey = $Precision
+                                cez = 0
+                            end
+                            if noffz < closest and block ~ ~ ~1 air
+                                closest = noffz
+                                cox = x
+                                coy = y / $Precision * $Precision
+                                coz = (z / $Precision + 1) * $Precision
+                                cex = 0
+                                cey = $Precision
+                                cez = 0
+                            end
+                        end
+                    end
+
+                    if prev_crossing == $Y_Axis
+                        empty = False
+                        if ey > 0 and block ~ ~-1 ~ air
+                            empty = True
+                        end
+                        if ey <= 0 and block ~ ~1 ~ air
+                            empty = True
+                        end
+                        
+                        if empty
+                            offx = prev_x % $Precision
+                            offz = prev_z % $Precision
+                            noffx = $Precision - offx
+                            noffz = $Precision - offz
+                            
+                            if offx < closest and block ~-1 ~ ~ air
+                                closest = offx
+                                cox = prev_x / $Precision * $Precision
+                                coy = prev_y
+                                coz = prev_z / $Precision * $Precision
+                                cex = 0
+                                cey = 0
+                                cez = $Precision
+                            end
+                            if noffx < closest and block ~1 ~ ~ air
+                                closest = noffx
+                                cox = (prev_x / $Precision + 1) * $Precision
+                                coy = prev_y
+                                coz = prev_z / $Precision * $Precision
+                                cex = 0
+                                cey = 0
+                                cez = $Precision
+                            end
+                            if offz < closest and block ~ ~ ~-1 air
+                                closest = offz
+                                cox = prev_x / $Precision * $Precision
+                                coy = prev_y
+                                coz = prev_z / $Precision * $Precision
+                                cex = $Precision
+                                cey = 0
+                                cez = 0
+                            end
+                            if noffz < closest and block ~ ~ ~1 air
+                                closest = noffz
+                                cox = prev_x / $Precision * $Precision
+                                coy = prev_y
+                                coz = (prev_z / $Precision + 1) * $Precision
+                                cex = $Precision
+                                cey = 0
+                                cez = 0
+                            end
+                        end
+                    end
+                    if crossing == $Y_Axis
+                        empty = False
+                        if ey > 0 and block ~ ~1 ~ air
+                            empty = True
+                        end
+                        if ey <= 0 and block ~ ~-1 ~ air
+                            empty = True
+                        end
+                        
+                        if empty
+                            offx = x % $Precision
+                            offz = z % $Precision
+                            noffx = $Precision - offx
+                            noffz = $Precision - offz
+                            
+                            if offx < closest and block ~-1 ~ ~ air
+                                closest = offx
+                                cox = x / $Precision * $Precision
+                                coy = y
+                                coz = z / $Precision * $Precision
+                                cex = 0
+                                cey = 0
+                                cez = $Precision
+                            end
+                            if noffx < closest and block ~1 ~ ~ air
+                                closest = noffx
+                                cox = (x / $Precision + 1) * $Precision
+                                coy = y
+                                coz = z / $Precision * $Precision
+                                cex = 0
+                                cey = 0
+                                cez = $Precision
+                            end
+                            if offz < closest and block ~ ~ ~-1 air
+                                closest = offz
+                                cox = x / $Precision * $Precision
+                                coy = y
+                                coz = z / $Precision * $Precision
+                                cex = $Precision
+                                cey = 0
+                                cez = 0
+                            end
+                            if noffz < closest and block ~ ~ ~1 air
+                                closest = noffz
+                                cox = x / $Precision * $Precision
+                                coy = y
+                                coz = (z / $Precision + 1) * $Precision
+                                cex = $Precision
+                                cey = 0
+                                cez = 0
+                            end
+                        end
+                    end
+                    
+                    if prev_crossing == $Z_Axis
+                        empty = False
+                        if ez > 0 and block ~ ~ ~-1 air
+                            empty = True
+                        end
+                        if ez <= 0 and block ~ ~ ~1 air
+                            empty = True
+                        end
+                        
+                        if empty
+                            offx = prev_x % $Precision
+                            offy = prev_y % $Precision
+                            noffx = $Precision - offx
+                            noffy = $Precision - offy
+                            
+                            if offx < closest and block ~-1 ~ ~ air
+                                closest = offx
+                                cox = prev_x / $Precision * $Precision
+                                coy = prev_y / $Precision * $Precision
+                                coz = prev_z
+                                cex = 0
+                                cey = $Precision
+                                cez = 0
+                            end
+                            if noffx < closest and block ~1 ~ ~ air
+                                closest = noffx
+                                cox = (prev_x / $Precision + 1) * $Precision
+                                coy = prev_y / $Precision * $Precision
+                                coz = prev_z
+                                cex = 0
+                                cey = $Precision
+                                cez = 0
+                            end
+                            if offy < closest and block ~ ~-1 ~ air
+                                closest = offy
+                                cox = prev_x / $Precision * $Precision
+                                coy = prev_y / $Precision * $Precision
+                                coz = prev_z
+                                cex = $Precision
+                                cey = 0
+                                cez = 0
+                            end
+                            if noffy < closest and block ~ ~1 ~ air
+                                closest = noffy
+                                cox = prev_x / $Precision * $Precision
+                                coy = (prev_y / $Precision + 1) * $Precision
+                                coz = prev_z
+                                cex = $Precision
+                                cey = 0
+                                cez = 0
+                            end
+                        end
+                    end
+                    if crossing == $Z_Axis
+                        empty = False
+                        if ez > 0 and block ~ ~ ~1 air
+                            empty = True
+                        end
+                        if ez <= 0 and block ~ ~ ~-1 air
+                            empty = True
+                        end
+                        
+                        if empty
+                            offx = x % $Precision
+                            offy = y % $Precision
+                            noffx = $Precision - offx
+                            noffy = $Precision - offy
+                            
+                            if offx < closest and block ~-1 ~ ~ air
+                                closest = offx
+                                cox = x / $Precision * $Precision
+                                coy = y / $Precision * $Precision
+                                coz = z
+                                cex = 0
+                                cey = $Precision
+                                cez = 0
+                            end
+                            if noffx < closest and block ~1 ~ ~ air
+                                closest = noffx
+                                cox = (x / $Precision + 1) * $Precision
+                                coy = y / $Precision * $Precision
+                                coz = z
+                                cex = 0
+                                cey = $Precision
+                                cez = 0
+                            end
+                            if offy < closest and block ~ ~-1 ~ air
+                                closest = offy
+                                cox = x / $Precision * $Precision
+                                coy = y / $Precision * $Precision
+                                coz = z
+                                cex = $Precision
+                                cey = 0
+                                cez = 0
+                            end
+                            if noffy < closest and block ~ ~1 ~ air
+                                closest = noffy
+                                cox = x / $Precision * $Precision
+                                coy = (y / $Precision + 1) * $Precision
+                                coz = z
+                                cex = $Precision
+                                cey = 0
+                                cez = 0
+                            end
+                        end
+                    end
+                    
+                    if closest < $Precision
+                        get_edge_edge_penetration(ox, oy, oz, ex, ey, ez, cox, coy, coz, cex, cey, cez)
+                        
+                        # Check if the collision point is inside the block
+                        if p1x >= block_x and p1x < block_x + $Precision and p1y >= block_y and p1y < block_y + $Precision and p1z >= block_z and p1z < block_z + $Precision
+                            # Direction from collider center to the collision point
+                            dx = p1x - collider.x
+                            dy = p1y - collider.y
+                            dz = p1z - collider.z
+
+                            # Dot product of that direction and the collision normal
+                            normdir = dx*nx + dy*ny + dz*nz
+                            
+                            if normdir > 0
+                                # Make sure the collision normal points towards the collider (away from the block)
+                                nx *= -1
+                                ny *= -1
+                                nz *= -1
+                            end
+
+                            # Make sure the penetration is positive
+                            if d < 0
+                                d *= -1
+                            end
+
+                            # Cap the penetration
+                            if d > 200
+                                d = 200
+                            end
+                        
+                            create_collision(p1x, p1y, p1z, nx, ny, nz, d, collider.id, -1)
+                        end
+                    end
+                end
+            end
+        end
+        
+        prev_t = t
+        prev_x = x
+        prev_y = y
+        prev_z = z
+        prev_crossing = crossing
+    end
+end
+
+# Source for the math: https://math.stackexchange.com/questions/2213165/find-shortest-distance-between-lines-in-3d
+function get_edge_edge_penetration(o1x, o1y, o1z, d1x, d1y, d1z, o2x, o2y, o2z, d2x, d2y, d2z)
+    # Cross the two directions to get the normal
+    nx = (d1y * d2z - d1z * d2y) / $Precision
+    ny = (d1z * d2x - d1x * d2z) / $Precision
+    nz = (d1x * d2y - d1y * d2x) / $Precision
+
+    # Get the magnitude and square magnitude
+    nmagsq = nx*nx + ny*ny + nz*nz
+    nmag = sqrt(nmagsq)
+    
+    # Difference of origins
+    odx = o2x - o1x
+    ody = o2y - o1y
+    odz = o2z - o1z
+
+    # Get the distance
+    d = (nx * odx + ny * ody + nz * odz) / nmag
+    
+    # Get a vector perpendicular to the normal and the second ray
+    # These are scaled up by the Precision because it'll be divided
+    # out in the next step
+    perpx_big = d2y * nz - d2z * ny
+    perpy_big = d2z * nx - d2x * nz
+    perpz_big = d2x * ny - d2y * nx
+    
+    # Get the projected distance along the first ray
+    t = (perpx_big * odx + perpy_big * ody + perpz_big * odz) / nmagsq
+    
+    # Get the point on the first ray
+    p1x = o1x + t * d1x / $Precision
+    p1y = o1y + t * d1y / $Precision
+    p1z = o1z + t * d1z / $Precision
+
+    # Normalize the normal
+    nx *= $Precision
+    ny *= $Precision
+    nz *= $Precision
+    nx /= nmag
+    ny /= nmag
+    nz /= nmag
+end
+
+function get_collider_collider_collisions()
+    define name collider1 = "collider_$(collider1)"
+    define name collider2 = "collider_$(collider2)"
+    
+    if collider1.sleeping and collider2.sleeping
+
+    else
+        dx = collider2.x - collider1.x
+        dy = collider2.y - collider1.y
+        dz = collider2.z - collider1.z
+        
+        total_hsize = collider1.halfsize + collider2.halfsize
+        
+        # Mulitply by sqrt(3) to account for bounding spheres
+        total_hsize *= 1732
+        total_hsize /= $Precision
+        
+        distsq = (dx*dx + dy*dy + dz*dz) / $Precision
+        total_hsize_sq = total_hsize*total_hsize / $Precision
+        
+        if distsq <= total_hsize_sq
+            with
+                $(col1) = collider1.id
+                $(col2) = collider2.id
+            get_point_face_collisions()
+            
+            with
+                $(col1) = collider2.id
+                $(col2) = collider1.id
+            get_point_face_collisions()
+            
+            get_collider_edge_collider_edge_collisions() with macros
+        end
+    end
+end
+
+function get_point_face_collisions()
+    define name collider1 = "collider_$(col1)"
+    define name collider2 = "collider_$(col2)"
+    
+    for vertex = 0 to 7
+        with
+            $(vertex) = vertex
+        do
+            define name vertex = "collider_$(col2)_v$(vertex)"
+            
+            dx = vertex.x - collider1.x
+            dy = vertex.y - collider1.y
+            dz = vertex.z - collider1.z
+            distsq = (dx*dx + dy*dy + dz*dz) / $Precision
+            
+            sizesq = collider1.halfsize * collider1.halfsize / $Precision
+            
+            # Muliply by sqrt(3) to account for bounding spheres
+            sizesq *= 1732
+            sizesq /= $Precision
+            
+            if distsq <= sizesq
+                with
+                    $(collider) = collider1.id
+                collider_world_to_local(vertex.x, vertex.y, vertex.z, True)
+                
+                absx = local_x
+                signx = -$Precision
+                if absx < 0
+                    absx *= -1
+                    signx *= -1
+                end
+                
+                absy = local_y
+                signy = -$Precision
+                if absy < 0
+                    absy *= -1
+                    signy *= -1
+                end
+                
+                absz = local_z
+                signz = -$Precision
+                if absz < 0
+                    absz *= -1
+                    signz *= -1
+                end
+                
+                if absx < collider1.halfsize and absy < collider1.halfsize and absz < collider1.halfsize
+                    if absx > absy and absx > absz
+                        pen = collider1.halfsize - absx
+                        nx = signx
+                        ny = 0
+                        nz = 0
+                    else if absy > absz
+                        pen = collider1.halfsize - absy
+                        nx = 0
+                        ny = signy
+                        nz = 0
+                    else
+                        pen = collider1.halfsize - absz
+                        nx = 0
+                        ny = 0
+                        nz = signz
+                    end
+                    
+                    with
+                        $(collider) = collider1.id
+                    collider_local_to_world(nx, ny, nz, False)
+                    
+                    #tell @a "(collider1.id) collided with (collider2.id) at (vertex.x), (vertex.y), (vertex.z) norm (world_x), (world_y), (world_z), pen (pen)"
+                    create_collision(vertex.x, vertex.y, vertex.z, world_x, world_y, world_z, pen, collider1.id, collider2.id)
+                end
+            end
+        end
+    end
+end
+function get_collider_edge_collider_edge_collisions()
+    define name collider1 = "collider_$(col1)"
+    define name collider2 = "collider_$(col2)"
+    
+    with
+        $(ncol1) = collider1.id
+        $(ncol2) = collider2.id
+    get_nearest_vertex()
+    vertex1 = vertex
+    
+    with
+        $(ncol1) = collider2.id
+        $(ncol2) = collider1.id
+    get_nearest_vertex()
+    vertex2 = vertex
+    
+    with
+        $(vertex) = vertex1
+    do
+        define name vertex = "collider_$(col1)_v$(vertex)"
+        o1x = vertex.x
+        o1y = vertex.y
+        o1z = vertex.z
+    end
+
+    with
+        $(vertex) = vertex2
+    do
+        define name vertex = "collider_$(col2)_v$(vertex)"
+        o2x = vertex.x
+        o2y = vertex.y
+        o2z = vertex.z
+    end
+    
+    min_pen = $Precision
+    
+    for neighbor1 = 1 to 3
+        with
+            $(neighbor) = neighbor1
+            $(vertex) = vertex1
+        do
+            define name neighbor = "vertex_$(vertex)_adj_$(neighbor)"
+            nvert = neighbor.val
+        end
+        with
+            $(vertex) = nvert
+        do
+            define name vertex = "collider_$(col1)_v$(vertex)"
+            d1x = vertex.x - o1x
+            d1y = vertex.y - o1y
+            d1z = vertex.z - o1z
+        end
+    
+        for neighbor2 = 1 to 3
+            with
+                $(neighbor) = neighbor2
+                $(vertex) = vertex2
+            do
+                define name neighbor = "vertex_$(vertex)_adj_$(neighbor)"
+                nvert = neighbor.val
+            end
+            with
+                $(vertex) = nvert
+            do
+                define name vertex = "collider_$(col2)_v$(vertex)"
+                d2x = vertex.x - o2x
+                d2y = vertex.y - o2y
+                d2z = vertex.z - o2z
+            end
+            
+            get_edge_edge_penetration(o1x, o1y, o1z, d1x, d1y, d1z, o2x, o2y, o2z, d2x, d2y, d2z)
+            
+            if t >= 0 and t <= $Precision
+                # The collision falls along the collider1 edge
+                
+                dx = p1x - collider1.x
+                dy = p1y - collider1.y
+                dz = p1z - collider1.z
+                
+                # Check if the normal vector is pointing in the same
+                # direction as the collision point from the origin
+                dot = dx*nx + dy*ny + dz*nz
+                
+                penetrating = False
+                if dot < 0 and d > 0
+                    # Normal vector pointing toward origin, and positive distance
+                    penetrating = True
+                end
+                
+                if dot > 0 and d < 0
+                    # Normal vector pointing away from origin, and negative distance
+                    penetrating = True
+                    nx *= -1
+                    ny *= -1
+                    nz *= -1
+                    d *= -1
+                end
+                
+                with
+                    $(collider) = collider2.id
+                collider_world_to_local(p1x, p1y, p1z, True)
+                if local_x >= -collider2.halfsize and local_x <= collider2.halfsize and local_y >= -collider2.halfsize and local_y <= collider2.halfsize and local_z >= -collider2.halfsize and local_z <= collider2.halfsize                
+                    # The collision point falls within collider2
+                    if penetrating and d < min_pen
+                        min_pen = d
+                        min_x = p1x
+                        min_y = p1y
+                        min_z = p1z
+                        min_nx = nx
+                        min_ny = ny
+                        min_nz = nz
+                    end
+                end
+            end
+        end        
+    end
+    
+    if min_pen < $Precision
+        #tell @a "(collider1.id) hit (collider2.id) at (min_x), (min_y), (min_z) norm (min_nx), (min_ny), (min_nz) pen (min_pen)"
+        create_collision(min_x, min_y, min_z, min_nx, min_ny, min_nz, min_pen, collider1.id, collider2.id)
+    end
+end
+
+function get_nearest_vertex()
+    define name collider1 = "collider_$(ncol1)"
+    define name collider2 = "collider_$(ncol2)"
+    
+    with
+        $(collider) = collider1.id
+    collider_world_to_local(collider2.x, collider2.y, collider2.z, True)
+    
+    if local_x > 0
+        if local_y > 0
+            if local_z > 0
+                vertex = 0
+            end
+            if local_z < 0
+                vertex = 4
+            end
+        end
+        if local_y < 0
+            if local_z > 0
+                vertex = 2
+            end
+            if local_z < 0
+                vertex = 6
+            end
+        end
+    end
+    if local_x < 0
+        if local_y > 0
+            if local_z > 0
+                vertex = 7
+            end
+            if local_z < 0
+                vertex = 3
+            end
+        end
+        if local_y < 0
+            if local_z > 0
+                vertex = 5
+            end
+            if local_z < 0
+                vertex = 1
+            end
+        end
+    end
+end
+
+function create_collision(x, y, z, nx, ny, nz, pen, collider1, collider2)
+    id = get_unused_collision_id()
+
+    with
+        $(collision) = id
+    do
+        define name collision = "collision_$(collision)"
+        
+        /scoreboard players set collision_$(collision) id $(collision)
+        collision.exists = True
+        collision.x = x
+        collision.y = y
+        collision.z = z
+        
+        collision.nx = nx
+        collision.ny = ny
+        collision.nz = nz
+        
+        collision.pen = pen
+        
+        collision.collider1 = collider1
+        collision.collider2 = collider2
+        
+        if collision.id > max_collision
+            max_collision = collision.id
+        end    
+    end
+end
+
+function get_unused_collision_id()
+    unused_id = -1
+
+    for collision = collision_start to 200
+        exists = False
+
+        with
+            $(collision) = collision
+        do
+            define name collision = "collision_$(collision)"
+            exists = collision.exists
+        end
+        
+        if not exists
+            collision_start = collision + 1
+            unused_id = collision
+            collision = 1000000
+        end
+    end
+    
+    return unused_id
+end
+
+function delete_collisions()
+    for collision = 1 to max_collision
+        with
+            $(collision) = collision
+        do
+            define name collision = "collision_$(collision)"
+            if collision.exists
+                if collision.id < collision_start
+                    collision_start = collision.id
+                end
+
+                /scoreboard players reset collision_$(collision)
+            end
+        end        
+        
+    end
+    
+    max_collision = 0
+    collision_start = 1
+end
+
 function handle_collision_impulse()
     define name collider1 = "collider_$(collider1)"
     define name collider2 = "collider_$(collider2)"
