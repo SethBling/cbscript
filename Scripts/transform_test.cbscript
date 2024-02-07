@@ -17,56 +17,90 @@ end
 
 $Precision = 1000
 $Half = 500
-$NumCubes = 3
-
 reset
+    /scoreboard objectives add absorbed minecraft.custom:minecraft.damage_dealt_absorbed
+
     initialize_transforms()
 
     at @nearest_player
         /kill @Position
-        create @Position
-    end
-
-    /kill @PhysicsBlock
-    
-    at @nearest_player ^ ^1.6 ^5
-        create @Position
-        /tp @Position ~ ~ ~
-        <x, y, z> = @Position.<pos>
+        create @Position ~ ~ ~
     end
     
-    with
-        $(collider) = 1
-        $(block_name) = "grass_block"
-    create_collider(6500, 57500, 1500, 1500, 800, 400)
+    destroy_colliders()
+
+    CubeSize = 1500
+    CubeInvMass = 800
+    CubeInvRotInt = 400
     
-    with
-        $(collider) = 2
-        $(block_name) = "command_block"
-    create_collider(-500, 57500, 1500, 1500, 800, 400)
-
-    with
-        $(collider) = 3
-        $(block_name) = "redstone_block"
-    create_collider(-500, 57500, -2500, 1500, 800, 400)
-
-    #with
-    #    $(collider) = 4
-    #create_collider(-7500, 57500, 1500, 6000, 200, 200)
-    
-
     click_detector_reset()
     as @Player
         create_click()
     end
+end
+
+function destroy_colliders()
+    for collider = max_collider to 1 by -1
+        with
+            $(collider) = collider
+        destroy_collider()
+    end
     
-    # Point 1 starts at origin and goes in positive x
-    # Point 2 starts at -0.5, -1.5, -0.5 and goes in positive x and positive y
-    get_edge_edge_penetration(0, 0, 0, 1000, 0, 0, -1500, -500, -500, 707, 707, 0)
+    /kill @PhysicsBlock
     
-    #tell @a "norm: (nx), (ny), (nz)"
-    #tell @a "dist: (d)"
-    #tell @a "pen point 2: (p1x), (p1y), (p1z)"
+    max_collider = 0
+end
+
+function destroy_collider()
+    define name collider = "collider_$(collider)"
+    
+    if max_collider == collider.id
+        max_collider--
+    end
+    
+    as @PhysicsBlock
+        if @s.id == collider.id
+            /kill @s
+        end
+    end
+    
+    /scoreboard players reset collider_$(collider)
+end
+
+function add_collider()
+    id = get_unused_collider_id()
+
+    at @nearest_player ^ ^1.6 ^3
+        /tp @Position ~ ~ ~
+        x = @Position.x
+        y = @Position.y
+        z = @Position.z
+    end
+    
+    with
+        $(collider) = id
+        $(block_name) = "command_block"
+    create_collider(x, y, z, CubeSize, CubeInvMass, CubeInvRotInt)
+    
+    unless id <= max_collider
+        max_collider = id
+    end
+end
+
+function get_unused_collider_id()
+    for collider = 1 to max_collider+1
+        with
+            $(collider) = collider
+        do
+            define name collider = "collider_$(collider)"
+            unless collider.inv_mass
+                return_id = collider
+                collider = 1000000000
+            end
+        end
+    end
+    
+    return return_id
 end
 
 clock tick
@@ -84,23 +118,18 @@ clock tick
         world_eye_dz = @Position.z - world_eye_z
         
         clicked = check_clicked()
+        
+        if @s.absorbed
+            @s.absorbed = 0
+        else
+            clicked = False
+        end
     end
     click_detector_tick()
     
-    if clicked unless @PhysicsBlock
-        at @nearest_player ^ ^1.6 ^5
-            /tp @Position ~ ~ ~
-            <x, y, z> = @Position.<pos>
-        end
-        
-        with
-            $(collider) = 1
-        create_collider(x, y, z, 3000, 400, 300)
-    end
-    
     delete_collisions()
 
-    for collider = 1 to $NumCubes
+    for collider = 1 to max_collider
         with
             $(collider) = collider
         do
@@ -113,7 +142,7 @@ clock tick
     if clicked
         min_col_t = 1000000000
 
-        for collider = 1 to $NumCubes
+        for collider = 1 to max_collider
             with
                 $(collider) = collider
             do
@@ -139,10 +168,12 @@ clock tick
             at @Position
                 /particle minecraft:crit ~ ~ ~ 0 0 0 0 1 force
             end
+        else
+            add_collider()
         end
     end
     
-    for collider = 1 to $NumCubes
+    for collider = 1 to max_collider
         with
             $(collider) = collider
         do
@@ -153,8 +184,8 @@ clock tick
         end
     end
     
-    for col1 = 1 to $NumCubes
-        for col2 = col1+1 to $NumCubes
+    for col1 = 1 to max_collider
+        for col2 = col1+1 to max_collider
             with
                 $(collider1) = col1
                 $(collider2) = col2
@@ -165,7 +196,7 @@ clock tick
     resolve_collision_velocity()
     resolve_collision_penetration()
     
-    for collider = 1 to $NumCubes
+    for collider = 1 to max_collider
         with
             $(collider) = collider
         do

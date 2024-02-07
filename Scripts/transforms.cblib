@@ -13,12 +13,6 @@ end
 
 function initialize_transforms()
     initialize_vertex_adjacency()
-    
-    for $row in $range(3)
-        for $col in $range(3)
-            /scoreboard objectives add m_$row$col dummy
-        end
-    end
 end
 
 
@@ -26,6 +20,15 @@ end
 # It doesn't actually need to be called.
 function register_transform_variables()
     accum = 0
+    m_00 = 0
+    m_01 = 0
+    m_02 = 0
+    m_10 = 0
+    m_11 = 0
+    m_12 = 0
+    m_20 = 0
+    m_21 = 0
+    m_22 = 0
 end
 
 function quaternion_multiply(w1, i1, j1, k1, w2, i2, j2, k2)
@@ -43,15 +46,15 @@ end
 function matrix_multiply()
     for $row in [0, 1, 2]
         for $col in [0, 1, 2]
-            /$execute store result score Global $(out)_$row$col run scoreboard players get Global $(m1)_$row0
-            /$scoreboard players operation Global $(out)_$row$col *= Global $(m2)_0$col
-            /$execute store result score Global accum run scoreboard players get Global $(m1)_$row1
-            /$scoreboard players operation Global accum *= Global $(m2)_1$col
-            /$scoreboard players operation Global $(out)_$row$col += Global accum
-            /$execute store result score Global accum run scoreboard players get Global $(m1)_$row2
-            /$scoreboard players operation Global accum *= Global $(m2)_2$col
-            /$scoreboard players operation Global $(out)_$row$col += Global accum
-            /$scoreboard players operation Global $(out)_$row$col /= c1000 Constant
+            /$execute store result score $(out)_$row$col run scoreboard players get $(m1)_$row0
+            /$scoreboard players operation $(out)_$row$col *= $(m2)_0$col
+            /$execute store result score Global accum run scoreboard players get $(m1)_$row1
+            /$scoreboard players operation Global accum *= $(m2)_1$col
+            /$scoreboard players operation $(out)_$row$col += Global accum
+            /$execute store result score Global accum run scoreboard players get $(m1)_$row2
+            /$scoreboard players operation Global accum *= $(m2)_2$col
+            /$scoreboard players operation $(out)_$row$col += Global accum
+            /$scoreboard players operation $(out)_$row$col /= c1000 Constant
         end
     end
 end
@@ -62,15 +65,15 @@ end
 function transpose_matrix_multiply()
     for $row in [0, 1, 2]
         for $col in [0, 1, 2]
-            /$execute store result score Global $(out)_$row$col run scoreboard players get Global $(m1)_0$row
-            /$scoreboard players operation Global $(out)_$row$col *= Global $(m2)_0$col
-            /$execute store result score Global accum run scoreboard players get Global $(m1)_1$row
-            /$scoreboard players operation Global accum *= Global $(m2)_1$col
-            /$scoreboard players operation Global $(out)_$row$col += Global accum
-            /$execute store result score Global accum run scoreboard players get Global $(m1)_2$row
-            /$scoreboard players operation Global accum *= Global $(m2)_2$col
-            /$scoreboard players operation Global $(out)_$row$col += Global accum
-            /$scoreboard players operation Global $(out)_$row$col /= c1000 Constant
+            /$execute store result score $(out)_$row$col run scoreboard players get $(m1)_0$row
+            /$scoreboard players operation $(out)_$row$col *= $(m2)_0$col
+            /$execute store result score Global accum run scoreboard players get $(m1)_1$row
+            /$scoreboard players operation Global accum *= $(m2)_1$col
+            /$scoreboard players operation $(out)_$row$col += Global accum
+            /$execute store result score Global accum run scoreboard players get $(m1)_2$row
+            /$scoreboard players operation Global accum *= $(m2)_2$col
+            /$scoreboard players operation $(out)_$row$col += Global accum
+            /$scoreboard players operation $(out)_$row$col /= c1000 Constant
         end
     end
 end
@@ -144,7 +147,7 @@ end
 function collider_check_sleep()
     define name collider = "collider_$(collider)"
     
-    if collider.recent_motion < 2200 and collider.recent_rotation < 2200
+    if collider.recent_motion < 2500 and collider.recent_rotation < 2500
         collider_sleep() with macros
     end
 end
@@ -159,9 +162,9 @@ end
 function collider_integrate_velocity()
     define name collider = "collider_$(collider)"
     
-    collider.velocity_x = (collider.velocity_x * 980 + $Half) / $Precision
-    collider.velocity_y = (collider.velocity_y * 980 + $Half) / $Precision
-    collider.velocity_z = (collider.velocity_z * 980 + $Half) / $Precision
+    collider.velocity_x = (collider.velocity_x * 995 + $Half) / $Precision
+    collider.velocity_y = (collider.velocity_y * 995 + $Half) / $Precision
+    collider.velocity_z = (collider.velocity_z * 995 + $Half) / $Precision
     
     collider.x += collider.velocity_x
     collider.y += collider.velocity_y
@@ -176,9 +179,9 @@ end
 function collider_integrate_rotation()
     define name collider = "collider_$(collider)"
     
-    collider.rotation_x = (collider.rotation_x * 980 + $Half) / $Precision
-    collider.rotation_y = (collider.rotation_y * 980 + $Half) / $Precision
-    collider.rotation_z = (collider.rotation_z * 980 + $Half) / $Precision
+    collider.rotation_x = (collider.rotation_x * 995 + $Half) / $Precision
+    collider.rotation_y = (collider.rotation_y * 995 + $Half) / $Precision
+    collider.rotation_z = (collider.rotation_z * 995 + $Half) / $Precision
     
     quaternion_multiply(0, collider.rotation_x, collider.rotation_y, collider.rotation_z, collider.w, collider.i, collider.j, collider.k)
     
@@ -1895,17 +1898,16 @@ function delete_collisions()
     collision_start = 1
 end
 
-function handle_collision_impulse()
+# Initializes contact transform, and impulse <--> velocity matrices
+function initialize_collision_matrices()
     define name collider1 = "collider_$(collider1)"
     define name collider2 = "collider_$(collider2)"
     define name collision = "collision_$(collision)"
-    
-    /scoreboard players set Global twobody $(collider2)
-    
+
     # Create contact basis/transform
-    ct_01 = collision.nx
-    ct_11 = collision.ny
-    ct_21 = collision.nz
+    collision.ct_01 = collision.nx
+    collision.ct_11 = collision.ny
+    collision.ct_21 = collision.nz
     
     absx = abs(collision.nx)
     absz = abs(collision.nz)
@@ -1914,52 +1916,28 @@ function handle_collision_impulse()
         # The norm isn't pointing toward x, so
         # cross the norm with 1,0,0
         s = sqrt(collision.ny*collision.ny + collision.nz*collision.nz)
-        ct_00 = 0
-        ct_10 = -collision.nz * $Precision / s
-        ct_20 = collision.ny * $Precision / s
+        collision.ct_00 = 0
+        collision.ct_10 = -collision.nz * $Precision / s
+        collision.ct_20 = collision.ny * $Precision / s
 
         # Cross the norm with the new vector
-        ct_02 = (ct_10*ct_21 - ct_20*ct_11 + $Half) / $Precision
-        ct_12 = (ct_20*ct_01 + $Half) / $Precision
-        ct_22 = (ct_10*ct_01 + $Half) / $Precision
+        collision.ct_02 = (collision.ct_10*collision.ct_21 - collision.ct_20*collision.ct_11 + $Half) / $Precision
+        collision.ct_12 = (collision.ct_20*collision.ct_01 + $Half) / $Precision
+        collision.ct_22 = (collision.ct_10*collision.ct_01 + $Half) / $Precision
     else
         # The norm isn't pointing toward z, so
         # cross the norm with 0,0,1
         s = sqrt(collision.ny*collision.ny + collision.nx*collision.nx)
-        ct_00 = collision.ny * $Precision / s
-        ct_10 = -collision.nx * $Precision / s
-        ct_20 = 0
+        collision.ct_00 = collision.ny * $Precision / s
+        collision.ct_10 = -collision.nx * $Precision / s
+        collision.ct_20 = 0
 
         # Cross the norm with the new vector
-        ct_02 = (ct_10*ct_21 + $Half) / $Precision
-        ct_12 = (ct_00*ct_21 + $Half) / $Precision
-        ct_22 = (ct_00*ct_11 - ct_10*ct_01 + $Half) / $Precision
+        collision.ct_02 = (collision.ct_10*collision.ct_21 + $Half) / $Precision
+        collision.ct_12 = (collision.ct_00*collision.ct_21 + $Half) / $Precision
+        collision.ct_22 = (collision.ct_00*collision.ct_11 - collision.ct_10*collision.ct_01 + $Half) / $Precision
     end
-    
-    # Full cross product would be:
-    #ct_20 = (ct_10*ct_21 - ct_20*ct_11 + $Half) / $Precision
-    #ct_21 = (ct_20*ct_01 - ct_00*ct_21 + $Half) / $Precision
-    #ct_22 = (ct_00*ct_11 - ct_10*ct_01 + $Half) / $Precision
 
-    
-    # Transform by the ct transpose matrix to get contact coordinates
-    c_vel_x = (ct_00 * collision.vel_x + ct_10 * collision.vel_y + ct_20 * collision.vel_z + $Half) / $Precision
-    c_vel_y = (ct_01 * collision.vel_x + ct_11 * collision.vel_y + ct_21 * collision.vel_z + $Half) / $Precision
-    c_vel_z = (ct_02 * collision.vel_x + ct_12 * collision.vel_y + ct_22 * collision.vel_z + $Half) / $Precision
-
-    # Impulse to torque skew symmetric matrix
-    #i_to_t_00 = 0
-    #i_to_t_01 = -dz
-    #i_to_t_02 = dy
-         
-    #i_to_t_10 = dz
-    #i_to_t_11 = 0
-    #i_to_t_12 = -dx
-         
-    #i_to_t_20 = -dy
-    #i_to_t_21 = dx
-    #i_to_t_22 = 0
-    
     dx = collision.x - collider1.x
     dy = collision.y - collider1.y
     dz = collision.z - collider1.z
@@ -1983,21 +1961,25 @@ function handle_collision_impulse()
     
     # First, ct^transpose * i_to_v
     with
-        $(m1) = "ct"
-        $(m2) = "i_to_v"
-        $(out) = "m"
+        $(m1) = "collision_$(collision) ct"
+        $(m2) = "Global i_to_v"
+        $(out) = "Global m"
     transpose_matrix_multiply()
 
     # Then, multiply by ct
     with
-        $(m1) = "m"
-        $(m2) = "ct"
-        $(out) = "c_i_to_v"
+        $(m1) = "Global m"
+        $(m2) = "collision_$(collision) ct"
+        $(out) = "collision_$(collision) c_i_to_v"
     matrix_multiply()
     
     inv_mass = collider1.inv_mass
     
     if twobody
+        dx = collision.x - collider2.x
+        dy = collision.y - collider2.y
+        dz = collision.z - collider2.z
+
         # Impulse to velocity transform
         # Formula: -(i_to_t^2) * InverseRotationalIntertia
         i_to_v_00 = ((dz * dz + dy * dy + $Half) / $Precision * collider2.inv_rot_int + $Half) / $Precision
@@ -2017,47 +1999,47 @@ function handle_collision_impulse()
         
         # First, ct^transpose * i_to_v
         with
-            $(m1) = "ct"
-            $(m2) = "i_to_v"
-            $(out) = "m"
+            $(m1) = "collision_$(collision) ct"
+            $(m2) = "Global i_to_v"
+            $(out) = "Global m"
         transpose_matrix_multiply()
 
         # Then, multiply by ct
         with
-            $(m1) = "m"
-            $(m2) = "ct"
-            $(out) = "c_i_to_v_2"
+            $(m1) = "Global m"
+            $(m2) = "collision_$(collision) ct"
+            $(out) = "Global c_i_to_v_2"
         matrix_multiply()
         
-        c_i_to_v_00 += c_i_to_v_2_00
-        c_i_to_v_01 += c_i_to_v_2_01
-        c_i_to_v_02 += c_i_to_v_2_02
-        c_i_to_v_10 += c_i_to_v_2_10
-        c_i_to_v_11 += c_i_to_v_2_11
-        c_i_to_v_12 += c_i_to_v_2_12
-        c_i_to_v_20 += c_i_to_v_2_20
-        c_i_to_v_21 += c_i_to_v_2_21
-        c_i_to_v_22 += c_i_to_v_2_22
+        collision.c_i_to_v_00 += c_i_to_v_2_00
+        collision.c_i_to_v_01 += c_i_to_v_2_01
+        collision.c_i_to_v_02 += c_i_to_v_2_02
+        collision.c_i_to_v_10 += c_i_to_v_2_10
+        collision.c_i_to_v_11 += c_i_to_v_2_11
+        collision.c_i_to_v_12 += c_i_to_v_2_12
+        collision.c_i_to_v_20 += c_i_to_v_2_20
+        collision.c_i_to_v_21 += c_i_to_v_2_21
+        collision.c_i_to_v_22 += c_i_to_v_2_22
         
         inv_mass += collider2.inv_mass
     end
     
     # In contact space, add the inverse mass to the diagonal
-    c_i_to_v_00 += inv_mass
-    c_i_to_v_11 += inv_mass
-    c_i_to_v_22 += inv_mass
+    collision.c_i_to_v_00 += inv_mass
+    collision.c_i_to_v_11 += inv_mass
+    collision.c_i_to_v_22 += inv_mass
 
-    a = c_i_to_v_00
-    b = c_i_to_v_01
-    c = c_i_to_v_02
-    
-    d = c_i_to_v_10
-    e = c_i_to_v_11
-    f = c_i_to_v_12
-    
-    g = c_i_to_v_20
-    h = c_i_to_v_21
-    i = c_i_to_v_22
+    a = collision.c_i_to_v_00
+    b = collision.c_i_to_v_01
+    c = collision.c_i_to_v_02
+
+    d = collision.c_i_to_v_10
+    e = collision.c_i_to_v_11
+    f = collision.c_i_to_v_12
+
+    g = collision.c_i_to_v_20
+    h = collision.c_i_to_v_21
+    i = collision.c_i_to_v_22
     
     # Inverse impulse to velocity
     det =  (a * e + $Half) / $Precision * i
@@ -2069,17 +2051,36 @@ function handle_collision_impulse()
     det += $Half
     det /= $Precision
 
-    v_to_i_00 = (e * i - f * h) / det
-    v_to_i_01 = (c * h - b * i) / det
-    v_to_i_02 = (b * f - c * e) / det
+    collision.v_to_i_00 = (e * i - f * h) / det
+    collision.v_to_i_01 = (c * h - b * i) / det
+    collision.v_to_i_02 = (b * f - c * e) / det
 
-    v_to_i_10 = (f * g - d * i) / det
-    v_to_i_11 = (a * i - c * g) / det
-    v_to_i_12 = (c * d - a * f) / det
+    collision.v_to_i_10 = (f * g - d * i) / det
+    collision.v_to_i_11 = (a * i - c * g) / det
+    collision.v_to_i_12 = (c * d - a * f) / det
+
+    collision.v_to_i_20 = (d * h - e * g) / det
+    collision.v_to_i_21 = (b * g - a * h) / det
+    collision.v_to_i_22 = (a * e - b * d) / det
     
-    v_to_i_20 = (d * h - e * g) / det
-    v_to_i_21 = (b * g - a * h) / det
-    v_to_i_22 = (a * e - b * d) / det
+    collision.initialized = True
+end
+
+function handle_collision_impulse()
+    define name collider1 = "collider_$(collider1)"
+    define name collider2 = "collider_$(collider2)"
+    define name collision = "collision_$(collision)"
+    
+    /scoreboard players set Global twobody $(collider2)
+    
+    unless collision.initialized
+        initialize_collision_matrices() with macros
+    end
+    
+    # Transform by the ct transpose matrix to get the closing velocity in contact coordinates
+    c_vel_x = (collision.ct_00 * collision.vel_x + collision.ct_10 * collision.vel_y + collision.ct_20 * collision.vel_z + $Half) / $Precision
+    c_vel_y = (collision.ct_01 * collision.vel_x + collision.ct_11 * collision.vel_y + collision.ct_21 * collision.vel_z + $Half) / $Precision
+    c_vel_z = (collision.ct_02 * collision.vel_x + collision.ct_12 * collision.vel_y + collision.ct_22 * collision.vel_z + $Half) / $Precision
     
     $Restitution = 600
     restitution = $Restitution
@@ -2096,9 +2097,9 @@ function handle_collision_impulse()
     desired_dvy = desired_vy - c_vel_y
     desired_dvz = desired_vz - c_vel_z
     
-    cix = (v_to_i_00 * desired_dvx + v_to_i_01 * desired_dvy + v_to_i_02 * desired_dvz + $Half) / $Precision
-    ciy = (v_to_i_10 * desired_dvx + v_to_i_11 * desired_dvy + v_to_i_12 * desired_dvz + $Half) / $Precision
-    ciz = (v_to_i_20 * desired_dvx + v_to_i_21 * desired_dvy + v_to_i_22 * desired_dvz + $Half) / $Precision
+    cix = (collision.v_to_i_00 * desired_dvx + collision.v_to_i_01 * desired_dvy + collision.v_to_i_02 * desired_dvz + $Half) / $Precision
+    ciy = (collision.v_to_i_10 * desired_dvx + collision.v_to_i_11 * desired_dvy + collision.v_to_i_12 * desired_dvz + $Half) / $Precision
+    ciz = (collision.v_to_i_20 * desired_dvx + collision.v_to_i_21 * desired_dvy + collision.v_to_i_22 * desired_dvz + $Half) / $Precision
     
     planar_impulse = sqrt(cix*cix + ciz*ciz)
     
@@ -2109,7 +2110,7 @@ function handle_collision_impulse()
         dir_ix = cix * $Precision / planar_impulse
         dir_iz = ciz * $Precision / planar_impulse
     
-        v_per_i_y = c_i_to_v_11 + ((c_i_to_v_10 * dir_ix + c_i_to_v_12 * dir_iz + $Half) / $Precision * $Friction + $Half) / $Precision
+        v_per_i_y = collision.c_i_to_v_11 + ((collision.c_i_to_v_10 * dir_ix + collision.c_i_to_v_12 * dir_iz + $Half) / $Precision * $Friction + $Half) / $Precision
         
         ciy = desired_dvy * $Precision / v_per_i_y
         
@@ -2118,10 +2119,10 @@ function handle_collision_impulse()
     end
     
     # Transform impulse vector out of contact coordinates
-    ix = (ct_00 * cix + ct_01 * ciy + ct_02 * ciz + $Half) / $Precision
-    iy = (ct_10 * cix + ct_11 * ciy + ct_12 * ciz + $Half) / $Precision
-    iz = (ct_20 * cix + ct_21 * ciy + ct_22 * ciz + $Half) / $Precision
-
+    ix = (collision.ct_00 * cix + collision.ct_01 * ciy + collision.ct_02 * ciz + $Half) / $Precision
+    iy = (collision.ct_10 * cix + collision.ct_11 * ciy + collision.ct_12 * ciz + $Half) / $Precision
+    iz = (collision.ct_20 * cix + collision.ct_21 * ciy + collision.ct_22 * ciz + $Half) / $Precision
+    
     # collider1.id isn't using define name
     with
         $(collider) = collider1.id
