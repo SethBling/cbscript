@@ -623,6 +623,8 @@ function collider_physics_tick()
 end
 
 function resolve_collision_velocity()
+    collision_frame++
+    
     for vel_iter = 1 to 20
         max_closing = 0
         
@@ -814,6 +816,11 @@ function move_collisions(dx, dy, dz, collider)
     end
 end
 
+function is_air()
+    air = False
+    /execute if block $(x) $(y) $(z) minecraft:air run scoreboard players set Global air 1
+end
+
 function get_collisions()
     define name collider = "collider_$(collider)"
     
@@ -825,78 +832,108 @@ function get_collisions()
         do
             define name v = "collider_$(collider)_v$(vertex)"
             
-            @Position.<pos> = <v.x, v.y, v.z>
-            at @Position
-                unless block ~ ~ ~ air
-                    block_x = v.x % $Precision
-                    block_y = v.y % $Precision
-                    block_z = v.z % $Precision
+            with
+                $(x) = v.x / $Precision
+                $(y) = v.y / $Precision
+                $(z) = v.z / $Precision
+            is_air()
+            
+            if not air
+                block_x = v.x % $Precision
+                block_y = v.y % $Precision
+                block_z = v.z % $Precision
+                nblock_x = $Precision - block_x
+                nblock_y = $Precision - block_y
+                nblock_z = $Precision - block_z
+                
+                min_pen = 1000
+                
+                if nblock_y < min_pen
+                    with
+                        $(y) = v.y / $Precision + 1
+                    is_air()
                     
-                    min_pen = 1000
-                    
-                    if block ~1 ~ ~ air
-                        pen = $Precision - block_x
-                        if pen < min_pen
-                            min_pen = pen
-                            nx = $Precision
-                            ny = 0
-                            nz = 0
-                        end
+                    if air
+                        min_pen = nblock_y
+                        nx = 0
+                        ny = $Precision
+                        nz = 0
                     end
+                end
+
+                if block_y < min_pen
+                    with
+                        $(y) = v.y / $Precision - 1
+                    is_air()
                     
-                    if block ~ ~1 ~ air
-                        pen = $Precision - block_y
-                        if pen < min_pen
-                            min_pen = pen
-                            nx = 0
-                            ny = $Precision
-                            nz = 0
-                        end
+                    if air
+                        min_pen = block_y
+                        nx = 0
+                        ny = -$Precision
+                        nz = 0
                     end
+                end
+                
+                if nblock_x < min_pen
+                    with
+                        $(x) = v.x / $Precision + 1
+                        $(y) = v.y / $Precision
+                    is_air()
+
+                    if air
+                        min_pen = nblock_x
+                        nx = $Precision
+                        ny = 0
+                        nz = 0
+                    end
+                end
+
+                if block_x < min_pen
+                    with
+                        $(x) = v.x / $Precision - 1
+                        $(y) = v.y / $Precision
+                    is_air()
                     
-                    if block ~ ~ ~1 air
-                        pen = $Precision - block_z
-                        if pen < min_pen
-                            min_pen = pen
-                            nx = 0
-                            ny = 0
-                            nz = $Precision
-                        end
+                    if air
+                        min_pen = block_x
+                        nx = -$Precision
+                        ny = 0
+                        nz = 0
                     end
+                end
+
+                if nblock_z < min_pen
+                    with
+                        $(x) = v.x / $Precision
+                        $(y) = v.y / $Precision
+                        $(z) = v.z / $Precision + 1
+                    is_air()
                     
-                    if block ~-1 ~ ~ air
-                        pen = block_x
-                        if pen < min_pen
-                            min_pen = pen
-                            nx = -$Precision
-                            ny = 0
-                            nz = 0
-                        end
+                    if air
+                        min_pen = nblock_z
+                        nx = 0
+                        ny = 0
+                        nz = $Precision
                     end
+                end
+                
+                if block_z < min_pen
+                    with
+                        $(x) = v.x / $Precision
+                        $(y) = v.y / $Precision
+                        $(z) = v.z / $Precision - 1
+                    is_air()
                     
-                    if block ~ ~-1 ~ air
-                        pen = block_y
-                        if pen < min_pen
-                            min_pen = pen
-                            nx = 0
-                            ny = -$Precision
-                            nz = 0
-                        end
+                    if air
+                        min_pen = block_z
+                        nx = 0
+                        ny = 0
+                        nz = -$Precision
                     end
-                    
-                    if block ~ ~ ~-1 air
-                        pen = block_z
-                        if pen < min_pen
-                            min_pen = pen
-                            nx = 0
-                            ny = 0
-                            nz = -$Precision
-                        end
-                    end
-                    
-                    if min_pen < 1000
-                        create_collision(v.x, v.y, v.z, nx, ny, nz, min_pen, collider.id, -1)
-                    end
+                end
+                
+                if min_pen < 1000
+                    create_collision(v.x, v.y, v.z, nx, ny, nz, min_pen, collider.id, -1)
                 end
             end
         end
@@ -911,68 +948,82 @@ function get_collisions()
     for block_x = start_x to collider.max_x by $Precision
         for block_y = start_y to collider.max_y by $Precision
             for block_z = start_z to collider.max_z by $Precision
-                @Position.<pos> = <block_x, block_y, block_z>
-                at @Position
-                    if block ~ ~ ~ air and block ~ ~ ~-1 air and block ~ ~-1 ~ air and block ~ ~-1 ~-1 air and block ~-1 ~ ~ air and block ~-1 ~ ~-1 air and block ~-1 ~-1 ~ air and block ~-1 ~-1 ~-1 air
-                    
-                    else
-                        collider_world_to_local(block_x, block_y, block_z, True) with macros
-                        if local_x > -collider.halfsize and local_x < collider.halfsize and local_y > -collider.halfsize and local_y < collider.halfsize and local_z > -collider.halfsize and local_z < collider.halfsize
-                            min_pen = collider.halfsize
+            
+                for dx = -1 to 0
+                    for dy = -1 to 0
+                        for dz = -1 to 0
+                            with
+                                $(x) = block_x / $Precision + dx
+                                $(y) = block_y / $Precision + dy
+                                $(z) = block_z / $Precision + dz
+                            is_air()
                             
-                            pen = collider.halfsize + local_x
-                            if pen < min_pen
-                                min_pen = pen
-                                lnx = $Precision
-                                lny = 0
-                                lnz = 0
+                            if not air
+                                dx = 2
+                                dy = 2
+                                dz = 2
                             end
-                            
-                            pen = collider.halfsize - local_x
-                            if pen < min_pen
-                                min_pen = pen
-                                lnx = -$Precision
-                                lny = 0
-                                lnz = 0
-                            end
-                            
-                            pen = collider.halfsize + local_y
-                            if pen < min_pen
-                                min_pen = pen
-                                lnx = 0
-                                lny = $Precision
-                                lnz = 0
-                            end
-                            
-                            pen = collider.halfsize - local_y
-                            if pen < min_pen
-                                min_pen = pen
-                                lnx = 0
-                                lny = -$Precision
-                                lnz = 0
-                            end
-                            
-                            pen = collider.halfsize + local_z
-                            if pen < min_pen
-                                min_pen = pen
-                                lnx = 0
-                                lny = 0
-                                lnz = $Precision
-                            end
-                            
-                            pen = collider.halfsize - local_z
-                            if pen < min_pen
-                                min_pen = pen
-                                lnx = 0
-                                lny = 0
-                                lnz = -$Precision
-                            end
+                        end
+                    end
+                end
+                
+                if not air
+                    collider_world_to_local(block_x, block_y, block_z, True) with macros
+                    if local_x > -collider.halfsize and local_x < collider.halfsize and local_y > -collider.halfsize and local_y < collider.halfsize and local_z > -collider.halfsize and local_z < collider.halfsize
+                        min_pen = collider.halfsize
+                        
+                        pen = collider.halfsize + local_x
+                        if pen < min_pen
+                            min_pen = pen
+                            lnx = $Precision
+                            lny = 0
+                            lnz = 0
+                        end
+                        
+                        pen = collider.halfsize - local_x
+                        if pen < min_pen
+                            min_pen = pen
+                            lnx = -$Precision
+                            lny = 0
+                            lnz = 0
+                        end
+                        
+                        pen = collider.halfsize + local_y
+                        if pen < min_pen
+                            min_pen = pen
+                            lnx = 0
+                            lny = $Precision
+                            lnz = 0
+                        end
+                        
+                        pen = collider.halfsize - local_y
+                        if pen < min_pen
+                            min_pen = pen
+                            lnx = 0
+                            lny = -$Precision
+                            lnz = 0
+                        end
+                        
+                        pen = collider.halfsize + local_z
+                        if pen < min_pen
+                            min_pen = pen
+                            lnx = 0
+                            lny = 0
+                            lnz = $Precision
+                        end
+                        
+                        pen = collider.halfsize - local_z
+                        if pen < min_pen
+                            min_pen = pen
+                            lnx = 0
+                            lny = 0
+                            lnz = -$Precision
+                        end
 
-                            if min_pen < collider.halfsize
-                                collider_local_to_world(lnx, lny, lnz, False) with macros
-                                
-                                create_collision(block_x, block_y, block_z, world_x, world_y, world_z, min_pen, collider.id, -1)
-                            end
+                        if min_pen < collider.halfsize
+                            collider_local_to_world(lnx, lny, lnz, False) with macros
+                            
+                            create_collision(block_x, block_y, block_z, world_x, world_y, world_z, min_pen, collider.id, -1)
                         end
                     end
                 end
@@ -1131,11 +1182,18 @@ function raymarch_edge()
             @Position.<pos> = <block_x, block_y, block_z>
             
             at @Position
-                unless block ~ ~ ~ air
+                with
+                    $(x) = block_x / $Precision
+                    $(y) = block_y / $Precision
+                    $(z) = block_z / $Precision
+                is_air()
+                
+                if not air
                     # Edge is penetrating a block                            
                     closest = $Precision
                     
                     if prev_crossing == $X_Axis
+                        
                         empty = False
                         if ex > 0 and block ~-1 ~ ~ air
                             empty = True
@@ -2063,7 +2121,7 @@ function initialize_collision_matrices()
     collision.v_to_i_21 = (b * g - a * h) / det
     collision.v_to_i_22 = (a * e - b * d) / det
     
-    collision.initialized = True
+    collision.initialized = collision_frame
 end
 
 function handle_collision_impulse()
@@ -2073,7 +2131,7 @@ function handle_collision_impulse()
     
     /scoreboard players set Global twobody $(collider2)
     
-    unless collision.initialized
+    unless collision.initialized == collision_frame
         initialize_collision_matrices() with macros
     end
     
