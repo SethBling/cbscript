@@ -17,7 +17,7 @@ class scoreboard_var(var_base):
 				
 		return None
 			
-	# Returns a scoreboard objective for this variable.
+	# Returns a scoreboard_var for this variable.
 	# If assignto isn't None, then this function may
 	# use the assignto objective to opimtize data flow.
 	def get_scoreboard_var(self, func, assignto=None):
@@ -25,12 +25,11 @@ class scoreboard_var(var_base):
 		
 		if path_data:
 			if assignto == None:
-				assignto = func.get_scratch()
+				assignto = scoreboard_var('Global', func.get_scratch())
+			
+			assignto.copy_from(func, self)
 				
-			ret = scoreboard_var('Global', assignto)
-			ret.copy_from(func, self)
-				
-			return scoreboard_var('Global', assignto)
+			return assignto
 		else:
 			func.register_objective(self.objective)
 
@@ -97,14 +96,34 @@ class scoreboard_var(var_base):
 			return True
 		else:
 			return False
+		
+	def same_as(self, func, var):
+		if var == None:
+			return False
+
+		myselector = self.selector
+		name_def = func.get_name_definition(self.selector)
+		if name_def != None:
+			myselector = name_def
+
+		return var.is_objective(func, myselector, self.objective)
+	
+	def is_fast_selector(self):
+		if not self.selector.startswith('@'):
+			return True
+		
+		if self.selector == '@s':
+			return True
+		
+		return False
 			
 	# Gets an assignto value for this variable if there is one.
 	def get_assignto(self, func):
 		path_data = self.get_path(func)
-		if path_data == None and self.selector == 'Global':
+		if path_data == None and self.is_fast_selector():
 			func.register_objective(self.objective)
 			
-			return self.objective
+			return self
 		else:
 			return None
 		
@@ -145,7 +164,12 @@ class scoreboard_var(var_base):
 			if var_const != None:
 				func.add_command('scoreboard players set {} {} {}'.format(selector, self.objective, var_const))
 			elif not var.is_objective(func, selector, self.objective):
-				func.add_command('{} run {}'.format(self.set_command(func), var.get_command(func)))
+				selvar = var.get_selvar(func)
+
+				if selvar == None:
+					func.add_command('{} run {}'.format(self.set_command(func), var.get_command(func)))
+				else:
+					func.add_command('scoreboard players operation {} {} = {}'.format(selector, self.objective, selvar))
 
 	# Returns a scoreboard_var which can be modified as needed without side effects
 	def get_modifiable_var(self, func, assignto):
@@ -158,12 +182,12 @@ class scoreboard_var(var_base):
 			
 			if self.selector == 'Global' and func.is_scratch(self.objective):
 				return self
-			elif self.selector == 'Global' and self.objective == assignto:
+			elif self.same_as(func, assignto):
 				return self
 			else:
 				modifiable_var = scoreboard_var('Global', func.get_scratch())
 				modifiable_var.copy_from(func, self)
-				func.is_scratch(self.objective)
+				
 				return modifiable_var
 				
 	# If this is a scratch variable, free it up
@@ -173,9 +197,14 @@ class scoreboard_var(var_base):
 	def uses_macro(self, func):
 		return func.get_name_definition(self.selector) != None or "$(" in self.selector
 		
+	# Returns the selector and objective of this variable if it is a scoreboard_var, otherwise returns None
 	def get_selvar(self, func):
-		name_def = func.get_name_definition(self.selector)
+		path_data = self.get_path(func)
+		if path_data:
+			return None
 
+		name_def = func.get_name_definition(self.selector)
+		
 		if name_def != None:
 			return '{} {}'.format(name_def, self.objective)
 		else:

@@ -20,7 +20,7 @@ class vector_here_expr(object):
 			if assignto == None:
 				return_components.append(scoreboard_var('Global', func.get_scratch()))
 			else:
-				return_components.append(scoreboard_var('Global', assignto[i]))
+				return_components.append(assignto[i])
 		
 			func.add_command('execute store result score Global {0} run data get entity @e[_age==1,limit=1] Pos[{1}] {2}'.format(return_components[i].objective, i, scale))
 		

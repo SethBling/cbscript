@@ -11,11 +11,11 @@ class storage_path_var(var_base):
 	# use the assignto objective to opimtize data flow.
 	def get_scoreboard_var(self, func, assignto=None):
 		if assignto == None:
-			assignto = func.get_scratch()
+			assignto = scoreboard_var('Global', func.get_scratch())
 			
-		func.add_command('execute store result score Global {} run {}'.format(assignto, self.get_command(func)))
+		func.add_command('execute store result score {} run {}'.format(assignto.get_selvar(func), self.get_command(func)))
 			
-		return scoreboard_var('Global', assignto)
+		return assignto
 		
 	def get_target(self, func):
 		if self.target == None:

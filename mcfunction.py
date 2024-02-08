@@ -64,20 +64,6 @@ class mcfunction(object):
 		else:
 			return 'function {}:{}'.format(self.namespace, self.filename)
 
-	# Takes a scoreboard objective and returns a (potentially different)
-	# scoreboard objective which can be freely modified.
-	def get_modifiable_id(self, id, assignto):
-		if assignto != None:
-			if id != assignto:
-				self.add_operation('Global', assignto, '=', id)
-				id = assignto
-		elif not self.is_scratch(id):
-			newId = self.get_scratch()
-			self.add_operation('Global', newId, '=', id)
-			id = newId
-			
-		return id
-	
 	def evaluate_params(self, params):
 		results = []
 		for p in range(len(params)):

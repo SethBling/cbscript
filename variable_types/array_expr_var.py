@@ -60,7 +60,7 @@ class array_expr_var(var_base):
 	def get_assignto(self, func):
 		self.check_defined(func)
 		
-		return '{}Idx'.format(self.array)
+		return scoreboard_var('Global', '{}Idx'.format(self.array))
 		
 	# Copies the value from a target variable to this variable
 	def copy_from(self, func, var):

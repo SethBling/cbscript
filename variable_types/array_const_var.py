@@ -49,7 +49,7 @@ class array_const_var(var_base):
 			
 	# Gets an assignto value for this variable if there is one.
 	def get_assignto(self, func):
-		return self.get_objective(func)
+		return scoreboard_var('Global', self.get_objective(func))
 		
 	# Copies the value from a target variable to this variable
 	def copy_from(self, func, var):

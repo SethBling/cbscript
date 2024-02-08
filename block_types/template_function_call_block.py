@@ -42,11 +42,10 @@ class template_function_call_block(call_block_base):
 		
 		# Calculate function arguments
 		for i in range(len(args)):
-			assignto = 'Param{}'.format(i)
+			assignto = scoreboard_var('Global', 'Param{}'.format(i))
 			arg_var = args[i].compile(func, assignto)
 			
-			param_var = scoreboard_var('Global', assignto)
-			param_var.copy_from(func, arg_var)
+			assignto.copy_from(func, arg_var)
 			
 			arg_var.free_scratch(func)
 		

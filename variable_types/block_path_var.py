@@ -15,11 +15,11 @@ class block_path_var(var_base):
 		block_def = func.get_block_definition(self.block_id)
 		
 		if assignto == None:
-			assignto = func.get_scratch()
+			assignto = scoreboard_var('Global', func.get_scratch())
 			
-		func.add_command('execute store result score Global {} run {}'.format(assignto, self.get_command(func)))
+		func.add_command('execute store result score {} run {}'.format(assignto.get_selvar(func), self.get_command(func)))
 			
-		return scoreboard_var('Global', assignto)
+		return assignto
 	
 	# Returns a command that will get this variable's value to be used with "execute store result"
 	def get_command(self, func):

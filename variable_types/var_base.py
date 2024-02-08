@@ -35,6 +35,13 @@ class var_base(object):
 	# If this is a scratch variable, free it up
 	def free_scratch(self, func):
 		None
+
+	def get_global_id(self):
+		return None
+	
+	# Returns the selector and objective of this variable if it is a scoreboard_var, otherwise returns None
+	def get_selvar(self, func):
+		return None
 		
 	# Used to evaluate a variable as an expression
 	def compile(self, func, assignto=None):

@@ -16,6 +16,7 @@ class binop_expr(scalar_expression_base):
 			right_const = right_var.get_const_value(func)
 
 			if self.op in ['+', '*'] and left_const != None and right_const == None:
+				# Swap the operands so that the constant is on the right
 				old_left_var = left_var
 				old_left_const = left_const
 

@@ -4,6 +4,40 @@ desc "Test optimization of assignment expressions"
 import common
 
 reset
-    a.i = 1
-    a.i = 1 + i
+    step = 0
+end
+
+function tick()
+    $iters = 1000
+    
+    step++
+    
+    if step == 10
+        a = 0
+        b = 0
+        tell @a "(a) (b)"
+    end
+    if step == 11
+        for i = 1 to $iters
+            for $i in $range(1000)
+                /execute store result score Global a run scoreboard players operation Global b = Global i
+            end
+        end
+        tell @a "(a) (b)"
+    end
+    
+    if step == 20
+        a = 0
+        b = 0
+        tell @a "(a) (b)"
+    end
+    if step == 30
+        for i = 1 to $iters
+            for $i in $range(1000)
+                /scoreboard players operation Global a = Global i
+                /scoreboard players operation Global b = Global i
+            end
+        end
+        tell @a "(a) (b)"
+    end
 end
