@@ -651,7 +651,6 @@ function resolve_collision_velocity()
         end
         
         if max_closing <= 5
-            tell @a "(vel_iter)"
             vel_iter = 1000000
         else
             with

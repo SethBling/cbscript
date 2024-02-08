@@ -5,6 +5,11 @@ class binop_expr(scalar_expression_base):
 		self.op = op
 		self.rhs = rhs
 
+	# Returns true if this varariable/expression references the specified scoreboard variable
+	def references_scoreboard_var(self, func, var):
+		return self.lhs.references_scoreboard_var(func, var) or self.rhs.references_scoreboard_var(func, var)
+
+
 	def compile(self, func, assignto=None):
 		# TODO: Handle case where both variables are constant, and return constant
 	
@@ -26,7 +31,11 @@ class binop_expr(scalar_expression_base):
 				right_var = old_left_var
 				right_const = old_left_const
 			
-			temp_var = left_var.get_modifiable_var(func, assignto)
+			if assignto != None and not self.rhs.references_scoreboard_var(func, assignto):
+				assignto.copy_from(func, left_var)
+				temp_var = assignto
+			else:
+				temp_var = left_var.get_modifiable_var(func, assignto)
 			
 			# TODO: handle case where both variables have constant values, return constant result
 			
@@ -37,10 +46,10 @@ class binop_expr(scalar_expression_base):
 					right_const = -right_const
 					op = {'+':'-', '-':'+'}[self.op]
 					
-				func.add_command('scoreboard players {} {} {} {}'.format({'+':'add', '-':'remove'}[op], temp_var.selector, temp_var.objective, right_const))
+				func.add_command('scoreboard players {} {} {}'.format({'+':'add', '-':'remove'}[op], temp_var.get_selvar(func), right_const))
 			else:
 				right_var = right_var.get_scoreboard_var(func)
-				func.add_command('scoreboard players operation {} {} {}= {} {}'.format(temp_var.selector, temp_var.objective, self.op, right_var.selector, right_var.objective))
+				func.add_command('scoreboard players operation {} {}= {}'.format(temp_var.get_selvar(func), self.op, right_var.get_selvar(func)))
 				
 			right_var.free_scratch(func)
 			

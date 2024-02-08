@@ -42,6 +42,10 @@ class var_base(object):
 	# Returns the selector and objective of this variable if it is a scoreboard_var, otherwise returns None
 	def get_selvar(self, func):
 		return None
+
+	# Returns true if this varariable/expression references the specified scoreboard variable
+	def references_scoreboard_var(self, func, var):
+		return False
 		
 	# Used to evaluate a variable as an expression
 	def compile(self, func, assignto=None):

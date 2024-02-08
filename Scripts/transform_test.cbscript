@@ -54,6 +54,8 @@ end
 function destroy_collider()
     define name collider = "collider_$(collider)"
     
+    /say destroying $(collider)
+    
     if max_collider == collider.id
         max_collider--
     end
@@ -65,6 +67,14 @@ function destroy_collider()
     end
     
     /scoreboard players reset collider_$(collider)
+    
+    for vertex = 0 to 7
+        with
+            $(vertex) = vertex
+        do
+            /scoreboard players reset collider_$(collider)_v$(vertex)
+        end
+    end
 end
 
 function add_collider()
@@ -76,6 +86,8 @@ function add_collider()
         y = @Position.y
         z = @Position.z
     end
+    
+    tell @a "Creating collider at (x), (y), (z)"
     
     with
         $(collider) = id

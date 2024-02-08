@@ -93,3 +93,7 @@ class array_expr_var(var_base):
 		scratch_var = scoreboard_var('Global', func.get_scratch())
 		scratch_var.copy_from(func, self)
 		return scratch_var
+	
+	# Returns true if this varariable/expression references the specified scoreboard variable
+	def references_scoreboard_var(self, func, var):
+		return self.idx_expr.references_scoreboard_var(func, var)

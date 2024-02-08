@@ -108,6 +108,10 @@ class scoreboard_var(var_base):
 
 		return var.is_objective(func, myselector, self.objective)
 	
+	# Returns true if this varariable/expression references the specified scoreboard variable
+	def references_scoreboard_var(self, func, var):
+		return self.same_as(func, var)
+
 	def is_fast_selector(self):
 		if not self.selector.startswith('@'):
 			return True
