@@ -10,10 +10,22 @@ class binop_expr(scalar_expression_base):
 	
 		if len(self.op) == 1 and self.op in ['+', '-', '*', '/', '%']:
 			left_var = self.lhs.compile(func, assignto)
-			temp_var = left_var.get_modifiable_var(func, assignto)
+			left_const = left_var.get_const_value(func)
 			
 			right_var = self.rhs.compile(func, None)
 			right_const = right_var.get_const_value(func)
+
+			if self.op in ['+', '*'] and left_const != None and right_const == None:
+				old_left_var = left_var
+				old_left_const = left_const
+
+				left_var = right_var
+				left_const = right_const
+
+				right_var = old_left_var
+				right_const = old_left_const
+			
+			temp_var = left_var.get_modifiable_var(func, assignto)
 			
 			# TODO: handle case where both variables have constant values, return constant result
 			
