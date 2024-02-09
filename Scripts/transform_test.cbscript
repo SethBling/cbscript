@@ -204,6 +204,8 @@ clock tick
             get_collider_collider_collisions()
         end
     end
+    
+    test_update_collision()
 
     resolve_collision_velocity()
     resolve_collision_penetration()
@@ -215,6 +217,70 @@ clock tick
             if not collider.sleeping
                 collider_set_transform() with macros
                 collider_check_sleep() with macros
+            end
+        end
+    end
+end
+
+function test_update_collision()
+    for collision = 1 to max_collision
+        with
+            $(collision) = collision
+        do
+            define name collision = "collision_$(collision)"
+            
+            old_pen = collision.pen
+            old_x = collision.x
+            old_y = collision.y
+            old_z = collision.z
+            old_nx = collision.nx
+            old_ny = collision.ny
+            old_nz = collision.nz
+            update_collision() with macros
+            
+            same = True
+            unless old_pen == collision.pen
+                same = False
+            end
+            unless old_x == collision.x
+                same = False
+            end
+            unless old_y == collision.y
+                same = False
+            end
+            unless old_z == collision.z
+                same = False
+            end
+            unless old_nx == collision.nx
+                same = False
+            end
+            unless old_ny == collision.ny
+                same = False
+            end
+            unless old_nz == collision.nz
+                same = False
+            end
+            
+            unless same
+                tell @a "Collision #(collision.id) changed"
+                if collision.type == $CollisionCubePointWorldFace
+                    tell @a "Cube Point - World Face"
+                end
+                if collision.type == $CollisionCubeFaceWorldPoint
+                    tell @a "Cube Face - World Point"
+                end
+                if collision.type == $CollisionCubeEdgeWorldEdge
+                    tell @a "Cube Edge - World Edge"
+                end
+                if collision.type == $CollisionCubeFaceCubePoint
+                    tell @a "Cube Face - Cube Point"
+                end
+                if collision.type == $CollisionCubeEdgeCubeEdge
+                    tell @a "Cube Edge - Cube Edge"
+                end
+
+                tell @a "(old_pen) pos (old_x), (old_y), (old_z) norm (old_nx), (old_ny), (old_nz)"
+                tell @a "(collision.pen) pos (collision.x), (collision.y), (collision.z) norm (collision.nx), (collision.ny), (collision.nz)"
             end
         end
     end
