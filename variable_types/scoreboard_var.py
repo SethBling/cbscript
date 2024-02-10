@@ -207,6 +207,8 @@ class scoreboard_var(var_base):
 		if path_data:
 			return None
 
+		func.register_objective(self.objective)
+
 		name_def = func.get_name_definition(self.selector)
 		
 		if name_def != None:

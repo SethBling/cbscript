@@ -33,6 +33,18 @@ reset
     CubeInvMass = 800
     CubeInvRotInt = 400
     
+    #id = get_unused_collider_id()
+
+    #with
+    #    $(collider) = id
+    #    $(block_name) = "command_block"
+    #create_collider(DebugX, DebugY, DebugZ, CubeSize, CubeInvMass, CubeInvRotInt)
+    
+    #unless id <= max_collider
+    #    max_collider = id
+    #end
+
+    
     click_detector_reset()
     as @Player
         create_click()
@@ -78,8 +90,6 @@ function destroy_collider()
 end
 
 function add_collider()
-    id = get_unused_collider_id()
-
     at @nearest_player ^ ^1.6 ^3
         /tp @Position ~ ~ ~
         x = @Position.x
@@ -89,6 +99,8 @@ function add_collider()
     
     tell @a "Creating collider at (x), (y), (z)"
     
+    id = get_unused_collider_id()
+
     with
         $(collider) = id
         $(block_name) = "command_block"

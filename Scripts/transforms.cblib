@@ -89,6 +89,48 @@ function transpose_matrix_multiply()
     end
 end
 
+# Source for the math: https://math.stackexchange.com/questions/2213165/find-shortest-distance-between-lines-in-3d
+function get_closest_points_on_edges(o1x, o1y, o1z, d1x, d1y, d1z, o2x, o2y, o2z, d2x, d2y, d2z)
+    # Cross the two directions to get the normal
+    nx = (d1y * d2z - d1z * d2y) / $Precision
+    ny = (d1z * d2x - d1x * d2z) / $Precision
+    nz = (d1x * d2y - d1y * d2x) / $Precision
+
+    # Get the square magnitude of the normal, scaled up by the Precision
+    nmagsq = (nx*nx + ny*ny + nz*nz) / $Precision
+    
+    # Difference of origins
+    odx = o2x - o1x
+    ody = o2y - o1y
+    odz = o2z - o1z
+    
+    # Get a vector perpendicular to the normal and the second ray
+    perpx = (d2y * nz - d2z * ny) / $Precision
+    perpy = (d2z * nx - d2x * nz) / $Precision
+    perpz = (d2x * ny - d2y * nx) / $Precision
+    
+    # Get the projected distance along the first ray
+    t1 = (perpx * odx + perpy * ody + perpz * odz) / nmagsq
+
+    # Get the point on the first ray
+    p1x = o1x + t1 * d1x / $Precision
+    p1y = o1y + t1 * d1y / $Precision
+    p1z = o1z + t1 * d1z / $Precision
+
+    # Get a vector perpendicular to the normal and the first ray
+    perpx = (d1y * nz - d1z * ny) / $Precision
+    perpy = (d1z * nx - d1x * nz) / $Precision
+    perpz = (d1x * ny - d1y * nx) / $Precision
+    
+    # Get the projected distance along the second ray
+    t2 = (perpx * odx + perpy * ody + perpz * odz) / nmagsq
+    
+    # Get the point on the second ray
+    p2x = o2x + t2 * d2x / $Precision
+    p2y = o2y + t2 * d2y / $Precision
+    p2z = o2z + t2 * d2z / $Precision
+end
+
 function create_collider(x, y, z, size, inv_mass, inv_rot_int)
     define name collider = "collider_$(collider)"
     
@@ -1225,36 +1267,48 @@ function raymarch_edge()
         
         if t < collider.size and prev_t > 0
             if x < prev_x
-                block_x = x / $Precision * $Precision
+                block_x = x
             end                    
             if x >= prev_x
-                block_x = prev_x / $Precision * $Precision
+                block_x = prev_x
             end
             if y < prev_y
-                block_y = y / $Precision * $Precision
+                block_y = y
             end                    
             if y >= prev_y
-                block_y = prev_y / $Precision * $Precision
+                block_y = prev_y
             end
             if z < prev_z
-                block_z = z / $Precision * $Precision
+                block_z = z
             end                    
             if z >= prev_z
-                block_z = prev_z / $Precision * $Precision
+                block_z = prev_z
             end
             
             @Position.<pos> = <block_x, block_y, block_z>
             
             at @Position
+                test_x = block_x / $Precision
+                test_y = block_y / $Precision
+                test_z = block_z / $Precision
+                
+                block_min_x = test_x * $Precision
+                block_min_y = test_y * $Precision
+                block_min_z = test_z * $Precision
+                
+                block_max_x = block_min_x + $Precision
+                block_max_y = block_min_y + $Precision
+                block_max_z = block_min_z + $Precision
+            
                 with
-                    $(x) = block_x / $Precision
-                    $(y) = block_y / $Precision
-                    $(z) = block_z / $Precision
+                    $(x) = test_x
+                    $(y) = test_y
+                    $(z) = test_z
                 is_air()
                 
                 if not air
                     # Edge is penetrating a block                            
-                    closest = $Precision
+                    closest = $Half
                     
                     if prev_crossing == $X_Axis
                         
@@ -1578,29 +1632,22 @@ function raymarch_edge()
                         end
                     end
                     
-                    if closest < $Precision
-                        get_edge_edge_penetration(ox, oy, oz, ex, ey, ez, cox, coy, coz, cex, cey, cez)
-                        
+                    if closest < $Half
+                        get_closest_points_on_edges(ox, oy, oz, ex, ey, ez, cox, coy, coz, cex, cey, cez)
+
                         if t1 >= 0 and t1 <= $Precision and t2 >= 0 and t2 <= $Precision
-                            # Direction from collider center to the collision point
-                            dx = p1x - collider.x
-                            dy = p1y - collider.y
-                            dz = p1z - collider.z
+                            # The collision falls along the collider edges
 
-                            # Dot product of that direction and the collision normal
-                            normdir = dx*nx + dy*ny + dz*nz
-                            
-                            if normdir > 0
-                                # Make sure the collision normal points towards the collider (away from the block)
-                                nx *= -1
-                                ny *= -1
-                                nz *= -1
-                                d *= -1
-                            end
-
-                            if d > 0
+                            if p1x >= block_min_x and p1x <= block_max_x and p1y >= block_min_y and p1y <= block_max_y and p1z >= block_min_z and p1z <= block_max_z
+                                # The collision point is within the block
+                                dx = p2x - p1x
+                                dy = p2y - p1y
+                                dz = p2z - p1z
+                                
+                                dist = sqrt(dx*dx + dy*dy + dz*dz)
+                                
                                 id = get_unused_collision_id()
-
+                                
                                 with
                                     $(collision) = id
                                 do
@@ -1610,17 +1657,20 @@ function raymarch_edge()
                                     collision.y = p1y
                                     collision.z = p1z
                                     
-                                    collision.nx = nx
-                                    collision.ny = ny
-                                    collision.nz = nz
+                                    collision.nx = dx * $Precision / dist
+                                    collision.ny = dy * $Precision / dist
+                                    collision.nz = dz * $Precision / dist
                                     
-                                    collision.pen = d
+                                    collision.pen = dist
                                     
                                     collision.collider1 = collider.id
                                     
                                     collision.type = $CollisionCubeEdgeWorldEdge
                                     collision.vertex1 = vertex1
                                     collision.vertex2 = vertex2
+                                    collision.block_x = block_min_x
+                                    collision.block_y = block_min_y
+                                    collision.block_z = block_min_z
                                     collision.ox = cox
                                     collision.oy = coy
                                     collision.oz = coz
@@ -1641,59 +1691,6 @@ function raymarch_edge()
         prev_z = z
         prev_crossing = crossing
     end
-end
-
-# Source for the math: https://math.stackexchange.com/questions/2213165/find-shortest-distance-between-lines-in-3d
-function get_edge_edge_penetration(o1x, o1y, o1z, d1x, d1y, d1z, o2x, o2y, o2z, d2x, d2y, d2z)
-    # Cross the two directions to get the normal
-    nx = (d1y * d2z - d1z * d2y) / $Precision
-    ny = (d1z * d2x - d1x * d2z) / $Precision
-    nz = (d1x * d2y - d1y * d2x) / $Precision
-
-    # Get the magnitude and square magnitude
-    nmagsq = nx*nx + ny*ny + nz*nz
-    nmag = sqrt(nmagsq)
-    
-    # Difference of origins
-    odx = o2x - o1x
-    ody = o2y - o1y
-    odz = o2z - o1z
-
-    # Get the distance
-    d = (nx * odx + ny * ody + nz * odz) / nmag
-    
-    # Get a vector perpendicular to the normal and the second ray
-    # These are scaled up by the Precision because it'll be divided
-    # out in the next step
-    perpx_big = d2y * nz - d2z * ny
-    perpy_big = d2z * nx - d2x * nz
-    perpz_big = d2x * ny - d2y * nx
-    
-    # Get the projected distance along the first ray
-    t1 = (perpx_big * odx + perpy_big * ody + perpz_big * odz) / nmagsq
-
-    # Get a vector perpendicular to the normal and the first ray
-    # These are scaled up by the Precision because it'll be divided
-    # out in the next step
-    perpx_big = d1y * nz - d1z * ny
-    perpy_big = d1z * nx - d1x * nz
-    perpz_big = d1x * ny - d1y * nx
-    
-    # Get the projected distance along the first ray
-    t2 = (perpx_big * odx + perpy_big * ody + perpz_big * odz) / nmagsq
-    
-    # Get the point on the first ray
-    p1x = o1x + t1 * d1x / $Precision
-    p1y = o1y + t1 * d1y / $Precision
-    p1z = o1z + t1 * d1z / $Precision
-
-    # Normalize the normal
-    nx *= $Precision
-    ny *= $Precision
-    nz *= $Precision
-    nx /= nmag
-    ny /= nmag
-    nz /= nmag
 end
 
 function get_collider_collider_collisions()
@@ -1742,8 +1739,8 @@ function get_point_face_collisions()
         do
             define name vertex = "collider_$(col2)_v$(vertex)"
             vx = vertex.x
-            vy = vertex.x
-            vz = vertex.x
+            vy = vertex.y
+            vz = vertex.z
         end
             
         dx = vx - collider1.x
@@ -1804,8 +1801,6 @@ function get_point_face_collisions()
                 with
                     $(collider) = collider1.id
                 collider_local_to_world(nx, ny, nz, False)
-                
-                #tell @a "(collider1.id) collided with (collider2.id) at (vertex.x), (vertex.y), (vertex.z) norm (world_x), (world_y), (world_z), pen (pen)"
                 
                 id = get_unused_collision_id()
 
@@ -1871,7 +1866,7 @@ function get_collider_edge_collider_edge_collisions()
         o2z = vertex.z
     end
     
-    min_pen = $Precision
+    min_pen = collider1.halfsize + collider2.halfsize
     
     for neighbor1 = 1 to 3
         with
@@ -1907,45 +1902,36 @@ function get_collider_edge_collider_edge_collisions()
                 d2z = vertex.z - o2z
             end
             
-            get_edge_edge_penetration(o1x, o1y, o1z, d1x, d1y, d1z, o2x, o2y, o2z, d2x, d2y, d2z)
+            get_closest_points_on_edges(o1x, o1y, o1z, d1x, d1y, d1z, o2x, o2y, o2z, d2x, d2y, d2z)
             
             if t1 >= 0 and t1 <= $Precision and t2 >= 0 and t2 <= $Precision
-                # The collision falls along the collider1 edge
+                # The collision falls along the collider edges
+                with
+                    $(collider) = collider2.id
+                collider_world_to_local(p1x, p1y, p1z, True)
                 
-                dx = p1x - collider1.x
-                dy = p1y - collider1.y
-                dz = p1z - collider1.z
-                
-                # Check if the normal vector is pointing in the same
-                # direction as the collision point from the origin
-                dot = dx*nx + dy*ny + dz*nz
-                
-                penetrating = False
-                if dot < 0 and d > 0
-                    # Normal vector pointing toward origin, and positive distance
-                    penetrating = True
-                end
-                
-                if dot > 0 and d < 0
-                    # Normal vector pointing away from origin, and negative distance
-                    penetrating = True
-                    nx *= -1
-                    ny *= -1
-                    nz *= -1
-                    d *= -1
-                end
-                
-                if penetrating and d < min_pen
+                if local_x >= -collider2.halfsize and local_x <= collider2.halfsize and local_y >= -collider2.halfsize and local_y <= collider2.halfsize and local_z >= -collider2.halfsize and local_z <= collider2.halfsize
                     # The collision point falls within collider2
-                    min_pen = d
-                    min_x = p1x
-                    min_y = p1y
-                    min_z = p1z
-                    min_nx = nx
-                    min_ny = ny
-                    min_nz = nz
-                    min_nvert1 = nvert1
-                    min_nvert2 = nvert2
+                    dx = p2x - p1x
+                    dy = p2y - p1y
+                    dz = p2z - p1z
+                    
+                    dist = sqrt(dx*dx + dy*dy + dz*dz)
+                    
+                    if dist < min_pen
+                        min_pen = dist
+                        
+                        min_x = p1x
+                        min_y = p1y
+                        min_z = p1z
+                        
+                        min_nx = dx * $Precision / dist
+                        min_ny = dy * $Precision / dist
+                        min_nz = dz * $Precision / dist
+                        
+                        min_nvert1 = nvert1
+                        min_nvert2 = nvert2
+                    end
                 end
             end
         end        
@@ -2060,34 +2046,54 @@ function update_collision()
     if collision.type == $CollisionCubePointWorldFace
         with
             $(collider) = collision.collider1
-            $(vertex) = collision.vertex
         do
+            with
+                $(vertex) = collision.vertex
+            do
+                define name vertex = "collider_$(collider)_v$(vertex)"
+                vx = vertex.x
+                vy = vertex.y
+                vz = vertex.z
+            end
+        
+
             define name vertex = "collider_$(collider)_v$(vertex)"
             
-            # TODO: Check if the vertex is outside the bounds of the block
+            keep = False
             
-            if collision.nx == $Precision
-                collision.pen = (collision.block_x + $Precision) - vertex.x
+            if collision.nx == $Precision and vy >= collision.block_y and vy <= collision.block_y+$Precision and vz >= collision.block_z and vz <= collision.block_z+$Precision
+                collision.pen = (collision.block_x + $Precision) - vx
+                keep = True
             end
-            if collision.nx == -$Precision
-                collision.pen = vertex.x - collision.block_x
+            if collision.nx == -$Precision and vy >= collision.block_y and vy <= collision.block_y+$Precision and vz >= collision.block_z and vz <= collision.block_z+$Precision
+                collision.pen = vx - collision.block_x
+                keep = True
             end
-            if collision.ny == $Precision
-                collision.pen = (collision.block_y + $Precision) - vertex.y
+            if collision.ny == $Precision and vx >= collision.block_x and vx <= collision.block_x+$Precision and vz >= collision.block_z and vz <= collision.block_z+$Precision
+                collision.pen = (collision.block_y + $Precision) - vy
+                keep = True
             end
-            if collision.ny == -$Precision
-                collision.pen = vertex.y - collision.block_y
+            if collision.ny == -$Precision and vx >= collision.block_x and vx <= collision.block_x+$Precision and vz >= collision.block_z and vz <= collision.block_z+$Precision
+                collision.pen = vy - collision.block_y
+                keep = True
             end
-            if collision.nz == $Precision
-                collision.pen = (collision.block_z + $Precision) - vertex.z
-            end
-            if collision.nz == -$Precision
-                collision.pen = vertex.z - collision.block_z
+            if collision.nz == $Precision and vy >= collision.block_y and vy <= collision.block_y+$Precision and vx >= collision.block_x and vx <= collision.block_x+$Precision
+                collision.pen = (collision.block_z + $Precision) - vz
+                keep = True
             end
             
-            collision.x = vertex.x
-            collision.y = vertex.y
-            collision.z = vertex.z
+            if collision.nz == -$Precision and vy >= collision.block_y and vy <= collision.block_y+$Precision and vx >= collision.block_x and vx <= collision.block_x+$Precision
+                collision.pen = vz - collision.block_z
+                keep = True
+            end
+            
+            if keep
+                collision.x = vx
+                collision.y = vy
+                collision.z = vz
+            else
+                delete_collision() with macros
+            end
         end
     end
     if collision.type == $CollisionCubeFaceWorldPoint
@@ -2097,29 +2103,41 @@ function update_collision()
             # TODO: Check if the point is outside the bounds of the cube
             
             collider_world_to_local(collision.block_x, collision.block_y, collision.block_z, True) with macros
-            if collision.lnx == $Precision
-                collision.pen = local_x + collider.halfsize
-            end
-            if collision.lnx == -$Precision
-                collision.pen = collider.halfsize - local_x
-            end
-            if collision.lny == $Precision
-                collision.pen = local_y + collider.halfsize
-            end
-            if collision.lny == -$Precision
-                collision.pen = collider.halfsize - local_y
-            end
-            if collision.lnz == $Precision
-                collision.pen = local_z + collider.halfsize
-            end
-            if collision.lnz == -$Precision
-                collision.pen = collider.halfsize - local_z
-            end
             
-            collider_local_to_world(collision.lnx, collision.lny, collision.lnz, False) with macros
-            collision.nx = world_x
-            collision.ny = world_y
-            collision.nz = world_z
+            keep = False
+            if collision.lnx == $Precision and local_y >= -collider.halfsize and local_y <= collider.halfsize and local_z >= -collider.halfsize and local_z <= collider.halfsize
+                collision.pen = local_x + collider.halfsize
+                keep = True
+            end
+            if collision.lnx == -$Precision and local_y >= -collider.halfsize and local_y <= collider.halfsize and local_z >= -collider.halfsize and local_z <= collider.halfsize
+                collision.pen = collider.halfsize - local_x
+                keep = True
+            end
+            if collision.lny == $Precision and local_x >= -collider.halfsize and local_x <= collider.halfsize and local_z >= -collider.halfsize and local_z <= collider.halfsize
+                collision.pen = local_y + collider.halfsize
+                keep = True
+            end
+            if collision.lny == -$Precision and local_x >= -collider.halfsize and local_x <= collider.halfsize and local_z >= -collider.halfsize and local_z <= collider.halfsize
+                collision.pen = collider.halfsize - local_y
+                keep = True
+            end
+            if collision.lnz == $Precision and local_x >= -collider.halfsize and local_x <= collider.halfsize and local_y >= -collider.halfsize and local_y <= collider.halfsize
+                collision.pen = local_z + collider.halfsize
+                keep = True
+            end
+            if collision.lnz == -$Precision and local_x >= -collider.halfsize and local_x <= collider.halfsize and local_y >= -collider.halfsize and local_y <= collider.halfsize
+                collision.pen = collider.halfsize - local_z
+                keep = True
+            end
+
+            if keep
+                collider_local_to_world(collision.lnx, collision.lny, collision.lnz, False) with macros
+                collision.nx = world_x
+                collision.ny = world_y
+                collision.nz = world_z
+            else
+                delete_collision() with macros
+            end
         end
     end
     if collision.type == $CollisionCubeEdgeWorldEdge
@@ -2144,87 +2162,97 @@ function update_collision()
                 ez = vertex.z - oz
             end
             
-            get_edge_edge_penetration(ox, oy, oz, ex, ey, ez, collision.ox, collision.oy, collision.oz, collision.ex, collision.ey, collision.ez)
+            get_closest_points_on_edges(ox, oy, oz, ex, ey, ez, collision.ox, collision.oy, collision.oz, collision.ex, collision.ey, collision.ez)
             
             if t1 >= 0 and t1 <= $Precision and t2 >= 0 and t2 <= $Precision
-                # The closest points lie along the two edges
-                dx = p1x - collider.x
-                dy = p1y - collider.y
-                dz = p1z - collider.z
+                # The collision falls along the collider edges
+                
+                dx = p2x - p1x
+                dy = p2y - p1y
+                dz = p2z - p1z
 
-                # Dot product of that direction and the collision normal
-                dot = dx*nx + dy*ny + dz*nz
+                dist = sqrt(dx*dx + dy*dy + dz*dz)
                 
-                if dot > 0
-                    # Make sure the collision normal points towards the collider (away from the block)
-                    nx *= -1
-                    ny *= -1
-                    nz *= -1
-                    d *= -1
+                if p1x >= collision.block_x and p1x <= collision.block_x + $Precision and p1y >= collision.block_y and p1y <= collision.block_y + $Precision and p1z >= collision.block_z and p1z <= collision.block_z + $Precision
+                    # Collision point falls within the block
+                else
+                    dist *= -1
                 end
-                
-                collision.pen = d
+                    
+                collision.pen = dist
                 
                 collision.x = p1x
                 collision.y = p1y
                 collision.z = p1z
                 
-                collision.nx = nx
-                collision.ny = ny
-                collision.nz = nz
+                collision.nx = dx * $Precision / dist
+                collision.ny = dy * $Precision / dist
+                collision.nz = dz * $Precision / dist
             else
-                tell @a "t1=(t1) t2=(t2), deleting cube edge world edge"
                 delete_collision() with macros
             end
         end
     end
     if collision.type == $CollisionCubeFaceCubePoint
         with
-            $(collider1) = collision.collider1
             $(collider2) = collision.collider2
+            $(vertex) = collision.vertex
         do
-            with
-                $(vertex) = collision.vertex
-            do
-                define name v = "collision_$(collider2)_v$(vertex)"  
-                x = v.x
-                y = v.y
-                z = v.z
-            end
-        
+            define name v = "collider_$(collider2)_v$(vertex)"  
+            vx = v.x
+            vy = v.y
+            vz = v.z
+        end
+    
+        with
+            $(collider1) = collision.collider1
+        do        
             with
                 $(collider) = collision.collider1
             collider_local_to_world(collision.lnx, collision.lny, collision.lnz, False)
+            
             collision.nx = world_x
             collision.ny = world_y
             collision.nz = world_z
             
-            collider_world_to_local(x, y, z, True) with macros
+            collider_world_to_local(vx, vy, vz, True) with macros
             
             # TODO: Check if local_xyz lies within the bounds of the cube
+            
+            keep = False
                 
-            if collision.lnx == $Precision
+            if collision.lnx == -$Precision and local_y >= -collider1.halfsize and local_y <= collider1.halfsize and local_z >= -collider1.halfsize and local_z <= collider1.halfsize
                 collision.pen = collider1.halfsize - local_x
+                keep = True
             end
-            if collision.lnx == -$Precision
+            if collision.lnx == $Precision and local_y >= -collider1.halfsize and local_y <= collider1.halfsize and local_z >= -collider1.halfsize and local_z <= collider1.halfsize
                 collision.pen = local_x + collider1.halfsize
+                keep = True
             end
-            if collision.lny == $Precision
+            if collision.lny == -$Precision and local_x >= -collider1.halfsize and local_x <= collider1.halfsize and local_z >= -collider1.halfsize and local_z <= collider1.halfsize
                 collision.pen = collider1.halfsize - local_y
+                keep = True
             end
-            if collision.lny == -$Precision
+            if collision.lny == $Precision and local_x >= -collider1.halfsize and local_x <= collider1.halfsize and local_z >= -collider1.halfsize and local_z <= collider1.halfsize
                 collision.pen = local_y + collider1.halfsize
+                keep = True
             end
-            if collision.lnz == $Precision
+            if collision.lnz == -$Precision and local_x >= -collider1.halfsize and local_x <= collider1.halfsize and local_y >= -collider1.halfsize and local_y <= collider1.halfsize
                 collision.pen = collider1.halfsize - local_z
+                keep = True
             end
-            if collision.lnz == -$Precision
+            if collision.lnz == $Precision and local_x >= -collider1.halfsize and local_x <= collider1.halfsize and local_y >= -collider1.halfsize and local_y <= collider1.halfsize
                 collision.pen = local_z + collider1.halfsize
+                keep = True
             end
             
-            collision.x = v.x
-            collision.y = v.y
-            collision.z = v.z
+            if keep
+                collision.x = vx
+                collision.y = vy
+                collision.z = vz
+            else
+                delete_collision() with macros
+            end
         end
     end
     if collision.type == $CollisionCubeEdgeCubeEdge
@@ -2266,36 +2294,36 @@ function update_collision()
                 e2z = v.z - o2z
             end
             
-            get_edge_edge_penetration(o1x, o1y, o1z, e1x, e1y, e1z, o2x, o2y, o2z, e2x, e2y, e2z)
+            get_closest_points_on_edges(o1x, o1y, o1z, e1x, e1y, e1z, o2x, o2y, o2z, e2x, e2y, e2z)
             
             if t1 >= 0 and t1 <= $Precision and t2 >= 0 and t2 <= $Precision
-                # The closest points fall along the two edges
+                # The collision falls along the collider edges
+                with
+                    $(collider) = collider2.id
+                collider_world_to_local(p1x, p1y, p1z, True)
+
+                dx = p2x - p1x
+                dy = p2y - p1y
+                dz = p2z - p1z
+
+                dist = sqrt(dx*dx + dy*dy + dz*dz)
                 
-                dx = p1x - collider1.x
-                dy = p1y - collider1.y
-                dz = p1z - collider1.z
-                
-                # Check if the normal vector is pointing in the same
-                # direction as the collision point from the origin
-                dot = dx*nx + dy*ny + dz*nz
-                
-                if dot > 0
-                    # Normal vector pointing away from origin
-                    nx *= -1
-                    ny *= -1
-                    nz *= -1
-                    d *= -1
+                if local_x >= -collider2.halfsize and local_x <= collider2.halfsize and local_y >= -collider2.halfsize and local_y <= collider2.halfsize and local_z >= -collider2.halfsize and local_z <= collider2.halfsize
+                    # The collision point falls within collider2
+                else
+                    dist *= -1
                 end
+                    
+                collision.pen = dist
                 
-                collision.pen = d
                 collision.x = p1x
                 collision.y = p1y
                 collision.z = p1z
-                collision.nx = nx
-                collision.ny = ny
-                collision.nz = nz
+                
+                collision.nx = dx * $Precision / dist
+                collision.ny = dy * $Precision / dist
+                collision.nz = dz * $Precision / dist
             else
-                tell @a "t1=(t1) t2=(t2), deleting cube edge cube edge"
                 delete_collision() with macros
             end
         end
