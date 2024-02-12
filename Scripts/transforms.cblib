@@ -1646,37 +1646,39 @@ function raymarch_edge()
                                 
                                 dist = sqrt(dx*dx + dy*dy + dz*dz)
                                 
-                                id = get_unused_collision_id()
-                                
-                                with
-                                    $(collision) = id
-                                do
-                                    define name collision = "collision_$(collision)"
+                                if dist > 5
+                                    id = get_unused_collision_id()
                                     
-                                    collision.x = p1x
-                                    collision.y = p1y
-                                    collision.z = p1z
-                                    
-                                    collision.nx = dx * $Precision / dist
-                                    collision.ny = dy * $Precision / dist
-                                    collision.nz = dz * $Precision / dist
-                                    
-                                    collision.pen = dist
-                                    
-                                    collision.collider1 = collider.id
-                                    
-                                    collision.type = $CollisionCubeEdgeWorldEdge
-                                    collision.vertex1 = vertex1
-                                    collision.vertex2 = vertex2
-                                    collision.block_x = block_min_x
-                                    collision.block_y = block_min_y
-                                    collision.block_z = block_min_z
-                                    collision.ox = cox
-                                    collision.oy = coy
-                                    collision.oz = coz
-                                    collision.ex = cex
-                                    collision.ey = cey
-                                    collision.ez = cez
+                                    with
+                                        $(collision) = id
+                                    do
+                                        define name collision = "collision_$(collision)"
+                                        
+                                        collision.x = p1x
+                                        collision.y = p1y
+                                        collision.z = p1z
+                                        
+                                        collision.nx = dx * $Precision / dist
+                                        collision.ny = dy * $Precision / dist
+                                        collision.nz = dz * $Precision / dist
+                                        
+                                        collision.pen = dist
+                                        
+                                        collision.collider1 = collider.id
+                                        
+                                        collision.type = $CollisionCubeEdgeWorldEdge
+                                        collision.vertex1 = vertex1
+                                        collision.vertex2 = vertex2
+                                        collision.block_x = block_min_x
+                                        collision.block_y = block_min_y
+                                        collision.block_z = block_min_z
+                                        collision.ox = cox
+                                        collision.oy = coy
+                                        collision.oz = coz
+                                        collision.ex = cex
+                                        collision.ey = cey
+                                        collision.ez = cez
+                                    end
                                 end
                             end
                         end
@@ -1732,6 +1734,9 @@ end
 function get_point_face_collisions()
     define name collider1 = "collider_$(col1)"
     define name collider2 = "collider_$(col2)"
+    
+    # TEST CODE
+    get_collider_edges_that_intersect_collider() with macros
     
     for vertex = 0 to 7
         with
@@ -1832,50 +1837,175 @@ function get_point_face_collisions()
         end
     end
 end
+
+# Checks which edges of col2 intersect with col1 and stores them
+function get_collider_edges_that_intersect_collider()
+    define name collider1 = "collider_$(col1)"
+    define name collider2 = "collider_$(col2)"
+    define name edges = "collider_$(col2)_edges"
+    
+    edges.val = 0
+    
+    for vertex_iter = 0 to 7
+        with
+            $(vertex) = vertex_iter
+        do
+            define name vertex = "collider_$(col2)_v$(vertex)"
+            vx = vertex.x
+            vy = vertex.y
+            vz = vertex.z
+        end
+            
+        with
+            $(collider) = collider1.id
+        collider_world_to_local(vx, vy, vz, True)
+        
+        set_local_vertex() with macros
+    end
+        
+    for $edge in [[0, 2], [1, 3], [0, 4], [1, 5], [2, 6], [3, 7], [4, 6], [5, 7], [0, 7], [2, 5], [4, 3], [6, 1]]
+        $vertex1 = $edge[0]
+        $vertex2 = $edge[1]
+        
+        vertex1 = $vertex1
+        vertex2 = $vertex2
+        
+        with
+            $(vertex) = $vertex1
+        get_local_origin_vertex()
+        
+        with
+            $(vertex) = $vertex2
+        get_local_direction()
+        
+        get_edge_intersection()
+    end
+end
+
+function set_local_vertex()
+    define name vertex = "local_v$(vertex)"
+    
+    vertex.x = local_x
+    vertex.y = local_y
+    vertex.z = local_z
+end
+
+function get_local_origin_vertex()
+    define name v = "local_v$(vertex)"
+    ox = v.x
+    oy = v.y
+    oz = v.z
+end
+
+function get_local_direction()
+    define name v = "local_v$(vertex)"
+    dx = v.x - ox
+    dy = v.y - oy
+    dz = v.z - oz
+    
+    
+    if dx*dx+dy*dy+dz*dz > 3100*3100
+        tell @a "(dx), (dy), (dz)"
+        tell @a "(v.x)-(ox) (v.y)-(oy) (v.z)-(oz)"
+        
+        tell @a "(vertex2)"
+    end
+end
+
+# Check if ox,oy,oz by dx,dy,dz intersects the cube with halfsize at 0,0,0
+function get_edge_intersection()
+    xtp = (halfsize - ox) * $Precision / dx
+    xtn = (-halfsize - ox) * $Precision / dx
+    ytp = (halfsize - oy) * $Precision / dy
+    ytn = (-halfsize - oy) * $Precision / dy
+    ztp = (halfsize - oz) * $Precision / dz
+    ztn = (-halfsize - oz) * $Precision / dz
+
+    if xtp > xtn
+        max_xt = xtp
+        min_xt = xtn
+    end
+    if xtp < xtn
+        max_xt = xtn
+        min_xt = xtp
+    end
+    if ytp > ytn
+        max_yt = ytp
+        min_yt = ytn
+    end
+    if ytp < ytn
+        max_yt = ytn
+        min_yt = ytp
+    end
+    if ztp > ztn
+        max_zt = ztp
+        min_zt = ztn
+    end
+    if ztp < ztn
+        max_zt = ztn
+        min_zt = ztp
+    end
+    
+    if min_xt > min_yt and min_xt > min_zt
+        max_min_t = min_xt
+    else if min_yt > min_zt
+        max_min_t = min_yt
+    else
+        max_min_t = min_zt
+    end
+    
+    if max_xt < max_yt and max_xt < max_zt
+        min_max_t = max_xt
+    else if max_yt < max_zt
+        min_max_t = max_yt
+    else
+        min_max_t = max_zt
+    end
+
+    if max_min_t <= min_max_t and max_min_t <= $Precision and min_max_t >= 0
+        #tell @a "v(vertex1) to v(vertex2) - (ox), (oy), (oz) by (dx), (dy), (dz) intersects (halfsize) at t=(max_min_t) to (min_max_t)"
+        
+        # The line segment intersects the cube, store this edge.
+        define name edges = "collider_$(col2)_edges"
+        edges.val++
+        
+        with
+            $(edge) = edges.val
+        do
+            define name edge = "collider_$(col2)_e$(edge)"
+            edge.origin = vertex1
+            edge.dest = vertex2
+        end
+    end
+end
+
 function get_collider_edge_collider_edge_collisions()
     define name collider1 = "collider_$(col1)"
     define name collider2 = "collider_$(col2)"
+    define name edges1 = "collider_$(col1)_edges"
+    define name edges2 = "collider_$(col2)_edges"
     
-    with
-        $(ncol1) = collider1.id
-        $(ncol2) = collider2.id
-    get_nearest_vertex()
-    vertex1 = vertex
+    # Track the maximum penetration for all edges on collider1
+    min_pen = 1000000000
     
-    with
-        $(ncol1) = collider2.id
-        $(ncol2) = collider1.id
-    get_nearest_vertex()
-    vertex2 = vertex
-    
-    with
-        $(vertex) = vertex1
-    do
-        define name vertex = "collider_$(col1)_v$(vertex)"
-        o1x = vertex.x
-        o1y = vertex.y
-        o1z = vertex.z
-    end
-
-    with
-        $(vertex) = vertex2
-    do
-        define name vertex = "collider_$(col2)_v$(vertex)"
-        o2x = vertex.x
-        o2y = vertex.y
-        o2z = vertex.z
-    end
-    
-    min_pen = collider1.halfsize + collider2.halfsize
-    
-    for neighbor1 = 1 to 3
+    for edge_iter1 = 1 to edges1.val
         with
-            $(neighbor) = neighbor1
+            $(edge) = edge_iter1
+        do
+            define name edge = "collider_$(col1)_e$(edge)"
+            vertex1 = edge.origin
+            nvert1 = edge.dest
+        end
+        
+        with
             $(vertex) = vertex1
         do
-            define name neighbor = "vertex_$(vertex)_adj_$(neighbor)"
-            nvert1 = neighbor.val
+            define name vertex = "collider_$(col1)_v$(vertex)"
+            o1x = vertex.x
+            o1y = vertex.y
+            o1z = vertex.z
         end
+        
         with
             $(vertex) = nvert1
         do
@@ -1884,15 +2014,25 @@ function get_collider_edge_collider_edge_collisions()
             d1y = vertex.y - o1y
             d1z = vertex.z - o1z
         end
-    
-        for neighbor2 = 1 to 3
+
+        for edge_iter2 = 1 to edges2.val
             with
-                $(neighbor) = neighbor2
+                $(edge) = edge_iter2
+            do
+                define name edge = "collider_$(col2)_e$(edge)"
+                vertex2 = edge.origin
+                nvert2 = edge.dest
+            end
+            
+            with
                 $(vertex) = vertex2
             do
-                define name neighbor = "vertex_$(vertex)_adj_$(neighbor)"
-                nvert2 = neighbor.val
+                define name vertex = "collider_$(col2)_v$(vertex)"
+                o2x = vertex.x
+                o2y = vertex.y
+                o2z = vertex.z
             end
+            
             with
                 $(vertex) = nvert2
             do
@@ -1912,32 +2052,43 @@ function get_collider_edge_collider_edge_collisions()
                 
                 if local_x >= -collider2.halfsize and local_x <= collider2.halfsize and local_y >= -collider2.halfsize and local_y <= collider2.halfsize and local_z >= -collider2.halfsize and local_z <= collider2.halfsize
                     # The collision point falls within collider2
-                    dx = p2x - p1x
-                    dy = p2y - p1y
-                    dz = p2z - p1z
+                    with
+                        $(collider) = collider1.id
+                    collider_world_to_local(p2x, p2y, p2z)
                     
-                    dist = sqrt(dx*dx + dy*dy + dz*dz)
-                    
-                    if dist < min_pen
-                        min_pen = dist
+                    if local_x >= -collider1.halfsize and local_x <= collider1.halfsize and local_y >= -collider1.halfsize and local_y <= collider1.halfsize and local_z >= -collider1.halfsize and local_z <= collider1.halfsize
+                        # The collision point falls within collider1
+                        dx = p2x - p1x
+                        dy = p2y - p1y
+                        dz = p2z - p1z
                         
-                        min_x = p1x
-                        min_y = p1y
-                        min_z = p1z
+                        dist = sqrt(dx*dx + dy*dy + dz*dz)
+
+                        #tell @a "Penetrates with (dist) from (p1x), (p1y), (p1z) to (p2x), (p2y), (p2z)"
                         
-                        min_nx = dx * $Precision / dist
-                        min_ny = dy * $Precision / dist
-                        min_nz = dz * $Precision / dist
-                        
-                        min_nvert1 = nvert1
-                        min_nvert2 = nvert2
+                        if dist < min_pen
+                            min_pen = dist
+                            
+                            min_x = p1x
+                            min_y = p1y
+                            min_z = p1z
+                            
+                            min_nx = dx * $Precision / dist
+                            min_ny = dy * $Precision / dist
+                            min_nz = dz * $Precision / dist
+                            
+                            min_vertex1 = vertex1
+                            min_nvert1 = nvert1
+                            min_vertex2 = vertex2
+                            min_nvert2 = nvert2
+                        end
                     end
                 end
             end
-        end        
+        end
     end
     
-    if min_pen < $Precision
+    if min_pen < 1000000000
         #tell @a "(collider1.id) hit (collider2.id) at (min_x), (min_y), (min_z) norm (min_nx), (min_ny), (min_nz) pen (min_pen)"
         id = get_unused_collision_id()
 
@@ -1960,9 +2111,9 @@ function get_collider_edge_collider_edge_collisions()
             collision.collider2 = collider2.id
             
             collision.type = $CollisionCubeEdgeCubeEdge
-            collision.vertex1 = vertex1
+            collision.vertex1 = min_vertex1
             collision.nvert1 = min_nvert1
-            collision.vertex2 = vertex2
+            collision.vertex2 = min_vertex2
             collision.nvert2 = min_nvert2
         end
     end
@@ -2298,19 +2449,31 @@ function update_collision()
             
             if t1 >= 0 and t1 <= $Precision and t2 >= 0 and t2 <= $Precision
                 # The collision falls along the collider edges
-                with
-                    $(collider) = collider2.id
-                collider_world_to_local(p1x, p1y, p1z, True)
-
                 dx = p2x - p1x
                 dy = p2y - p1y
                 dz = p2z - p1z
 
                 dist = sqrt(dx*dx + dy*dy + dz*dz)
                 
+                # The collision falls along the collider edges
+                with
+                    $(collider) = collider2.id
+                collider_world_to_local(p1x, p1y, p1z, True)
+                
+                is_collision = False
                 if local_x >= -collider2.halfsize and local_x <= collider2.halfsize and local_y >= -collider2.halfsize and local_y <= collider2.halfsize and local_z >= -collider2.halfsize and local_z <= collider2.halfsize
                     # The collision point falls within collider2
-                else
+                    with
+                        $(collider) = collider1.id
+                    collider_world_to_local(p2x, p2y, p2z)
+                    
+                    if local_x >= -collider1.halfsize and local_x <= collider1.halfsize and local_y >= -collider1.halfsize and local_y <= collider1.halfsize and local_z >= -collider1.halfsize and local_z <= collider1.halfsize
+                        # The collision point falls within collider1
+                        is_collision = True
+                    end
+                end
+                
+                if not is_collision
                     dist *= -1
                 end
                     

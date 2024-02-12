@@ -241,6 +241,8 @@ function test_update_collision()
         do
             define name collision = "collision_$(collision)"
             
+            old_id = collision.id
+            old_type = collision.type
             old_pen = collision.pen
             old_x = collision.x
             old_y = collision.y
@@ -274,20 +276,20 @@ function test_update_collision()
             end
             
             unless same
-                tell @a "Collision #(collision.id) changed"
-                if collision.type == $CollisionCubePointWorldFace
+                tell @a "Collision #(old_id) changed"
+                if old_type == $CollisionCubePointWorldFace
                     tell @a "Cube Point - World Face"
                 end
-                if collision.type == $CollisionCubeFaceWorldPoint
+                if old_type == $CollisionCubeFaceWorldPoint
                     tell @a "Cube Face - World Point"
                 end
-                if collision.type == $CollisionCubeEdgeWorldEdge
+                if old_type == $CollisionCubeEdgeWorldEdge
                     tell @a "Cube Edge - World Edge"
                 end
-                if collision.type == $CollisionCubeFaceCubePoint
+                if old_type == $CollisionCubeFaceCubePoint
                     tell @a "Cube Face - Cube Point"
                 end
-                if collision.type == $CollisionCubeEdgeCubeEdge
+                if old_type == $CollisionCubeEdgeCubeEdge
                     tell @a "Cube Edge - Cube Edge"
                 end
 
