@@ -28,6 +28,7 @@ reset
     end
     
     destroy_colliders()
+    delete_collisions()
 
     CubeSize = 1500
     CubeInvMass = 800
@@ -150,19 +151,7 @@ clock tick
         end
     end
     click_detector_tick()
-    
-    delete_collisions()
 
-    for collider = 1 to max_collider
-        with
-            $(collider) = collider
-        do
-            if not collider.sleeping
-                collider_physics_tick() with macros
-            end
-        end
-    end
-    
     if clicked
         min_col_t = 1000000000
 
@@ -197,6 +186,19 @@ clock tick
         end
     end
     
+
+    for collider = 1 to max_collider
+        with
+            $(collider) = collider
+        do
+            if not collider.sleeping
+                collider_physics_tick() with macros
+            end
+        end
+    end
+    
+    update_active_collisions()
+
     for collider = 1 to max_collider
         with
             $(collider) = collider
@@ -217,7 +219,7 @@ clock tick
         end
     end
     
-    test_update_collision()
+    cull_collisions()
 
     resolve_collision_velocity()
     resolve_collision_penetration()

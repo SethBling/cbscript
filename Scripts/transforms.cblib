@@ -690,13 +690,29 @@ function resolve_collision_velocity()
                     with
                         $(collider1) = collision.collider1
                         $(collider2) = collision.collider2
-                    update_closing_velocity()
-                    
-                    if collision.closing > max_closing
-                        max_closing = collision.closing
-                        max_closing_id = collision.id
-                        max_closing_col1 = collision.collider1
-                        max_closing_col2 = collision.collider2
+                    do
+                        define name collider1 = "collider_$(collider1)"
+                        define name collider2 = "collider_$(collider2)"
+                        
+                        sleeping = True
+                        unless collider1.sleeping
+                            sleeping = False
+                        end
+                        
+                        if collision.collider2 unless collider2.sleeping
+                            sleeping = False
+                        end
+                        
+                        if not sleeping                    
+                            update_closing_velocity() with macros
+                            
+                            if collision.closing > max_closing
+                                max_closing = collision.closing
+                                max_closing_id = collision.id
+                                max_closing_col1 = collision.collider1
+                                max_closing_col2 = collision.collider2
+                            end
+                        end
                     end
                 end
             end
@@ -801,41 +817,52 @@ function resolve_collision_penetration()
                     define name collider1 = "collider_$(collider1)"
                     define name collider2 = "collider_$(collider2)"
                     
-                    inv_mass = collider1.inv_mass + collider2.inv_mass
+                    sleeping = True
+                    unless collider1.sleeping
+                        sleeping = False
+                    end
+                    
+                    if collision.collider2 unless collider2.sleeping
+                        sleeping = False
+                    end
+                    
+                    if not sleeping                    
+                        inv_mass = collider1.inv_mass + collider2.inv_mass
 
-                    p1 = collider1.inv_mass * $Precision / inv_mass
-                    
-                    m1x = p1 * mx / $Precision
-                    m1y = p1 * my / $Precision
-                    m1z = p1 * mz / $Precision
-        
-                    collider1.x += m1x 
-                    collider1.y += m1y
-                    collider1.z += m1z
-                    if collider1.sleeping
-                        with
-                            $(collider) = collider1.id
-                        collider_wake_up()
+                        p1 = collider1.inv_mass * $Precision / inv_mass
+                        
+                        m1x = p1 * mx / $Precision
+                        m1y = p1 * my / $Precision
+                        m1z = p1 * mz / $Precision
+            
+                        collider1.x += m1x 
+                        collider1.y += m1y
+                        collider1.z += m1z
+                        if collider1.sleeping
+                            with
+                                $(collider) = collider1.id
+                            collider_wake_up()
+                        end
+                        
+                        move_collisions(m1x, m1y, m1z, collider1.id)
+                        
+                        p2 = -collider2.inv_mass * $Precision / inv_mass
+                        
+                        m2x = p2 * mx / $Precision
+                        m2y = p2 * my / $Precision
+                        m2z = p2 * mz / $Precision
+            
+                        collider2.x += m2x 
+                        collider2.y += m2y
+                        collider2.z += m2z
+                        if collider2.sleeping
+                            with
+                                $(collider) = collider2.id
+                            collider_wake_up()
+                        end
+                        
+                        move_collisions(m2x, m2y, m2z, collider2.id)
                     end
-                    
-                    move_collisions(m1x, m1y, m1z, collider1.id)
-                    
-                    p2 = -collider2.inv_mass * $Precision / inv_mass
-                    
-                    m2x = p2 * mx / $Precision
-                    m2y = p2 * my / $Precision
-                    m2z = p2 * mz / $Precision
-        
-                    collider2.x += m2x 
-                    collider2.y += m2y
-                    collider2.z += m2z
-                    if collider2.sleeping
-                        with
-                            $(collider) = collider2.id
-                        collider_wake_up()
-                    end
-                    
-                    move_collisions(m2x, m2y, m2z, collider2.id)
                 end
             end
         end
@@ -874,8 +901,6 @@ end
 function get_collisions()
     define name collider = "collider_$(collider)"
     
-    collider_calculate_vertex_world_positions() with macros
-
     for vertex = 0 to 7
         with
             $(vertex) = vertex
@@ -1902,14 +1927,6 @@ function get_local_direction()
     dx = v.x - ox
     dy = v.y - oy
     dz = v.z - oz
-    
-    
-    if dx*dx+dy*dy+dz*dz > 3100*3100
-        tell @a "(dx), (dy), (dz)"
-        tell @a "(v.x)-(ox) (v.y)-(oy) (v.z)-(oz)"
-        
-        tell @a "(vertex2)"
-    end
 end
 
 # Check if ox,oy,oz by dx,dy,dz intersects the cube with halfsize at 0,0,0
@@ -2188,6 +2205,38 @@ function create_collision(x, y, z, nx, ny, nz, pen, collider1, collider2)
     end
 end
 
+function update_active_collisions()
+    define name collision = "collision_$(collision)"
+
+    # Clear the maximum penetration for each collider
+    for collider_iter = 1 to max_collider
+        with
+            $(collider) = collider_iter
+        do
+            define name collider = "collider_$(collider)"
+
+            collider_calculate_vertex_world_positions() with macros
+
+            if collider.id
+                collider.max_pen = 0
+                collider.max_pen_col = 0
+            end
+        end
+    end
+    
+    # Update each active collision
+    for collision_iter = max_collision to 1 by -1
+        with
+            $(collision) = collision_iter
+        do
+            define name collision = "collision_$(collision)"
+            if collision.active
+                update_collision() with macros
+            end
+        end
+    end
+end
+
 function update_collision()
     define name collision = "collision_$(collision)"
     define name collider = "collider_$(collider)"
@@ -2206,9 +2255,6 @@ function update_collision()
                 vy = vertex.y
                 vz = vertex.z
             end
-        
-
-            define name vertex = "collider_$(collider)_v$(vertex)"
             
             keep = False
             
@@ -2492,13 +2538,93 @@ function update_collision()
         end
     end
     
-    # TODO: Track max penetration for each collider
+    if collision.pen < -100
+        delete_collision() with macros
+    else
+        with
+            $(collider) = collision.collider1
+        do
+            if collision.pen > collider.max_pen
+                collider.max_pen = collision.pen
+            end
+        end
+        
+        if collision.collider2
+            with
+                $(collider) = collision.collider2
+            do
+                if collision.pen > collider.max_pen
+                    collider.max_pen = collision.pen
+                end
+            end
+        end
+    end
+end
+
+function cull_collisions()
+    define name collider = "collider_$(collider)"
+    define name collision = "collision_$(collision)"
+
+    # Find the maximum penetration for each collider
+    for collision_iter = 1 to max_collision
+        with
+            $(collision) = collision_iter
+        do
+            if collision.id
+                with
+                    $(collider) = collision.collider1
+                do
+                    if collision.pen > collider.max_pen
+                        collider.max_pen = collision.pen
+                        collider.max_pen_col = collision.id
+                    end
+                end
+
+                if collision.collider2
+                    with
+                        $(collider) = collision.collider2
+                    do
+                        if collision.pen > collider.max_pen
+                            collider.max_pen = collision.pen
+                            collider.max_pen_col = collision.id
+                        end
+                    end
+                end
+            end
+        end
+    end
+    
+    # Set the highest penetration collision to active
+    for collider_iter = 1 to max_collider
+        with
+            $(collider) = collider_iter
+        do
+            if collider.max_pen_col
+                with
+                    $(collision) = collider.max_pen_col
+                do
+                    collision.active = True
+                end
+            end
+        end
+    end
+    
+    # Delete any inactive collisions
+    for collision_iter = max_collision to 1 by -1
+        with
+            $(collision) = collision_iter
+        do
+            if collision.id unless collision.active
+                delete_collision() with macros
+            end
+        end
+    end
 end
 
 function get_unused_collision_id()
     unused_id = -1
 
-    for collision = collision_start to 200
+    for collision = 1 to 200
         exists = False
 
         with
@@ -2506,7 +2632,6 @@ function get_unused_collision_id()
         do
             define name collision = "collision_$(collision)"
             unless collision.id
-                collision_start = collision + 1
                 unused_id = collision
                 collision.id = collision
 
@@ -2530,7 +2655,6 @@ function delete_collisions()
     end
     
     max_collision = 0
-    collision_start = 1
 end
 
 function delete_collision()
@@ -2538,9 +2662,6 @@ function delete_collision()
     if collision.id
         if collision.id == max_collision
             max_collision--
-         end
-        if collision.id < collision_start
-            collision_start = collision.id
         end
 
         /scoreboard players reset collision_$(collision)
