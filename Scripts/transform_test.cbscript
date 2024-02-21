@@ -52,6 +52,126 @@ reset
     end
 end
 
+clock tick
+    define name collider = "collider_$(collider)"
+
+    # Get click data
+    as @Player at @s eyes
+        /tp @Position ^ ^ ^
+        world_eye_x = @Position.x
+        world_eye_y = @Position.y
+        world_eye_z = @Position.z
+        
+        /tp @Position ^ ^ ^1
+        world_eye_dx = @Position.x - world_eye_x
+        world_eye_dy = @Position.y - world_eye_y
+        world_eye_dz = @Position.z - world_eye_z
+        
+        clicked = check_clicked()
+        
+        if @s.absorbed
+            @s.absorbed = 0
+        else
+            clicked = False
+        end
+    end
+    click_detector_tick()
+
+    if clicked
+        min_col_t = 1000000000
+
+        # Find the nearest collider in the direction of the cursor ray
+        for collider = 1 to max_collider
+            with
+                $(collider) = collider
+            do
+                if collider_ray_intersection(world_eye_x, world_eye_y, world_eye_z, world_eye_dx, world_eye_dy, world_eye_dz) with macros
+                    if t < min_col_t
+                        min_col_t = t
+                        min_x = collision_x
+                        min_y = collision_y
+                        min_z = collision_z
+                        min_col = collider
+                    end
+                end
+            end
+        end
+        
+        if min_col_t < 1000000000
+            # There was a ray intersection
+            $PunchPower = 1000
+            with
+                $(collider) = min_col
+            collider_apply_impulse(min_x, min_y, min_z, world_eye_dx * $PunchPower / scale, world_eye_dy * $PunchPower / scale, world_eye_dz * $PunchPower / scale)
+            
+            @Position.<pos> = <min_x, min_y, min_z>
+            at @Position
+                /particle minecraft:crit ~ ~ ~ 0 0 0 0 1 force
+            end
+        else
+            # No ray intersection, create a new collider
+            add_collider()
+        end
+    end
+    
+    # Apply gravity, integrate linear/angular velocity
+    for collider = 1 to max_collider
+        with
+            $(collider) = collider
+        do
+            if not collider.sleeping
+                collider_physics_tick() with macros
+            end
+        end
+    end
+    
+    # Update the penetration and normal for active collisions
+    update_active_collisions()
+
+    # Get collisions between colliders and the world
+    for collider = 1 to max_collider
+        with
+            $(collider) = collider
+        do
+            if not collider.sleeping
+                get_point_world_collisions() with macros
+                get_edge_world_collisions() with macros
+            end
+        end
+    end
+    
+    # Get collisions between each pair of colliders
+    for col1 = 1 to max_collider
+        for col2 = col1+1 to max_collider
+            with
+                $(collider1) = col1
+                $(collider2) = col2
+            get_collider_collider_collisions()
+        end
+    end
+    
+    # Remove all new collisions, except for new collisions that have
+    # the deepest penetration for a collider
+    cull_collisions()
+
+    # Resolve collisions
+    resolve_collision_velocity()
+    resolve_collision_penetration()
+
+    # Final collider update to render and check for sleeping
+    for collider = 1 to max_collider
+        with
+            $(collider) = collider
+        do
+            if not collider.sleeping
+                collider_set_transform() with macros
+                collider_check_sleep() with macros
+            end
+        end
+    end
+end
+
+
 function destroy_colliders()
     for collider = max_collider to 1 by -1
         with
@@ -126,114 +246,6 @@ function get_unused_collider_id()
     end
     
     return return_id
-end
-
-clock tick
-    define name collider = "collider_$(collider)"
-
-    as @Player at @s eyes
-        /tp @Position ^ ^ ^
-        world_eye_x = @Position.x
-        world_eye_y = @Position.y
-        world_eye_z = @Position.z
-        
-        /tp @Position ^ ^ ^1
-        world_eye_dx = @Position.x - world_eye_x
-        world_eye_dy = @Position.y - world_eye_y
-        world_eye_dz = @Position.z - world_eye_z
-        
-        clicked = check_clicked()
-        
-        if @s.absorbed
-            @s.absorbed = 0
-        else
-            clicked = False
-        end
-    end
-    click_detector_tick()
-
-    if clicked
-        min_col_t = 1000000000
-
-        for collider = 1 to max_collider
-            with
-                $(collider) = collider
-            do
-                if collider_ray_intersection(world_eye_x, world_eye_y, world_eye_z, world_eye_dx, world_eye_dy, world_eye_dz) with macros
-                    if t < min_col_t
-                        min_col_t = t
-                        min_x = collision_x
-                        min_y = collision_y
-                        min_z = collision_z
-                        min_col = collider
-                    end
-                end
-            end
-        end
-        
-        if min_col_t < 1000000000
-            $PunchPower = 1000
-            with
-                $(collider) = min_col
-            collider_apply_impulse(min_x, min_y, min_z, world_eye_dx * $PunchPower / scale, world_eye_dy * $PunchPower / scale, world_eye_dz * $PunchPower / scale)
-            
-            @Position.<pos> = <min_x, min_y, min_z>
-            at @Position
-                /particle minecraft:crit ~ ~ ~ 0 0 0 0 1 force
-            end
-        else
-            add_collider()
-        end
-    end
-    
-
-    for collider = 1 to max_collider
-        with
-            $(collider) = collider
-        do
-            if not collider.sleeping
-                collider_physics_tick() with macros
-            end
-        end
-    end
-    
-    update_active_collisions()
-
-    for collider = 1 to max_collider
-        with
-            $(collider) = collider
-        do
-            if not collider.sleeping
-                get_collisions() with macros
-                get_edge_world_collisions() with macros
-            end
-        end
-    end
-    
-    for col1 = 1 to max_collider
-        for col2 = col1+1 to max_collider
-            with
-                $(collider1) = col1
-                $(collider2) = col2
-            get_collider_collider_collisions()
-        end
-    end
-    
-    cull_collisions()
-
-    resolve_collision_velocity()
-    resolve_collision_penetration()
-    
-    for collider = 1 to max_collider
-        with
-            $(collider) = collider
-        do
-            if not collider.sleeping
-                collider_set_transform() with macros
-                collider_check_sleep() with macros
-            end
-        end
-    end
 end
 
 function test_update_collision()

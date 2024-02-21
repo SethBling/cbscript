@@ -898,7 +898,7 @@ function is_air()
     /execute if block $(x) $(y) $(z) minecraft:air run scoreboard players set Global air 1
 end
 
-function get_collisions()
+function get_point_world_collisions()
     define name collider = "collider_$(collider)"
     
     for vertex = 0 to 7
