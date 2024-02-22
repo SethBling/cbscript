@@ -24,6 +24,7 @@ function initialize_transforms()
     
     Gravity = 45
     Restituion = 600
+    collision_frame = 0
 end
 
 
@@ -159,9 +160,7 @@ function create_collider(x, y, z, size, inv_mass, inv_rot_int)
     @PhysicsBlock.age++
     as @PhysicsBlock[age == 1]
         /scoreboard players set @s collider_id $(collider)
-        @s.x = x
-        @s.y = y
-        @s.z = z
+        @s.<pos> = <x, y, z>
     end
 end
 
@@ -686,7 +685,7 @@ function resolve_collision_velocity()
             do
                 define name collision = "collision_$(collision)"
             
-                if collision.id
+                if collision.id and collision.pen >= 0
                     with
                         $(collider1) = collision.collider1
                         $(collider2) = collision.collider2
