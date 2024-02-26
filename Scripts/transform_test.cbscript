@@ -152,7 +152,7 @@ clock tick
             with
                 $(collider1) = col1
                 $(collider2) = col2
-            get_collider_collider_collisions()
+            get_collider_collider_collision()
         end
     end
     
@@ -212,6 +212,14 @@ function destroy_collider()
             $(vertex) = vertex
         do
             /scoreboard players reset collider_$(collider)_v$(vertex)
+        end
+    end
+    
+    for axis = 0 to 2
+        with
+            $(axis) = axis
+        do
+            /scoreboard players reset collider_$(collider)_a$(axis)
         end
     end
 end
@@ -467,6 +475,8 @@ function load_state()
                 collider.recent_motion = save_state.recent_motion
                 collider.recent_rotation = save_state.recent_rotation
                 collider.sleeping = save_state.sleeping
+                
+                collider_set_transform() with macros
             end
         end
     end
