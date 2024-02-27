@@ -159,6 +159,9 @@ clock tick
     # Remove all new collisions, except for new collisions that have
     # the deepest penetration for a collider
     cull_collisions()
+    
+    # Merge collision indices down so that there aren't any empties
+    merge_collisions_down()
 
     # Resolve collisions
     resolve_collision_velocity()
