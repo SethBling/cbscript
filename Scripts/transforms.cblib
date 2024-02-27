@@ -812,6 +812,464 @@ function collider_calculate_vertex_world_positions()
     end
 end
 
+function get_collider_world_collisions()
+    define name collider = "collider_$(collider)"
+    define name collider_a0 = "collider_$(collider)_a0"
+    define name collider_a1 = "collider_$(collider)_a1"
+    define name collider_a2 = "collider_$(collider)_a2"
+    
+    # Initialize block axes
+    
+    # 1,0,0
+    separating_axis_3.x = $Precision
+    separating_axis_3.y = 0
+    separating_axis_3.z = 0
+    
+    hs_x = collider_a0.x
+    if hs_x < 0
+        hs_x *= -1
+    end
+    hs_y = collider_a1.x
+    if hs_y < 0
+        hs_y *= -1
+    end
+    hs_z = collider_a2.x
+    if hs_z < 0
+        hs_z *= -1
+    end
+    
+    separating_axis_3.halfsize = (hs_x + hs_y + hs_z) * collider.halfsize / $Precision + $Half
+
+    # 0,1,0
+    separating_axis_4.x = 0
+    separating_axis_4.y = $Precision
+    separating_axis_4.z = 0
+    
+    hs_x = collider_a0.y
+    if hs_x < 0
+        hs_x *= -1
+    end
+    hs_y = collider_a1.y
+    if hs_y < 0
+        hs_y *= -1
+    end
+    hs_z = collider_a2.y
+    if hs_z < 0
+        hs_z *= -1
+    end
+    
+    separating_axis_4.halfsize = (hs_x + hs_y + hs_z) * collider.halfsize / $Precision + $Half
+    
+    # 0,0,1
+    separating_axis_5.x = 0
+    separating_axis_5.y = 0
+    separating_axis_5.z = $Precision
+    
+    hs_x = collider_a0.z
+    if hs_x < 0
+        hs_x *= -1
+    end
+    hs_y = collider_a1.z
+    if hs_y < 0
+        hs_y *= -1
+    end
+    hs_z = collider_a2.z
+    if hs_z < 0
+        hs_z *= -1
+    end
+    
+    separating_axis_5.halfsize = (hs_x + hs_y + hs_z) * collider.halfsize / $Precision + $Half
+    
+    # Initialize the cube face and edge-edge separating axes
+    edge_axis = 6
+    
+    for axis = 0 to 2
+        with
+            $(axis) = axis
+        do
+            define name collider_axis = "collider_$(collider)_a$(axis)"
+            define name separating_axis = "separating_axis_$(axis)"
+            
+            separating_axis.x = collider_axis.x
+            separating_axis.y = collider_axis.y
+            separating_axis.z = collider_axis.z
+            
+            hs_x = separating_axis.x
+            if hs_x < 0
+                hs_x *= -1
+            end
+            hs_y = separating_axis.y
+            if hs_y < 0
+                hs_y *= -1
+            end
+            hs_z = separating_axis.z
+            if hs_z < 0
+                hs_z *= -1
+            end
+            
+            separating_axis.halfsize = collider.halfsize + (hs_x + hs_y + hs_z) / 2
+            
+            with
+                $(edge_0) = edge_axis
+                $(edge_1) = edge_axis+1
+                $(edge_2) = edge_axis+2
+            do
+                define name edge0 = "separating_axis_$(edge_0)"
+                define name edge1 = "separating_axis_$(edge_1)"
+                define name edge2 = "separating_axis_$(edge_2)"
+                
+                
+                # Cross with 1,0,0
+                mag = sqrt(collider_axis.y*collider_axis.y + collider_axis.z*collider_axis.z)
+                edge0.x = 0
+                edge0.y = collider_axis.z * $Precision / mag
+                edge0.z = -collider_axis.y * $Precision / mag
+
+                # Cross with 0,1,0
+                mag = sqrt(collider_axis.x*collider_axis.x + collider_axis.z*collider_axis.z)
+                edge1.x = -collider_axis.z * $Precision / mag
+                edge1.y = 0
+                edge1.z = collider_axis.x * $Precision / mag
+
+                # Cross with 0,0,1
+                mag = sqrt(collider_axis.x*collider_axis.x + collider_axis.y*collider_axis.y)
+                edge2.x = collider_axis.y * $Precision / mag
+                edge2.y = -collider_axis.x * $Precision / mag
+                edge2.z = 0
+                
+                for edge_iter = 0 to 2
+                    with
+                        $(edge_axis) = edge_axis
+                    do
+                        define name edge = "separating_axis_$(edge_axis)"
+                        
+                        edge.halfsize = 0
+                        
+                        for cube_axis = 0 to 2
+                            with
+                                $(cube_axis) = cube_axis
+                            do
+                                define name cube_axis = "collider_$(collider)_a$(cube_axis)"
+                                # Cube Halfsize
+                                unless axis == cube_axis                                
+                                    cube_hs = cube_axis.x * edge.x
+                                    cube_hs += cube_axis.y * edge.y
+                                    cube_hs += cube_axis.z * edge.z
+                                    
+                                    cube_hs /= $Precision
+
+                                    if cube_hs < 0
+                                        cube_hs *= -1
+                                    end
+                                    edge.halfsize += cube_hs
+                                end
+                            end
+                        end
+                        
+                        edge.halfsize *= collider.halfsize
+                        edge.halfsize /= $Precision
+                        
+                        hs_x = edge.x
+                        if hs_x < 0
+                            hs_x *= -1
+                        end
+                        hs_y = edge.y
+                        if hs_y < 0
+                            hs_y *= -1
+                        end
+                        hs_z = edge.z
+                        if hs_z < 0
+                            hs_z *= -1
+                        end
+
+                        edge.halfsize += (hs_x + hs_y + hs_z) / 2
+                    end
+                    
+                    edge_axis++
+                end
+            end
+        end
+    end
+
+    block_start_x = collider.min_x / $Precision * $Precision + $Half
+    block_start_y = collider.min_y / $Precision * $Precision + $Half
+    block_start_z = collider.min_z / $Precision * $Precision + $Half
+    block_end_x = (collider.max_x / $Precision + 1) * $Precision
+    block_end_y = (collider.max_y / $Precision + 1) * $Precision
+    block_end_z = (collider.max_z / $Precision + 1) * $Precision
+    
+    for block_x = block_start_x to block_end_x by $Precision
+        test_x = block_x / $Precision
+        center_to_center.x = block_x - collider.x
+        
+        for block_y = block_start_y to block_end_y by $Precision
+            test_y = block_y / $Precision
+            center_to_center.y = block_y - collider.y
+            
+            for block_z = block_start_z to block_end_z by $Precision
+                test_z = block_z / $Precision
+                
+                with
+                    $(x) = test_x
+                    $(y) = test_y
+                    $(z) = test_z
+                is_air()
+                
+                unless air
+                    center_to_center.z = block_z - collider.z
+
+                    continue = True
+                    min_pen = $Billion
+                    
+                    for axis = 0 to 14
+                        if continue
+                            with
+                                $(axis) = axis
+                            do
+                                define name separating_axis = "separating_axis_$(axis)"
+                                
+                                unless separating_axis.halfsize == 0
+                                    pen = center_to_center.x * separating_axis.x
+                                    pen += center_to_center.y * separating_axis.y
+                                    pen += center_to_center.z * separating_axis.z
+                                    pen /= $Precision
+                                    axis_sign = 1
+                                    
+                                    if pen > 0
+                                        pen *= -1
+                                        axis_sign = -1
+                                    end
+                                    
+                                    pen += separating_axis.halfsize
+                                    
+                                    if pen <= 0
+                                        if DebugCollisions
+                                            tell @a "(test_x),(test_y),(test_z): Found separation of (pen) on axis (axis)"
+                                        end
+                                        continue = False
+                                        axis = $Billion
+                                    else if pen < min_pen
+                                        min_pen = pen
+                                        min_axis = axis
+                                        min_axis_sign = axis_sign
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    
+                    if continue
+                        if DebugCollisions
+                            tell @a "(test_x),(test_y),(test_z): World penetration (min_pen) on axis (min_axis)"
+                        end
+                        id = get_unused_collision_id()
+                        
+                        with
+                            $(axis) = min_axis
+                            $(collision) = id
+                        do
+                            define name axis = "separating_axis_$(axis)"
+                            define name collision = "collision_$(collision)"
+                            
+                            collision.id = id
+                            collision.pen = min_pen
+                            
+                            collision.collider1 = collider.id
+                            
+                            collision.nx = axis.x * min_axis_sign
+                            collision.ny = axis.y * min_axis_sign
+                            collision.nz = axis.z * min_axis_sign
+                            
+                            if min_axis < 3
+                                collision.type = $CollisionCubeFaceWorldPoint
+                                
+                                if collision.nx > 0
+                                    collision.x = block_x + $Half
+                                end
+                                if collision.nx <= 0
+                                    collision.x = block_x - $Half
+                                end
+                                collision.block_x = collision.x
+                                
+                                if collision.ny > 0
+                                    collision.y = block_y + $Half
+                                end
+                                if collision.ny <= 0
+                                    collision.y = block_y - $Half
+                                end
+                                collision.block_y = collision.y
+                                
+                                if collision.nz > 0
+                                    collision.z = block_z + $Half
+                                end
+                                if collision.nz <= 0
+                                    collision.z = block_z - $Half
+                                end
+                                collision.block_z = collision.z
+                                
+                                
+                                if min_axis == 0
+                                    collision.lnx = min_axis_sign * $Precision
+                                    collision.lny = 0
+                                    collision.lnz = 0
+                                end
+                                if min_axis == 1
+                                    collision.lnx = 0
+                                    collision.lny = min_axis_sign * $Precision
+                                    collision.lnz = 0
+                                end
+                                if min_axis == 2
+                                    collision.lnx = 0
+                                    collision.lny = 0
+                                    collision.lnz = min_axis_sign * $Precision
+                                end
+                            else if min_axis < 6
+                                collision.type = $CollisionCubePointWorldFace
+                                
+                                collision.block_x = block_x - $Half
+                                collision.block_y = block_y - $Half
+                                collision.block_z = block_z - $Half
+                                
+                                if min_axis == 3
+                                    sign0 = -collider_a0.x * collision.nx
+                                    sign1 = -collider_a1.x * collision.nx
+                                    sign2 = -collider_a2.x * collision.nx
+                                end
+                                if min_axis == 4
+                                    sign0 = -collider_a0.y * collision.ny
+                                    sign1 = -collider_a1.y * collision.ny
+                                    sign2 = -collider_a2.y * collision.ny
+                                end
+                                if min_axis == 5
+                                    sign0 = -collider_a0.z * collision.nz
+                                    sign1 = -collider_a1.z * collision.nz
+                                    sign2 = -collider_a2.z * collision.nz
+                                end
+                                    
+                                get_vertex_from_axis_signs()
+                                
+                                collision.vertex = vertex
+                                with
+                                    $(vertex) = vertex
+                                do
+                                    define name vertex = "collider_$(collider)_v$(vertex)"
+                                    collision.x = vertex.x
+                                    collision.y = vertex.y
+                                    collision.z = vertex.z
+                                end
+                            else
+                                collision.type = $CollisionCubeEdgeWorldEdge
+                                
+                                min_axis -= 6
+
+                                collision.block_x = block_x - $Half
+                                collision.block_y = block_y - $Half
+                                collision.block_z = block_z - $Half
+                                
+                                block_axis = min_axis % 3
+                                if block_axis == 0
+                                    collision.ox = collision.block_x
+                                    collision.ex = $Precision
+                                    collision.ey = 0
+                                    collision.ez = 0
+                                    
+                                    if collision.ny > 0
+                                        collision.oy = collision.block_y + $Precision
+                                    end
+                                    if collision.ny <= 0
+                                        collision.oy = collision.block_y
+                                    end
+                                    if collision.nz > 0
+                                        collision.oz = collision.block_z + $Precision
+                                    end
+                                    if collision.nz <= 0
+                                        collision.oz = collision.block_z
+                                    end
+                                end
+                                if block_axis == 1
+                                    collision.oy = collision.block_y
+                                    collision.ex = 0
+                                    collision.ey = $Precision
+                                    collision.ez = 0
+                                    
+                                    if collision.nx > 0
+                                        collision.ox = collision.block_x + $Precision
+                                    end
+                                    if collision.nx <= 0
+                                        collision.ox = collision.block_x
+                                    end
+                                    if collision.nz > 0
+                                        collision.oz = collision.block_z + $Precision
+                                    end
+                                    if collision.nz <= 0
+                                        collision.oz = collision.block_z
+                                    end
+                                end                            
+                                if block_axis == 2
+                                    collision.oz = collision.block_z
+                                    collision.ex = 0
+                                    collision.ey = 0
+                                    collision.ez = $Precision
+                                    
+                                    if collision.ny > 0
+                                        collision.oy = collision.block_y + $Precision
+                                    end
+                                    if collision.ny <= 0
+                                        collision.oy = collision.block_y
+                                    end
+                                    if collision.nx > 0
+                                        collision.ox = collision.block_x + $Precision
+                                    end
+                                    if collision.nx <= 0
+                                        collision.ox = collision.block_x
+                                    end
+                                end
+                                
+                                #tell @a "c2c: (center_to_center.x), (center_to_center.y), (center_to_center.z) sign: (min_axis_sign)"
+                                #tell @a "n: (collision.nx), (collision.ny), (collision.nz)"
+                                
+                                axis = min_axis / 3
+                                unless axis == 0
+                                    sign0 = collision.nx * collider_a0.x + collision.ny * collider_a0.y + collision.nz * collider_a0.z
+                                end
+                                unless axis == 1
+                                    sign1 = collision.nx * collider_a1.x + collision.ny * collider_a1.y + collision.nz * collider_a1.z
+                                end
+                                unless axis == 2
+                                    sign2 = collision.nx * collider_a2.x + collision.ny * collider_a2.y + collision.nz * collider_a2.z
+                                end
+                                
+                                sign0 *= -1
+                                sign1 *= -1
+                                sign2 *= -1
+                                
+                                #tell @a "block_axis:(block_axis) axis:(axis) signs:(sign0),(sign1),(sign2)"
+                                
+                                get_edge_from_signs()
+                                collision.vertex1 = vertex
+                                collision.vertex2 = nvert
+                                
+                                with
+                                    $(vertex) = vertex
+                                    $(nvert) = nvert
+                                do
+                                    define name vertex = "collider_$(collider)_v$(vertex)"
+                                    define name nvert = "collider_$(collider)_v$(nvert)"
+                                    get_closest_points_on_edges(vertex.x, vertex.y, vertex.z, nvert.x - vertex.x, nvert.y - vertex.y, nvert.z - vertex.z, collision.ox, collision.oy, collision.oz, collision.ex, collision.ey, collision.ez)
+                                end
+                                
+                                collision.x = p1x
+                                collision.y = p1y
+                                collision.z = p1z
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
 # Assumes separating_axis.xyz contains the normalized axis,
 # called with $(collider)
 function project_halfsize_onto_separating_axis()
@@ -1054,13 +1512,13 @@ function get_edge_from_signs()
                 vertex = 0
                 nvert = 4
             else
-                vertex = 3
-                nvert = 7
+                vertex = 2
+                nvert = 6
             end
         else
             if sign1 > 0
-                vertex = 2
-                nvert = 6
+                vertex = 3
+                nvert = 7
             else
                 vertex = 1
                 nvert = 5
