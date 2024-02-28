@@ -24,7 +24,7 @@ function initialize_transforms()
     initialize_vertex_adjacency()
     
     Gravity = 45
-    Restituion = 600
+    Restitution = 600
     collision_frame = 0
 end
 
@@ -991,12 +991,12 @@ function get_collider_world_collisions()
         end
     end
 
-    block_start_x = collider.min_x / $Precision * $Precision + $Half
-    block_start_y = collider.min_y / $Precision * $Precision + $Half
-    block_start_z = collider.min_z / $Precision * $Precision + $Half
-    block_end_x = (collider.max_x / $Precision + 1) * $Precision
-    block_end_y = (collider.max_y / $Precision + 1) * $Precision
-    block_end_z = (collider.max_z / $Precision + 1) * $Precision
+    block_start_x = (collider.min_x + collider.max_pen) / $Precision * $Precision + $Half
+    block_start_y = (collider.min_y + collider.max_pen) / $Precision * $Precision + $Half
+    block_start_z = (collider.min_z + collider.max_pen) / $Precision * $Precision + $Half
+    block_end_x = ((collider.max_x - collider.max_pen) / $Precision + 1) * $Precision
+    block_end_y = ((collider.max_y - collider.max_pen) / $Precision + 1) * $Precision
+    block_end_z = ((collider.max_z - collider.max_pen) / $Precision + 1) * $Precision
     
     for block_x = block_start_x to block_end_x by $Precision
         test_x = block_x / $Precision
@@ -2214,9 +2214,16 @@ function update_collision()
 
                 dist = sqrt(dx*dx + dy*dy + dz*dz)
 
-                if d1sq > d2sq
-                    # Penetration
-                else
+                collider_world_to_local(p2x, p2y, p2z, True) with macros
+                
+                is_collision = False
+                if p1x >= collision.block_x and p1y >= collision.block_y and p1z >= collision.block_z and p1x <= collision.block_x + $Precision and p1y <= collision.block_y + $Precision and p1z <= collision.block_z + $Precision
+                    if local_x >= -collider.halfsize and local_x <= collider.halfsize and local_y >= -collider.halfsize and local_y <= collider.halfsize and local_z >= -collider.halfsize and local_z <= collider.halfsize
+                        is_collision = True
+                    end
+                end
+                
+                if not is_collision
                     dist *= -1
                 end
                     
@@ -2345,7 +2352,6 @@ function update_collision()
 
                 dist = sqrt(dx*dx + dy*dy + dz*dz)
                 
-                # The collision falls along the collider edges
                 with
                     $(collider) = collider2.id
                 collider_world_to_local(p1x, p1y, p1z, True)
