@@ -140,10 +140,6 @@ clock tick
             $(collider) = collider
         do
             if not collider.sleeping
-                # Old collisions
-                #get_point_world_collisions() with macros
-                #get_edge_world_collisions() with macros
-                
                 # New collisions
                 get_collider_world_collisions() with macros
             end
