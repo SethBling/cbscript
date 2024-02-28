@@ -2417,60 +2417,59 @@ function cull_collisions()
     define name collider = "collider_$(collider)"
     define name collision = "collision_$(collision)"
 
-    # Find the maximum penetration for each collider
+    # Remove any new duplicate collisions
     for collision_iter = 1 to max_collision
         with
             $(collision) = collision_iter
         do
-            if collision.id
+            if collision.id unless collision.active
                 already_exists = False
-                unless collision.active
-                    for collision2_iter = 1 to max_collision
-                        with
-                            $(collision2) = collision2_iter
-                        do
-                            define name collision2 = "collision_$(collision2)"
+                
+                for collision2_iter = 1 to max_collision
+                    with
+                        $(collision2) = collision2_iter
+                    do
+                        define name collision2 = "collision_$(collision2)"
 
-                            if collision2.active
-                                if collision.type == collision2.type
-                                    if collision.type == $CollisionCubePointWorldFace
-                                        if collision.vertex == collision2.vertex and collision.block_x == collision2.block_x and collision.block_y == collision2.block_y and collision.block_z == collision2.block_z
-                                            already_exists = True
-                                            collision2_iter = $Billion
-                                        end
-                                    end
-                                    if collision.type == $CollisionCubeFaceWorldPoint
-                                        if collision.x == collision2.x and collision.y == collision2.y and collision.z == collision2.z and collision.lnx == collision2.lnx and collision.lny == collision2.lny and collision.lnz == collision2.lnz
-                                            already_exists = True
-                                            collision2_iter = $Billion
-                                        end
-                                    end
-                                    if collision.type == $CollisionCubeEdgeWorldEdge
-                                        if collision.vertex1 == collision2.vertex1 and collision.vertex2 == collision2.vertex2 and collision.block_x == collision2.block_x and collision.block_y == collision2.block_y and collision.block_z == collision2.block_z and collision.ox == collision2.ox and collision.oy == collision2.oy and collision.oz == collision2.oz and collision.ex == collision2.ex and collision.ey == collision2.ey and collision.ez == collision2.ez
-                                            already_exists = True
-                                            collision2_iter = $Billion
-                                        end
-                                    end
-                                    if collision.type == $CollisionCubeFaceCubePoint
-                                        if collision.lnx == collision2.lnx and collision.lny == collision2.lny and collision.lnz == collision2.lnz and collision.vertex == collision2.vertex
-                                            already_exists = True
-                                            collision2_iter = $Billion
-                                        end
-                                    end
-                                    if collision.type == $CollisionCubeEdgeCubeEdge
-                                        if collision.vertex1 == collision2.vertex1 and collision.nvert1 == collision2.nvert1 and collision.vertex2 == collision2.vertex2 and collision.nvert2 == collision2.nvert2
-                                            already_exists = True
-                                            collision2_iter = $Billion
-                                        end
+                        if collision2.active
+                            if collision.type == collision2.type and collision.collider1 == collision2.collider1 and collision.collider2 == collision2.collider2
+                                if collision.type == $CollisionCubePointWorldFace
+                                    if collision.vertex == collision2.vertex and collision.block_x == collision2.block_x and collision.block_y == collision2.block_y and collision.block_z == collision2.block_z
+                                        already_exists = True
+                                        collision2_iter = $Billion
                                     end
                                 end
-                            else
-                                collision2_iter = $Billion
+                                if collision.type == $CollisionCubeFaceWorldPoint
+                                    if collision.x == collision2.x and collision.y == collision2.y and collision.z == collision2.z and collision.lnx == collision2.lnx and collision.lny == collision2.lny and collision.lnz == collision2.lnz
+                                        already_exists = True
+                                        collision2_iter = $Billion
+                                    end
+                                end
+                                if collision.type == $CollisionCubeEdgeWorldEdge
+                                    if collision.vertex1 == collision2.vertex1 and collision.vertex2 == collision2.vertex2 and collision.block_x == collision2.block_x and collision.block_y == collision2.block_y and collision.block_z == collision2.block_z and collision.ox == collision2.ox and collision.oy == collision2.oy and collision.oz == collision2.oz and collision.ex == collision2.ex and collision.ey == collision2.ey and collision.ez == collision2.ez
+                                        already_exists = True
+                                        collision2_iter = $Billion
+                                    end
+                                end
+                                if collision.type == $CollisionCubeFaceCubePoint
+                                    if collision.lnx == collision2.lnx and collision.lny == collision2.lny and collision.lnz == collision2.lnz and collision.vertex == collision2.vertex
+                                        already_exists = True
+                                        collision2_iter = $Billion
+                                    end
+                                end
+                                if collision.type == $CollisionCubeEdgeCubeEdge
+                                    if collision.vertex1 == collision2.vertex1 and collision.nvert1 == collision2.nvert1 and collision.vertex2 == collision2.vertex2 and collision.nvert2 == collision2.nvert2
+                                        already_exists = True
+                                        collision2_iter = $Billion
+                                    end
+                                end
                             end
+                        else
+                            collision2_iter = $Billion
                         end
                     end
                 end
-                
+            
                 if already_exists
                     delete_collision() with macros
                 end
@@ -2487,7 +2486,10 @@ function cull_collisions()
                 with
                     $(collision) = collider.max_pen_col
                 do
-                    collision.active = True
+                    # Make sure the collision still exists after culling
+                    if collision.id
+                        collision.active = True
+                    end
                 end
             end
         end

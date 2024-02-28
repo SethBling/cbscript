@@ -163,6 +163,23 @@ clock tick
     # Merge collision indices down so that there aren't any empties
     merge_collisions_down()
 
+    if Particles
+        for collision = 1 to max_collision
+            with
+                $(collision) = collision
+            do
+                define name collision = "collision_$(collision)"
+                
+                if collision.id
+                    @Position.<pos> = <collision.x, collision.y, collision.z>
+                    at @Position
+                        /particle minecraft:bubble_pop ~ ~ ~
+                    end
+                end
+            end
+        end
+    end
+
     # Resolve collisions
     resolve_collision_velocity()
     resolve_collision_penetration()
