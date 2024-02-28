@@ -1042,7 +1042,12 @@ function get_collider_world_collisions()
                                     
                                     pen += separating_axis.halfsize
                                     
-                                    if pen <= 0
+                                    if pen <= collider.max_pen
+                                        if DebugCollisions
+                                            tell @a "(test_x),(test_y),(test_z): Penetration (pen) less than (collider.max_pen) on axis (axis)"
+                                        end
+                                        continue = False
+                                    else if pen <= 0
                                         if DebugCollisions
                                             tell @a "(test_x),(test_y),(test_z): Found separation of (pen) on axis (axis)"
                                         end
@@ -1062,9 +1067,14 @@ function get_collider_world_collisions()
                         if DebugCollisions
                             tell @a "(test_x),(test_y),(test_z): World penetration (min_pen) on axis (min_axis)"
                         end
+
                         id = get_unused_collision_id()
                         
-                        with
+                        # This collision surpasses the previous maximium penetration
+                        collider.max_pen = min_pen
+                        collider.max_pen_col = id
+
+                       with
                             $(axis) = min_axis
                             $(collision) = id
                         do
@@ -1320,7 +1330,9 @@ function test_axis_penetration()
     project_halfsize_onto_separating_axis() with macros
     pen += projected
     
-    if pen < 0
+    if pen <= pen_threshold
+        # This collision will be smaller than both of the colliders' existing
+        # max collisions.
         continue = False
     else if pen < min_pen
         min_pen = pen
@@ -1335,6 +1347,12 @@ end
 function get_min_separating_axis()
     define name collider1 = "collider_$(collider1)"
     define name collider2 = "collider_$(collider2)"
+    
+    if collider1.max_pen < collider2.max_pen
+        pen_threshold = collider1.pen
+    else
+        pen_threshold = collider2.pen
+    end
     
     min_pen = $Billion
     continue = True
@@ -1532,64 +1550,77 @@ function get_collider_collider_collision()
     get_min_separating_axis() with macros
     
     if continue
-        if min_axis_idx < 3
-            # collider1 face, collider2 point
-            # Get the collider1 face                
-            if min_axis_idx == 0
-                lnx = min_axis_sign * $Precision
-                lny = 0
-                lnz = 0
-            end
-            if min_axis_idx == 1
-                lnx = 0
-                lny = min_axis_sign * $Precision
-                lnz = 0
-            end
-            if min_axis_idx == 2
-                lnx = 0
-                lny = 0
-                lnz = min_axis_sign * $Precision
+        # Create the collision
+        id = get_unused_collision_id()
+
+        with
+            $(collision) = id
+        do            
+            collision.id = id
+            collision.pen = min_pen
+            
+            if min_pen > collider1.max_pen
+                collider1.max_pen = min_pen
+                collider1.max_pen_col = id
             end
             
-            define name axis0 = "collider_$(collider2)_a0"
-            define name axis1 = "collider_$(collider2)_a1"
-            define name axis2 = "collider_$(collider2)_a2"
-            
-            # Make the axis point toward collider1
-            min_axis_x *= min_axis_sign
-            min_axis_y *= min_axis_sign
-            min_axis_z *= min_axis_sign
-               
-            # Get the collider2 point
-            sign0 = min_axis_x * axis0.x + min_axis_y * axis0.y + min_axis_z * axis0.z
-            sign1 = min_axis_x * axis1.x + min_axis_y * axis1.y + min_axis_z * axis1.z
-            sign2 = min_axis_x * axis2.x + min_axis_y * axis2.y + min_axis_z * axis2.z
-            
-            get_vertex_from_axis_signs()
-            
-            # Create the collision
-            id = get_unused_collision_id()
-            
-            with
-                $(collision) = id
-                $(vertex) = vertex
-            do
-                define name vertex = "collider_$(collider2)_v$(vertex)"
+            if min_pen > collider2.max_pen
+                collider2.max_pen = min_pen
+                collider2.max_pen_col = id
+            end
+
+            if min_axis_idx < 3
+                # collider1 face, collider2 point
+                # Get the collider1 face                
+                if min_axis_idx == 0
+                    lnx = min_axis_sign * $Precision
+                    lny = 0
+                    lnz = 0
+                end
+                if min_axis_idx == 1
+                    lnx = 0
+                    lny = min_axis_sign * $Precision
+                    lnz = 0
+                end
+                if min_axis_idx == 2
+                    lnx = 0
+                    lny = 0
+                    lnz = min_axis_sign * $Precision
+                end
                 
+                define name axis0 = "collider_$(collider2)_a0"
+                define name axis1 = "collider_$(collider2)_a1"
+                define name axis2 = "collider_$(collider2)_a2"
+                
+                # Make the axis point toward collider1
+                min_axis_x *= min_axis_sign
+                min_axis_y *= min_axis_sign
+                min_axis_z *= min_axis_sign
+                   
+                # Get the collider2 point
+                sign0 = min_axis_x * axis0.x + min_axis_y * axis0.y + min_axis_z * axis0.z
+                sign1 = min_axis_x * axis1.x + min_axis_y * axis1.y + min_axis_z * axis1.z
+                sign2 = min_axis_x * axis2.x + min_axis_y * axis2.y + min_axis_z * axis2.z
+                
+                get_vertex_from_axis_signs()
+                
+                collision.collider1 = collider1.id
+                collision.collider2 = collider2.id
+                
+                with
+                    $(vertex) = vertex
+                do
+                    define name vertex = "collider_$(collider2)_v$(vertex)"
+
+                    collision.x = vertex.x
+                    collision.y = vertex.y
+                    collision.z = vertex.z
+                end
+                    
                 if DebugCollisions
                     tell @a "Creating collision with (collider1.id) face and (collider2.id) vertex"
                 end
 
-                collision.id = id
-                collision.collider1 = collider1.id
-                collision.collider2 = collider2.id
-                
-                collision.pen = min_pen
-                
-                collision.x = vertex.x
-                collision.y = vertex.y
-                collision.z = vertex.z
-                
                 collision.nx = min_axis_x
                 collision.ny = min_axis_y
                 collision.nz = min_axis_z
@@ -1599,63 +1630,56 @@ function get_collider_collider_collision()
                 collision.lny = lny
                 collision.lnz = lnz
                 collision.vertex = vertex
-            end
-        else if min_axis_idx < 6
-            # collider1 point, collider2 face
-            # Get the collider2 face                
-            min_axis_sign *= -1
-            
-            if min_axis_idx == 3
-                lnx = min_axis_sign * $Precision
-                lny = 0
-                lnz = 0
-            end
-            if min_axis_idx == 4
-                lnx = 0
-                lny = min_axis_sign * $Precision
-                lnz = 0
-            end
-            if min_axis_idx == 5
-                lnx = 0
-                lny = 0
-                lnz = min_axis_sign * $Precision
-            end
-            
-            define name axis0 = "collider_$(collider1)_a0"
-            define name axis1 = "collider_$(collider1)_a1"
-            define name axis2 = "collider_$(collider1)_a2"
+            else if min_axis_idx < 6
+                # collider1 point, collider2 face
+                # Get the collider2 face                
+                min_axis_sign *= -1
+                
+                if min_axis_idx == 3
+                    lnx = min_axis_sign * $Precision
+                    lny = 0
+                    lnz = 0
+                end
+                if min_axis_idx == 4
+                    lnx = 0
+                    lny = min_axis_sign * $Precision
+                    lnz = 0
+                end
+                if min_axis_idx == 5
+                    lnx = 0
+                    lny = 0
+                    lnz = min_axis_sign * $Precision
+                end
+                
+                define name axis0 = "collider_$(collider1)_a0"
+                define name axis1 = "collider_$(collider1)_a1"
+                define name axis2 = "collider_$(collider1)_a2"
 
-            # Make the axis point toward collider2
-            min_axis_x *= min_axis_sign
-            min_axis_y *= min_axis_sign
-            min_axis_z *= min_axis_sign
+                # Make the axis point toward collider2
+                min_axis_x *= min_axis_sign
+                min_axis_y *= min_axis_sign
+                min_axis_z *= min_axis_sign
 
-            # Get the collider1 point
-            sign0 = min_axis_x * axis0.x + min_axis_y * axis0.y + min_axis_z * axis0.z
-            sign1 = min_axis_x * axis1.x + min_axis_y * axis1.y + min_axis_z * axis1.z
-            sign2 = min_axis_x * axis2.x + min_axis_y * axis2.y + min_axis_z * axis2.z
-            
-            get_vertex_from_axis_signs()
-            
-            # Create the collision
-            id = get_unused_collision_id()
-            
-            with
-                $(collision) = id
-                $(vertex) = vertex
-            do
-                define name vertex = "collider_$(collider1)_v$(vertex)"
-
-                collision.id = id
+                # Get the collider1 point
+                sign0 = min_axis_x * axis0.x + min_axis_y * axis0.y + min_axis_z * axis0.z
+                sign1 = min_axis_x * axis1.x + min_axis_y * axis1.y + min_axis_z * axis1.z
+                sign2 = min_axis_x * axis2.x + min_axis_y * axis2.y + min_axis_z * axis2.z
+                
+                get_vertex_from_axis_signs()
+                
                 collision.collider1 = collider2.id
                 collision.collider2 = collider1.id
                 
-                collision.pen = min_pen
-                
-                collision.x = vertex.x
-                collision.y = vertex.y
-                collision.z = vertex.z
-                
+                with
+                    $(vertex) = vertex
+                do
+                    define name vertex = "collider_$(collider1)_v$(vertex)"
+
+                    collision.x = vertex.x
+                    collision.y = vertex.y
+                    collision.z = vertex.z
+                end
+
                 collision.nx = min_axis_x
                 collision.ny = min_axis_y
                 collision.nz = min_axis_z
@@ -1670,91 +1694,80 @@ function get_collider_collider_collision()
                     tell @a "Creating collision with (collider2.id) face and (collider1.id) vertex"
                     tell @a "Collision pen: (collision.pen) n: (collision.nx), (collision.ny), (collision.nz)"
                 end
-            end
-        else
-            # edge, edge
-            min_axis_idx -= 6
-            
-            # Get the collider1 edge
-            define name axis0 = "collider_$(collider1)_a0"
-            define name axis1 = "collider_$(collider1)_a1"
-            define name axis2 = "collider_$(collider1)_a2"
-            
-            # Make the axis point toward collider1
-            min_axis_x *= min_axis_sign
-            min_axis_y *= min_axis_sign
-            min_axis_z *= min_axis_sign
-
-            axis = min_axis_idx / 3
-            unless axis == 0
-                sign0 = min_axis_x * axis0.x + min_axis_y * axis0.y + min_axis_z * axis0.z
-            end
-            unless axis == 1
-                sign1 = min_axis_x * axis1.x + min_axis_y * axis1.y + min_axis_z * axis1.z
-            end
-            unless axis == 2
-                sign2 = min_axis_x * axis2.x + min_axis_y * axis2.y + min_axis_z * axis2.z
-            end
-            
-            get_edge_from_signs()
-            vertex1 = vertex
-            nvert1 = nvert
-            
-            # Get the collider2 edge
-            define name axis0 = "collider_$(collider2)_a0"
-            define name axis1 = "collider_$(collider2)_a1"
-            define name axis2 = "collider_$(collider2)_a2"
-
-            axis = min_axis_idx % 3
-            unless axis == 0
-                sign0 = min_axis_x * axis0.x + min_axis_y * axis0.y + min_axis_z * axis0.z
-            end
-            unless axis == 1
-                sign1 = min_axis_x * axis1.x + min_axis_y * axis1.y + min_axis_z * axis1.z
-            end
-            unless axis == 2
-                sign2 = min_axis_x * axis2.x + min_axis_y * axis2.y + min_axis_z * axis2.z
-            end
-            
-            get_edge_from_signs()
-            vertex2 = vertex
-            nvert2 = nvert
-            
-            # Get the nearest points on the edges
-            with
-                $(vertex1) = vertex1
-                $(nvert1) = nvert1
-                $(vertex2) = vertex2
-                $(nvert2) = nvert2
-            do
-                define name vertex1 = "collider_$(collider1)_v$(vertex1)"
-                define name nvert1 = "collider_$(collider1)_v$(nvert1)"
-                define name vertex2 = "collider_$(collider2)_v$(vertex2)"
-                define name nvert2 = "collider_$(collider2)_v$(nvert2)"
+            else
+                # edge, edge
+                min_axis_idx -= 6
                 
-                get_closest_points_on_edges(vertex1.x, vertex1.y, vertex1.z, nvert1.x - vertex1.x, nvert1.y - vertex1.y, nvert1.z - vertex1.z, vertex2.x, vertex2.y, vertex2.z, nvert2.x - vertex2.x, nvert2.y - vertex2.y, nvert2.z - vertex2.z)
-            end
-            
-            dx = p2x-p1x
-            dy = p2y-p1y
-            dz = p2z-p1z
-            mag = sqrt(dx*dx+dy*dy+dz*dz)
-            if DebugCollisions
-                tell @a "Closest points are (mag) apart."
-            end
+                # Get the collider1 edge
+                define name axis0 = "collider_$(collider1)_a0"
+                define name axis1 = "collider_$(collider1)_a1"
+                define name axis2 = "collider_$(collider1)_a2"
+                
+                # Make the axis point toward collider1
+                min_axis_x *= min_axis_sign
+                min_axis_y *= min_axis_sign
+                min_axis_z *= min_axis_sign
 
-            # Create the collision
-            id = get_unused_collision_id()
-            
-            with
-                $(collision) = id
-            do
+                axis = min_axis_idx / 3
+                unless axis == 0
+                    sign0 = min_axis_x * axis0.x + min_axis_y * axis0.y + min_axis_z * axis0.z
+                end
+                unless axis == 1
+                    sign1 = min_axis_x * axis1.x + min_axis_y * axis1.y + min_axis_z * axis1.z
+                end
+                unless axis == 2
+                    sign2 = min_axis_x * axis2.x + min_axis_y * axis2.y + min_axis_z * axis2.z
+                end
+                
+                get_edge_from_signs()
+                vertex1 = vertex
+                nvert1 = nvert
+                
+                # Get the collider2 edge
+                define name axis0 = "collider_$(collider2)_a0"
+                define name axis1 = "collider_$(collider2)_a1"
+                define name axis2 = "collider_$(collider2)_a2"
+
+                axis = min_axis_idx % 3
+                unless axis == 0
+                    sign0 = min_axis_x * axis0.x + min_axis_y * axis0.y + min_axis_z * axis0.z
+                end
+                unless axis == 1
+                    sign1 = min_axis_x * axis1.x + min_axis_y * axis1.y + min_axis_z * axis1.z
+                end
+                unless axis == 2
+                    sign2 = min_axis_x * axis2.x + min_axis_y * axis2.y + min_axis_z * axis2.z
+                end
+                
+                get_edge_from_signs()
+                vertex2 = vertex
+                nvert2 = nvert
+                
+                # Get the nearest points on the edges
+                with
+                    $(vertex1) = vertex1
+                    $(nvert1) = nvert1
+                    $(vertex2) = vertex2
+                    $(nvert2) = nvert2
+                do
+                    define name vertex1 = "collider_$(collider1)_v$(vertex1)"
+                    define name nvert1 = "collider_$(collider1)_v$(nvert1)"
+                    define name vertex2 = "collider_$(collider2)_v$(vertex2)"
+                    define name nvert2 = "collider_$(collider2)_v$(nvert2)"
+                    
+                    get_closest_points_on_edges(vertex1.x, vertex1.y, vertex1.z, nvert1.x - vertex1.x, nvert1.y - vertex1.y, nvert1.z - vertex1.z, vertex2.x, vertex2.y, vertex2.z, nvert2.x - vertex2.x, nvert2.y - vertex2.y, nvert2.z - vertex2.z)
+                end
+                
                 if DebugCollisions
+                    dx = p2x-p1x
+                    dy = p2y-p1y
+                    dz = p2z-p1z
+                    mag = sqrt(dx*dx+dy*dy+dz*dz)
+
+                    tell @a "Closest points are (mag) apart."
                     tell @a "Creating collision with (collider1.id) edge and (collider2.id) edge"
                 end
 
-                collision.id = id
-                collision.pen = min_pen
                 collision.collider1 = collider1.id
                 collision.collider2 = collider2.id
                 
@@ -2037,9 +2050,8 @@ function update_active_collisions()
         do
             define name collider = "collider_$(collider)"
 
-            collider_calculate_vertex_world_positions() with macros
-
             if collider.id
+                collider_calculate_vertex_world_positions() with macros
                 collider.max_pen = 0
                 collider.max_pen_col = 0
             end
@@ -2455,26 +2467,6 @@ function cull_collisions()
                 
                 if already_exists
                     delete_collision() with macros
-                else
-                    with
-                        $(collider) = collision.collider1
-                    do
-                        if collision.pen > collider.max_pen
-                            collider.max_pen = collision.pen
-                            collider.max_pen_col = collision.id
-                        end
-                    end
-
-                    if collision.collider2
-                        with
-                            $(collider) = collision.collider2
-                        do
-                            if collision.pen > collider.max_pen
-                                collider.max_pen = collision.pen
-                                collider.max_pen_col = collision.id
-                            end
-                        end
-                    end
                 end
             end
         end
