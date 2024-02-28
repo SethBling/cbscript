@@ -14,8 +14,6 @@ $CollisionCubeEdgeWorldEdge = 3
 $CollisionCubeFaceCubePoint = 4
 $CollisionCubeEdgeCubeEdge = 5
 
-
-
 define @PhysicsBlock = @Entity[type=block_display,tag=physics_block]
 
 end
@@ -27,7 +25,6 @@ function initialize_transforms()
     Restitution = 600
     collision_frame = 0
 end
-
 
 # These lines register the variables for the matrix_multiply functions
 # It doesn't actually need to be called.
@@ -131,6 +128,11 @@ function get_closest_points_on_edges(o1x, o1y, o1z, d1x, d1y, d1z, o2x, o2y, o2z
     p2x = o2x + t2 * d2x / $Precision
     p2y = o2y + t2 * d2y / $Precision
     p2z = o2z + t2 * d2z / $Precision
+end
+
+function is_air()
+    air = False
+    /execute if block $(x) $(y) $(z) minecraft:air run scoreboard players set Global air 1
 end
 
 function create_collider(x, y, z, size, inv_mass, inv_rot_int)
@@ -1355,7 +1357,6 @@ function get_min_separating_axis()
     end
     
     min_pen = $Billion
-    continue = True
     
     center_to_center.x = collider2.x - collider1.x
     center_to_center.y = collider2.y - collider1.y
@@ -1546,8 +1547,16 @@ function get_collider_collider_collision()
     define name collider1 = "collider_$(collider1)"
     define name collider2 = "collider_$(collider2)"
     define name collision = "collision_$(collision)"
-     
-    get_min_separating_axis() with macros
+
+    continue = True
+    
+    if collider1.sleeping and collider2.sleeping
+        continue = False
+    end
+    
+    if continue
+        get_min_separating_axis() with macros
+    end
     
     if continue
         # Create the collision
@@ -1934,7 +1943,7 @@ function resolve_collision_penetration()
         end
         
         if max_pen <= 5
-            pen_iter = 1000000
+            pen_iter = $Billion
         else
             mx = (max_pen_nx * max_pen) / $Precision
             my = (max_pen_ny * max_pen) / $Precision
@@ -2033,11 +2042,6 @@ function move_collisions(dx, dy, dz, collider)
             end
         end
     end
-end
-
-function is_air()
-    air = False
-    /execute if block $(x) $(y) $(z) minecraft:air run scoreboard players set Global air 1
 end
 
 function update_active_collisions()
@@ -2198,44 +2202,35 @@ function update_collision()
             if t1 >= 0 and t1 <= $Precision and t2 >= 0 and t2 <= $Precision
                 # The collision falls along the collider edges
                 
-                d1x = p1x - collider.x
-                d1y = p1y - collider.y
-                d1z = p1z - collider.z
-                d1sq = d1x*d1x + d1y*d1y + d1z*d1z
-                
-                d2x = p2x - collider.x
-                d2y = p2y - collider.y
-                d2z = p2z - collider.z
-                d2sq = d2x*d2x + d2y*d2y + d2z*d2z
-
                 dx = p2x - p1x
                 dy = p2y - p1y
                 dz = p2z - p1z
 
-                dist = sqrt(dx*dx + dy*dy + dz*dz)
+                collision.pen = sqrt(dx*dx + dy*dy + dz*dz)
 
-                collider_world_to_local(p2x, p2y, p2z, True) with macros
-                
                 is_collision = False
-                if p1x >= collision.block_x and p1y >= collision.block_y and p1z >= collision.block_z and p1x <= collision.block_x + $Precision and p1y <= collision.block_y + $Precision and p1z <= collision.block_z + $Precision
+                block_max_x = collision.block_x + $Precision
+                block_max_y = collision.block_y + $Precision
+                block_max_z = collision.block_z + $Precision
+                if p1x >= collision.block_x and p1y >= collision.block_y and p1z >= collision.block_z and p1x <= block_max_x and p1y <= block_max_y and p1z <= block_max_z
+                    collider_world_to_local(p2x, p2y, p2z, True) with macros
+                
                     if local_x >= -collider.halfsize and local_x <= collider.halfsize and local_y >= -collider.halfsize and local_y <= collider.halfsize and local_z >= -collider.halfsize and local_z <= collider.halfsize
                         is_collision = True
                     end
                 end
                 
-                if not is_collision
-                    dist *= -1
-                end
+                if is_collision
+                    collision.x = p1x
+                    collision.y = p1y
+                    collision.z = p1z
                     
-                collision.pen = dist
-                
-                collision.x = p1x
-                collision.y = p1y
-                collision.z = p1z
-                
-                collision.nx = dx * $Precision / dist
-                collision.ny = dy * $Precision / dist
-                collision.nz = dz * $Precision / dist
+                    collision.nx = dx * $Precision / collision.pen
+                    collision.ny = dy * $Precision / collision.pen
+                    collision.nz = dz * $Precision / collision.pen
+                else
+                    delete_collision() with macros
+                end
             else
                 delete_collision() with macros
             end
@@ -2350,7 +2345,7 @@ function update_collision()
                 dy = p2y - p1y
                 dz = p2z - p1z
 
-                dist = sqrt(dx*dx + dy*dy + dz*dz)
+                collision.pen = sqrt(dx*dx + dy*dy + dz*dz)
                 
                 with
                     $(collider) = collider2.id
@@ -2369,19 +2364,17 @@ function update_collision()
                     end
                 end
                 
-                if not is_collision
-                    dist *= -1
-                end
+                if is_collision
+                    collision.x = p1x
+                    collision.y = p1y
+                    collision.z = p1z
                     
-                collision.pen = dist
-                
-                collision.x = p1x
-                collision.y = p1y
-                collision.z = p1z
-                
-                collision.nx = dx * $Precision / dist
-                collision.ny = dy * $Precision / dist
-                collision.nz = dz * $Precision / dist
+                    collision.nx = dx * $Precision / collision.pen
+                    collision.ny = dy * $Precision / collision.pen
+                    collision.nz = dz * $Precision / collision.pen
+                else
+                    delete_collision() with macros
+                end
             else
                 delete_collision() with macros
             end
