@@ -1089,7 +1089,6 @@ function get_collider_world_collisions()
                                 if collision.nx <= 0
                                     collision.x = block_x - $Half
                                 end
-                                collision.block_x = collision.x
                                 
                                 if collision.ny > 0
                                     collision.y = block_y + $Half
@@ -1097,7 +1096,6 @@ function get_collider_world_collisions()
                                 if collision.ny <= 0
                                     collision.y = block_y - $Half
                                 end
-                                collision.block_y = collision.y
                                 
                                 if collision.nz > 0
                                     collision.z = block_z + $Half
@@ -1105,7 +1103,6 @@ function get_collider_world_collisions()
                                 if collision.nz <= 0
                                     collision.z = block_z - $Half
                                 end
-                                collision.block_z = collision.z
                                 
                                 
                                 if min_axis == 0
@@ -2425,7 +2422,7 @@ function cull_collisions()
                                         end
                                     end
                                     if collision.type == $CollisionCubeFaceWorldPoint
-                                        if collision.block_x == collision2.block_x and collision.block_y == collision2.block_y and collision.block_z == collision2.block_z and collision.lnx == collision2.lnx and collision.lny == collision2.lny and collision.lnz == collision2.lnz
+                                        if collision.x == collision2.x and collision.y == collision2.y and collision.z == collision2.z and collision.lnx == collision2.lnx and collision.lny == collision2.lny and collision.lnz == collision2.lnz
                                             already_exists = True
                                             collision2_iter = $Billion
                                         end
