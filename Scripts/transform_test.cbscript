@@ -5,18 +5,22 @@ scale 1000
 import common
 import transforms
 import math
-import click_detector
 
 define @ChainLink = @Entity[type=block_display,tag=chain]
     create {block_state:{Name:"minecraft:stone",Count:0b}, transformation:[0.2f,0f,0f,-0.1f,0f,0.2f,0f,-0.1f,0f,0f,0.2f,-0.1f,0f,0f,0f,1f],Tags:["chain"]}
 end
 
 define @nearest_player = @Player[sort=nearest,limit=1]
+    attacker: attack.player int 1
+    interacter: interaction.player int 1
 end
 
+define @Interaction = @Entity[type=interaction]
+end
 
 $Precision = 1000
 $Half = 500
+$Billion = 1000000000
 reset
     /scoreboard objectives add absorbed minecraft.custom:minecraft.damage_dealt_absorbed
 
@@ -46,16 +50,37 @@ reset
     #end
 
     
-    click_detector_reset()
-    as @Player
-        create_click()
-    end
+    /kill @Interaction
 end
 
 clock tick
     define name collider = "collider_$(collider)"
+    
+    unless @Interaction
+        at @nearest_player
+            /summon minecraft:interaction ~ ~-5 ~ {width:10, height:10}
+        end
+    end
+    
+    left_clicked = False
+    right_clicked = False
+    
+    as @Interaction
+        on attacker
+            left_clicked = True
+        end
+        on target
+            right_clicked = True
+        end
+        /data remove entity @s attack
+        /data remove entity @s interaction
 
-    # Get click data
+        at @nearest_player
+            /tp @s ~ ~-5 ~
+        end
+    end
+
+    # Get facing data
     as @Player at @s eyes
         /tp @Position ^ ^ ^
         world_eye_x = @Position.x
@@ -66,19 +91,10 @@ clock tick
         world_eye_dx = @Position.x - world_eye_x
         world_eye_dy = @Position.y - world_eye_y
         world_eye_dz = @Position.z - world_eye_z
-        
-        clicked = check_clicked()
-        
-        if @s.absorbed
-            @s.absorbed = 0
-        else
-            clicked = False
-        end
     end
-    click_detector_tick()
 
-    if clicked
-        min_col_t = 1000000000
+    if left_clicked
+        min_col_t = $Billion
 
         # Find the nearest collider in the direction of the cursor ray
         for collider = 1 to max_collider
@@ -97,7 +113,7 @@ clock tick
             end
         end
         
-        if min_col_t < 1000000000
+        if min_col_t < $Billion
             # There was a ray intersection
             $PunchPower = 1000
             with
@@ -110,14 +126,11 @@ clock tick
             at @Position
                 /particle minecraft:crit ~ ~ ~ 0 0 0 0 1 force
             end
-        else
-            #if max_collider >= 1
-            #    load_state()
-            #else
-                # No ray intersection, create a new collider
-                add_collider()
-            #end
         end
+    end
+    
+    if right_clicked
+        add_collider()
     end
     
     # Apply gravity, integrate linear/angular velocity
@@ -127,8 +140,68 @@ clock tick
         do
             if not collider.sleeping
                 collider_physics_tick() with macros
+                
+                water_here = False
+                with
+                    $(x) = collider.x / $Precision
+                    $(y) = collider.y / $Precision
+                    $(z) = collider.z / $Precision
+                do
+                    /$execute if block $(x) $(y) $(z) minecraft:water run scoreboard players set Global water_here 1
+                end
+
+                if water_here
+                    unless collider.buoyancy
+                        collider.buoyancy = 200
+                    end
+                
+                    water_above = False
+                    with
+                        $(y) = collider.y / $Precision + 1
+                    do
+                        /$execute if block $(x) $(y) $(z) minecraft:water run scoreboard players set Global water_above 1
+                    end
+                    
+                    if water_above
+                        submerged = $Precision
+                    else
+                        submerged = $Precision - collider.y % $Precision
+                    end
+                    
+                    collider.velocity_y += submerged * collider.buoyancy / $Precision
+                    
+                    collider.velocity_x *= 9
+                    collider.velocity_x /= 10
+                    collider.velocity_y *= 9
+                    collider.velocity_y /= 10
+                    collider.velocity_z *= 9
+                    collider.velocity_z /= 10
+                    
+                    collider.rotation_x *= 9
+                    collider.rotation_x /= 10
+                    collider.rotation_y *= 9
+                    collider.rotation_y /= 10
+                    collider.rotation_z *= 9
+                    collider.rotation_z /= 10
+                    
+                    collider_wake_up() with macros
+                end
             end
         end
+    end
+    
+    if False
+        @Position.x = collider_1.x
+        @Position.y = collider_1.y
+        @Position.z = collider_1.z
+        
+        at @Position
+            /tp @Player[limit=1] ~ ~ ~
+        end
+        
+        collider_1.velocity_x += world_eye_dx / 20
+        collider_1.velocity_y += world_eye_dy / 20
+        collider_1.velocity_z += world_eye_dz / 20
     end
     
     # Update the penetration and normal for active collisions

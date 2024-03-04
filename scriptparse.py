@@ -610,6 +610,23 @@ def p_execute_as(p):
 	'''execute_item : as fullselector'''
 	p[0] = ('As', p[2])
 
+def p_execute_on(p):
+	'''execute_item : on ID'''
+
+	if p[2] not in [
+		'attacker',
+		'controller',
+		'leasher',
+		'origin',
+		'owner',
+		'passengers',
+		'target',
+		'vehicle',
+	]:
+		print('Warning: Unknown argument for execute on: "{}" at line {}'.format(p[2], p.lineno(2)))
+
+	p[0] = ('On', p[2])
+
 def p_execute_rotated(p):
 	'''execute_item : rotated fullselector'''
 	p[0] = ('Rotated', p[2])

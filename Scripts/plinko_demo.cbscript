@@ -1,0 +1,40 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.20\saves\Plinko Demo"
+desc "Demonstrates plinko"
+scale 1000
+
+import common
+import math
+
+define @nearest_player = @Player[sort=nearest,limit=1]
+end
+
+define @PhysicsBlock = @Entity[type=block_display,tag=physics_block]
+end
+
+$Precision = 1000
+$Half = 500
+$Billion = 1000000000
+reset
+end
+
+clock tick
+    as @PhysicsBlock
+        with
+            $(collider) = @s.collider_id
+        do
+            define name collider = "collider_$(collider)"
+            if collider.y <= 54000
+                @s.tele_duration = 0
+            else
+                @s.tele_duration = 1
+            end
+            
+            if collider.y < 52000
+                collider.y = 72000
+            end
+            if collider.velocity_y < -1000
+                collider.velocity_y = -1000
+            end
+        end
+    end
+end

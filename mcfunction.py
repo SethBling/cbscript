@@ -244,8 +244,11 @@ class mcfunction(object):
 			if type == 'Unless':
 				cmd += self.get_if_chain(val, 'unless')
 			elif type == 'As':
-				cmd += 'as {0} '.format(val)
+				cmd += 'as {} '.format(val)
 				exec_func.update_self_selector(val)
+			elif type == 'On':
+				cmd += 'on {} '.format(val)
+				exec_func.update_self_selector("@s")
 			elif type == 'AsId':
 				var, attype = val
 				

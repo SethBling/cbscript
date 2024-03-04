@@ -1,0 +1,126 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.20\saves\Transform Demo"
+desc "Demonstrates transform parameters"
+scale 1000
+
+import common
+import math
+
+define @nearest_player = @Player[sort=nearest,limit=1]
+end
+
+define @Demo = @Entity[type=block_display,tag=transform_demo]
+end
+
+define @rot_trans = @Entity[type=block_display,tag=rot_trans, limit=1]
+end
+
+$Precision = 1000
+$Half = 500
+$Billion = 1000000000
+reset
+    anim = 0
+    rot_anim = 0
+    
+    unless @Position do create @Position
+    
+    /kill @e[type=block_display]
+    
+    for col = 0 to 3
+        for row = 0 to 2
+            @Position.<pos> = <col * 5000, 67000 - row * 5000, 0>
+            at @Position
+                /summon minecraft:block_display ~ ~ ~ {block_state:{Name:"minecraft:command_block",Count:0b}, interpolation_duration: 0, teleport_duration: 1, Tags:["transform_demo"]}
+            end
+            
+            @Demo.age++
+            as @Demo[age == 1]
+                @s.row = row
+                @s.col = col
+                @s.idx = col + row * 4
+                
+                if col == row
+                    @s.base = 1000
+                else
+                    @s.base = 0
+                end
+            end
+        end
+    end
+    
+    /summon minecraft:block_display -10 57 0 {block_state:{Name:"minecraft:command_block",Count:0b}, interpolation_duration: 0, teleport_duration: 1, Tags:["rot_trans"]}    
+end
+
+clock tick
+    anim++
+
+    as @Demo
+        with
+            $(idx) = @s.idx
+        do
+            val = $Billion
+            if anim <= 20
+                # Grow
+                frame = anim
+                val = frame * 50 + @s.base
+            else if anim >= 30 and anim <= 70
+                # Shrink
+                frame = anim - 30
+                val = 1000 - frame * 100 + @s.base
+            else if anim >= 80 and anim <= 100
+                # Restore
+                frame = anim - 80
+                val = -3000 + frame * 150 + @s.base
+            end            
+            
+            if val < $Billion
+                /data modify storage $namespace:global transformation set value [1f,0f,0f,0f,0f,1f,0f,0f,0f,0f,1f,0f,0f,0f,0f,1f]
+                /execute store result storage $namespace:global transformation[$(idx)] float 0.001 run scoreboard players get Global val
+                /data modify entity @s transformation set from storage $namespace:global transformation
+                /data modify entity @s start_interpolation set value 0b
+            end
+        end
+    end
+
+    if anim >= 110
+        anim = 0
+    end
+    
+    as @rot_trans
+        if rot_anim <= 0
+            /data modify storage $namespace:global rot_trans set value [1f,0f,0f,0f,0f,1f,0f,0f,0f,0f,1f,0f,0f,0f,0f,1f]
+            /data modify entity @s transformation set from storage $namespace:global rot_trans
+            /data modify entity @s start_interpolation set value 0b
+        end
+        
+        rot_anim++
+
+        idx = rot_anim / 15
+        frame = rot_anim % 15
+        if frame <= 10
+            $starting_vals = [1000, 0, 0, 0, 0, 1000, 0, 0, 0, 0, 1000, 0]
+            $vals = [1168, -914, 223, -239, 787, 756, -1028, -258, 514, 916, 1069, -1250]
+            for $idx in $range(12)
+                if idx == $idx
+                    $starting_val = $starting_vals[$idx]
+                    $val = $vals[$idx]
+                    
+                    delta = $val - $starting_val
+                    val = $starting_val + delta * frame / 10
+                    
+                    with
+                        $(idx) = idx
+                    do
+                        /execute store result storage $namespace:global rot_trans[$(idx)] float 0.001 run scoreboard players get Global val
+                        /data modify entity @s transformation set from storage $namespace:global rot_trans
+                        /data modify entity @s start_interpolation set value 0b
+                    end
+                end
+            end
+        end
+        
+        if rot_anim >= 15 * 12 + 55
+            rot_anim = -20
+        end
+    
+    end
+end

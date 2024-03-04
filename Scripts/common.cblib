@@ -21,6 +21,7 @@ define @Entity: @e
 	glowing: Glowing byte 1
 	noai: NoAI byte 1
 	air: Air short 1
+    tele_duration: teleport_duration int 1
 end
 
 define @Marker: @Entity[type=marker]

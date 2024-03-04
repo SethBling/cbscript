@@ -153,6 +153,7 @@ class cbscript(object):
 		self.add_registered_objectives()
 		self.add_max_chain_length()
 		self.initialize_stack()
+		self.initialize_args()
 		
 	def add_max_chain_length(self):
 		f = self.global_context.get_reset_function()
@@ -161,6 +162,10 @@ class cbscript(object):
 	def initialize_stack(self):
 		f = self.global_context.get_reset_function()
 		f.insert_command('/data modify storage {} stack set value []'.format(self.namespace), 0)
+		
+	def initialize_args(self):
+		f = self.global_context.get_reset_function()
+		f.insert_command('/data modify storage {}:global args set value {{}}'.format(self.namespace), 0)
 		
 	def add_scratch_objectives(self):
 		f = self.global_context.get_reset_function()
