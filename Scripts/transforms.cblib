@@ -2114,39 +2114,49 @@ function update_collision()
             end
             
             keep = False
-            
-            nx = collision.nx
-            ny = collision.ny
-            nz = collision.nz
-            
-            block_x = collision.block_x
-            block_y = collision.block_y
-            block_z = collision.block_z
 
-            if nx == $Precision and vy >= block_y and vy <= block_y+$Precision and vz >= block_z and vz <= block_z+$Precision
-                collision.pen = (block_x + $Precision) - vx
-                keep = True
-            end
-            if nx == -$Precision and vy >= block_y and vy <= block_y+$Precision and vz >= block_z and vz <= block_z+$Precision
-                collision.pen = vx - block_x
-                keep = True
-            end
-            if ny == $Precision and vx >= block_x and vx <= block_x+$Precision and vz >= block_z and vz <= block_z+$Precision
-                collision.pen = (block_y + $Precision) - vy
-                keep = True
-            end
-            if ny == -$Precision and vx >= block_x and vx <= block_x+$Precision and vz >= block_z and vz <= block_z+$Precision
-                collision.pen = vy - block_y
-                keep = True
-            end
-            if nz == $Precision and vy >= block_y and vy <= block_y+$Precision and vx >= block_x and vx <= block_x+$Precision
-                collision.pen = (block_z + $Precision) - vz
-                keep = True
-            end
+            with
+                $(x) = collision.block_x / $Precision
+                $(y) = collision.block_y / $Precision
+                $(z) = collision.block_z / $Precision
+            is_air()
             
-            if nz == -$Precision and vy >= block_y and vy <= block_y+$Precision and vx >= block_x and vx <= block_x+$Precision
-                collision.pen = vz - block_z
-                keep = True
+            if air
+                collider_wake_up() with macros
+            else
+                nx = collision.nx
+                ny = collision.ny
+                nz = collision.nz
+                
+                block_x = collision.block_x
+                block_y = collision.block_y
+                block_z = collision.block_z
+
+                if nx == $Precision and vy >= block_y and vy <= block_y+$Precision and vz >= block_z and vz <= block_z+$Precision
+                    collision.pen = (block_x + $Precision) - vx
+                    keep = True
+                end
+                if nx == -$Precision and vy >= block_y and vy <= block_y+$Precision and vz >= block_z and vz <= block_z+$Precision
+                    collision.pen = vx - block_x
+                    keep = True
+                end
+                if ny == $Precision and vx >= block_x and vx <= block_x+$Precision and vz >= block_z and vz <= block_z+$Precision
+                    collision.pen = (block_y + $Precision) - vy
+                    keep = True
+                end
+                if ny == -$Precision and vx >= block_x and vx <= block_x+$Precision and vz >= block_z and vz <= block_z+$Precision
+                    collision.pen = vy - block_y
+                    keep = True
+                end
+                if nz == $Precision and vy >= block_y and vy <= block_y+$Precision and vx >= block_x and vx <= block_x+$Precision
+                    collision.pen = (block_z + $Precision) - vz
+                    keep = True
+                end
+                
+                if nz == -$Precision and vy >= block_y and vy <= block_y+$Precision and vx >= block_x and vx <= block_x+$Precision
+                    collision.pen = vz - block_z
+                    keep = True
+                end
             end
             
             if keep
@@ -2173,29 +2183,40 @@ function update_collision()
             halfsize = collider.halfsize
             
             keep = False
-            if lnx == $Precision and local_y >= -halfsize and local_y <= halfsize and local_z >= -halfsize and local_z <= halfsize
-                collision.pen = local_x + halfsize
-                keep = True
-            end
-            if lnx == -$Precision and local_y >= -halfsize and local_y <= halfsize and local_z >= -halfsize and local_z <= halfsize
-                collision.pen = halfsize - local_x
-                keep = True
-            end
-            if lny == $Precision and local_x >= -halfsize and local_x <= halfsize and local_z >= -halfsize and local_z <= halfsize
-                collision.pen = local_y + halfsize
-                keep = True
-            end
-            if lny == -$Precision and local_x >= -halfsize and local_x <= halfsize and local_z >= -halfsize and local_z <= halfsize
-                collision.pen = halfsize - local_y
-                keep = True
-            end
-            if lnz == $Precision and local_x >= -halfsize and local_x <= halfsize and local_y >= -halfsize and local_y <= halfsize
-                collision.pen = local_z + halfsize
-                keep = True
-            end
-            if lnz == -$Precision and local_x >= -halfsize and local_x <= halfsize and local_y >= -halfsize and local_y <= halfsize
-                collision.pen = halfsize - local_z
-                keep = True
+            
+            with
+                $(x) = collision.block_x / $Precision
+                $(y) = collision.block_y / $Precision
+                $(z) = collision.block_z / $Precision
+            is_air()
+            
+            if air
+                collider_wake_up() with macros
+            else
+                if lnx == $Precision and local_y >= -halfsize and local_y <= halfsize and local_z >= -halfsize and local_z <= halfsize
+                    collision.pen = local_x + halfsize
+                    keep = True
+                end
+                if lnx == -$Precision and local_y >= -halfsize and local_y <= halfsize and local_z >= -halfsize and local_z <= halfsize
+                    collision.pen = halfsize - local_x
+                    keep = True
+                end
+                if lny == $Precision and local_x >= -halfsize and local_x <= halfsize and local_z >= -halfsize and local_z <= halfsize
+                    collision.pen = local_y + halfsize
+                    keep = True
+                end
+                if lny == -$Precision and local_x >= -halfsize and local_x <= halfsize and local_z >= -halfsize and local_z <= halfsize
+                    collision.pen = halfsize - local_y
+                    keep = True
+                end
+                if lnz == $Precision and local_x >= -halfsize and local_x <= halfsize and local_y >= -halfsize and local_y <= halfsize
+                    collision.pen = local_z + halfsize
+                    keep = True
+                end
+                if lnz == -$Precision and local_x >= -halfsize and local_x <= halfsize and local_y >= -halfsize and local_y <= halfsize
+                    collision.pen = halfsize - local_z
+                    keep = True
+                end
             end
 
             if keep
