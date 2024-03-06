@@ -1,22 +1,10 @@
-dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.20\saves\Physics - One Wall"
-desc "Automatically mine the blocks in front of you"
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.20\saves\Stupid Mobile Game Test"
+desc "Physics engine for stupid mobile game."
 scale 1000
 
 import common
 import transforms
 import math
-
-define @ChainLink = @Entity[type=block_display,tag=chain]
-    create {block_state:{Name:"minecraft:stone",Count:0b}, transformation:[0.2f,0f,0f,-0.1f,0f,0.2f,0f,-0.1f,0f,0f,0.2f,-0.1f,0f,0f,0f,1f],Tags:["chain"]}
-end
-
-define @nearest_player = @Player[sort=nearest,limit=1]
-    attacker: attack.player int 1
-    interacter: interaction.player int 1
-end
-
-define @Interaction = @Entity[type=interaction]
-end
 
 $Precision = 1000
 $Half = 500
@@ -25,113 +13,14 @@ reset
     /scoreboard objectives add absorbed minecraft.custom:minecraft.damage_dealt_absorbed
 
     initialize_transforms()
-
-    at @nearest_player
-        /kill @Position
-        create @Position ~ ~ ~
-    end
     
-    destroy_colliders()
-    delete_collisions()
-
     CubeSize = 1500
     CubeInvMass = 800
     CubeInvRotInt = 400
-    
-    #id = get_unused_collider_id()
-
-    #with
-    #    $(collider) = id
-    #    $(block_name) = "command_block"
-    #create_collider(DebugX, DebugY, DebugZ, CubeSize, CubeInvMass, CubeInvRotInt)
-    
-    #unless id <= max_collider
-    #    max_collider = id
-    #end
-
-    
-    /kill @Interaction
 end
 
 clock tick
     define name collider = "collider_$(collider)"
-    
-    unless @Interaction
-        at @nearest_player
-            /summon minecraft:interaction ~ ~-5 ~ {width:10, height:10}
-        end
-    end
-    
-    left_clicked = False
-    right_clicked = False
-    
-    as @Interaction
-        on attacker
-            left_clicked = True
-        end
-        on target
-            right_clicked = True
-        end
-        /data remove entity @s attack
-        /data remove entity @s interaction
-
-        at @nearest_player
-            /tp @s ~ ~-5 ~
-        end
-    end
-
-    # Get facing data
-    as @Player at @s eyes
-        /tp @Position ^ ^ ^
-        world_eye_x = @Position.x
-        world_eye_y = @Position.y
-        world_eye_z = @Position.z
-        
-        /tp @Position ^ ^ ^1
-        world_eye_dx = @Position.x - world_eye_x
-        world_eye_dy = @Position.y - world_eye_y
-        world_eye_dz = @Position.z - world_eye_z
-    end
-
-    if left_clicked
-        min_col_t = $Billion
-
-        # Find the nearest collider in the direction of the cursor ray
-        for collider = 1 to max_collider
-            with
-                $(collider) = collider
-            do
-                if collider_ray_intersection(world_eye_x, world_eye_y, world_eye_z, world_eye_dx, world_eye_dy, world_eye_dz) with macros
-                    if t < min_col_t
-                        min_col_t = t
-                        min_x = collision_x
-                        min_y = collision_y
-                        min_z = collision_z
-                        min_col = collider
-                    end
-                end
-            end
-        end
-        
-        if min_col_t < $Billion
-            # There was a ray intersection
-            $PunchPower = 1000
-            with
-                $(collider) = min_col
-            collider_apply_impulse(min_x, min_y, min_z, world_eye_dx * $PunchPower / scale, world_eye_dy * $PunchPower / scale, world_eye_dz * $PunchPower / scale)
-            
-            save_state()
-            
-            @Position.<pos> = <min_x, min_y, min_z>
-            at @Position
-                /particle minecraft:crit ~ ~ ~ 0 0 0 0 1 force
-            end
-        end
-    end
-    
-    if right_clicked
-        add_collider()
-    end
     
     # Apply gravity, integrate linear/angular velocity
     for collider = 1 to max_collider
@@ -190,20 +79,6 @@ clock tick
         end
     end
     
-    if False
-        @Position.x = collider_1.x
-        @Position.y = collider_1.y
-        @Position.z = collider_1.z
-        
-        at @Position
-            /tp @Player[limit=1] ~ ~ ~
-        end
-        
-        collider_1.velocity_x += world_eye_dx / 20
-        collider_1.velocity_y += world_eye_dy / 20
-        collider_1.velocity_z += world_eye_dz / 20
-    end
-    
     # Update the penetration and normal for active collisions
     update_active_collisions()
 
@@ -236,23 +111,6 @@ clock tick
     # Merge collision indices down so that there aren't any empties
     merge_collisions_down()
 
-    if Particles
-        for collision = 1 to max_collision
-            with
-                $(collision) = collision
-            do
-                define name collision = "collision_$(collision)"
-                
-                if collision.id
-                    @Position.<pos> = <collision.x, collision.y, collision.z>
-                    at @Position
-                        /particle minecraft:bubble_pop ~ ~ ~
-                    end
-                end
-            end
-        end
-    end
-
     # Resolve collisions
     resolve_collision_velocity()
     resolve_collision_penetration()
@@ -272,9 +130,7 @@ end
 
 
 function destroy_colliders()
-    for collider = max_collider to 1 by -1
-        with
-            $(collider) = collider
+    for destroy.collider = max_collider to 1 by -1
         destroy_collider()
     end
     
@@ -284,51 +140,72 @@ function destroy_colliders()
 end
 
 function destroy_collider()
-    define name collider = "collider_$(collider)"
-    
-    if max_collider == collider.id
-        max_collider--
-    end
-    
-    as @PhysicsBlock
-        if @s.id == collider.id
-            /kill @s
+    with
+        $(collider) = destroy.collider
+    do
+        define name collider = "collider_$(collider)"
+        
+        if max_collider == collider.id
+            max_collider--
         end
-    end
-    
-    /scoreboard players reset collider_$(collider)
-    
-    for vertex = 0 to 7
-        with
-            $(vertex) = vertex
-        do
-            /scoreboard players reset collider_$(collider)_v$(vertex)
+        
+        as @PhysicsBlock
+            if @s.collider_id == collider.id
+                /kill @s
+            end
         end
-    end
-    
-    for axis = 0 to 2
-        with
-            $(axis) = axis
-        do
-            /scoreboard players reset collider_$(collider)_a$(axis)
+        
+        /scoreboard players reset collider_$(collider)
+        
+        for vertex = 0 to 7
+            with
+                $(vertex) = vertex
+            do
+                /scoreboard players reset collider_$(collider)_v$(vertex)
+            end
+        end
+        
+        for axis = 0 to 2
+            with
+                $(axis) = axis
+            do
+                /scoreboard players reset collider_$(collider)_a$(axis)
+            end
         end
     end
 end
 
+function add_chest()
+    block_type = 1
+    with
+        $(block_name) = "chest"
+    add_collider()
+end
+
+function add_cobblestone()
+    block_type = 2
+    with
+        $(block_name) = "cobblestone"
+    add_collider()
+end
+
+function add_tnt()
+    block_type = 3
+    with
+        $(block_name) = "tnt"
+    add_collider()
+end
+
 function add_collider()
-    at @nearest_player ^ ^1.6 ^3
-        /tp @Position ~ ~ ~
-        x = @Position.x
-        y = @Position.y
-        z = @Position.z
-    end
-    
     id = get_unused_collider_id()
 
     with
         $(collider) = id
-        $(block_name) = "command_block"
-    create_collider(x, y, z, CubeSize, CubeInvMass, CubeInvRotInt)
+    create_collider(new.x, new.y, new.z, CubeSize, CubeInvMass, CubeInvRotInt)
+    
+    as @PhysicsBlock[age == 1]
+        @s.block_type = block_type
+    end
     
     unless id <= max_collider
         max_collider = id
@@ -341,7 +218,7 @@ function get_unused_collider_id()
             $(collider) = collider
         do
             define name collider = "collider_$(collider)"
-            unless collider.inv_mass
+            unless collider.id
                 return_id = collider
                 collider = 1000000000
             end

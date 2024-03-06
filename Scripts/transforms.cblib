@@ -21,6 +21,8 @@ end
 define block_tag passthrough
     air
     water
+    structure_void
+    light
 end
 
 function initialize_transforms()
