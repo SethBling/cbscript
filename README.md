@@ -8,7 +8,7 @@ The CBScript compiler requires python 2.7. In order to run it via the run.cmd fi
 
 ```pip install -r requirements.txt```
 
-There are instructions in run.cmd for setting up your Window registry to be able to double click .cbscript files in order to run the compiler.
+There are instructions in run.cmd for setting up your Windows registry to be able to double click .cbscript files in order to run the compiler.
 
 You can use cbscript-npp-highlighting.xml with Notepad++ to add syntax highlighting.
 
