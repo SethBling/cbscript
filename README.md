@@ -26,6 +26,7 @@ CBScript includes many high level features that simplify the syntax and construc
 * If/else if/else blocks
 * Execute syntax
 * Tellraw with simplified syntax
+* Title/subtitle/actionbar with simplified syntax.
 * Macro function support
 * Entity selector definitions, including data paths
 * Advancement/loot table/block tag/predicate definitions.
