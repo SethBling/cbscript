@@ -6,10 +6,6 @@ import common
 import transforms
 import math
 
-define @ChainLink = @Entity[type=block_display,tag=chain]
-    create {block_state:{Name:"minecraft:stone",Count:0b}, transformation:[0.2f,0f,0f,-0.1f,0f,0.2f,0f,-0.1f,0f,0f,0.2f,-0.1f,0f,0f,0f,1f],Tags:["chain"]}
-end
-
 define @nearest_player = @Player[sort=nearest,limit=1]
     attacker: attack.player int 1
     interacter: interaction.player int 1
@@ -71,7 +67,7 @@ clock tick
     end
 
     # Get facing data
-    as @Player at @s eyes
+    as @nearest_player at @s eyes
         /tp @Position ^ ^ ^
         world_eye_x = @Position.x
         world_eye_y = @Position.y
