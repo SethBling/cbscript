@@ -1,5 +1,5 @@
 dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.20\saves\Physics - One Wall"
-desc "Automatically mine the blocks in front of you"
+desc "Rigid Body Physics Sandbox"
 scale 1000
 
 import common
@@ -30,31 +30,21 @@ reset
         /kill @Position
         create @Position ~ ~ ~
     end
-    
-    destroy_colliders()
-    delete_collisions()
+
+    /kill @Interaction
 
     CubeSize = 1500
     CubeInvMass = 800
     CubeInvRotInt = 400
     
-    #id = get_unused_collider_id()
-
-    #with
-    #    $(collider) = id
-    #    $(block_name) = "command_block"
-    #create_collider(DebugX, DebugY, DebugZ, CubeSize, CubeInvMass, CubeInvRotInt)
-    
-    #unless id <= max_collider
-    #    max_collider = id
-    #end
-
-    
-    /kill @Interaction
+    tell @a "Physics: {C[\[Load State\]](/function $namespace:load_state) {R[\[Destroy All Colliders\]](/function $namespace:destroy_colliders)"
 end
 
 clock tick
     define name collider = "collider_$(collider)"
+    
+    /kill @Position
+    create @Position
     
     unless @Interaction
         at @nearest_player
@@ -131,78 +121,20 @@ clock tick
     
     if right_clicked
         add_collider()
+        tell @a "Physics: {C[\[Load State\]](/function $namespace:load_state) {R[\[Destroy All Colliders\]](/function $namespace:destroy_colliders)"
     end
     
-    # Apply gravity, integrate linear/angular velocity
     for collider = 1 to max_collider
         with
             $(collider) = collider
         do
             if not collider.sleeping
                 collider_physics_tick() with macros
-                
-                water_here = False
-                with
-                    $(x) = collider.x / $Precision
-                    $(y) = collider.y / $Precision
-                    $(z) = collider.z / $Precision
-                do
-                    /$execute if block $(x) $(y) $(z) minecraft:water run scoreboard players set Global water_here 1
-                end
-
-                if water_here
-                    unless collider.buoyancy
-                        collider.buoyancy = 200
-                    end
-                
-                    water_above = False
-                    with
-                        $(y) = collider.y / $Precision + 1
-                    do
-                        /$execute if block $(x) $(y) $(z) minecraft:water run scoreboard players set Global water_above 1
-                    end
-                    
-                    if water_above
-                        submerged = $Precision
-                    else
-                        submerged = $Precision - collider.y % $Precision
-                    end
-                    
-                    collider.velocity_y += submerged * collider.buoyancy / $Precision
-                    
-                    collider.velocity_x *= 9
-                    collider.velocity_x /= 10
-                    collider.velocity_y *= 9
-                    collider.velocity_y /= 10
-                    collider.velocity_z *= 9
-                    collider.velocity_z /= 10
-                    
-                    collider.rotation_x *= 9
-                    collider.rotation_x /= 10
-                    collider.rotation_y *= 9
-                    collider.rotation_y /= 10
-                    collider.rotation_z *= 9
-                    collider.rotation_z /= 10
-                    
-                    collider_wake_up() with macros
-                end
             end
         end
     end
     
-    if False
-        @Position.x = collider_1.x
-        @Position.y = collider_1.y
-        @Position.z = collider_1.z
-        
-        at @Position
-            /tp @Player[limit=1] ~ ~ ~
-        end
-        
-        collider_1.velocity_x += world_eye_dx / 20
-        collider_1.velocity_y += world_eye_dy / 20
-        collider_1.velocity_z += world_eye_dz / 20
-    end
+    apply_buoyancy()
     
     # Update the penetration and normal for active collisions
     update_active_collisions()
@@ -281,6 +213,8 @@ function destroy_colliders()
     /kill @PhysicsBlock
     
     max_collider = 0
+
+    delete_collisions()
 end
 
 function destroy_collider()
@@ -612,6 +546,64 @@ function load_state()
                 collision.ex = save_state.ex
                 collision.ey = save_state.ey
                 collision.ez = save_state.ez
+            end
+        end
+    end
+end
+
+function apply_buoyancy()
+    # Apply gravity, integrate linear/angular velocity
+    for collider = 1 to max_collider
+        with
+            $(collider) = collider
+        do
+            define name collider = "collider_$(collider)"
+            if not collider.sleeping
+                water_here = False
+                with
+                    $(x) = collider.x / $Precision
+                    $(y) = collider.y / $Precision
+                    $(z) = collider.z / $Precision
+                do
+                    /$execute if block $(x) $(y) $(z) minecraft:water run scoreboard players set Global water_here 1
+                end
+
+                if water_here
+                    unless collider.buoyancy
+                        collider.buoyancy = 200
+                    end
+                
+                    water_above = False
+                    with
+                        $(y) = collider.y / $Precision + 1
+                    do
+                        /$execute if block $(x) $(y) $(z) minecraft:water run scoreboard players set Global water_above 1
+                    end
+                    
+                    if water_above
+                        submerged = $Precision
+                    else
+                        submerged = $Precision - collider.y % $Precision
+                    end
+                    
+                    collider.velocity_y += submerged * collider.buoyancy / $Precision
+                    
+                    collider.velocity_x *= 9
+                    collider.velocity_x /= 10
+                    collider.velocity_y *= 9
+                    collider.velocity_y /= 10
+                    collider.velocity_z *= 9
+                    collider.velocity_z /= 10
+                    
+                    collider.rotation_x *= 9
+                    collider.rotation_x /= 10
+                    collider.rotation_y *= 9
+                    collider.rotation_y /= 10
+                    collider.rotation_z *= 9
+                    collider.rotation_z /= 10
+                    
+                    collider_wake_up() with macros
+                end
             end
         end
     end

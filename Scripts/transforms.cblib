@@ -21,6 +21,7 @@ end
 define block_tag passthrough
     air
     water
+    lava
     structure_void
     light
 end
