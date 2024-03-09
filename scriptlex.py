@@ -56,7 +56,7 @@ def t_ID(t):
     return t
     
 def t_COMMAND(t):
-    r'(?m)^\s*/.+'
+    r'(?m:^\s*\/.+)'
     t.lexer.lineno += t.value.count('\n')
     t.value = t.value.strip()
     return t
