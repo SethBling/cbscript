@@ -1,4 +1,4 @@
-from block_base import block_base
+from block_types.block_base import block_base
 
 class call_block_base(block_base):
     def compile_with_macro_items(self, func):

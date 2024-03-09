@@ -1,4 +1,4 @@
-from block_base import block_base
+from block_types.block_base import block_base
 
 class define_name_block(block_base):
     def __init__(self, line, id, str):

@@ -1,4 +1,4 @@
-from call_block_base import call_block_base
+from block_types.call_block_base import call_block_base
 
 class method_call_block(call_block_base):
 	def __init__(self, line, selector, dest, params, with_macro_items):

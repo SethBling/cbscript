@@ -1,4 +1,4 @@
-from block_base import block_base
+from block_types.block_base import block_base
 from mcfunction import isNumber
 
 class scoreboard_assignment_block(block_base):

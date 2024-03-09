@@ -1,4 +1,4 @@
-from block_base import block_base
+from block_types.block_base import block_base
 from CompileError import CompileError
 
 class block_switch_base(block_base):

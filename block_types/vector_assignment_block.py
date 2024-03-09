@@ -1,4 +1,4 @@
-from vector_assignment_base import vector_assignment_base
+from block_types.vector_assignment_base import vector_assignment_base
 
 class vector_assignment_block(vector_assignment_base):
 	def __init__(self, line, var, op, expr):

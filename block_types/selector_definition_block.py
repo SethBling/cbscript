@@ -1,4 +1,4 @@
-from block_base import block_base
+from block_types.block_base import block_base
 from mcfunction import compile_section
 
 class selector_definition_block(block_base):

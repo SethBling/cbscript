@@ -1,5 +1,5 @@
-from block_base import block_base
-from command_block import command_block
+from block_types.block_base import block_base
+from block_types.command_block import command_block
 from variable_types.scoreboard_var import scoreboard_var
 from CompileError import CompileError
 
