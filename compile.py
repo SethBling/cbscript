@@ -9,8 +9,8 @@ import source_file
 import scriptparse
 import os
 
-if len(sys.argv) <> 2:
-	print "You must include a script filename."
+if len(sys.argv) != 2:
+	print("You must include a script filename.")
 	exit()
 
 source = source_file.source_file(sys.argv[1])
