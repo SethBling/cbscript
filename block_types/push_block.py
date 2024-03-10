@@ -1,4 +1,4 @@
-from block_base import block_base
+from .block_base import block_base
 from variable_types.storage_path_var import storage_path_var
 
 class push_block(block_base):

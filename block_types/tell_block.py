@@ -1,4 +1,4 @@
-from block_base import block_base
+from .block_base import block_base
 import tellraw
 
 class tell_block(block_base):

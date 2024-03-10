@@ -1,4 +1,4 @@
-from vector_binop_base import vector_binop_base
+from .vector_binop_base import vector_binop_base
 
 class vector_binop_scalar_expr(vector_binop_base):
 	def calc_op(self, func, return_components):

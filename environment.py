@@ -20,7 +20,7 @@ def isNumber(s):
 		
 def isInt(s):
 	try:
-		if isinstance(s, basestring):
+		if isinstance(s, str):
 			if s == str(int(s)):
 				return True
 			return False

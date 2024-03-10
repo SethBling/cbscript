@@ -1,4 +1,4 @@
-from block_base import block_base
+from .block_base import block_base
 
 class clock_section(block_base):
 	def __init__(self, line, id, lines):

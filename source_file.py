@@ -3,7 +3,7 @@ import time
 
 class source_file(object):
 	def __init__(self, filename):
-		self.filename = filename
+		self.filename = os.path.abspath(filename)
 		self.modified = self.get_last_modified()
 		self.last_size = os.path.getsize(filename)
 		

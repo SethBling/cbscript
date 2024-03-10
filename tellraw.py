@@ -35,7 +35,7 @@ def formatJsonText(func, text):
 	
 	for segment, properties in parseTextFormatting(text):
 		propertiesText = getPropertiesText(properties)
-		if isinstance(segment, basestring):
+		if isinstance(segment, str):
 			formatted = formatted + ',{{"text":"{0}"{1}}}'.format(segment.replace('"', '\\"'), getPropertiesText(properties))
 		else:
 			unformatted, command = segment

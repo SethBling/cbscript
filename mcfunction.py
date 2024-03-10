@@ -342,8 +342,8 @@ class mcfunction(object):
 			
 	def switch_cases(self, var, cases, switch_func_name = 'switch', case_func_name = 'case'):
 		for q in range(4):
-			imin = q * len(cases) / 4
-			imax = (q+1) * len(cases) / 4
+			imin = q * len(cases) // 4
+			imax = (q+1) * len(cases) // 4
 			if imin == imax:
 				continue
 		

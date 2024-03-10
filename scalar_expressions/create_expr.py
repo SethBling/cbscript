@@ -1,4 +1,4 @@
-from scalar_expression_base import scalar_expression_base
+from .scalar_expression_base import scalar_expression_base
 from variable_types.selector_id_var import selector_id_var
 
 class create_expr(scalar_expression_base):

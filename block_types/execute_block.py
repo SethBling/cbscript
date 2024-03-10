@@ -1,4 +1,4 @@
-from execute_base import execute_base
+from .execute_base import execute_base
 from CompileError import CompileError
 import traceback
 

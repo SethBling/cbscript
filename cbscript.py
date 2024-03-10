@@ -171,14 +171,14 @@ class cbscript(object):
 		f = self.global_context.get_reset_function()
 		
 		for prefix in self.global_context.scratch:			
-			for i in xrange(self.global_context.scratch[prefix]):
+			for i in range(self.global_context.scratch[prefix]):
 				f.insert_command('/scoreboard objectives add {0}_scratch{1} dummy'.format(prefix, i), 0)
 	
 	
 	def add_temp_objectives(self):
 		f = self.global_context.get_reset_function()
 		
-		for t in xrange(self.global_context.temp):
+		for t in range(self.global_context.temp):
 			f.insert_command('scoreboard objectives add temp{0} dummy'.format(str(t)), 0)
 	
 	def add_constants(self):

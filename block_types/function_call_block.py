@@ -1,4 +1,4 @@
-from call_block_base import call_block_base
+from .call_block_base import call_block_base
 
 class function_call_block(call_block_base):
 	def __init__(self, line, dest, args, with_macro_items):

@@ -1,4 +1,4 @@
-from scalar_expression_base import scalar_expression_base
+from .scalar_expression_base import scalar_expression_base
 class binop_expr(scalar_expression_base):
 	def __init__(self, lhs, op, rhs):
 		self.lhs = lhs
@@ -69,7 +69,7 @@ class binop_expr(scalar_expression_base):
 			power = int(power)
 				
 			if power < 1:
-				print "Powers less than 1 are not supported"
+				print("Powers less than 1 are not supported")
 				return None
 				
 			if power == 1:
@@ -78,7 +78,7 @@ class binop_expr(scalar_expression_base):
 			multiplier_obj = func.get_scratch()
 			func.add_command('scoreboard players operation Global {} = {} {}'.format(multiplier_obj, temp_var.selector, temp_var.objective))
 			
-			for i in xrange(power-1):
+			for i in range(power-1):
 				func.add_command('scoreboard players operation {} {} *= Global {}'.format(temp_var.selector, temp_var.objective, multiplier_obj))
 				
 			func.free_scratch(multiplier_obj)
@@ -86,5 +86,5 @@ class binop_expr(scalar_expression_base):
 			return temp_var
 			
 		else:	
-			print "Binary operation '{0}' isn't implemented".format(self.op)
+			print(f"Binary operation '{self.op}' isn't implemented")
 			return None

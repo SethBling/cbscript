@@ -1,4 +1,4 @@
-from block_base import block_base
+from .block_base import block_base
 from CompileError import CompileError
 
 class block_switch_base(block_base):
@@ -45,10 +45,10 @@ class block_switch_base(block_base):
 	def get_quartiles(self, list):
 		size = len(list)
 		return [
-			list[:size/4],
-			list[size/4:size/2],
-			list[size/2:size*3/4],
-			list[size*3/4:]]
+			list[:size//4],
+			list[size//4:size//2],
+			list[size//2:size*3//4],
+			list[size*3//4:]]
 	
 	# Creates switch and case function tree
 	def compile_block_cases(self, func, block_cases):

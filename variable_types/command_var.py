@@ -1,5 +1,5 @@
-from var_base import var_base
-from scoreboard_var import scoreboard_var
+from .var_base import var_base
+from .scoreboard_var import scoreboard_var
 from CompileError import CompileError
 
 class command_var(var_base):

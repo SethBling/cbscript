@@ -1,4 +1,4 @@
-from block_base import block_base
+from .block_base import block_base
 import traceback
 from CompileError import CompileError
 
