@@ -12,12 +12,12 @@ class vector_assignment_base(block_base):
 			components = var_content
 		elif var_type == 'VAR_ID':
 			id = var_content
-			components = [scoreboard_var('Global', '_{0}_{1}'.format(id, i)) for i in range(3)]
+			components = [scoreboard_var('Global', f'_{id}_{i}') for i in range(3)]
 		elif var_type == 'SEL_VAR_ID':
 			selector, id = var_content
-			components = [scoreboard_var(selector, '_{0}_{1}'.format(id, i)) for i in range(3)]
+			components = [scoreboard_var(selector, f'_{id}_{i}') for i in range(3)]
 		elif var_type == 'VAR_CONST':
-			raise CompileError('Cannot assign to vector constant at line {}.'.format(self.line))
+			raise CompileError(f'Cannot assign to vector constant at line {self.line}.')
 		
 		if op == '=':
 			assignto = []
@@ -44,7 +44,7 @@ class vector_assignment_base(block_base):
 			for i in range(3):
 				temp_var = components[i].get_scoreboard_var(func)
 				rvar = component_val_vars[i].get_scoreboard_var(func)
-				func.add_command('scoreboard players operation {} {} {} {} {}'.format(temp_var.selector, temp_var.objective, op, rvar.selector, rvar.objective))
+				func.add_command(f'scoreboard players operation {temp_var.selector} {temp_var.objective} {op} {rvar.selector} {rvar.objective}')
 				components[i].copy_from(func, temp_var)
 				temp_var.free_scratch(func)
 				rvar.free_scratch(func)

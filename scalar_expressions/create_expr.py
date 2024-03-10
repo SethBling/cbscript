@@ -10,7 +10,7 @@ class create_expr(scalar_expression_base):
 		func.register_objective('_unique')
 		func.register_objective('_id')
 		
-		func.add_command('scoreboard players set @{} _age 1'.format(self.create_block.atid))
+		func.add_command(f'scoreboard players set @{self.create_block.atid} _age 1')
 		
 		try:
 			self.create_block.compile(func)
@@ -18,6 +18,6 @@ class create_expr(scalar_expression_base):
 			print(e)
 			raise Exception('Could not run create operation.')
 		
-		func.add_command('scoreboard players add @{} _age 1'.format(self.create_block.atid))
+		func.add_command(f'scoreboard players add @{self.create_block.atid} _age 1')
 		
-		return selector_id_var('@{}[_age==1,limit=1]'.format(self.create_block.atid))
+		return selector_id_var(f'@{self.create_block.atid}[_age==1,limit=1]')

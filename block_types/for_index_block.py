@@ -29,7 +29,7 @@ class for_index_block(block_base):
 				by_const = int(by_const)
 				
 		unique = func.get_unique_id()
-		loop_func_name = 'line{:03}/for{:03}'.format(self.line, unique)
+		loop_func_name = f'line{self.line:03}/for{unique:03}'
 
 		loop_func = func.create_child_function()
 		func.register_function(loop_func_name, loop_func)	
@@ -47,19 +47,19 @@ class for_index_block(block_base):
 			loop_func.compile_blocks(sub)
 		except CompileError as e:
 			print(e)
-			raise CompileError('Unable to compile for block contents at line {}'.format(self.line))
+			raise CompileError(f'Unable to compile for block contents at line {self.line}')
 		except Exception as e:
 			print(traceback.print_exc())
-			raise CompileError('Unable to compile for block contents at line {}'.format(self.line))
+			raise CompileError(f'Unable to compile for block contents at line {self.line}')
 		
 		if by == None:
 			# Use a temporary version of the counting var to work with the scoreboard
 			temp_var = var.get_scoreboard_var(func)
-			continue_command = 'execute if score {} <= {} run {}'.format(temp_var.get_selvar(func), to_var.get_selvar(func), loop_func.get_call())
+			continue_command = f'execute if score {temp_var.get_selvar(func)} <= {to_var.get_selvar(func)} run {loop_func.get_call()}'
 			func.add_command(continue_command)
 			
 			# Add 1 to the counter variable
-			loop_func.add_command('scoreboard players add {0} 1'.format(temp_var.get_selvar(func)))
+			loop_func.add_command(f'scoreboard players add {temp_var.get_selvar(func)} 1')
 			var.copy_from(func, temp_var)
 			
 			loop_func.add_command(continue_command)
@@ -68,17 +68,17 @@ class for_index_block(block_base):
 			temp_var = var.get_scoreboard_var(func)
 			
 			if by_const:
-				continue_command = 'execute if score {} {} {} run {}'.format(temp_var.get_selvar(func), '>=' if by_const < 0 else '<=', to_var.get_selvar(func), loop_func.get_call())
+				continue_command = f'execute if score {temp_var.get_selvar(func)} {"<=" if by_const >= 0 else ">="} {to_var.get_selvar(func)} run {loop_func.get_call()}'
 				func.add_command(continue_command)
 
-				loop_func.add_command('scoreboard players {} {} {}'.format('add' if by_const > 0 else 'remove', temp_var.get_selvar(func), abs(by_const)))
+				loop_func.add_command(f'scoreboard players {"add" if by_const > 0 else "remove"} {temp_var.get_selvar(func)} {abs(by_const)}')
 			else:
-				continue_negative_command = 'execute if score {} matches ..-1 if score {} >= {} run {}'.format(by_var.get_selvar(func), temp_var.get_selvar(func), to_var.get_selvar(func), loop_func.get_call())
-				continue_positive_command = 'execute if score {} matches 1.. if score {} <= {} run {}'.format(by_var.get_selvar(func), temp_var.get_selvar(func), to_var.get_selvar(func), loop_func.get_call())
+				continue_negative_command = f'execute if score {by_var.get_selvar(func)} matches ..-1 if score {temp_var.get_selvar(func)} >= {to_var.get_selvar(func)} run {loop_func.get_call()}'
+				continue_positive_command = f'execute if score {by_var.get_selvar(func)} matches 1.. if score {temp_var.get_selvar(func)} <= {to_var.get_selvar(func)} run {loop_func.get_call()}'
 				func.add_command(continue_negative_command)
 				func.add_command(continue_positive_command)
 
-				loop_func.add_command('scoreboard players operation {} += {}'.format(temp_var.get_selvar(func), by_var.get_selvar(func)))
+				loop_func.add_command(f'scoreboard players operation {temp_var.get_selvar(func)} += {by_var.get_selvar(func)}')
 				
 			var.copy_from(func, temp_var)
 			

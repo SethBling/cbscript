@@ -16,10 +16,10 @@ class python_if_block(block_base):
 				func.compile_blocks(self.sub)
 			except Exception as e:
 				print(e.message)
-				raise Exception('Unable to compile true block for python if block at line {}'.format(self.line))
+				raise Exception(f'Unable to compile true block for python if block at line {self.line}')
 		elif self.else_sub != None:
 			try:
 				func.compile_blocks(self.else_sub)
 			except Exception as e:
 				print(e.message)
-				raise Exception('Unable to compile false block for python if block at line {}'.format(self.line))
+				raise Exception(f'Unable to compile false block for python if block at line {self.line}')

@@ -21,7 +21,7 @@ class block_definition_block(block_base):
 			coords = self.coords
 			
 		if path not in self.paths:
-			raise CompileError('No path "{}" defined for [{}].'.format(path, self.block_id))
+			raise CompileError(f'No path "{path}" defined for [{self.block_id}].')
 			
 		self.paths[id].copy_to_objective(func, coords, macro_args, objective)
 		
@@ -30,7 +30,7 @@ class block_definition_block(block_base):
 			coords = self.coords
 			
 		if path not in self.paths:
-			raise CompileError('No path "{}" defined for [{}].'.format(path, self.block_id))
+			raise CompileError(f'No path "{path}" defined for [{self.block_id}].')
 			
 		self.paths[path].copy_from(func, coords, macro_args, var)
 		
@@ -39,6 +39,6 @@ class block_definition_block(block_base):
 			coords = self.coords
 			
 		if path not in self.paths:
-			raise CompileError('No path "{}" defined for [{}].'.format(path, self.block_id))
+			raise CompileError(f'No path "{path}" defined for [{self.block_id}].')
 		
 		return self.paths[path].get_command(func, coords, macro_args)

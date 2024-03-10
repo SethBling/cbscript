@@ -102,7 +102,7 @@ class environment(object):
 			text = str(text).replace('$' + identifier, str(replacements[identifier]))	
 			
 		if text == None:
-			raise Exception('Applying replacements to "{}" returned None.'.format(text))
+			raise Exception(f'Applying replacements to "{text}" returned None.')
 			
 		return text
 	
@@ -146,7 +146,7 @@ class environment(object):
 			elif isNumber(self.dollarid[id]):
 				self.dollarid[id] = str(-float(self.dollarid[id]))
 			else:
-				raise CompileError('Unable to negate value of ${} when copying to ${}, it has non-numeric value "{}"'.format(copyid, id, self.dollarid[id]))
+				raise CompileError(f'Unable to negate value of ${copyid} when copying to ${id}, it has non-numeric value "{self.dollarid[id]}"')
 		
 	def set_atid(self, id, fullselector):
 		self.selectors[id] = selector_definition(fullselector, self)
@@ -199,7 +199,7 @@ class environment(object):
 		
 	def register_objective(self, objective):
 		if len(objective) > 16:
-			raise CompileError('Objective name "{0}" is {1} characters long, max is 16.'.format(objective, len(objective)))
+			raise CompileError(f'Objective name "{objective}" is {len(objective)} characters long, max is 16.')
 		self.global_context.register_objective(objective)
 		
 	def split_selectors(self, line):
@@ -362,13 +362,13 @@ class environment(object):
 		
 	def get_block_definition(self, block_id):
 		if block_id not in self.block_definitions:
-			raise CompileError('[{}] is not defined.'.format(block_id))
+			raise CompileError(f'[{block_id}] is not defined.')
 		
 		return self.block_definitions[block_id]
 		
 	def get_block_path(self, func, block_id, path_id, coords, macro_args, initialize):
 		if block_id not in self.block_definitions:
-			raise CompileError('[{}] is not defined.'.format(block_id))
+			raise CompileError(f'[{block_id}] is not defined.')
 		
 		if initialize:
 			self.block_definitions[block_id].get_path(func, path_id, coords, macro_args)
@@ -377,7 +377,7 @@ class environment(object):
 		
 	def set_block_path(self, func, block_id, path_id, coords, macro_args, initialize):
 		if block_id not in self.block_definitions:
-			raise CompileError('[{}] is not defined.'.format(block_id))
+			raise CompileError(f'[{block_id}] is not defined.')
 		
 		self.block_definitions[block_id].set_path(func, path_id, coords, macro_args)
 		

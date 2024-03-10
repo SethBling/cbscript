@@ -149,7 +149,7 @@ def t_COMMENT(t):
     return t
 
 def t_error(t):
-    print('Illegal character "{}" was skipped at line {}'.format(t.value[0], t.lexer.lineno))
+    print(f'Illegal character "{t.value[0]}" was skipped at line {t.lexer.lineno}')
     t.lexer.skip(1)
     
 # Compute column.

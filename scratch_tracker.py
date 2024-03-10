@@ -21,7 +21,7 @@ class scratch_tracker(object):
 			self.temp_allocation = new_length
 			self.global_context.allocate_temp(new_length)
 
-		return 'temp{1}'.format(self.prefix, newScratch)
+		return f'temp{newScratch}'
 
 	def free_temp_var(self, id):
 		num = int(id[len('temp'):])
@@ -33,7 +33,7 @@ class scratch_tracker(object):
 		for key in self.scratch.keys():
 			if self.scratch[key] == False:
 				self.scratch[key] = True
-				return '{0}_scratch{1}'.format(self.prefix, key)
+				return f'{self.prefix}_scratch{key}'
 		
 		newScratch = len(self.scratch.keys())
 		self.scratch[newScratch] = True
@@ -43,13 +43,13 @@ class scratch_tracker(object):
 			self.scratch_allocation = new_length
 			self.global_context.allocate_scratch(self.prefix, new_length)
 		
-		return '{0}_scratch{1}'.format(self.prefix, newScratch)
+		return f'{self.prefix}_scratch{newScratch}'
 		
 	def get_scratch_vector(self):
 		return [self.get_scratch() for i in range(3)]
 
 	def get_prefix(self):
-		return '{0}_scratch'.format(self.prefix)
+		return f'{self.prefix}_scratch'
 	
 	def is_scratch(self, id):
 		scratch_prefix = self.get_prefix()
@@ -66,8 +66,8 @@ class scratch_tracker(object):
 		self.scratch[num] = False
 		
 	def get_allocated_variables(self):
-		ret = ['{}_scratch{}'.format(self.prefix, i) for i in range(self.scratch_allocation)]
-		ret += ['temp{}'.format(i) for i in range(self.temp_allocation)]
+		ret = [f'{self.prefix}_scratch{i}'for i in range(self.scratch_allocation)]
+		ret += [f'temp{i}' for i in range(self.temp_allocation)]
 		
 		return ret
 		
@@ -75,10 +75,10 @@ class scratch_tracker(object):
 		all_objectives = []
 		for num in self.scratch:
 			if self.scratch[num]:
-				all_objectives.append('{}_scratch{}'.format(self.prefix, num))
+				all_objectives.append(f'{self.prefix}_scratch{num}')
 				
 		for num in self.temp:
 			if self.temp[num]:
-				all_objectives.append('temp{}'.format(num))
+				all_objectives.append(f'temp{num}')
 				
 		return all_objectives

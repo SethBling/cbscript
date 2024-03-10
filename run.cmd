@@ -9,5 +9,4 @@
 @title %~nx1
 @cd "%~dp0"
 py compile.py %1
-py -2.7 compile.py %1
 @pause

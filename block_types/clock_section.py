@@ -14,4 +14,4 @@ class clock_section(block_base):
 		
 	@property
 	def block_name(self):
-		return 'clock "{}"'.format(self.id)
+		return f'clock "{self.id}"'

@@ -15,15 +15,15 @@ class template_function_call_block(call_block_base):
 		function, template_args, args = self.function, self.template_args, self.args
 		
 		if function not in func.template_functions:
-			raise ValueError('Tried to call non-existant template function "{}" at line {}'.format(function, self.line))
+			raise ValueError(f'Tried to call non-existant template function "{function}" at line {self.line}')
 		
 		template_params, params, sub = func.template_functions[function]
 		
 		if len(template_args) != len(template_params):
-			raise ValueError('Tried to call template function "{}" with {} template arguments ({} expected) at line {}'.format(function, len(template_args), len(template_params), self.line))
+			raise ValueError(f'Tried to call template function "{function}" with {len(template_args)} template arguments ({len(template_params)} expected) at line {self.line}')
 			
 		if len(args) != len(params):
-			raise ValueError('Tried to call template function "{}" with {} function arguments ({} expected) at line {}'.format(function, len(args), len(params), self.line))
+			raise ValueError(f'Tried to call template function "{function}" with {len(args)} function arguments ({len(params)} expected) at line {self.line}')
 		
 		# Get textual function name
 		func_name = function
@@ -31,7 +31,7 @@ class template_function_call_block(call_block_base):
 			template_arg_val = template_arg.get_value(func)
 			# TODO: Replace all invalid function characters with _
 			template_arg_val = str(template_arg_val).replace(' ', '_')
-			func_name = func_name + '_{}'.format(template_arg_val)
+			func_name = func_name + f'_{template_arg_val}'
 		
 		if func_name == func.name:
 			locals = func.get_all_locals()
@@ -42,7 +42,7 @@ class template_function_call_block(call_block_base):
 		
 		# Calculate function arguments
 		for i in range(len(args)):
-			assignto = scoreboard_var('Global', 'Param{}'.format(i))
+			assignto = scoreboard_var(f'Global', 'Param{i}')
 			arg_var = args[i].compile(func, assignto)
 			
 			assignto.copy_from(func, arg_var)
@@ -64,15 +64,15 @@ class template_function_call_block(call_block_base):
 				new_func.compile_blocks(sub)
 			except Exception as e:
 				print(e.message)
-				raise Exception('Unable to compile template function contents at line {}'.format(self.line))
+				raise Exception(f'Unable to compile template function contents at line {self.line}')
 			
 			# Register the new function
 			func.register_function(func_name, new_func)
 			
-		cmd = 'function {}:{}'.format(func.namespace, func_name)
+		cmd = f'function {func.namespace}:{func_name}'
 
 		if self.with_macro_items != None:
-			cmd = cmd + 'with storage {}:global args'.format(func.namespace)
+			cmd = cmd + f'with storage {func.namespace}:global args'
 			self.has_macros = True
 
 		func.add_command(cmd)

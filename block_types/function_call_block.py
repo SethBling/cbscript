@@ -13,18 +13,18 @@ class function_call_block(call_block_base):
 		self.compile_with_macro_items(func)
 			
 		if not func.evaluate_params(self.args):
-			raise Exception('Unable to evaluate function call parameters at line {}'.format(self.line))
+			raise Exception(f'Unable to evaluate function call parameters at line {self.line}')
 		
 		cmd = ""
 
 		if ':' in self.dest:
-			cmd = 'function {}'.format(self.dest)
+			cmd = f'function {self.dest}'
 		else:
 			# Default to this datapack's namespace
-			cmd = 'function {}:{}'.format(func.namespace, self.dest)
+			cmd = f'function {func.namespace}:{self.dest}'
 
 		if self.with_macro_items != None:
-			cmd += ' with storage {}:global args'.format(func.namespace)
+			cmd += f' with storage {func.namespace}:global args'
 			func.has_macros = True
 
 		func.add_command(cmd)

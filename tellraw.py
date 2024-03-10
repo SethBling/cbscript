@@ -42,29 +42,29 @@ def formatJsonText(func, text):
 			if unformatted == None:
 				parts = command.split(".")
 				if len(parts) > 2:
-					raise CompileError('Json text has invalid () text: "{}"'.format(command))
+					raise CompileError(f'Json text has invalid () text: "{command}"')
 				if len(parts) == 1:
 					if len(parts[0]) == 0:
 						raise CompileError('Empty () in json text.')
 					elif parts[0][0] == '@':
-						formatted = formatted + ',{{"selector":"{0}"{1}}}'.format(parts[0],getPropertiesText(properties))
+						formatted = formatted + f',{parts[0]}"{getPropertiesText(properties)}}}'
 					elif ':' in parts[0]:
 						storage_parts = parts[0].split(':')
 						if len(storage_parts) != 2:
-							raise CompileError('Unable to parse storage variable "{}"'.format(parts[0]))
+							raise CompileError(f'Unable to parse storage variable "{parts[0]}"')
 						if len(storage_parts[0]) == 0:
 							target = func.namespace
 						else:
 							target = storage_parts[0]
-						formatted = formatted + ',{{"nbt":"{}","storage":"{}"}}'.format(storage_parts[1], target)
+						formatted = formatted + f',{storage_parts[1]}","storage":"{target}"}}'
 					else:
-						formatted = formatted + ',{{"score":{{"name":"Global","objective":"{0}"}}{1}}}'.format(parts[0], getPropertiesText(properties))
+						formatted = formatted + f',{parts[0]}"}}{getPropertiesText(properties)}}}'
 				if len(parts) == 2:
 					name = parts[0]
 					name_def = func.get_name_definition(parts[0])
 					if name_def:
 						name = name_def
-					formatted = formatted + ',{{"score":{{"name":"{}","objective":"{}"}}{}}}'.format(name, parts[1], getPropertiesText(properties))
+					formatted = formatted + f',{name}","objective":"{parts[1]}"}}{getPropertiesText(properties)}}}'
 			elif command == None:
 				formatted = formatted + ',{{"text":"{0}"{1}}}'.format(unformatted.replace('"', '\\"'), getPropertiesText(properties))
 			else:
@@ -76,7 +76,7 @@ def formatJsonText(func, text):
 					command = command[1:]
 				elif command.startswith('call '):
 					action = 'run_command'
-					command = '/function {}:{}'.format(func.namespace, command[len('call '):])
+					command = f'/function {func.namespace}:{command[len("call "):]}'
 				else:
 					action = 'run_command'
 				formatted = formatted + ',{{"text":"{0}","clickEvent":{{"action":"{1}","value":"{2}"}}{3}}}'.format(unformatted.replace('"', '\\"'), action, command, getPropertiesText(properties))
@@ -206,7 +206,7 @@ def parseTextFormatting(text):
 			elif ch == "{":
 				seg = seg + ch
 			else:
-				raise CompileError('Unexpected formatting character {{{0} in tell command'.format(ch))
+				raise CompileError(f'Unexpected formatting character {{{ch} in tell command')
 			
 			mode = NONE
 	

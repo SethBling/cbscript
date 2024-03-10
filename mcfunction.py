@@ -60,20 +60,20 @@ class mcfunction(object):
 			raise CompileError('Tried to call function with no registered filename.')
 		
 		if self.has_macros:
-			return 'function {}:{} with storage {}:global args'.format(self.namespace, self.filename, self.namespace)
+			return f'function {self.namespace}:{self.filename} with storage {self.namespace}:global args'
 		else:
-			return 'function {}:{}'.format(self.namespace, self.filename)
+			return f'function {self.namespace}:{self.filename}'
 
 	def evaluate_params(self, params):
 		results = []
 		for p in range(len(params)):
-			param_name = 'Param{0}'.format(p)
+			param_name = f'Param{p}'
 			param_var = scoreboard_var('Global', param_name)
 			try:
 				var = params[p].compile(self, None)
 			except Exception as e:
 				print(e)
-				print('Unable to compile parameter {}.'.format(p))
+				print(f'Unable to compile parameter {p}.')
 				return False
 				
 			param_var.copy_from(self, var)
@@ -87,14 +87,14 @@ class mcfunction(object):
 		test = ''
 		for type, val in conditions:
 			if type == 'selector':
-				test += '{0} entity {1} '.format(iftype, val)
+				test += f'{iftype} entity {val} '
 			elif type == 'predicate':
 				if ':' in val:
-					test += '{} predicate {} '.format(iftype, val)
+					test += f'{iftype} predicate {val} '
 				elif val in self.predicates:
-					test += '{} predicate {}:{} '.format(iftype, self.namespace, val)
+					test += f'{iftype} predicate {self.namespace}:{val} '
 				else:
-					raise CompileError('Predicate "{}" does not exist'.format(val))
+					raise CompileError(f'Predicate "{val}" does not exist')
 			elif type == 'score':
 				lexpr, op, rexpr = val
 				
@@ -135,22 +135,22 @@ class mcfunction(object):
 						const = rconst
 						
 					if op == '>':						
-						test += '{3} score {0} {1} matches {2}.. '.format(sbvar.selector, sbvar.objective, int(const)+1, iftype)
+						test += f'{iftype} score {sbvar.selector} {sbvar.objective} matches {int(const)+1}.. '
 					if op == '>=':						
-						test += '{3} score {0} {1} matches {2}.. '.format(sbvar.selector, sbvar.objective, const, iftype)
+						test += f'{iftype} score {sbvar.selector} {sbvar.objective} matches {const}.. '
 					if op == '<':						
-						test += '{3} score {0} {1} matches ..{2} '.format(sbvar.selector, sbvar.objective, int(const)-1, iftype)
+						test += f'{iftype} score {sbvar.selector} {sbvar.objective} matches ..{int(const)-1} '
 					if op == '<=':						
-						test += '{3} score {0} {1} matches ..{2} '.format(sbvar.selector, sbvar.objective, const, iftype)
+						test += f'{iftype} score {sbvar.selector} {sbvar.objective} matches ..{const} '
 					if op == '=':						
-						test += '{3} score {0} {1} matches {2} '.format(sbvar.selector, sbvar.objective, const, iftype)
+						test += f'{iftype} score {sbvar.selector} {sbvar.objective} matches {const} '
 					
 				else:
 					# Continue if chain comparing two score values
 					lsbvar = lvar.get_scoreboard_var(self)
 					rsbvar = rvar.get_scoreboard_var(self)
 					
-					test += '{0} score {1} {2} {3} {4} {5} '.format(iftype, lsbvar.selector, lsbvar.objective, op, rsbvar.selector, rsbvar.objective)
+					test += f'{iftype} score {lsbvar.selector} {lsbvar.objective} {op} {rsbvar.selector} {rsbvar.objective} '
 				
 			elif type == 'vector_equality':
 				if iftype == 'unless':
@@ -188,40 +188,40 @@ class mcfunction(object):
 						
 					for i in range(3):
 						if type1 == 'VAR_ID':
-							lvar = scoreboard_var('Global', '_{}_{}'.format(var1, i))
+							lvar = scoreboard_var('Global', f'_{var1}_{i}')
 						elif type1 == 'SEL_VAR_ID':
 							sel1, selvar1 = var1
-							lvar = scoreboard_var(sel1, '_{}_{}'.format(selvar1, i))
+							lvar = scoreboard_var(sel1, f'_{selvar1}_{i}')
 						elif type1 == 'VAR_COMPONENTS':
 							lvar = var1[i].get_scoreboard_var(self)
 						
 						if type2 == 'VAR_CONST':
-							test += 'if score {} {} matches {} '.format(sel1, sco1, const_vals[i])
+							test += f'if score {sel1} {sco1} matches {const_vals[i]} '
 						else:
 							if type2 == 'VAR_ID':
-								rvar = scoreboard_var('Global', '_{}_{}'.format(var2, i))
+								rvar = scoreboard_var('Global', f'_{var2}_{i}')
 							elif type2 == 'SEL_VAR_ID':
 								sel2, selvar2 = var2
-								rvar = scoreboard_var(sel2, '_{}_{}'.format(selvar2, i))
+								rvar = scoreboard_var(sel2, f'_{selvar2}_{i}')
 							elif type2 == 'VAR_COMPONENTS':
 								rvar = var2[i].get_scoreboard_var(self)
 								
-						test += 'if score {} = {} '.format(lvar.selvar, rvar.selvar)
+						test += f'if score {lvar.selvar} = {rvar.selvar} '
 					
 			elif type == 'block':
 				relcoords, block = val
 				block = self.apply_environment(block)
 				
 				if block in self.block_tags:
-					block = '#{0}:{1}'.format(self.namespace, block)
+					block = f'#{self.namespace}:{block}'
 				else:
-					block = 'minecraft:{0}'.format(block)
+					block = f'minecraft:{block}'
 					
-				test += '{0} block {1} {2} '.format(iftype, relcoords.get_value(self), block)
+				test += f'{iftype} block {relcoords.get_value(self)} {block} '
 			elif type == 'nbt_path':
-				test += '{} data {} '.format(iftype, val.get_dest_path(self))
+				test += f'{iftype} data {val.get_dest_path(self)} '
 			else:
-				raise ValueError('Unknown "if" type: {0}'.format(type))
+				raise ValueError(f'Unknown "if" type: {type}')
 		
 		return test
 		
@@ -244,10 +244,10 @@ class mcfunction(object):
 			if type == 'Unless':
 				cmd += self.get_if_chain(val, 'unless')
 			elif type == 'As':
-				cmd += 'as {} '.format(val)
+				cmd += f'as {val} '
 				exec_func.update_self_selector(val)
 			elif type == 'On':
-				cmd += 'on {} '.format(val)
+				cmd += f'on {val} '
 				exec_func.update_self_selector("@s")
 			elif type == 'AsId':
 				var, attype = val
@@ -258,7 +258,7 @@ class mcfunction(object):
 				if attype == None:
 					psel = '@e'
 				else:
-					psel = '@{}'.format(attype)
+					psel = f'@{attype}'
 				if selector[0] == '@':
 					seldef = selector_definition(selector, self.environment)
 					if seldef.base_name == 's' and self.environment.self_selector != None and id in self.environment.self_selector.pointers:
@@ -272,9 +272,9 @@ class mcfunction(object):
 				self.register_objective('_id')
 				self.register_objective(id)
 				
-				self.add_command('scoreboard players operation Global _id = {0} {1}'.format(selector, id))
+				self.add_command(f'scoreboard players operation Global _id = {selector} {id}')
 									
-				cmd += 'as {} if score @s _id = Global _id '.format(psel)
+				cmd += f'as {psel} if score @s _id = Global _id '
 				
 				if attype != None:
 					exec_func.update_self_selector('@' + attype)
@@ -289,30 +289,30 @@ class mcfunction(object):
 				create_operation = val
 					
 				self.register_objective('_age')
-				self.add_command('scoreboard players set @{} _age 1'.format(create_operation.atid))
+				self.add_command(f'scoreboard players set @{create_operation.atid} _age 1')
 				
 				create_operation.compile(self)
 					
-				self.add_command('scoreboard players add @{} _age 1'.format(create_operation.atid))
-				cmd += 'as @{}[_age==1,limit=1] '.format(create_operation.atid)
+				self.add_command(f'scoreboard players add @{create_operation.atid} _age 1')
+				cmd += f'as @{create_operation.atid}[_age==1,limit=1] '
 				
 				exec_func.update_self_selector('@'+create_operation.atid)
 			elif type == 'Rotated':
-				cmd += 'rotated as {0} '.format(val)
+				cmd += f'rotated as {val} '
 			elif type == 'FacingCoords':
-				cmd += 'facing {0} '.format(val.get_value(self))
+				cmd += f'facing {val.get_value(self)} '
 			elif type == 'FacingEntity':
-				cmd += 'facing entity {0} feet '.format(val)
+				cmd += f'facing entity {val} feet '
 			elif type == 'Align':
-				cmd += 'align {0} '.format(val)
+				cmd += f'align {val} '
 			elif type == 'At':
 				selector, relcoords, anchor = val
 				if selector != None:
-					cmd += 'at {0} '.format(selector)
+					cmd += f'at {selector} '
 				if anchor != None:
-					cmd += 'anchored {} '.format(anchor)
+					cmd += f'anchored {anchor} '
 				if relcoords != None:
-					cmd += 'positioned {0} '.format(relcoords.get_value(self))
+					cmd += f'positioned {relcoords.get_value(self)} '
 			elif type == 'AtVector':
 				at_vector_count += 1
 				if at_vector_count >= 2:
@@ -331,12 +331,12 @@ class mcfunction(object):
 				self.add_command('scoreboard players add @e _age 1')
 				for i in range(3):
 					var = vec_vals[i].get_scoreboard_var(self)
-					self.add_command('execute store result entity @e[_age==1,limit=1] Pos[{0}] double {1} run scoreboard players get {2} {3}'.format(i, 1/float(scale), var.selector, var.objective))
+					self.add_command(f'execute store result entity @e[_age==1,limit=1] Pos[{i}] double {1/float(scale)} run scoreboard players get {var.selector} {var.objective}')
 				cmd += 'at @e[_age == 1] '
 				exec_func.add_command('/kill @e[_age == 1]')
 			elif type == 'In':
 				dimension = val
-				cmd += 'in {} '.format(dimension)
+				cmd += f'in {dimension} '
 				
 		return cmd
 			
@@ -362,37 +362,37 @@ class mcfunction(object):
 					case_func.compile_blocks(sub)
 				except CompileError as e:
 					print(e)
-					raise CompileError('Unable to compile case at line {}'.format(line))
+					raise CompileError(f'Unable to compile case at line {line}')
 				except Exception as e:
 					print(traceback.format_exc())
-					raise CompileError('Unable to compile case at line {}'.format(line))
+					raise CompileError(f'Unable to compile case at line {line}')
 					
 				single_command = case_func.single_command()
 				if single_command != None:
 					if vmin == vmax:
 						vrange = str(vmin)
 					else:
-						vrange = '{}..{}'.format(vmin, vmax)
+						vrange = f'{vmin}..{vmax}'
 						
 					if len(single_command) >= 1 and single_command[0] == '$':
-						self.add_command('$execute if score {} {} matches {} run {}'.format(var.selector, var.objective, vrange, single_command[1:]))
+						self.add_command(f'$execute if score {var.selector} {var.objective} matches {vrange} run {single_command[1:]}')
 					else:
-						self.add_command('execute if score {} {} matches {} run {}'.format(var.selector, var.objective, vrange, single_command))
+						self.add_command(f'execute if score {var.selector} {var.objective} matches {vrange} run {single_command}')
 				else:
 					unique = self.get_unique_id()
 
 					if vmin == vmax:
-						case_name = 'line{:03}/{}{}_{:03}'.format(line, case_func_name, vmin, unique)
+						case_name = f'line{line}/{case_func_name}{vmin}_{unique}'
 					else:
-						case_name = 'line{:03}/{}{}-{}_{:03}'.format(line, case_func_name, vmin, vmax, unique)
+						case_name = f'line{line}/{case_func_name}{vmin}-{vmax}_{unique}'
 						
 					self.register_function(case_name, case_func)
-					self.add_command('execute if score {} {} matches {}..{} run {}'.format(var.selector, var.objective, vmin, vmax, case_func.get_call()))
+					self.add_command(f'execute if score {var.selector} {var.objective} matches {vmin}..{vmax} run {case_func.get_call()}')
 			else:
 				unique = self.get_unique_id()
-				case_name = 'line{:03}/{}{}-{}_{:03}'.format(line, switch_func_name, vmin, vmax, unique)
+				case_name = f'line{line}/{switch_func_name}{vmin}-{vmax}_{unique}'
 				self.register_function(case_name, case_func)
-				self.add_command('execute if score {} {} matches {}..{} run {}'.format(var.selector, var.objective, vmin, vmax, case_func.get_call()))
+				self.add_command(f'execute if score {var.selector} {var.objective} matches {vmin}..{vmax} run {case_func.get_call()}')
 			
 				if not case_func.switch_cases(var, sub_cases):
 					return False
@@ -403,7 +403,7 @@ class mcfunction(object):
 	def add_operation(self, selector, id1, operation, id2):
 		selector = self.environment.apply(selector)
 		
-		self.add_command("scoreboard players operation {0} {1} {2} {0} {3}".format(selector, id1, operation, id2))
+		self.add_command(f"scoreboard players operation {selector} {id1} {operation} {selector} {id2}")
 			
 		if self.is_scratch(id2):
 			self.free_scratch(id2)
@@ -458,8 +458,8 @@ class mcfunction(object):
 				self.register_local(v)
 	
 			for p in range(len(self.params)):
-				self.insert_command('scoreboard players operation Global {0} = Global Param{1}'.format(self.params[p], p), 0)
-				self.register_objective("Param{0}".format(p))
+				self.insert_command(f'scoreboard players operation Global {self.params[p]} = Global Param{p}', 0)
+				self.register_objective(f"Param{p}")
 			
 		self.commands = comments + self.commands
 		
@@ -510,9 +510,9 @@ class mcfunction(object):
 				scale = self.scale
 			
 			if not self.check_single_entity(selector):
-				raise CompileError('Tried to get data "{0}" from selector "{1}" which is not limited to a single entity.'.format(var, selector))
+				raise CompileError(f'Tried to get data "{var}" from selector "{selector}" which is not limited to a single entity.')
 				
-			self.add_command('execute store result score {0} {1} run data get entity {0} {2} {3}'.format(selector, var, path, scale))
+			self.add_command(f'execute store result score {selector} {var} run data get entity {selector} {path} {scale}')
 				
 	def set_path(self, selector, var):
 		if selector[0] != '@':
@@ -534,9 +534,9 @@ class mcfunction(object):
 				scale = self.scale
 
 			if not self.check_single_entity(selector):
-				raise CompileError('Tried to set data "{0}" for selector "{1}" which is not limited to a single entity.'.format(var, selector))
+				raise CompileError(f'Tried to set data "{var}" for selector "{selector}" which is not limited to a single entity.')
 				
-			self.add_command('execute store result entity {0} {2} {3} {4} run scoreboard players get {0} {1}'.format(selector, var, path, data_type, 1/float(scale)))
+			self.add_command(f'execute store result entity {selector} {path} {data_type} {1/float(scale)} run scoreboard players get {selector} {var}')
 
 	def get_vector_path(self, selector, var):
 		if selector[0] != '@':
@@ -558,10 +558,10 @@ class mcfunction(object):
 				scale = self.scale
 
 			if not self.check_single_entity(selector):
-				raise CompileError('Tried to get vector data "{0}" from selector "{1}" which is not limited to a single entity.'.format(var, selector))
+				raise CompileError(f'Tried to get vector data "{var}" from selector "{selector}" which is not limited to a single entity.')
 				
 			for i in range(3):
-				self.add_command('execute store result score {0} _{1}_{2} run data get entity {0} {3}[{2}] {4}'.format(selector, var, i, path, scale))
+				self.add_command(f'execute store result score {selector} _{var}_{i} run data get entity {selector} {path}[{i}] {scale}')
 			
 			return True
 		else:
@@ -587,11 +587,11 @@ class mcfunction(object):
 				scale = self.scale
 
 			if not self.check_single_entity(selector):
-				raise CompileError('Tried to set vector data "{0}" for selector "{1}" which is not limited to a single entity.'.format(var, selector))
+				raise CompileError(f'Tried to set vector data "{var}" for selector "{selector}" which is not limited to a single entity.')
 				
 			for i in range(3):
 				val_var = values[i].get_scoreboard_var(self)
-				self.add_command('execute store result entity {} {}[{}] {} {} run scoreboard players get {} {}'.format(selector, path, i, data_type, 1/float(scale), val_var.selector, val_var.objective))
+				self.add_command(f'execute store result entity {selector} {path}[{i}] {data_type} {1/float(scale)} run scoreboard players get {val_var.selector} {val_var.objective}')
 			
 			return True
 		else:
@@ -725,7 +725,7 @@ class mcfunction(object):
 		
 	def run_create(self, atid, relcoords, idx=None):
 		if atid not in self.selectors:
-			print('Unable to create unknown entity: @{0}'.format(atid))
+			print(f'Unable to create unknown entity: @{atid}')
 			return False
 		
 		selector = self.selectors[atid]
@@ -733,14 +733,14 @@ class mcfunction(object):
 		entity_type = selector.get_type()
 		
 		if entity_type == None:
-			print('Unable to create @{0}, no entity type is defined.'.format(atid))
+			print(f'Unable to create @{atid}, no entity type is defined.')
 			return False
 			
 		if selector.tag == None:
 			if idx:
-				self.add_command('summon {0} {1} {{UUIDMost:0, UUIDLeast:{}}}'.format(entity_type, relcoords.get_value(self), idx.get_value(self) + hash(atid) % (2 ** 32)))
+				self.add_command(f'summon {entity_type} {relcoords.get_value(self)} {idx.get_value(self) + hash(atid) % (2 ** 32)}}}')
 			else:
-				self.add_command('summon {0} {1}'.format(entity_type, relcoords.get_value(self)))
+				self.add_command(f'summon {entity_type} {relcoords.get_value(self)}')
 		else:
 			if idx:
 				parsed = json.loads(selector.tag)
@@ -750,7 +750,7 @@ class mcfunction(object):
 			else:
 				tag = selector.tag
 			
-			self.add_command('summon {0} {1} {2}'.format(entity_type, relcoords.get_value(self), tag))
+			self.add_command(f'summon {entity_type} {relcoords.get_value(self)} {tag}')
 			
 		return True
 	
@@ -773,10 +773,10 @@ class mcfunction(object):
 				block.compile(self)
 			except CompileError as e:
 				print(e)
-				raise CompileError('Error compiling block at line {}'.format(block.line))
+				raise CompileError(f'Error compiling block at line {block.line}')
 			except:
 				print(traceback.format_exc())
-				raise CompileError('Error compiling block at line {}'.format(block.line))
+				raise CompileError(f'Error compiling block at line {block.line}')
 					
 	@property
 	def parser(self):
@@ -789,11 +789,11 @@ class mcfunction(object):
 		
 		result = self.parser('import ' + file.get_text() + '\n')
 		if result == None:
-			raise CompileError('Unable to parse file "{}"'.format(filename))
+			raise CompileError(f'Unable to parse file "{filename}"')
 		
 		type, parsed = result
 		if type != 'lib':
-			raise CompileError('Unable to import non-lib-file "{}"'.format(filename))
+			raise CompileError(f'Unable to import non-lib-file "{filename}"')
 			
 		for line in parsed['lines']:
 			line.register(self.global_context)
@@ -808,20 +808,20 @@ class mcfunction(object):
 				text = file.read()
 		except Exception as e:
 			print(e)
-			raise CompileError('Unable to open "{}"'.format(filename))
+			raise CompileError(f'Unable to open "{filename}"')
 			
 		try:
 			exec(text, globals(), self.get_python_env())
 		except Exception as e:
 			print(e)
-			raise CompileError('Unable to execute "{}"'.format(filename))
+			raise CompileError(f'Unable to execute "{filename}"')
 			
 	def eval(self, expr, line):
 		try:
 			return eval(expr, globals(), self.get_python_env())
 		except Exception as e:
 			print(e)
-			raise CompileError('Could not evaluate python expression "{0}" at line {1}'.format(expr, line))
+			raise CompileError(f'Could not evaluate python expression "{expr}" at line {line}')
 			
 	def add_pointer(self, id, selector):
 		self.environment.add_pointer(id, selector)
@@ -858,12 +858,12 @@ class mcfunction(object):
 		
 		if single_command:
 			if single_command.startswith('$'):
-				self.add_command('${}{}'.format(prefix, single_command[1:]))
+				self.add_command(f'${prefix}{single_command[1:]}')
 			else:
-				self.add_command('{}{}'.format(prefix, single_command))
+				self.add_command(f'{prefix}{single_command}')
 		else:
 			unique = self.get_unique_id()
-			sub_name = '{}_{:03}'.format(sub_name, unique)
+			sub_name = f'{sub_name}_{unique}'
 			
 			self.register_function(sub_name, sub_func)
 			cmd = prefix + sub_func.get_call()

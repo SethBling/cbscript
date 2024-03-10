@@ -17,4 +17,4 @@ class template_function_section(block_base):
 	
 	@property
 	def block_name(self):
-		return 'template function "{}"'.format(self.name)
+		return f'template function "{self.name}"'

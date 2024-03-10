@@ -13,10 +13,10 @@ class python_tuple_assignment_block(block_base):
 			val_len = len(val)
 		except Exception as e:
 			print(e)
-			raise CompileError('Expression at line {} is not a tuple.'.format(self.line))
+			raise CompileError(f'Expression at line {self.line} is not a tuple.')
 		
 		if val_len != len(self.ids):
-			raise CompileError('Expected {} values for tuple expression at line {}, got {}'.format(len(self.ids), self.line, len(val)))
+			raise CompileError(f'Expected {len(self.ids)} values for tuple expression at line {self.line}, got {len(val)}')
 		
 		for idx in range(val_len):
 			func.set_dollarid(self.ids[idx], val[idx])

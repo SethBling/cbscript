@@ -12,10 +12,10 @@ class python_import_block(block_base):
 			func.import_python_file(self.filename + '.py')
 		except SyntaxError as e:
 			print(e)
-			raise CompileError('Importing file "{}" failed at line {}:\n{}'.format(self.filename, self.line, e))
+			raise CompileError(f'Importing file "{self.filename}" failed at line {self.line}:\n{e}')
 		except CompileError as e:
 			print(e)
-			raise CompileError('Importing file "{}" failed at line {}:\n{}'.format(self.filename, self.line, e))
+			raise CompileError(f'Importing file "{self.filename}" failed at line {self.line}:\n{e}')
 		except Exception as e:
 			print(traceback.format_exc())
-			raise CompileError('Importing file "{}" failed at line {}:\n{}'.format(self.filename, self.line, e))
+			raise CompileError(f'Importing file "{self.filename}" failed at line {self.line}:\n{e}')

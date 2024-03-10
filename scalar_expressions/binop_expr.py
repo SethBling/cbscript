@@ -49,7 +49,7 @@ class binop_expr(scalar_expression_base):
 				func.add_command('scoreboard players {} {} {}'.format({'+':'add', '-':'remove'}[op], temp_var.get_selvar(func), right_const))
 			else:
 				right_var = right_var.get_scoreboard_var(func)
-				func.add_command('scoreboard players operation {} {}= {}'.format(temp_var.get_selvar(func), self.op, right_var.get_selvar(func)))
+				func.add_command(f'scoreboard players operation {temp_var.get_selvar(func)} {self.op}= {right_var.get_selvar(func)}')
 				
 			right_var.free_scratch(func)
 			
@@ -76,10 +76,10 @@ class binop_expr(scalar_expression_base):
 				return target
 			
 			multiplier_obj = func.get_scratch()
-			func.add_command('scoreboard players operation Global {} = {} {}'.format(multiplier_obj, temp_var.selector, temp_var.objective))
+			func.add_command(f'scoreboard players operation Global {multiplier_obj} = {temp_var.selector} {temp_var.objective}')
 			
 			for i in range(power-1):
-				func.add_command('scoreboard players operation {} {} *= Global {}'.format(temp_var.selector, temp_var.objective, multiplier_obj))
+				func.add_command(f'scoreboard players operation {temp_var.selector} {temp_var.objective} *= Global {multiplier_obj}')
 				
 			func.free_scratch(multiplier_obj)
 				

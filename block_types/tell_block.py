@@ -9,5 +9,5 @@ class tell_block(block_base):
 		
 	def compile(self, func):
 		text = tellraw.formatJsonText(func, func.apply_replacements(self.unformatted))
-		command = '/tellraw {0} {1}'.format(self.selector, text)
+		command = f'/tellraw {self.selector} {text}'
 		func.add_command(command)

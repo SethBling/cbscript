@@ -16,7 +16,7 @@ class command_var(var_base):
 		if assignto == None:
 			assignto = scoreboard_var('Global', func.get_scratch())
 			
-		func.add_command('execute store {} score {} run {}'.format(self.output, assignto.get_selvar(func), self.command))
+		func.add_command(f'execute store {self.output} score {assignto.get_selvar(func)} run {self.command}')
 			
 		return assignto
 	

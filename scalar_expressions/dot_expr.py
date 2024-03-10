@@ -16,12 +16,12 @@ class dot_expr(scalar_expression_base):
 			assignto = None
 			multiplicand = rhs[i].get_scoreboard_var(func)
 			
-			func.add_command('scoreboard players operation {} *= {}'.format(prod.selvar, multiplicand.selvar))
+			func.add_command(f'scoreboard players operation {prod.selvar} *= {multiplicand.selvar}')
 			
 			prods.append(prod)
 			
-		func.add_command('scoreboard players operation {0} += {1}'.format(prods[0].selvar, prods[1].selvar))
-		func.add_command('scoreboard players operation {0} += {1}'.format(prods[0].selvar, prods[2].selvar))
+		func.add_command(f'scoreboard players operation {prods[0].selvar} += {prods[1].selvar}')
+		func.add_command(f'scoreboard players operation {prods[0].selvar} += {prods[2].selvar}')
 		
 		for i in range(3):
 			for var in [lhs[i], rhs[i], prods[i]]:

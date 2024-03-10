@@ -6,4 +6,4 @@ class nbt_remove_block(block_base):
 		self.path = path
 
 	def compile(self, func):
-		func.add_command('data remove {}'.format(self.path.get_dest_path(func)))
+		func.add_command(f'data remove {self.path.get_dest_path(func)}')

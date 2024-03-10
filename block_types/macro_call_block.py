@@ -10,12 +10,12 @@ class macro_call_block(block_base):
 		
 	def compile(self, func):
 		if self.macro not in func.macros:
-			raise CompileError('Line {1}: macro "{0}" does not exist'.format(self.macro, self.line))
+			raise CompileError(f'Line {self.line}: macro "{self.macro}" does not exist')
 			
 		params, sub = func.macros[self.macro]
 			
 		if len(self.args) != len(params):
-			raise CompileError('Tried to call Macro "{0}" with {1} arguments at line {3}, but it requires {2}'.format(macro, len(args), len(params), get_line(line)))
+			raise CompileError(f'Tried to call Macro "{macro}" with {len(args)} arguments at line {get_line(line)}, but it requires {len(params)}')
 			
 		new_env = func.clone_environment()
 			
@@ -28,9 +28,9 @@ class macro_call_block(block_base):
 			func.compile_blocks(sub)
 		except CompileError as e:
 			print(e)
-			raise CompileError('Unable to compile macro contents at line {}'.format(self.line))
+			raise CompileError(f'Unable to compile macro contents at line {self.line}')
 		except Exception as e:
 			print(traceback.format_exc())
-			raise CompileError('Unable to compile macro contents at line {}'.format(self.line))
+			raise CompileError(f'Unable to compile macro contents at line {self.line}')
 			
 		func.pop_environment()

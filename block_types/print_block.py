@@ -9,4 +9,4 @@ class print_block(block_base):
 		try:
 			print(self.val.get_value(func))
 		except Exception as e:
-			raise Exception('Unable to get print value at line {}. Exception: "{}"'.format(self.line, e))
+			raise Exception(f'Unable to get print value at line {self.line}. Exception: "{e}"')

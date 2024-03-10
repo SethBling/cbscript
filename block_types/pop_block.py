@@ -9,9 +9,9 @@ class pop_block(block_base):
 	def compile(self, func):
 		idx = 0
 		for var in self.var_list:
-			data_var = storage_path_var(None, 'stack[-1].v{}'.format(idx))
+			data_var = storage_path_var(None, f'stack[-1].v{idx}')
 			var.copy_from(func, data_var)
 			
 			idx += 1
 			
-		func.add_command('data remove storage {} stack[-1]'.format(func.namespace))
+		func.add_command(f'data remove storage {func.namespace} stack[-1]')

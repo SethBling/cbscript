@@ -15,7 +15,7 @@ class python_for_block(block_base):
 		try:
 			iter(set)
 		except:
-			raise CompileError('"{0}" in "for" block at line {1} is not an iterable set.'.format(set, self.line))
+			raise CompileError(f'"{set}" in "for" block at line {self.line} is not an iterable set.')
 
 		for v in set:
 			if len(self.ids) == 1:
@@ -25,16 +25,16 @@ class python_for_block(block_base):
 					v_len = len(v)
 				except Exception as e:
 					print(e)
-					raise CompileError('Set is not a tuple at line {}'.format(self.line))
+					raise CompileError(f'Set is not a tuple at line {self.line}')
 				if v_len != len(self.ids):
-					raise CompileError('Expected {} tuple items at line {}, got {}.'.format(len(self.ids), self.line, v_len))
+					raise CompileError(f'Expected {len(self.ids)} tuple items at line {self.line}, got {v_len}.')
 				for idx in range(v_len):
 					func.set_dollarid(self.ids[idx], v[idx])
 			try:
 				func.compile_blocks(self.sub)
 			except CompileError as e:
 				print(e)
-				raise CompileError('Unable to compile python for block contents at line {}'.format(self.line))
+				raise CompileError(f'Unable to compile python for block contents at line {self.line}')
 			except:
 				print(traceback.format_exc())
-				raise CompileError('Unable to compile python for block contents at line {}'.format(self.line))
+				raise CompileError(f'Unable to compile python for block contents at line {self.line}')

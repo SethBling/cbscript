@@ -56,7 +56,7 @@ class mock_environment(object):
 		
 	def get_scratch(self):
 		self.scratch += 1
-		return 'test_scratch{}'.format(self.scratch)
+		return f'test_scratch{self.scratch}'
 		
 	def free_scratch(self, id):
 		None
@@ -65,7 +65,7 @@ class mock_environment(object):
 		return self.selector_definitions[selector_text]
 	
 	def get_arrayconst_var(self, name, idxval):
-		return '{}{}'.format(name, idxval)
+		return f'{name}{idxval}'
 		
 	def copy_dollarid(self, id1, id2):
 		self.dollarid[id1] = self.dollarid[id2]

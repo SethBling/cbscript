@@ -29,9 +29,9 @@ class unary_expr(scalar_expression_base):
 				temp_var = var.get_modifiable_var(func, assignto)
 				
 			minus = func.add_constant(-1)
-			func.add_command('scoreboard players operation {} *= {} Constant'.format(temp_var.get_selvar(func), minus))
+			func.add_command(f'scoreboard players operation {temp_var.get_selvar(func)} *= {minus} Constant')
 			
 			return temp_var
 		
-		print("Unary operation '{}' isn't implemented.".format(self.type))
+		print(f"Unary operation '{self.type}' isn't implemented.")
 		return None

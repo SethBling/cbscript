@@ -25,4 +25,4 @@ class function_section(block_base):
 		
 	@property
 	def block_name(self):
-		return 'function "{}"'.format(self.name)
+		return f'function "{self.name}"'
