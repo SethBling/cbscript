@@ -4,3 +4,5 @@
 unittest/htmlcov/*
 *.coverage
 parsetab.py
+myenv/
+.vscode/
