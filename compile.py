@@ -13,6 +13,10 @@ if len(sys.argv) != 2:
 	print("You must include a script filename.")
 	exit()
 
+# Sets default string encoding to utf-8
+reload(sys)
+sys.setdefaultencoding("utf-8")
+
 source = source_file.source_file(sys.argv[1])
 
 os.chdir(source.get_directory())

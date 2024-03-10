@@ -27,10 +27,10 @@ class source_file(object):
 	def get_text(self, only_new_text = False):
 		text = ""
 		while len(text) == 0:
-			with open(self.filename, 'r') as content_file:
+			with open(self.filename, 'rb') as content_file:
 				if only_new_text:
 					content_file.seek(self.last_size)
-				text = content_file.read()
+				text = content_file.read().decode('utf-8')
 			
 			time.sleep(0.1)
 			

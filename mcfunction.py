@@ -804,8 +804,8 @@ class mcfunction(object):
 		self.environment.register_dependency(filename)
 		
 		try:
-			with open(filename) as file:
-				text = file.read()
+			with open(filename, 'rb') as file:
+				text = file.read().decode('utf-8')
 		except Exception as e:
 			print(e)
 			raise CompileError('Unable to open "{}"'.format(filename))
