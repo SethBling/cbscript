@@ -1284,7 +1284,7 @@ def p_block_item_macro_path_scale(p):
 #### Selector Assignment
 def p_uuid(p):
 	'''uuid : integer MINUS integer MINUS integer MINUS integer MINUS integer'''
-	p[0] = f'{int(p[1])}-{int(p[3])}-{int(p[5])}-{int(p[7])}-{int(p[9])}'
+	p[0] = f'{int(p[1]):X}-{int(p[3]):X}-{int(p[5]):X}-{int(p[7]):X}-{int(p[9]):X}'
 
 def p_selector_assignment(p):
 	'''selector_assignment : ATID EQUALS fullselector'''

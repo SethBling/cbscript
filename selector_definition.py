@@ -83,7 +83,7 @@ class selector_definition(object):
 			if len(parts) == 1:
 				try:
 					index = int(parts[0])
-					self.uuid = f'0-0-0-0-{index + hash(base_name) % (2 ** 32)}'
+					self.uuid = f'0-0-0-0-{index + hash(base_name) % (2 ** 32):X}'
 					return
 				except:
 					None
