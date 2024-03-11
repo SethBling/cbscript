@@ -209,7 +209,7 @@ class test_cbscript(unittest.TestCase):
 		self.assertEqual(len(func.commands), 4)
 		self.assertEqual(func.commands[0], 'scoreboard players set Global test_scratch1 2')
 		for i in range(3):
-			self.assertEqual(func.commands[i+1], 'scoreboard players operation Global _test_vector_{} *= Global test_scratch1'.format(i))
+			self.assertEqual(func.commands[i+1], f'scoreboard players operation Global _test_vector_{i} *= Global test_scratch1')
 	
 	def test_compile_vector_assignment(self):
 		func = mock_mcfunction()
@@ -219,8 +219,8 @@ class test_cbscript(unittest.TestCase):
 		
 		self.assertEqual(len(func.commands), 6)
 		for i in range(3):
-			self.assertEqual(func.commands[i], 'scoreboard players set Global test_scratch{} {}'.format(i+1, i+2))
-			self.assertEqual(func.commands[i+3], 'scoreboard players operation Global _test_vector_{} += Global test_scratch{}'.format(i, i+1))
+			self.assertEqual(func.commands[i], f'scoreboard players set Global test_scratch{i+1} {i+2}')
+			self.assertEqual(func.commands[i+3], f'scoreboard players operation Global _test_vector_{i} += Global test_scratch{i+1}')
 	
 	def test_compile_comment(self):
 		func = mock_mcfunction()
@@ -835,7 +835,7 @@ class test_cbscript(unittest.TestCase):
 		
 		self.assertEqual(ids, ['x', 'y', 'z'])
 		for left, right in [('x', 0), ('y', 1), ('z', 2)]:
-			self.assertTrue('scoreboard players operation Global {} = @test _test_var_{}'.format(left, right) in func.commands)
+			self.assertTrue(f'scoreboard players operation Global {left} = @test _test_var_{right}'in func.commands)
 			
 	def test_vector_binop_scalar_expr(self):
 		func = mock_mcfunction()
@@ -878,7 +878,7 @@ class test_cbscript(unittest.TestCase):
 		
 		self.assertEqual(ids, ['x', 'y', 'z'])
 		for left, right in [('x', 1), ('y', 2), ('z', 3)]:
-			self.assertTrue('scoreboard players set Global {} {}'.format(left, right) in func.commands)
+			self.assertTrue(f'scoreboard players set Global {left} {right}'in func.commands)
 			
 	def test_vector_here_expr(self):
 		func = mock_mcfunction()
@@ -2718,7 +2718,7 @@ class test_cbscript(unittest.TestCase):
 			condition = 'score', (('Var', ('@test_selector', 'test_var')), op, ('num', interpreted_python('1')))
 			chain = func.get_if_chain([condition])
 		
-			self.assertEqual(chain, 'if score @test_selector test_var matches {} '.format(match))
+			self.assertEqual(chain, f'if score @test_selector test_var matches {match} ')
 		
 	def test_mcfunction_get_if_chain_score_var(self):
 		env = mock_environment()
@@ -2897,7 +2897,7 @@ class test_cbscript(unittest.TestCase):
 			item = type, target
 			
 			cmd = func.get_execute_command([item], exec_func)
-			self.assertEqual(cmd, 'execute {} {}{} '.format(code, target_code, extra))
+			self.assertEqual(cmd, f'execute {code} {target_code}{extra} ')
 			
 	def test_mcfunction_execute_command_at_selector_coords(self):
 		env = mock_environment()

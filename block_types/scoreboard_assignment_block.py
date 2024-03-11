@@ -1,4 +1,4 @@
-from block_base import block_base
+from .block_base import block_base
 from mcfunction import isNumber
 
 class scoreboard_assignment_block(block_base):
@@ -30,7 +30,7 @@ class scoreboard_assignment_block(block_base):
 				func.add_command('scoreboard players {} {} {} {}'.format({'+=': 'add', '-=':'remove'}[op], temp_var.selector, temp_var.objective, expr_const))
 			else:
 				expr_scoreboard_var = expr_var.get_scoreboard_var(func)
-				func.add_command('scoreboard players operation {} {} {} {} {}'.format(temp_var.selector, temp_var.objective, self.op, expr_scoreboard_var.selector, expr_scoreboard_var.objective))
+				func.add_command(f'scoreboard players operation {temp_var.selector} {temp_var.objective} {self.op} {expr_scoreboard_var.selector} {expr_scoreboard_var.objective}')
 				
 				expr_scoreboard_var.free_scratch(func)
 				

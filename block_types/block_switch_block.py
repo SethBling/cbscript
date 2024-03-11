@@ -1,4 +1,4 @@
-from block_switch_base import block_switch_base
+from .block_switch_base import block_switch_base
 from CompileError import CompileError
 
 class block_switch_block(block_switch_base):
@@ -11,7 +11,7 @@ class block_switch_block(block_switch_base):
 		super(block_switch_block, self).__init__()
 		
 	def case_condition(self, func, block_state):
-		return 'block {} {}'.format(self.coords.get_value(func), block_state)
+		return f'block {self.coords.get_value(func)} {block_state}'
 		
 	def compile_block_case(self, func, block):
 		single_case = self.get_matching_case(func, block, {})
@@ -29,7 +29,7 @@ class block_switch_block(block_switch_base):
 					else:
 						block_state += ','
 						
-					block_state += '{}={}'.format(prop, props[prop][0])
+					block_state += f'{prop}={props[prop][0]}'
 					
 				block_state += ']'
 				
@@ -38,17 +38,17 @@ class block_switch_block(block_switch_base):
 				block,
 				block,
 				block_state,
-				'line{:03}/case_{}'.format(self.line, block.replace('minecraft:', ''))
+				f'line{self.line:03}/case_{block.replace("minecraft:", "")}'
 			)
 		elif 'properties' in self.blocks[block]:
 			case_func = func.create_child_function()
 			
 			props = self.blocks[block]['properties']
-			self.compile_property_case(case_func, block, props.keys(), props, '{}['.format(block))
+			self.compile_property_case(case_func, block, props.keys(), props, f'{block}[')
 			func.call_function(
 				case_func,
-				'line{0:03}/switch_{1}/{1}'.format(self.line, block.replace('minecraft:','')),
-				'execute if block {} {} run '.format(self.coords.get_value(func), block)
+				f'line{self.line:03}/switch_{block.replace("minecraft:", "")}/{block.replace("minecraft:", "")}',
+				f'execute if block {self.coords.get_value(func)} {block} run '
 			)
 		elif self.default_case:
 			self.compile_single_case(
@@ -56,7 +56,7 @@ class block_switch_block(block_switch_base):
 				block,
 				block,
 				block,
-				'line{:03}/case_{}'.format(self.line, block.replace('minecraft:', ''))
+				f'line{self.line:03}/case_{block.replace("minecraft:", "")}'
 			)
 			
 	def compile_property_case(self, func, block, prop_names, props, partial_block_state):
@@ -65,26 +65,26 @@ class block_switch_block(block_switch_base):
 	
 		if len(prop_names) == 1:
 			for value in cur_prop:
-				block_state = '{}{}={}]'.format(partial_block_state, cur_prop_name, value)
+				block_state = f'{partial_block_state}{cur_prop_name}={value}]'
 				if block_state in self.block_state_list:
 					self.compile_single_case(
 						func,
 						block,
 						block_state,
 						block_state,
-						'line{:03}/switch_{}/{}_{}'.format(self.line, block.replace('minecraft:',''), cur_prop_name, value)
+						f'line{self.line:03}/switch_{block.replace("minecraft:", "")}/{cur_prop_name}_{value}'
 					)
 		else:
 			for value in cur_prop:
-				block_state = '{}{}={},'.format(partial_block_state, cur_prop_name, value)
+				block_state = f'{partial_block_state}{cur_prop_name}={value},'
 				
 				case_func = func.create_child_function()
 				
 				self.compile_property_case(case_func, block, prop_names[1:], props, block_state)
 				func.call_function(
 					case_func,
-					'line{:03}/switch_{}/{}_{}'.format(self.line, block.replace('minecraft:',''), cur_prop_name, value),
-					'execute if block {} {}[{}={}] run '.format(self.coords.get_value(func), block, cur_prop_name, value)
+					f'line{self.line:03}/switch_{block.replace("minecraft:", "")}/{cur_prop_name}_{value}',
+					f'execute if block {self.coords.get_value(func)} {block}[{cur_prop_name}={value}] run '
 				)
 				
 			
@@ -98,20 +98,21 @@ class block_switch_block(block_switch_base):
 			case.compile(block.replace('minecraft:', ''), block_state, id, case_func, falling_block_nbt)
 		except CompileError as e:
 			print(e)
-			raise CompileError('Unable to compile block switch case "{}" at line {}'.format(block_state, self.line))
+			raise CompileError(f'Unable to compile block switch case "{block_state}" at line {self.line}')
 			
 		func.call_function(
 			case_func,
 			case_func_name,
-			'execute if {} run '.format(self.case_condition(func, block_test))
+			f'execute if {self.case_condition(func, block_test)} run '
+
 		)
 	
 	def get_range_condition(self, func, blocks):
 		unique = func.get_unique_id()
-		block_tag_name = 'switch_{}'.format(unique)
+		block_tag_name = f'switch_{unique}'
 		func.register_block_tag(block_tag_name, [block.replace('minecraft:', '') for block in blocks])
 		
-		return 'block {} #{}:{}'.format(self.coords.get_value(func), func.namespace, block_tag_name)
+		return f'block {self.coords.get_value(func)} #{func.namespace}:{block_tag_name}'
 		
 	def get_case_ids(self):
 		return sorted(self.block_list.keys())

@@ -1,4 +1,4 @@
-from vector_binop_base import vector_binop_base
+from .vector_binop_base import vector_binop_base
 from variable_types.scoreboard_var import scoreboard_var
 
 class vector_binop_vector_expr(vector_binop_base):
@@ -10,5 +10,5 @@ class vector_binop_vector_expr(vector_binop_base):
 			
 		for i in range(3):
 			right_var = right_component_vars[i].get_scoreboard_var(func)
-			func.add_command('scoreboard players operation {} {} {}= {} {}'.format(return_components[i].selector, return_components[i].objective, self.op, right_var.selector, right_var.objective))
+			func.add_command(f'scoreboard players operation {return_components[i].selector} {return_components[i].objective} {self.op}= {right_var.selector} {right_var.objective}')
 			right_component_vars[i].free_scratch(func)

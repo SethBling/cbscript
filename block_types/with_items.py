@@ -14,12 +14,12 @@ class with_items(object):
                 const_value = expr_value_var.get_const_value(func)
                 
                 if const_value != None:
-                    func.add_command('data modify storage {}:global args.{} set value {}'.format(func.namespace, id, const_value))
+                    func.add_command(f'data modify storage {func.namespace}:global args.{id} set value {const_value}')
                 else:                
-                    func.add_command('execute store result storage {}:global args.{} int 1 run scoreboard players get {} {}'.format(func.namespace, id, expr_value_var.selector, expr_value_var.objective))
+                    func.add_command(f'execute store result storage {func.namespace}:global args.{id} int 1 run scoreboard players get {expr_value_var.selector} {expr_value_var.objective}')
 
             elif item[0] == 'string':
                 id = item[1]
                 str = item[2]
 
-                func.add_command('data modify storage {}:global args.{} set value {}'.format(func.namespace, id, str))
+                func.add_command(f'data modify storage {func.namespace}:global args.{id} set value {str}')

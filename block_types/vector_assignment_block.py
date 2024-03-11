@@ -1,4 +1,4 @@
-from vector_assignment_base import vector_assignment_base
+from .vector_assignment_base import vector_assignment_base
 
 class vector_assignment_block(vector_assignment_base):
 	def __init__(self, line, var, op, expr):
@@ -13,6 +13,6 @@ class vector_assignment_block(vector_assignment_base):
 	def compute_assignment(self, func, expr, assignto):
 		component_val_vars = expr.compile(func, assignto)
 		if component_val_vars == None:
-			raise Exception('Unable to compute vector assignment at line {0}'.format(self.line))
+			raise Exception(f'Unable to compute vector assignment at line {self.line}')
 				
 		return component_val_vars

@@ -8,6 +8,5 @@
 @ECHO CBScript 1.20
 @title %~nx1
 @cd "%~dp0"
-@if not defined PYTHON27 set PYTHON27=c:\python27\python
-py -2.7 compile.py %1
+py -3 compile.py %1
 @pause

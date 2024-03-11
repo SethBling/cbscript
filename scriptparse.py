@@ -179,7 +179,7 @@ def p_resetsection(p):
 def validate_mcfunction_name(str):
 	for ch in str:
 		if ch.isupper():
-			print('"{0}" is not a valid mcfunction name.'.format(str))
+			print(f'"{str}" is not a valid mcfunction name.')
 			raise SyntaxError()
 	
 #### Clock Section
@@ -420,7 +420,7 @@ def p_python_import_statement(p):
 	elif p[4] == 'cblib':
 		p[0] = import_block(p.lineno(1), p[2])
 	else:
-		raise SyntaxError('Unknown import file type: "{}.{}"'.format(p[2], p[4]))
+		raise SyntaxError(f'Unknown import file type: "{p[2]}.{p[4]}"')
 	
 #### Variable
 def p_variable_selector(p):
@@ -623,7 +623,7 @@ def p_execute_on(p):
 		'target',
 		'vehicle',
 	]:
-		print('Warning: Unknown argument for execute on: "{}" at line {}'.format(p[2], p.lineno(2)))
+		print(f'Warning: Unknown argument for execute on: "{p[2]}" at line {p.lineno(2)}')
 
 	p[0] = ('On', p[2])
 
@@ -642,7 +642,7 @@ def p_execute_facing_entity(p):
 def p_execute_align(p):
 	'''execute_item : align ID'''
 	if p[2] not in ['x','y','z','xy','xz','yz','xyz']:
-		raise SyntaxError('Must align to a combination of x, y, and z axes, not "{}", at line {}'.format(p[2], p.lineno(2)))
+		raise SyntaxError(f'Must align to a combination of x, y, and z axes, not "{p[2]}", at line {p.lineno(2)}')
 	p[0] = ('Align', p[2])
 	
 def p_opt_anchor(p):
@@ -1031,12 +1031,12 @@ def p_qualifier_not(p):
 #### Full Selector
 def p_fullselector(p):
 	'''fullselector : ATID'''
-	p[0] = '@{0}[]'.format(p[1])
+	p[0] = f'@{p[1]}[]'
 
 def p_fullselector_qualifiers(p):
 	'''fullselector : ATID LBRACK virtualinteger RBRACK
 					| ATID LBRACK qualifiers RBRACK'''
-	p[0] = '@{0}[{1}]'.format(p[1], p[3])
+	p[0] = f'@{p[1]}[{p[3]}]'
 	
 #### Relative Coordinates
 def p_relcoord_number(p):
@@ -1284,7 +1284,7 @@ def p_block_item_macro_path_scale(p):
 #### Selector Assignment
 def p_uuid(p):
 	'''uuid : integer MINUS integer MINUS integer MINUS integer MINUS integer'''
-	p[0] = '{:X}-{:X}-{:X}-{:X}-{:X}'.format(int(p[1]), int(p[3]), int(p[5]), int(p[7]), int(p[9]))
+	p[0] = f'{int(p[1])}-{int(p[3])}-{int(p[5])}-{int(p[7])}-{int(p[9])}'
 
 def p_selector_assignment(p):
 	'''selector_assignment : ATID EQUALS fullselector'''
@@ -1356,7 +1356,7 @@ def p_data_path_id(p):
 	
 def p_data_path_array(p):
 	'''data_path : ID LBRACK virtualinteger RBRACK'''
-	p[0] = '{0}[{1}]'.format(p[1], p[3])
+	p[0] = f'{p[1]}[{p[3]}]'
 	
 def p_data_path_array_match(p):
 	'''data_path : ID LBRACK json_object RBRACK'''
@@ -1368,12 +1368,12 @@ def p_data_path_object_match(p):
 	
 def p_data_path_multi(p):
 	'''data_path : data_path DOT data_path'''
-	p[0] = '{0}.{1}'.format(p[1], p[3])
+	p[0] = f'{p[1]}.{p[3]}'
 	
 def p_data_type(p):
 	'''data_type : ID'''
 	if p[1] not in ['byte', 'double', 'float', 'int', 'long', 'short']:
-		raise SyntaxError('Syntax Error: Invalid path type "{}" at line {}.'.format(p.lineno(1)))
+		raise SyntaxError(f'Syntax Error: Invalid path type "{{}}" at line {p.lineno(1)}.')
 	p[0] = p[1]
 	
 #### Array
@@ -1710,7 +1710,7 @@ def p_json_value_dollar_id(p):
 def p_json_value_typed_number(p):
 	'''json_value : number ID'''
 	if p[2].lower() not in ['b', 'f', 's', 'd', 'l']:
-		raise SyntaxError('Invalid type "{}" for number "{}" at line {}'.format(p[2], p[1], p.lineno(1)))
+		raise SyntaxError(f'Invalid type "{p[2]}" for number "{p[1]}" at line {p.lineno(1)}')
 		
 	p[0] = p[1] + p[2]
 	
@@ -1737,7 +1737,7 @@ def p_json_elements_empty(p):
 def p_json_literal_array(p):
 	'''json_literal_array : LBRACK optnewlines ID SEMICOLON optnewlines json_literal_elements optnewlines RBRACK'''
 	if p[3].lower() not in ['b', 'i', 'l']:
-		raise SyntaxError('Invalid type "{}" for literal array at line {}'.format(p[3], p.lineno(1)))
+		raise SyntaxError(f'Invalid type "{p[3]}" for literal array at line {p.lineno(1)}')
 
 	p[0] = p[1] + p[3] + p[4] + p[6] + p[8]
 
@@ -1777,10 +1777,10 @@ def p_recipe_lines_empty(p):
 def p_recipe_key_item(p):
 	'''recipe_key_item : ID EQUALS ID COLON ID'''
 	if len(p[1]) != 1:
-		raise SyntaxError('Recipe key "{}" at line {} is not a single character.'.format(p[1], p.lineno(1)))
+		raise SyntaxError(f'Recipe key "{p[1]}" at line {p.lineno(1)} is not a single character.')
 		
 	if p[3] not in ['item', 'tag']:
-		raise SyntaxError('Recipe key type "{}" at line {} must be "block" or "tag".'.format(p[3], p.lineno(1)))
+		raise SyntaxError(f'Recipe key type "{p[3]}" at line {p.lineno(1)} must be "block" or "tag".')
 	
 	p[0] = (p[1], p[3], p[5])
 	
@@ -1806,7 +1806,7 @@ def p_loot_table_type(p):
 		'block': 'blocks',
 	}
 	if p[1] not in types:
-		raise SyntaxError('Invalid loot table type "{}" at line {}.'.format(p[1], p.lineno(1)))
+		raise SyntaxError(f'Invalid loot table type "{p[1]}" at line {p.lineno(1)}.')
 		
 	p[0] = types[p[1]]
 	

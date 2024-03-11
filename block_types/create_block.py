@@ -1,4 +1,4 @@
-from block_base import block_base
+from .block_base import block_base
 
 class create_block(block_base):
 	def __init__(self, line, atid, relcoords, index):
@@ -9,4 +9,4 @@ class create_block(block_base):
 		
 	def compile(self, func):
 		if not func.run_create(self.atid, self.relcoords, self.index):
-			raise Exception('Error creating entity at line {0}'.format(self.line))
+			raise Exception(f'Error creating entity at line {self.line}')

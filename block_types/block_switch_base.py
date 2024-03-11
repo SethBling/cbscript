@@ -1,4 +1,4 @@
-from block_base import block_base
+from .block_base import block_base
 from CompileError import CompileError
 
 class block_switch_base(block_base):
@@ -7,7 +7,7 @@ class block_switch_base(block_base):
 		for case in self.cases:
 			if case.is_default:
 				if self.default_case:
-					raise CompileError('Block switch at line {} has multiple default cases.'.format(self.line))
+					raise CompileError(f'Block switch at line {self.line} has multiple default cases.')
 				else:
 					self.default_case = case
 	
@@ -37,18 +37,18 @@ class block_switch_base(block_base):
 			self.compile_block_cases(switch_func, case_ids)
 			func.call_function(
 				switch_func,
-				'line{:03}/switch_block'.format(self.line),
-				'execute if {} run '.format(self.get_range_condition(func, case_ids))
+				f'line{self.line:03}/switch_block',
+				f'execute if {self.get_range_condition(func, case_ids)} run '
 			)
 		
 	# Splits a list into four quartiles
 	def get_quartiles(self, list):
 		size = len(list)
 		return [
-			list[:size/4],
-			list[size/4:size/2],
-			list[size/2:size*3/4],
-			list[size*3/4:]]
+			list[:size//4],
+			list[size//4:size//2],
+			list[size//2:size*3//4],
+			list[size*3//4:]]
 	
 	# Creates switch and case function tree
 	def compile_block_cases(self, func, block_cases):
@@ -68,12 +68,8 @@ class block_switch_base(block_base):
 				
 				func.call_function(
 					range_func,
-					'line{:03}/switch_{}-{}'.format(
-						self.line,
-						str(quartile[0]).replace('minecraft:',''),
-						str(quartile[-1]).replace('minecraft:','')
-					),
-					'execute if {} run '.format(self.get_range_condition(func, quartile))
+					f'line{self.line:03}/switch_{str(quartile[0]).replace("minecraft:", "")}-{str(quartile[-1]).replace("minecraft:", "")}',
+					f'execute if {self.get_range_condition(func, quartile)} run '
 				)
 			
 	# Gets a block state name in command format from a json block state object
@@ -81,10 +77,7 @@ class block_switch_base(block_base):
 		if 'properties' in state:
 			props = state['properties']
 			
-			return '{}[{}]'.format(
-				block,
-				','.join('{}={}'.format(p, props[p]) for p in props)
-			)
+			return f'{block}[{",".join(f"{p}={props[p]}" for p in props)}]'
 		else:
 			return block
 			
@@ -99,7 +92,7 @@ class block_switch_base(block_base):
 			)
 		
 		else:
-			return 'Name:"{}"'.format(block)
+			return f'Name:"{block}"'
 		
 	# Gets a list of all block states matching some case (including the default case)
 	def get_block_state_list(self, func, blocks):

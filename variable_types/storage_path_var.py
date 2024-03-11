@@ -13,7 +13,7 @@ class storage_path_var(var_base):
 		if assignto == None:
 			assignto = scoreboard_var('Global', func.get_scratch())
 			
-		func.add_command('execute store result score {} run {}'.format(assignto.get_selvar(func), self.get_command(func)))
+		func.add_command(f'execute store result score {assignto.get_selvar(func)} run {self.get_command(func)}')
 			
 		return assignto
 		
@@ -25,24 +25,16 @@ class storage_path_var(var_base):
 	
 	# Returns a command that will get this variable's value to be used with "execute store result"
 	def get_command(self, func):
-		return 'data get storage {} {} 1'.format(self.get_target(func), self.path_name)
+		return f'data get storage {self.get_target(func)} {self.path_name} 1'
 		
 	# Copies the value from a target variable to this variable
 	def copy_from(self, func, var):
 		var_const = var.get_const_value(func)
 		
 		if var_const != None:
-			func.add_command('data modify storage {} {} set value {}'.format(
-				self.get_target(func),
-				self.path_name,
-				var_const
-			))
+			func.add_command(f'data modify storage {self.get_target(func)} {self.path_name} set value {var_const}')
 		else:
-			func.add_command('execute store result storage {} {} int 1 run {}'.format(
-				self.get_target(func),
-				self.path_name,
-				var.get_command(func)
-			))
+			func.add_command(f'execute store result storage {self.get_target(func)} {self.path_name} int 1 run {var.get_command(func)}')
 		
 		var.free_scratch(func)
 		

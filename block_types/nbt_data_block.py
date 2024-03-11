@@ -1,4 +1,4 @@
-from block_base import block_base
+from .block_base import block_base
 
 class nbt_data_block(block_base):
 	def __init__(self, line, dest, op, source):
@@ -8,4 +8,4 @@ class nbt_data_block(block_base):
 		self.source = source
 
 	def compile(self, func):
-		func.add_command('data modify {} {} {}'.format(self.dest.get_dest_path(func), self.op, self.source.get_source_path(func)))
+		func.add_command(f'data modify {self.dest.get_dest_path(func)} {self.op} {self.source.get_source_path(func)}')

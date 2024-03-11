@@ -17,7 +17,7 @@ class virtualint_var(var_base):
 	
 	# Returns a command that will get this variable's value to be used with "execute store result"
 	def get_command(self, func):
-		return 'scoreboard players get {} Constant'.format(func.add_constant(self.get_value(func)))
+		return f'scoreboard players get {func.add_constant(self.get_value(func))} Constant'
 	
 	# Gets a constant integer value for this variable if there is one, otherwise returns None.
 	def get_const_value(self, func):

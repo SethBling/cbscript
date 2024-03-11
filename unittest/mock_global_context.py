@@ -11,4 +11,4 @@ class mock_global_context(object):
 		self.scratch[prefix] = size
 		
 	def get_scratch_prefix(self, name):
-		return '{}_prefix'.format(name)
+		return f'{name}_prefix'

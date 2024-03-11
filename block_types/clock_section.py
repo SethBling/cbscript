@@ -1,4 +1,4 @@
-from block_base import block_base
+from .block_base import block_base
 
 class clock_section(block_base):
 	def __init__(self, line, id, lines):
@@ -14,4 +14,4 @@ class clock_section(block_base):
 		
 	@property
 	def block_name(self):
-		return 'clock "{}"'.format(self.id)
+		return f'clock "{self.id}"'
