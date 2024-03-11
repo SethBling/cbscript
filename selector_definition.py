@@ -197,7 +197,7 @@ class selector_definition(object):
 				if var not in self.scores_min:
 					score_parts.append(f'{var}=..{self.scores_max[var]}')
 			
-			major_parts.append(f"scores={','.join(score_parts)}")
+			major_parts.append(f"scores={{{','.join(score_parts)}}}")
 			
 		return f"@{base_name}[{','.join(major_parts)}]"
 		

@@ -47,7 +47,7 @@ def formatJsonText(func, text):
 					if len(parts[0]) == 0:
 						raise CompileError('Empty () in json text.')
 					elif parts[0][0] == '@':
-						formatted = formatted + f',{parts[0]}"{getPropertiesText(properties)}}}'
+						formatted = formatted + f',{{"selector":"{parts[0]}"{getPropertiesText(properties)}}}'
 					elif ':' in parts[0]:
 						storage_parts = parts[0].split(':')
 						if len(storage_parts) != 2:
@@ -56,17 +56,17 @@ def formatJsonText(func, text):
 							target = func.namespace
 						else:
 							target = storage_parts[0]
-						formatted = formatted + f',{storage_parts[1]}","storage":"{target}"}}'
+						formatted = formatted + f',{{"nbt":"{storage_parts[1]}","storage":"{target}"}}'
 					else:
-						formatted = formatted + f',{parts[0]}"}}{getPropertiesText(properties)}}}'
+						formatted = formatted + f',{{"score":{{"name":"Global","objective":"{parts[0]}"{getPropertiesText(properties)}}}}}'
 				if len(parts) == 2:
 					name = parts[0]
 					name_def = func.get_name_definition(parts[0])
 					if name_def:
 						name = name_def
-					formatted = formatted + f',{name}","objective":"{parts[1]}"}}{getPropertiesText(properties)}}}'
+					formatted = formatted + f',{{"score":{{"name":"{name}","objective":"{parts[1]}"{getPropertiesText(properties)}}}}}'
 			elif command == None:
-				formatted = formatted + ',{{"text":"{0}"{1}}}'.format(unformatted.replace('"', '\\"'), getPropertiesText(properties))
+				formatted = formatted + f',{{"text":"{0}"{1}}}'.format(unformatted.replace('"', '\\"'), getPropertiesText(properties))
 			else:
 				command = command.replace('"', '\\"')
 				if command.startswith('http'):
