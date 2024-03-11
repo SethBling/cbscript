@@ -4,7 +4,7 @@ CBScript is a transpiled language, designed by SethBling. This compiler will com
 
 # Installation and Requirements
 
-The CBScript compiler requires python 2.7. In order to run it via the run.cmd file, you'll need the Python "py launcher", which comes with newer installations of Python, and can be used to launch a specific version. You'll need to install the Python dependencies with
+The CBScript compiler requires python 3. In order to run it via the run.cmd file, you'll need the Python "py launcher", which comes with newer installations of Python, and can be used to launch a specific version. You'll need to install the Python dependencies with
 
 ```pip install -r requirements.txt```
 
