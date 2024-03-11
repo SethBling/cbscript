@@ -34,7 +34,7 @@ class execute_base(block_base):
 		single = exec_func.single_command()
 		if single == None or self.force_sub_function():
 			unique = func.get_unique_id()
-			func_name = f'line{self.line}/{self.display_name()}{unique}'
+			func_name = f'line{self.line:03}/{self.display_name()}{unique}'
 			func.register_function(func_name, exec_func)
 			
 			self.add_continuation_command(func, exec_func)

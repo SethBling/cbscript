@@ -24,7 +24,7 @@ class with_anonymous_block(block_base):
             raise CompileError(f'Unable to compile with block contents at line {self.line}')
         
         unique = func.get_unique_id()
-        func_name = f'line{self.line}/{"with"}{unique}'
+        func_name = f'line{self.line:03}/{"with"}{unique:03}'
         func.register_function(func_name, anon_func)
 
         func.add_command(anon_func.get_call())

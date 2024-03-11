@@ -41,7 +41,7 @@ class block_id_switch_block(block_switch_base):
 			
 		func.call_function(
 			case_func,
-			f'line{self.line}/case{id}',
+			f'line{self.line:03}/case{id}',
 			f'execute if {self.case_condition(id)} run '
 		)
 			
