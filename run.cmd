@@ -8,5 +8,5 @@
 @ECHO CBScript 1.20
 @title %~nx1
 @cd "%~dp0"
-py compile.py %1
+py -3 compile.py %1
 @pause
