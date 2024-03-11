@@ -1,4 +1,4 @@
-from block_switch_base import block_switch_base
+from .block_switch_base import block_switch_base
 from CompileError import CompileError
 
 class block_id_switch_block(block_switch_base):
@@ -16,10 +16,10 @@ class block_id_switch_block(block_switch_base):
 			self.condition_var = var.get_scoreboard_var(func)
 		except CompileError as e:
 			print(e)
-			raise CompileError('Unable to compile switch expression at line {}.'.format(self.line))
+			raise CompileError(f'Unable to compile switch expression at line {self.line}.')
 		
 	def case_condition(self, block_id):
-		return 'score {} {} matches {}'.format(self.condition_var.selector, self.condition_var.objective, block_id)
+		return f'score {self.condition_var.selector} {self.condition_var.objective} matches {block_id}'
 	
 	def compile_block_case(self, func, id):
 		case_func = func.create_child_function()
@@ -37,16 +37,16 @@ class block_id_switch_block(block_switch_base):
 			case.compile(block, block_state, id, case_func, falling_block_nbt)
 		except CompileError as e:
 			print(e)
-			raise CompileError('Unable to compile block switch at line {}'.format(self.line))
+			raise CompileError(f'Unable to compile block switch at line {self.line}')
 			
 		func.call_function(
 			case_func,
-			'line{:03}/case{}'.format(self.line, id),
-			'execute if {} run '.format(self.case_condition(id))
+			f'line{self.line}/case{id}',
+			f'execute if {self.case_condition(id)} run '
 		)
 			
 	def get_range_condition(self, func, ids):
-		return 'score {} {} matches {}..{}'.format(self.condition_var.selector, self.condition_var.objective, ids[0], ids[-1])
+		return f'score {self.condition_var.selector} {self.condition_var.objective} matches {ids[0]}..{ids[-1]}'
 		
 	def get_case_ids(self):
 		return sorted(self.id_block_states.keys())

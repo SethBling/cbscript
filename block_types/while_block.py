@@ -1,4 +1,4 @@
-from execute_base import execute_base
+from .execute_base import execute_base
 
 class while_block(execute_base):
 	def __init__(self, line, exec_items, sub):
@@ -22,9 +22,9 @@ class while_block(execute_base):
 			exec_func.has_macros = True
 
 		if sub_cmd == None:
-			raise Exception('Unable to compile continuation command for while block at line {}'.format(self.line))
+			raise Exception(f'Unable to compile continuation command for while block at line {self.line}')
 
-		exec_func.add_command('{}run {}'.format(sub_cmd, exec_func.get_call()))
+		exec_func.add_command(f'{sub_cmd}run {exec_func.get_call()}')
 		
 	def display_name(self):
 		return 'while'

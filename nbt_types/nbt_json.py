@@ -3,4 +3,4 @@ class nbt_json(object):
 		self.json = json
 		
 	def get_source_path(self, func):
-		return 'value {}'.format(self.json)
+		return f'value {self.json}'

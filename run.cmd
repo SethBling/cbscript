@@ -23,12 +23,6 @@ if not exist "%1" (
 )
 
 cd "%~dp0"
-
-if not defined PYTHON27 set PYTHON27=c:\python27\python
-if exist "%PYTHON27%" (
-    py -2.7 compile.py %1
-) else (
-    py compile.py %1
-)
+py compile.py %1
 
 pause

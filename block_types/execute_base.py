@@ -1,4 +1,4 @@
-from block_base import block_base
+from .block_base import block_base
 import traceback
 from CompileError import CompileError
 
@@ -20,26 +20,26 @@ class execute_base(block_base):
 		
 		cmd = 'execute ' + func.get_execute_items(self.exec_items, exec_func)
 		if cmd == None:
-			raise CompileError('Unable to compile {0} block at line {1}'.format(self.display_name(), self.line))
+			raise CompileError(f'Unable to compile {self.display_name()} block at line {self.line}')
 		
 		try:
 			exec_func.compile_blocks(self.sub)
 		except CompileError as e:
 			print(e)
-			raise CompileError('Unable to compile {} block contents at line {}'.format(self.display_name(), self.line))
+			raise CompileError(f'Unable to compile {self.display_name()} block contents at line {self.line}')
 		except Exception as e:
 			print(traceback.format_exc())
-			raise CompileError('Unable to compile {} block contents at line {}'.format(self.display_name(), self.line))
+			raise CompileError(f'Unable to compile {self.display_name()} block contents at line {self.line}')
 
 		single = exec_func.single_command()
 		if single == None or self.force_sub_function():
 			unique = func.get_unique_id()
-			func_name = 'line{:03}/{}{:03}'.format(self.line, self.display_name(), unique)
+			func_name = f'line{self.line}/{self.display_name()}{unique}'
 			func.register_function(func_name, exec_func)
 			
 			self.add_continuation_command(func, exec_func)
 			
-			func.add_command('{}run {}'.format(cmd, exec_func.get_call()))			
+			func.add_command(f'{cmd}run {exec_func.get_call()}')
 		else:
 			if single.startswith('/'):
 				single = single[1:]

@@ -72,7 +72,7 @@ class selector_definition(object):
 			self.uuid = base_selector.uuid
 		else:
 			if len(base_name) != 1:
-				raise CompileError('Tried to create selector with base name @{0}'.format(base_name))
+				raise CompileError(f'Tried to create selector with base name @{base_name}')
 				
 			self.base_name = base_name
 				
@@ -83,7 +83,7 @@ class selector_definition(object):
 			if len(parts) == 1:
 				try:
 					index = int(parts[0])
-					self.uuid = '0-0-0-0-{:X}'.format(index + hash(base_name) % (2 ** 32))
+					self.uuid = f'0-0-0-0-{index + hash(base_name) % (2 ** 32)}'
 					return
 				except:
 					None
@@ -125,12 +125,12 @@ class selector_definition(object):
 						if subparts[0] == 'type' and not type.startswith('minecraft:') and not type.startswith('!minecraft:'):
 							if subparts[1].startswith('!'):
 								if type in env.entity_tags:
-									subparts[1] = '!#{}:{}'.format(env.namespace, subparts[1][1:])
+									subparts[1] = f'!#{env.namespace}:{subparts[1][1:]}'
 								else:
 									subparts[1] = '!minecraft:' + subparts[1][1:]
 							else:
 								if type in env.entity_tags:
-									subparts[1] = '#{}:{}'.format(env.namespace, subparts[1])
+									subparts[1] = f'#{env.namespace}:{subparts[1]}'
 								else:
 									subparts[1] = 'minecraft:' + subparts[1]
 									
@@ -144,7 +144,7 @@ class selector_definition(object):
 								if ':' in part:
 									self.parts.append(['predicate', part])
 								else:
-									self.parts.append(['predicate', '{}:{}'.format(env.namespace, part)])
+									self.parts.append(['predicate', f'{env.namespace}:{part}'])
 							else:
 								self.scores_min[part] = 1
 								env.register_objective(part)
@@ -152,7 +152,7 @@ class selector_definition(object):
 					before, op, after = op_parts
 				
 					if not isNumber(after):
-						raise SyntaxError('"{0}" is not a number in "{1}"'.format(after, selector))
+						raise SyntaxError(f'"{after}" is not a number in "{selector}"')
 							
 					if op == '==':				
 						self.scores_min[before] = int(after)
@@ -188,18 +188,18 @@ class selector_definition(object):
 			for var in self.scores_min:
 				if var in self.scores_max:
 					if self.scores_min[var] == self.scores_max[var]:
-						score_parts.append('{0}={1}'.format(var, self.scores_min[var]))
+						score_parts.append(f'{var}={self.scores_min[var]}')
 					else:
-						score_parts.append('{0}={1}..{2}'.format(var, self.scores_min[var], self.scores_max[var]))
+						score_parts.append(f'{var}={self.scores_min[var]}..{self.scores_max[var]}')
 				else:
-					score_parts.append('{0}={1}..'.format(var, self.scores_min[var]))
+					score_parts.append(f'{var}={self.scores_min[var]}..')
 			for var in self.scores_max:
 				if var not in self.scores_min:
-					score_parts.append('{0}=..{1}'.format(var, self.scores_max[var]))
+					score_parts.append(f'{var}=..{self.scores_max[var]}')
 			
-			major_parts.append('scores={{{0}}}'.format(','.join(score_parts)))
+			major_parts.append(f"scores={','.join(score_parts)}")
 			
-		return '@{0}[{1}]'.format(base_name, ','.join(major_parts))
+		return f"@{base_name}[{','.join(major_parts)}]"
 		
 	def get_type(self):
 		for part in self.parts:

@@ -18,9 +18,9 @@ def get_constant_name(c):
 		if c == -1:
 			return 'minus'
 		elif c >= 0:
-			return 'c{}'.format(c)
+			return f'c{c}'
 		else:
-			return 'cm{}'.format(-c)
+			return f'cm{-c}'
 		
 class global_context(object):
 	def __init__(self, namespace):
@@ -76,12 +76,12 @@ class global_context(object):
 		
 	def register_array(self, name, from_val, to_val, selector_based):
 		if name in self.arrays:
-			raise CompileError('Array "{}" is defined multiple times.'.format(name))
+			raise CompileError(f'Array "{name}" is defined multiple times.')
 		self.arrays[name] = (from_val, to_val, selector_based)
 		
 	def register_objective(self, objective):
 		if len(objective) > 16:
-			raise CompileError('Cannot create objective "{}", name is {} characters (max is 16)'.format(objective, len(objective)))
+			raise CompileError(f'Cannot create objective "{objective}", name is {len(objective)} characters (max is 16)')
 		self.objectives[objective] = True
 	
 	def get_reset_function(self):
@@ -95,7 +95,7 @@ class global_context(object):
 			c = int(c)
 		except:
 			print(e)
-			raise Exception('Unable to create constant integer value for "{}"'.format(c))
+			raise Exception(f'Unable to create constant integer value for "{c}"')
 			
 		if c not in self.constants:
 			self.constants.append(c)
@@ -108,7 +108,7 @@ class global_context(object):
 		if len(self.constants) > 0:
 			f.insert_command('/scoreboard objectives add Constant dummy', 0)
 			for c in self.constants:
-				f.insert_command('/scoreboard players set {} Constant {}'.format(get_constant_name(c), c), 1)
+				f.insert_command(f'/scoreboard players set {get_constant_name(c)} Constant {c}', 1)
 
 	def allocate_scratch(self, prefix, n):
 		if prefix not in self.scratch:
@@ -129,10 +129,10 @@ class global_context(object):
 		name = name[:3]
 		if name in self.scratch_prefixes:
 			i = 2
-			while '{0}{1}'.format(name, i) in self.scratch_prefixes:
+			while f"{name}{i}" in self.scratch_prefixes:
 				i += 1
 			
-			name = '{0}{1}'.format(name, i)
+			name = f"{name}{i}"
 			self.scratch_prefixes[name] = True
 			return name
 		else:

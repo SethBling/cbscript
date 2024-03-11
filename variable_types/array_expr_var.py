@@ -9,20 +9,20 @@ class array_expr_var(var_base):
 		
 	def check_defined(self, func):
 		if self.array not in func.arrays:
-			print('Tried to use undefined array "{}"'.format(self.array))
+			print(f'Tried to use undefined array "{self.array}"')
 			return None
 			
 		from_val, to_val, selector_based = func.arrays[self.array]
 		
 		if selector_based and self.selector == 'Global':
-			raise CompileError('Tried to use selector-based array {} without a selector.'.format(self.array))
+			raise CompileError(f'Tried to use selector-based array {self.array} without a selector.')
 		if not selector_based and self.selector != 'Global':
-			raise CompileError('Tried to use global array {} with a selector.'.format(self.array))
+			raise CompileError(f'Tried to use global array {self.array} with a selector.')
 
 	def evaluate(self, func):
 		self.check_defined(func)
 	
-		index_name = '{}Idx'.format(self.array)
+		index_name = f'{self.array}Idx'
 		expr_var = self.idx_expr.compile(func, index_name)
 		
 		index_var = scoreboard_var(self.selector, index_name)
@@ -31,9 +31,9 @@ class array_expr_var(var_base):
 		if self.selector == '@s' or not self.selector.startswith('@'):
 			prefix = ''
 		else:
-			prefix = 'execute as {} run '.format(self.selector)
+			prefix = f'execute as {self.selector} run '
 		
-		func.add_command(prefix + 'function {}:array_{}_get'.format(func.namespace, self.array.lower()))
+		func.add_command(prefix + f'function {func.namespace}:array_{self.array.lower()}_get')
 
 		expr_var.free_scratch(func)
 		
@@ -43,7 +43,7 @@ class array_expr_var(var_base):
 	def get_scoreboard_var(self, func, assignto=None):
 		self.evaluate(func)
 		
-		return scoreboard_var(self.selector, '{}Val'.format(self.array))
+		return scoreboard_var(self.selector, f'{self.array}Val')
 	
 	# Returns a command that will get this variable's value to be used with "execute store result"
 	def get_command(self, func):
@@ -54,25 +54,25 @@ class array_expr_var(var_base):
 	def is_objective(self, func, selector, objective):
 		self.check_defined(func)
 		
-		return selector == self.selector and objective == '{}Idx'.format(self.array)
+		return selector == self.selector and objective == f'{self.array}Idx'
 			
 	# Gets an assignto value for this variable if there is one.
 	def get_assignto(self, func):
 		self.check_defined(func)
 		
-		return scoreboard_var('Global', '{}Idx'.format(self.array))
+		return scoreboard_var(f'Global', '{self.array}Idx')
 		
 	# Copies the value from a target variable to this variable
 	def copy_from(self, func, var):
 		self.check_defined(func)
 	
-		index_name = '{}Idx'.format(self.array)
+		index_name = f'{self.array}Idx'
 		index_var = scoreboard_var(self.selector, index_name)
 		
 		expr_var = self.idx_expr.compile(func, index_name)
 		index_var.copy_from(func, expr_var)
 		
-		val_name = '{}Val'.format(self.array)
+		val_name = f'{self.array}Val'
 		val_var = scoreboard_var(self.selector, val_name)
 		
 		val_var.copy_from(func, var)
@@ -80,9 +80,9 @@ class array_expr_var(var_base):
 		if self.selector == '@s' or not self.selector.startswith('@'):
 			prefix = ''
 		else:
-			prefix = 'execute as {} run '.format(self.selector)
+			prefix = f'execute as {self.selector} run '
 		
-		func.add_command(prefix + 'function {}:array_{}_set'.format(func.namespace, self.array.lower()))
+		func.add_command(prefix + f'function {func.namespace}:array_{self.array.lower()}_set')
 		
 		expr_var.free_scratch(func)
 		val_var.free_scratch(func)

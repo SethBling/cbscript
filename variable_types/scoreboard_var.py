@@ -51,7 +51,7 @@ class scoreboard_var(var_base):
 		path_data = self.get_path(func)
 		if path_data:
 			path, data_type, scale = path_data
-			return 'data get entity {} {} {}'.format(self.selector, path, scale)
+			return f'data get entity {self.selector} {path} {scale}'
 		else:		
 			func.register_objective(self.objective)
 
@@ -60,14 +60,14 @@ class scoreboard_var(var_base):
 			if name_def != None:
 				selector = name_def
 			
-			return 'scoreboard players get {} {}'.format(selector, self.objective)
+			return f'scoreboard players get {selector} {self.objective}'
 	
 	# Returns an execute prefix that can be used to set this variable's value when paired with a get_command() command
 	def set_command(self, func):
 		path_data = self.get_path(func)
 		if path_data:
 			path, data_type, scale = path_data
-			return 'execute store result entity {} {} {} {}'.format(self.selector, path, data_type, 1/float(scale))
+			return f'execute store result entity {self.selector} {path} {data_type} {1/float(scale)}'
 		else:		
 			func.register_objective(self.objective)
 
@@ -76,7 +76,7 @@ class scoreboard_var(var_base):
 			if name_def != None:
 				selector = name_def
 		
-			return 'execute store result score {} {}'.format(selector, self.objective)
+			return f'execute store result score {selector} {self.objective}'
 			
 	# Gets a constant integer value for this variable if there is one, otherwise returns None.
 	def get_const_value(self, func):
@@ -154,9 +154,9 @@ class scoreboard_var(var_base):
 				else:
 					val = float(var_const) / float(scale)
 					
-				func.add_command('data modify entity {} {} set value {}{}'.format(self.selector, path, val, suffix[data_type]))
+				func.add_command(f'data modify entity {self.selector} {path} set value {val}{suffix[data_type]}')
 			else:
-				func.add_command('{} run {}'.format(self.set_command(func), var.get_command(func)))
+				func.add_command(f'{self.set_command(func)} run {var.get_command(func)}')
 		else:
 			func.register_objective(self.objective)
 
@@ -166,14 +166,14 @@ class scoreboard_var(var_base):
 				selector = name_def
 			
 			if var_const != None:
-				func.add_command('scoreboard players set {} {} {}'.format(selector, self.objective, var_const))
+				func.add_command(f'scoreboard players set {selector} {self.objective} {var_const}')
 			elif not var.is_objective(func, selector, self.objective):
 				selvar = var.get_selvar(func)
 
 				if selvar == None:
-					func.add_command('{} run {}'.format(self.set_command(func), var.get_command(func)))
+					func.add_command(f'{self.set_command(func)} run {var.get_command(func)}')
 				else:
-					func.add_command('scoreboard players operation {} {} = {}'.format(selector, self.objective, selvar))
+					func.add_command(f'scoreboard players operation {selector} {self.objective} = {selvar}')
 
 	# Returns a scoreboard_var which can be modified as needed without side effects
 	def get_modifiable_var(self, func, assignto):
@@ -212,12 +212,12 @@ class scoreboard_var(var_base):
 		name_def = func.get_name_definition(self.selector)
 		
 		if name_def != None:
-			return '{} {}'.format(name_def, self.objective)
+			return f'{name_def} {self.objective}'
 		else:
-			return '{} {}'.format(self.selector, self.objective)
+			return f'{self.selector} {self.objective}'
 
 	# This should only be used for scoreboard variables that are known to
 	# be Global
 	@property
 	def selvar(self):
-		return '{} {}'.format(self.selector, self.objective)
+		return f'{self.selector} {self.objective}'

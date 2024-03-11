@@ -17,7 +17,7 @@ class block_path_var(var_base):
 		if assignto == None:
 			assignto = scoreboard_var('Global', func.get_scratch())
 			
-		func.add_command('execute store result score {} run {}'.format(assignto.get_selvar(func), self.get_command(func)))
+		func.add_command(f'execute store result score {assignto.get_selvar(func)} run {self.get_command(func)}')
 			
 		return assignto
 	

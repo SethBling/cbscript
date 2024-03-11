@@ -18,7 +18,7 @@ class number_macro_path(object):
 		
 	def get_path(self, func, macro_args):
 		if len(macro_args) != len(self.params):
-			raise CompileError('"[{}].{}" expects {} macro arguments, received {}.'.format(self.id, self.path, len(self.params), len(macro_args)))
+			raise CompileError(f'"[{self.id}].{self.path}" expects {len(self.params)} macro arguments, received {len(macro_args)}.')
 	
 		overrides = {}
 		for i in range(len(macro_args)):
@@ -27,22 +27,17 @@ class number_macro_path(object):
 		return func.apply_replacements(self.path, overrides)
 		
 	def copy_to_objective(self, func, coords, macro_args, objective):
-		func.add_command('execute store result score Global {} run {}'.format(objective, self.get_command(func, coords, macro_args)))
+		func.add_command(f'execute store result score Global {objective} run {self.get_command(func, coords, macro_args)}')
 			
 	def copy_from(self, func, coords, macro_args, var):
 		const_val = var.get_const_value(func)
 		if const_val:
-			func.add_command('data modify block {} {} set value {}'.format(coords.get_value(func), self.get_path(func, macro_args), float(const_val) / float(self.get_scale(func))))
+			func.add_command(f'data modify block {coords.get_value(func)} {self.get_path(func, macro_args)} set value {float(const_val) / float(self.get_scale(func))}')
 		else:
-			func.add_command('execute store result block {} {} {} {} run {}'.format(
-				coords.get_value(func),
-				self.get_path(func, macro_args),
-				self.type, 1 / float(self.get_scale(func)),
-				var.get_command(func)
-			))
+			func.add_command(f'execute store result block {coords.get_value(func)} {self.get_path(func, macro_args)} {self.type} {1 / float(self.get_scale(func))} run {var.get_command(func)}')
 			
 	def get_command(self, func, coords, macro_args):
-		return 'data get block {} {} {}'.format(coords.get_value(func), self.get_path(func, macro_args), self.get_scale(func))
+		return f'data get block {coords.get_value(func)} {self.get_path(func, macro_args)} {self.get_scale(func)}'
 		
 	def get_name(self):
 		return self.id

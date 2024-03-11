@@ -1,4 +1,4 @@
-from block_base import block_base
+from .block_base import block_base
 from mcfunction import compile_section
 
 class selector_definition_block(block_base):
@@ -45,4 +45,4 @@ class selector_definition_block(block_base):
 				def_block.compile(func)
 				selector.predicates[def_block.name] = True
 			else:
-				raise ValueError('Unknown selector item type "{0}" in selector definition at line {1}'.format(type, get_line(line)))
+				raise ValueError(f'Unknown selector item type "{type}" in selector definition at line {get_line(line)}')

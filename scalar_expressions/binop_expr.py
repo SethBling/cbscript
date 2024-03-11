@@ -1,4 +1,4 @@
-from scalar_expression_base import scalar_expression_base
+from .scalar_expression_base import scalar_expression_base
 class binop_expr(scalar_expression_base):
 	def __init__(self, lhs, op, rhs):
 		self.lhs = lhs
@@ -49,7 +49,7 @@ class binop_expr(scalar_expression_base):
 				func.add_command('scoreboard players {} {} {}'.format({'+':'add', '-':'remove'}[op], temp_var.get_selvar(func), right_const))
 			else:
 				right_var = right_var.get_scoreboard_var(func)
-				func.add_command('scoreboard players operation {} {}= {}'.format(temp_var.get_selvar(func), self.op, right_var.get_selvar(func)))
+				func.add_command(f'scoreboard players operation {temp_var.get_selvar(func)} {self.op}= {right_var.get_selvar(func)}')
 				
 			right_var.free_scratch(func)
 			
@@ -69,22 +69,22 @@ class binop_expr(scalar_expression_base):
 			power = int(power)
 				
 			if power < 1:
-				print "Powers less than 1 are not supported"
+				print("Powers less than 1 are not supported")
 				return None
 				
 			if power == 1:
 				return target
 			
 			multiplier_obj = func.get_scratch()
-			func.add_command('scoreboard players operation Global {} = {} {}'.format(multiplier_obj, temp_var.selector, temp_var.objective))
+			func.add_command(f'scoreboard players operation Global {multiplier_obj} = {temp_var.selector} {temp_var.objective}')
 			
-			for i in xrange(power-1):
-				func.add_command('scoreboard players operation {} {} *= Global {}'.format(temp_var.selector, temp_var.objective, multiplier_obj))
+			for i in range(power-1):
+				func.add_command(f'scoreboard players operation {temp_var.selector} {temp_var.objective} *= Global {multiplier_obj}')
 				
 			func.free_scratch(multiplier_obj)
 				
 			return temp_var
 			
 		else:	
-			print "Binary operation '{0}' isn't implemented".format(self.op)
+			print(f"Binary operation '{self.op}' isn't implemented")
 			return None

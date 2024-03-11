@@ -1,4 +1,4 @@
-from block_base import block_base
+from .block_base import block_base
 from data_types.shaped_recipe import shaped_recipe
 
 class shaped_recipe_block(block_base):
@@ -26,8 +26,8 @@ class shaped_recipe_block(block_base):
 		keys = []
 		for key, type, value in self.keys:
 			if type == 'tag' and value in func.item_tags:
-				keys.append((key, type, '{}:{}'.format(func.namespace, value)))
+				keys.append((key, type, f'{func.namespace}:{value}'))
 			else:
-				keys.append((key, type, 'minecraft:{}'.format(value)))
+				keys.append((key, type, f'minecraft:{value}'))
 				
 		return keys

@@ -66,10 +66,10 @@ class cbscript(object):
 	
 	def try_to_compile(self):
 		try:
-			self.log('Compiling {0}...'.format(self.namespace))
+			self.log(f'Compiling {self.namespace}...')
 			success = self.compile_all()
 			if success:
-				self.log("Script successfully applied at {}.".format(time.ctime()))
+				self.log(f"Script successfully applied at {time.ctime()}.")
 			else:
 				self.log("Script had compile error(s).\a")
 		except SyntaxError as e:
@@ -161,25 +161,25 @@ class cbscript(object):
 		
 	def initialize_stack(self):
 		f = self.global_context.get_reset_function()
-		f.insert_command('/data modify storage {} stack set value []'.format(self.namespace), 0)
+		f.insert_command(f'/data modify storage {self.namespace} stack set value []', 0)
 		
 	def initialize_args(self):
 		f = self.global_context.get_reset_function()
-		f.insert_command('/data modify storage {}:global args set value {{}}'.format(self.namespace), 0)
+		f.insert_command(f'/data modify storage {self.namespace}:global args set value {{}}', 0)
 		
 	def add_scratch_objectives(self):
 		f = self.global_context.get_reset_function()
 		
 		for prefix in self.global_context.scratch:			
-			for i in xrange(self.global_context.scratch[prefix]):
-				f.insert_command('/scoreboard objectives add {0}_scratch{1} dummy'.format(prefix, i), 0)
+			for i in range(self.global_context.scratch[prefix]):
+				f.insert_command(f'/scoreboard objectives add {prefix}_scratch{i} dummy', 0)
 	
 	
 	def add_temp_objectives(self):
 		f = self.global_context.get_reset_function()
 		
-		for t in xrange(self.global_context.temp):
-			f.insert_command('scoreboard objectives add temp{0} dummy'.format(str(t)), 0)
+		for t in range(self.global_context.temp):
+			f.insert_command(f'scoreboard objectives add temp{str(t)} dummy', 0)
 	
 	def add_constants(self):
 		self.global_context.add_constant_definitions()
@@ -194,4 +194,4 @@ class cbscript(object):
 		
 		for objective in self.global_context.objectives.keys():
 			if objective not in defined:
-				reset.insert_command("/scoreboard objectives add {0} dummy".format(objective), 0)
+				reset.insert_command(f"/scoreboard objectives add {objective} dummy", 0)
