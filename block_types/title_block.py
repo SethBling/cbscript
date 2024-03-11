@@ -1,4 +1,4 @@
-from block_base import block_base
+from .block_base import block_base
 import tellraw
 
 class title_block(block_base):
@@ -11,8 +11,8 @@ class title_block(block_base):
 		
 	def compile(self, func):
 		if self.times != None:
-			func.add_command('/title {} times {}'.format(self.selector, ' '.join([str(t.get_value(func)) for t in self.times])))
+			func.add_command(f'/title {self.selector} times {" ".join(str(t.get_value(func)) for t in self.times)}')
 		
 		text = tellraw.formatJsonText(func, self.unformatted)
-		command = '/title {} {} {}'.format(self.selector, self.subtype, text)
+		command = f'/title {self.selector} {self.subtype} {text}'
 		func.add_command(command)

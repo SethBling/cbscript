@@ -8,12 +8,12 @@ class selector_id_var(var_base):
 
 	def initialize_id(self, func):
 		if not func.check_single_entity(self.selector):
-			raise CompileError('Selector "{}" does not specify an individual entity.'.format(self.selector))
+			raise CompileError(f'Selector "{self.selector}" does not specify an individual entity.')
 	
 		func.register_objective('_unique')
 		func.register_objective('_id')
 		func.add_command('scoreboard players add Global _unique 1')
-		func.add_command('execute unless score {0} _id matches 1.. run scoreboard players operation {0} _id = Global _unique'.format(self.selector))
+		func.add_command(f'execute unless score {self.selector} _id matches 1.. run scoreboard players operation {0} _id = Global _unique')
 		
 	# Returns a scoreboard objective for this variable.
 	# If assignto isn't None, then this function may

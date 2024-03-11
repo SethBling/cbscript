@@ -30,7 +30,7 @@ class mock_mcfunction(object):
 		self.self_selector = None
 		
 	def add_operation(self, selector, id1, operation, id2):
-		self.add_command("scoreboard players operation {0} {1} {2} {0} {3}".format(selector, id1, operation, id2))
+		self.add_command(f"scoreboard players operation {selector} {id1} {operation} {selector} {id2}")
 		
 	def add_command(self, command):
 		self.commands.append(command)
@@ -90,7 +90,7 @@ class mock_mcfunction(object):
 	
 	def get_scratch(self):
 		self.scratch += 1
-		return 'test_scratch{}'.format(self.scratch)
+		return f'test_scratch{self.scratch}'
 		
 	def free_scratch(self, id):
 		None
@@ -170,7 +170,7 @@ class mock_mcfunction(object):
 		
 	def get_temp_var(self):
 		self.temp += 1
-		return 'temp{}'.format(self.temp)
+		return f'temp{self.temp}'
 		
 	def free_temp_var(self, var):
 		None
@@ -187,13 +187,13 @@ class mock_mcfunction(object):
 		
 	def get_variable(self, variable, initialize):
 		self.scratch += 1
-		return ('Global', 'var{}'.format(self.scratch))
+		return (f'Global', 'var{self.scratch}')
 		
 	def set_variable(self, variable):
 		self.set_var[variable] = True
 		
 	def get_arrayconst_var(self, name, idxval):
-		return '{}{}'.format(name, idxval)
+		return f'{name}{idxval}'
 		
 	def get_modifiable_id(self, id, assignto):
 		if assignto != None:
@@ -217,4 +217,4 @@ class mock_mcfunction(object):
 			return eval(expr, globals(), self.get_python_env())
 		except Exception as e:
 			print(e)
-			raise ValueError('Could not evaluate "{0}" at line {1}'.format(expr, line))
+			raise ValueError(f'Could not evaluate "{expr}" at line {line}')

@@ -24,10 +24,10 @@ class mcworld(object):
 		return logfile
 	
 	def write_functions(self, functions):
-		function_dir = 'data/{}/functions/'.format(self.namespace)
+		function_dir = f'data/{self.namespace}/functions/'
 		
 		for name in functions:
-			filename = os.path.join(function_dir, "{0}.mcfunction".format(name))
+			filename = os.path.join(function_dir, f"{name}.mcfunction")
 			
 			func = functions[name]
 			text = func.get_utf8_text()
@@ -37,10 +37,10 @@ class mcworld(object):
 		tag_dir = 'data/minecraft/tags/functions/'
 		
 		tick_tag_file = os.path.join(tag_dir, 'tick.json')
-		self.zip.writestr(tick_tag_file, json.dumps({'values':['{0}:{1}'.format(self.namespace, name) for name in clocks]}, indent=4))
+		self.zip.writestr(tick_tag_file, json.dumps({'values':[f'{self.namespace}:{name}'for name in clocks]}, indent=4))
 		
 		load_tag_file = os.path.join(tag_dir, 'load.json')
-		self.zip.writestr(load_tag_file, json.dumps({'values':['{0}:reset'.format(self.namespace)]}, indent=4))
+		self.zip.writestr(load_tag_file, json.dumps({'values':[f'{self.namespace}:reset']}, indent=4))
 			
 		for name, list in [
 			('blocks', block_tags),
@@ -48,32 +48,32 @@ class mcworld(object):
 			('entity_types', entity_tags)
 		]:
 			if len(list) > 0:
-				tag_dir = 'data/{}/tags/{}/'.format(self.namespace, name)
+				tag_dir = f'data/{self.namespace}/tags/{name}/'
 				
 				for tag in list:
 					items = list[tag]
 					
-					tag_filename = os.path.join(tag_dir, '{0}.json'.format(tag))
-					self.zip.writestr(tag_filename, json.dumps({'values':['minecraft:{0}'.format(item) for item in items]}, indent=4))
+					tag_filename = os.path.join(tag_dir, f'{tag}.json')
+					self.zip.writestr(tag_filename, json.dumps({'values':[f'minecraft:{item}'for item in items]}, indent=4))
 				
 	def write_recipes(self, recipes):
 		if len(recipes) > 0:
-			recipe_dir = 'data/{}/recipes/'.format(self.namespace)
+			recipe_dir = f'data/{self.namespace}/recipes/'
 			
 			id = 0
 			for recipe in recipes:
 				id += 1
-				recipe_file = os.path.join(recipe_dir, '{}{}.json'.format(recipe.get_type(), id))
+				recipe_file = os.path.join(recipe_dir, f'{recipe.get_type()}{id}.json')
 				recipe_struct = recipe.get_json_struct()
 				
 				self.zip.writestr(recipe_file, json.dumps(recipe_struct, indent=4))
 				
 	def write_advancements(self, advancements):
 		if len(advancements) > 0:
-			advancement_dir = 'data/{}/advancements/'.format(self.namespace)
+			advancement_dir = f'data/{self.namespace}/advancements/'
 			
 			for name in advancements:
-				advancement_file = os.path.join(advancement_dir, '{}.json'.format(name))
+				advancement_file = os.path.join(advancement_dir, f'{name}.json')
 				self.zip.writestr(advancement_file, advancements[name])
 				
 	def write_loot_tables(self, loot_tables):
@@ -83,21 +83,21 @@ class mcworld(object):
 				if ':' in name:
 					parts = name.split(':')
 					if len(parts) != 2:
-						raise CompileError('Invalid loot tables name "{}"'.format(name))
-					loot_table_dir = 'data/{}/loot_tables/{}/'.format(parts[0], type)
+						raise CompileError(f'Invalid loot tables name "{name}"')
+					loot_table_dir = f'data/{parts[0]}/loot_tables/{type}/'
 					filename = parts[1]
 				else:
-					loot_table_dir = 'data/{}/loot_tables/{}/'.format(self.namespace, type)
+					loot_table_dir = f'data/{self.namespace}/loot_tables/{type}/'
 					filename = name
-				loot_table_file = os.path.join(loot_table_dir, '{}.json'.format(filename))
+				loot_table_file = os.path.join(loot_table_dir, f'{filename}.json')
 				self.zip.writestr(loot_table_file, contents)
 	
 	def write_predicates(self, predicates):
 		if len(predicates) > 0:
-			predicate_dir = 'data/{}/predicates/'.format(self.namespace)
+			predicate_dir = f'data/{self.namespace}/predicates/'
 			
 			for name in predicates:
-				predicate_file = os.path.join(predicate_dir, '{}.json'.format(name))
+				predicate_file = os.path.join(predicate_dir, f'{name}.json')
 				self.zip.writestr(predicate_file, predicates[name])
 		
 	def write_mcmeta(self, desc):
@@ -108,6 +108,6 @@ class mcworld(object):
 	def write_zip(self):
 		self.zip.close()
 	
-		zip_filename = os.path.join(self.dir, 'datapacks/{}.zip'.format(self.namespace))
+		zip_filename = os.path.join(self.dir, f'datapacks/{self.namespace}.zip')
 		with open(zip_filename, 'wb') as file:
 			file.write(self.zipbytes.getvalue())

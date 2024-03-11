@@ -7,7 +7,7 @@ class vector_var_expr(object):
 	def compile(self, func, assignto):
 		return_components = []
 		for i in range(3):
-			component_name = '_{0}_{1}'.format(self.vector_id, i)
+			component_name = f'_{self.vector_id}_{i}'
 			return_components.append(scoreboard_var('Global', component_name))
 			func.register_objective(component_name)
 		

@@ -1,4 +1,4 @@
-from call_block_base import call_block_base
+from .call_block_base import call_block_base
 
 class method_call_block(call_block_base):
 	def __init__(self, line, selector, dest, params, with_macro_items):
@@ -9,17 +9,17 @@ class method_call_block(call_block_base):
 		self.compile_with_macro_items(func)
 		
 		if not func.evaluate_params(self.params):
-			raise Exception('Unable to evaluate method call parameters at line {}'.format(self.line))
+			raise Exception(f'Unable to evaluate method call parameters at line {self.line}')
 		
 		cmd = ""
 
 		if self.selector == '@s' or self.selector == '@s[]':
-			cmd = 'function {0}:{1}'.format(func.namespace, self.dest)
+			cmd = f'function {func.namespace}:{self.dest}'
 		else:
-			cmd = 'execute as {0} run function {1}:{2}'.format(self.selector, func.namespace, self.dest)
+			cmd = f'execute as {self.selector} run function {func.namespace}:{self.dest}'
 
 		if self.with_macro_items != None:
-			cmd += ' with storage {}:global args'.format(func.namespace)
+			cmd += f' with storage {func.namespace}:global args'
 			self.has_macros = True
 
 		func.add_command(cmd)

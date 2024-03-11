@@ -11,8 +11,8 @@ class relcoord_vector(object):
 		relcoords = []
 		try:
 			for i in range(3):
-				relcoords.append('{}{}'.format(self.type, coords[i]))
+				relcoords.append(f'{self.type}{coords[i]}')
 		except Exception as e:
-			raise CompileError('Unable to get three coordinates from constant value at line {}.'.format(self.line))
+			raise CompileError(f'Unable to get three coordinates from constant value at line {self.line}.')
 			
 		return ' '.join(relcoords)

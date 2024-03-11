@@ -10,7 +10,7 @@ class storage_nbt_path(object):
 			return self.target
 		
 	def get_dest_path(self, func):
-		return 'storage {} {}'.format(self.get_target(func), self.path)
+		return f'storage {self.get_target(func)} {self.path}'
 		
 	def get_source_path(self, func):
 		return 'from ' + self.get_dest_path(func)

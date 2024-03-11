@@ -14,23 +14,23 @@ class array_const_var(var_base):
 			val = int(idx_str)
 		except Exception as e:
 			print(e)
-			raise CompileError('"{}" is not an integer for array "{}" index'.format(idx_str, self.array))
+			raise CompileError(f'"{idx_str}" is not an integer for array "{self.array}" index')
 			
 		if self.array not in func.arrays:
-			raise CompileError('Tried to use undefined array {}'.format(self.array))
+			raise CompileError(f'Tried to use undefined array {self.array}')
 		from_val, to_val, selector_based = func.arrays[self.array]
 		if val < from_val or val > to_val:
-			raise CompileError('Index {} for "array {}[{} to {}]" is out of bounds.'.format(val, self.array, from_val, to_val))
+			raise CompileError(f'Index {val} for "array {self.array}[{from_val} to {to_val}]" is out of bounds.')
 
 		if selector_based and self.selector == 'Global':
-			raise CompileError('Tried to use selector-based array {} without a selector.'.format(self.array))
+			raise CompileError(f'Tried to use selector-based array {self.array} without a selector.')
 		if not selector_based and self.selector != 'Global':
-			raise CompileError('Tried to use global array {} with a selector.'.format(self.array))
+			raise CompileError(f'Tried to use global array {self.array} with a selector.')
 	
 	def get_objective(self, func):
 		self.check_array(func)
 		idx_str = func.apply_replacements(self.idx)
-		return '{}{}'.format(self.array, idx_str)
+		return f'{self.array}{idx_str}'
 
 	# Returns a scoreboard objective for this variable.
 	# If assignto isn't None, then this function may
@@ -40,7 +40,7 @@ class array_const_var(var_base):
 	
 	# Returns a command that will get this variable's value to be used with "execute store result"
 	def get_command(self, func):
-		return 'scoreboard players get {} {}'.format(self.selector, self.get_objective(func))
+		return f'scoreboard players get {self.selector} {self.get_objective(func)}'
 		
 	# Returns true if this variable is a scoreboard_var with the specified selector and objective,
 	# to reduce extranious copies.
@@ -55,9 +55,9 @@ class array_const_var(var_base):
 	def copy_from(self, func, var):
 		const_val = var.get_const_value(func)
 		if const_val != None:
-			func.add_command('scoreboard players set {} {} {}'.format(self.selector, self.get_objective(func), const_val))
+			func.add_command(f'scoreboard players set {self.selector} {self.get_objective(func)} {const_val}')
 		else:
-			func.add_command('execute store result score {} {} run {}'.format(self.selector, self.get_objective(func), var.get_command(func)))
+			func.add_command(f'execute store result score {self.selector} {self.get_objective(func)} run {var.get_command(func)}')
 			
 	# Returns a scoreboard_var which can be modified as needed without side effects
 	def get_modifiable_var(self, func, assignto):
