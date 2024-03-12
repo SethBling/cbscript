@@ -115,11 +115,14 @@ def p_parsed_expr(p):
 	
 #### Program
 def p_program(p):
-	'''program : optcomments dir string newlines optdesc optscale top_level_blocks'''
+	'''program : optcomments dir string newlines optdesc file_params top_level_blocks'''
 	p[0] = {}
 	p[0]['dir'] = p[3]
 	p[0]['desc'] = p[5]
-	p[0]['scale'] = p[6]
+
+	for param_name in p[6]:
+		p[0][param_name] = p[6][param_name]
+	
 	p[0]['lines'] = p[7]
 	
 ### Lib
@@ -136,15 +139,28 @@ def p_optdesc(p):
 		p[0] = 'No Description'
 	else:
 		p[0] = p[2]
-	
-#### Optscale
-def p_optscale(p):
-	'''optscale : scale integer newlines'''
-	p[0] = int(p[2])
 
-def p_optscale_none(p):
-	'''optscale : empty'''
-	p[0] = 1000
+#### File Params
+def p_file_params(p):
+	'''file_params : file_param file_params'''
+	param_name, param_value = p[1]
+
+	p[2][param_name] = param_value
+
+	p[0] = p[2]
+
+def p_file_params_none(p):
+	'''file_params : empty'''
+	p[0] = {}
+
+#### File Param
+def p_file_param(p):
+	'''file_param : ID integer newlines'''
+
+	if p[1] not in ['scale']:
+		raise SyntaxError(f'Unknown file parameter: "{p[1]}" at line {p.lineno(1)}')
+	
+	p[0] = (p[1], int(p[2]))
 	
 #### Sections
 def p_section_commented(p):
@@ -430,7 +446,10 @@ def p_variable_selector(p):
 	
 def p_variable_global(p):
 	'''variable : ID'''
-	p[0] = scoreboard_var('Global', p[1])
+	if p[1] == 'scale':
+		p[0] = scale_var()
+	else:
+		p[0] = scoreboard_var('Global', p[1])
 	
 def p_variable_array_const(p):
 	'''variable : ID LBRACK virtualinteger RBRACK'''
@@ -467,10 +486,6 @@ def p_variable_block_macro_path_coords(p):
 def p_variable_virtualint(p):
 	'''variable : virtualinteger'''
 	p[0] = virtualint_var(p[1])
-	
-def p_variable_scale(p):
-	'''variable : scale'''
-	p[0] = scale_var()
 	
 def p_variable_selector_ref(p):
 	'''variable : REF fullselector'''
