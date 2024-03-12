@@ -6,13 +6,8 @@ import common
 import math
 import colliders
 
-define @nearest_player = @Player[sort=nearest,limit=1]
-    attacker: attack.player int 1
-    interacter: interaction.player int 1
-end
-
-define @Interaction = @Entity[type=interaction]
-end
+@nearest_player = @Player[sort=nearest,limit=1]
+@Interaction = @Entity[type=interaction]
 
 $Precision = 1000
 $Half = 500
@@ -126,7 +121,6 @@ clock tick
         with
             $(block_name) = "command_block"
         add_collider(x, y, z)
-        tell @a "Adding collider at (x), (y), (z)"
         
         tell @a "Physics: {C[\[Load State\]](/function $namespace:load_state) {R[\[Destroy All Colliders\]](/function $namespace:destroy_colliders)"
     end

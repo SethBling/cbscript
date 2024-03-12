@@ -1,0 +1,149 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.20\saves\TetherBlock"
+desc "TetherBlock game"
+scale 1000
+
+import common
+import math
+import colliders
+
+@Interaction = @Entity[type=interaction]
+
+define @CubeInteraction = @Interaction[tag=CubeInteraction]
+    create {width:3, height:3, teleport_duration:1, Tags:["CubeInteraction"]}
+end
+
+define @RopeSegment = @Entity[type=block_display,tag=RopeSegment]
+    create {block_state: {Name: "minecraft:brown_wool", count: 0b}, transformation:{scale:[0.01f, 0.01f, 0.01f]}}
+end
+
+$Precision = 1000
+$Half = 500
+$Billion = 1000000000
+$AttackRange = 8000
+$PunchPower = 1000
+
+reset
+    /scoreboard objectives add absorbed minecraft.custom:minecraft.damage_dealt_absorbed
+
+    initialize_transforms()
+
+    CubeSize = 1500
+    CubeInvMass = 800
+    CubeInvRotInt = 400
+    
+    unless collider_1.id
+        with
+            $(block_name) = "brown_wool"
+        add_collider(1000, 60000, 1000)
+    end
+
+    unless collider_2.id
+        with
+            $(block_name) = "lime_wool"
+        add_collider(-1000, 60000, -1000)
+    end
+end
+
+clock tick
+    /kill @Position
+    create @Position
+    
+    as @CubeInteraction
+        on attacker
+            at @s eyes
+                /tp @Position ^ ^ ^
+                world_eye_x = @Position.x
+                world_eye_y = @Position.y
+                world_eye_z = @Position.z
+                
+                /tp @Position ^ ^ ^1
+                world_eye_dx = @Position.x - world_eye_x
+                world_eye_dy = @Position.y - world_eye_y
+                world_eye_dz = @Position.z - world_eye_z
+            end
+        
+            min_col_t = $Billion
+
+            # Find the nearest collider in the direction of the cursor ray
+            for collider = 1 to max_collider
+                with
+                    $(collider) = collider
+                do
+                    define name collider = "collider_$(collider)"
+
+                    if collider_ray_intersection(world_eye_x, world_eye_y, world_eye_z, world_eye_dx, world_eye_dy, world_eye_dz) with macros
+                        if t < min_col_t
+                            min_col_t = t
+                            min_x = collision_x
+                            min_y = collision_y
+                            min_z = collision_z
+                            min_col = collider
+                        end
+                    end
+                end
+            end
+            
+            if min_col_t <= $AttackRange
+                # There was a ray intersection
+                
+                @s.attacking = min_col
+                @s.attack_x = min_x
+                @s.attack_y = min_y
+                @s.attack_z = min_z
+                @s.attack_dx = world_eye_dx
+                @s.attack_dy = world_eye_dy
+                @s.attack_dz = world_eye_dz
+                
+            end
+        end
+        /data remove entity @s attack
+        /data remove entity @s interaction
+    end
+    
+    as @Player
+        if @s.attacking
+            with
+                $(collider) = @s.attacking
+            collider_apply_impulse(@s.attack_x, @s.attack_y, @s.attack_z, @s.attack_dx * $PunchPower / scale, @s.attack_dy * $PunchPower / scale, @s.attack_dz * $PunchPower / scale)
+
+            @Position.<pos> = <@s.attack_x, @s.attack_y, @s.attack_z>
+            at @Position
+                /particle minecraft:crit ~ ~ ~ 0 0 0 0 1 force
+            end
+        
+            @s.attacking = 0
+        end
+    end
+
+    spring_x = 0
+    spring_y = 68000
+    spring_z = 0
+    spring_neutral = 8000
+    spring_constant = 100
+    local_att_x = 0
+    local_att_y = 1500
+    local_att_z = 0
+    
+    for i = 1 to max_collider
+        with
+            $(collider) = i
+        collider_apply_spring_cable(spring_x, spring_y, spring_z, spring_neutral, spring_constant, local_att_x, local_att_y, local_att_z)
+    end
+        
+    colliders_physics_tick()
+    colliders_get_new_collisions()
+    colliders_resolve_collisions()
+    colliders_finalize_tick()
+    
+    as @PhysicsBlock at @s ~ ~-1.5 ~
+        id = @s.collider_id
+        
+        as @CubeInteraction if @s.id == id
+            /tp @s ~ ~ ~
+        else
+            as create @CubeInteraction
+                @s.id = id
+            end
+        end
+    end
+end
