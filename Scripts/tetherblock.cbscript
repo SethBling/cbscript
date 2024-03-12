@@ -8,8 +8,8 @@ import colliders
 
 @Interaction = @Entity[type=interaction]
 
-define @CubeInteraction = @Interaction[tag=CubeInteraction]
-    create {width:3, height:3, teleport_duration:1, Tags:["CubeInteraction"]}
+define @PlayerInteraction = @Interaction[tag=PlayerInteraction]
+    create {width:3, height:3, teleport_duration:1, Tags:["PlayerInteraction"]}
 end
 
 define @RopeSegment = @Entity[type=block_display,tag=RopeSegment]
@@ -19,8 +19,21 @@ end
 $Precision = 1000
 $Half = 500
 $Billion = 1000000000
-$AttackRange = 8000
+$AttackRange = 10000
 $PunchPower = 1000
+
+$PoleBase = 56000
+$SpringConstant = 100
+
+$Unwrapped = 1
+$ClockXPosZPos = 2
+$ClockXNegZPos = 3
+$ClockXNegZNeg = 4
+$ClockXPosZNeg = 5
+$CounterXPosZPos = 6
+$CounterXPosZNeg = 7
+$CounterXNegZNeg = 8
+$CounterXNegZPos = 9
 
 reset
     /scoreboard objectives add absorbed minecraft.custom:minecraft.damage_dealt_absorbed
@@ -30,25 +43,63 @@ reset
     CubeSize = 1500
     CubeInvMass = 800
     CubeInvRotInt = 400
-    
-    unless collider_1.id
-        with
-            $(block_name) = "brown_wool"
-        add_collider(1000, 60000, 1000)
-    end
+end
 
-    unless collider_2.id
-        with
-            $(block_name) = "lime_wool"
-        add_collider(-1000, 60000, -1000)
-    end
+function clear_game()
+    destroy_colliders()
+    /kill @RopeSegment
+    /kill @PlayerInteraction
+end
+
+function start_normal_game()
+    clear_game()
+    
+    PoleRadius = 125
+    PoleDiameter = PoleRadius * 2
+    PoleHeight = 12000
+    TetherX = 500+PoleRadius
+    TetherY = $PoleBase + PoleHeight
+    TetherZ = 500
+    TetherLength = 8000
+
+    with
+        $(block_name) = "brown_wool"
+    add_collider(1000, 60000, 1000)
+    
+    @PhysicsBlock.free_length = TetherLength
 end
 
 clock tick
     /kill @Position
     create @Position
     
-    as @CubeInteraction
+    as @Player at @s ~ ~ ~
+        if @s.id
+            id = @s.id
+        else
+            player_id++
+            @s.id = player_id
+            id = player_id
+        end
+    
+        as @PlayerInteraction if @s.id == id
+            /tp @s ~ ~ ~
+        else
+            as create @PlayerInteraction
+                @s.id = id
+            end
+        end
+    end
+    
+    as @PlayerInteraction
+        id = @s.id
+        as @Player if @s.id == id
+        else
+            /kill @s
+        end
+    end
+    
+    as @PlayerInteraction
         on attacker
             at @s eyes
                 /tp @Position ^ ^ ^
@@ -108,26 +159,31 @@ clock tick
 
             @Position.<pos> = <@s.attack_x, @s.attack_y, @s.attack_z>
             at @Position
-                /particle minecraft:crit ~ ~ ~ 0 0 0 0 1 force
+                /particle minecraft:explosion ~ ~ ~ 0 0 0 0 1 force
             end
         
             @s.attacking = 0
         end
     end
 
-    spring_x = 0
-    spring_y = 68000
-    spring_z = 0
-    spring_neutral = 8000
-    spring_constant = 100
-    local_att_x = 0
-    local_att_y = 750
-    local_att_z = 0
-    
-    for i = 1 to max_collider
-        with
-            $(collider) = i
-        collider_apply_spring_cable(spring_x, spring_y, spring_z, spring_neutral, spring_constant, local_att_x, local_att_y, local_att_z)
+    as @PhysicsBlock
+        id = @s.collider_id
+        segments = @s.segments
+        free_length = @s.free_length
+        as @RopeSegment if @s.id == id and @s.segment == segments
+            spring_x = @s.origin_x
+            spring_y = @s.origin_y
+            spring_z = @s.origin_z
+            spring_neutral = free_length
+            spring_constant = $SpringConstant
+            local_att_x = 0
+            local_att_y = CubeSize / 2
+            local_att_z = 0
+            
+            with
+                $(collider) = id
+            collider_apply_spring_cable(spring_x, spring_y, spring_z, spring_neutral, spring_constant, local_att_x, local_att_y, local_att_z)
+        end
     end
         
     colliders_physics_tick()
@@ -138,23 +194,150 @@ clock tick
     as @PhysicsBlock at @s ~ ~-1.5 ~
         id = @s.collider_id
         segments = @s.segments
-        
-        as @CubeInteraction if @s.id == id
-            /tp @s ~ ~ ~
-        else
-            as create @CubeInteraction
-                @s.id = id
-            end
-        end
+        free_length = @s.free_length
         
         as @RopeSegment if @s.id == id and @s.segment == segments
+            # Handle the last segment
+            
             with
                 $(collider) = id
             collider_local_to_world(0, 750, 0, True)
             
-            dx = world_x - 500
-            dy = world_y - 68000
-            dz = world_z - 500
+            dx = world_x - @s.origin_x
+            dy = world_y - @s.origin_y
+            dz = world_z - @s.origin_z
+            new_wrap_state = False
+            unwrap = False
+            
+            switch @s.wrap_state
+                case $Unwrapped
+                    if dx < 0
+                        if dz > 0
+                            wrapped_portion = PoleRadius * 1000 / dz
+                            wrap_x = 500 + PoleRadius
+                            wrap_z = 500 + PoleRadius
+                            new_wrap_state = $ClockXNegZPos
+                        else
+                            wrapped_portion = PoleRadius * 1000 / -dz
+                            wrap_x = 500 + PoleRadius
+                            wrap_z = 500 - PoleRadius
+                            new_wrap_state = $CounterXNegZNeg
+                        end
+                    end
+                end
+                case $ClockXPosZPos
+                    if dz < 0
+                        # Unwrap
+                        unwrap = True                        
+                    else if dx < 0
+                        # Wrap
+                        wrapped_portion = PoleDiameter * 1000 / dz
+                        wrap_x = 500 + PoleRadius
+                        wrap_z = 500 + PoleRadius
+                        new_wrap_state = $ClockXNegZPos
+                    end
+                end
+                case $ClockXNegZPos
+                    if dx > 0
+                        # Unwrap
+                        unwrap = True
+                    else if dz < 0
+                        # Wrap
+                        wrapped_portion = PoleDiameter * 1000 / -dx
+                        wrap_x = 500 - PoleRadius
+                        wrap_z = 500 + PoleRadius
+                        new_wrap_state = $ClockXNegZNeg
+                    end
+                end
+                case $ClockXNegZNeg
+                    if dz > 0
+                        # Unwrap
+                        unwrap = True
+                    else if dx > 0
+                        # Wrap
+                        wrapped_portion = PoleDiameter * 1000 / -dz
+                        wrap_x = 500 - PoleRadius
+                        wrap_z = 500 - PoleRadius
+                        new_wrap_state = $ClockXPosZNeg
+                    end
+                end
+                case $ClockXPosZNeg
+                    if dx < 0
+                        # Unwrap
+                        unwrap = True
+                    else if dz > 0
+                        # Wrap
+                        wrapped_portion = PoleDiameter * 1000 / dx
+                        wrap_x = 500 + PoleRadius
+                        wrap_z = 500 - PoleRadius
+                        new_wrap_state = $ClockXPosZPos
+                    end
+                end
+            end
+            
+            if new_wrap_state
+                @s.bound_length = bound_length
+
+                wrapped_dy = dy * wrapped_portion / 1000
+                wrap_y = @s.origin_y + wrapped_dy
+
+                # Compute the stretched length of the unbound tether
+                len = sqrt(dx*dx + dy*dy + dz*dz)
+            
+                # Compute the amount of tether that's bound
+                stretched_length = wrapped_portion * len / 1000
+                bound_length = wrapped_portion * free_length / 1000
+                free_length -= bound_length
+                
+                tell @a "Wrapping..."
+                tell @a "new_wrap_state: (new_wrap_state)"
+                tell @a "wrapped_portion: (wrapped_portion)"
+                tell @a "wrap_xyz: (wrap_x), (wrap_y), (wrap_z)"
+                tell @a "stretched_length: (stretched_length)"
+                tell @a "free_length: (free_length)"
+                
+                # Position current segment as bound
+                /data modify storage $namespace:global scale set value [0.05f, 0.05f, 0.05f]
+                /execute store result storage $namespace:global scale[2] float 0.001 run scoreboard players get Global stretched_length
+                /data modify entity @s transformation.scale set from storage $namespace:global scale
+                /data modify entity @s start_interpolation set value 0b
+                @Position.<pos> = <@s.origin_x, @s.origin_y, @s.origin_z>
+                at @Position
+                    @Position.<pos> = <wrap_x, wrap_y, wrap_z>
+                    facing @Position
+                        /tp @s ~ ~ ~ ~ ~
+                    end
+                end
+                
+                at @Position
+                    as create @RopeSegment
+                        segments++
+                        @s.id = id
+                        @s.segment = segments
+                        @s.origin_x = wrap_x
+                        @s.origin_y = wrap_y
+                        @s.origin_z = wrap_z
+                        @s.wrap_state = new_wrap_state
+                    end
+                end
+            end
+            
+            if unwrap
+                segments--
+                as @RopeSegment if @s.segment == segments
+                    free_length += @s.bound_length
+                end
+                /kill @s
+            end
+        end
+        
+        @s.segments = segments
+        @s.free_length = free_length
+        
+        as @RopeSegment if @s.id == id and @s.segment == segments
+            dx = world_x - @s.origin_x
+            dy = world_y - @s.origin_y
+            dz = world_z - @s.origin_z
 
             len = sqrt(dx*dx + dy*dy + dz*dz)
             
@@ -163,7 +346,7 @@ clock tick
             /data modify entity @s transformation.scale set from storage $namespace:global scale
             /data modify entity @s start_interpolation set value 0b
             
-            /tp @Position 0.5 68.0 0.5
+            @Position.<pos> = <@s.origin_x, @s.origin_y, @s.origin_z>
             at @Position            
                 @Position.<pos> = <world_x, world_y, world_z>
                 facing @Position
@@ -174,6 +357,10 @@ clock tick
             as create @RopeSegment
                 @s.segment = 1
                 @s.id = id
+                @s.origin_x = TetherX
+                @s.origin_y = TetherY
+                @s.origin_z = TetherZ
+                @s.wrap_state = $Unwrapped
             end
             
             @s.segments = 1
