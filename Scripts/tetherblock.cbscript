@@ -13,7 +13,10 @@ define @PlayerInteraction = @Interaction[tag=PlayerInteraction]
 end
 
 define @RopeSegment = @Entity[type=block_display,tag=RopeSegment]
-    create {block_state: {Name: "minecraft:brown_wool", count: 0b}, teleport_duration:1, interpolation_duration: 1, transformation:{scale:[0.05f, 0.05f, 0.05f]}, Tags:["RopeSegment"]}
+    create {block_state: {Name: "minecraft:brown_concrete", count: 0b}, teleport_duration: 0, interpolation_duration: 0, transformation:{left_rotation: [0f, 0f, 0f, 1f], translation: [0f, 0f, 0f], right_rotation: [0f, 0f, 0f, 1f], scale:[0.05f, 0.05f, 0.05f]}, Tags:["RopeSegment"]}
+    
+    tele_dur: teleport_duration int 1
+    interp_dur = interpolation_duration int 1
 end
 
 $Precision = 1000
@@ -54,6 +57,8 @@ end
 function start_normal_game()
     clear_game()
     
+    /fill 0 56 0 0 67 0 minecraft:birch_fence
+    
     PoleRadius = 125
     PoleDiameter = PoleRadius * 2
     PoleHeight = 12000
@@ -63,7 +68,7 @@ function start_normal_game()
     TetherLength = 8000
 
     with
-        $(block_name) = "brown_wool"
+        $(block_name) = "red_wool"
     add_collider(1000, 60000, 1000)
     
     @PhysicsBlock.free_length = TetherLength
@@ -289,21 +294,36 @@ clock tick
                 bound_length = wrapped_portion * free_length / 1000
                 free_length -= bound_length
                 
-                tell @a "Wrapping..."
-                tell @a "new_wrap_state: (new_wrap_state)"
-                tell @a "wrapped_portion: (wrapped_portion)"
-                tell @a "wrap_xyz: (wrap_x), (wrap_y), (wrap_z)"
-                tell @a "stretched_length: (stretched_length)"
-                tell @a "free_length: (free_length)"
-                
+                if Debug
+                    tell @a "Wrapping..."
+                    tell @a "new_wrap_state: (new_wrap_state)"
+                    tell @a "wrapped_portion: (wrapped_portion)"
+                    tell @a "wrap_xyz: (wrap_x), (wrap_y), (wrap_z)"
+                    tell @a "stretched_length: (stretched_length)"
+                    tell @a "free_length: (free_length)"
+                end
+
+                stretched_length += 50
                 # Position current segment as bound
                 /data modify storage $namespace:global scale set value [0.05f, 0.05f, 0.05f]
                 /execute store result storage $namespace:global scale[2] float 0.001 run scoreboard players get Global stretched_length
                 /data modify entity @s transformation.scale set from storage $namespace:global scale
                 /data modify entity @s start_interpolation set value 0b
-                @Position.<pos> = <@s.origin_x, @s.origin_y, @s.origin_z>
+                
+                @s.interp_dur = 0
+                @s.tele_dur = 0
+                
+                bdx = wrap_x - @s.origin_x
+                bdy = wrap_y - @s.origin_y
+                bdz = wrap_z - @s.origin_z
+                bl = sqrt(bdx*bdx + bdy*bdy + bdz*bdz)
+                ix = bdx * 25 / bl
+                iy = bdy * 25 / bl
+                iz = bdz * 25 / bl
+                
+                @Position.<pos> = <@s.origin_x-ix, @s.origin_y-iy, @s.origin_z-iz>
                 at @Position
-                    @Position.<pos> = <wrap_x, wrap_y, wrap_z>
+                    @Position.<pos> = <wrap_x+ix, wrap_y+iy, wrap_z+iz>
                     facing @Position
                         /tp @s ~ ~ ~ ~ ~
                     end
@@ -335,17 +355,22 @@ clock tick
         @s.free_length = free_length
         
         as @RopeSegment if @s.id == id and @s.segment == segments
-            dx = world_x - @s.origin_x
-            dy = world_y - @s.origin_y
-            dz = world_z - @s.origin_z
+            if not new_wrap_state
+                dx = world_x - @s.origin_x
+                dy = world_y - @s.origin_y
+                dz = world_z - @s.origin_z
 
-            len = sqrt(dx*dx + dy*dy + dz*dz)
-            
-            /data modify storage $namespace:global scale set value [0.05f, 0.05f, 0.05f]
-            /execute store result storage $namespace:global scale[2] float 0.001 run scoreboard players get Global len
-            /data modify entity @s transformation.scale set from storage $namespace:global scale
-            /data modify entity @s start_interpolation set value 0b
-            
+                len = sqrt(dx*dx + dy*dy + dz*dz)
+                
+                /data modify storage $namespace:global scale set value [0.05f, 0.05f, 0.05f]
+                /execute store result storage $namespace:global scale[2] float 0.001 run scoreboard players get Global len
+                /data modify entity @s transformation.scale set from storage $namespace:global scale
+                /data modify entity @s start_interpolation set value 0b
+                
+                @s.tele_dur = 1
+                @s.interp_dur = 1
+            end
+                
             @Position.<pos> = <@s.origin_x, @s.origin_y, @s.origin_z>
             at @Position            
                 @Position.<pos> = <world_x, world_y, world_z>
