@@ -224,8 +224,8 @@ clock tick
                             new_wrap_state = $ClockXNegZPos
                         else
                             wrapped_portion = PoleRadius * 1000 / -dz
-                            wrap_x = 500 + PoleRadius
-                            wrap_z = 500 - PoleRadius
+                            wrap_x = 500 + PoleRadius + 50
+                            wrap_z = 500 - PoleRadius - 50
                             new_wrap_state = $CounterXNegZNeg
                         end
                     end
@@ -276,6 +276,55 @@ clock tick
                         wrap_x = 500 + PoleRadius
                         wrap_z = 500 - PoleRadius
                         new_wrap_state = $ClockXPosZPos
+                    end
+                end
+                
+                case $CounterXPosZPos
+                    if dx < 0
+                        # Unwrap
+                        unwrap = True                        
+                    else if dz < 0
+                        # Wrap
+                        wrapped_portion = PoleDiameter * 1000 / dx
+                        wrap_x = 500 + PoleRadius + 50
+                        wrap_z = 500 + PoleRadius + 50
+                        new_wrap_state = $CounterXPosZNeg
+                    end
+                end
+                case $CounterXPosZNeg
+                    if dz > 0
+                        # Unwrap
+                        unwrap = True
+                    else if dx < 0
+                        # Wrap
+                        wrapped_portion = PoleDiameter * 1000 / -dz
+                        wrap_x = 500 + PoleRadius + 50
+                        wrap_z = 500 - PoleRadius - 50
+                        new_wrap_state = $CounterXNegZNeg
+                    end
+                end
+                case $CounterXNegZNeg
+                    if dx > 0
+                        # Unwrap
+                        unwrap = True
+                    else if dz > 0
+                        # Wrap
+                        wrapped_portion = PoleDiameter * 1000 / -dx
+                        wrap_x = 500 - PoleRadius - 50
+                        wrap_z = 500 - PoleRadius - 50
+                        new_wrap_state = $CounterXNegZPos
+                    end
+                end
+                case $CounterXNegZPos
+                    if dz < 0
+                        # Unwrap
+                        unwrap = True
+                    else if dx > 0
+                        # Wrap
+                        wrapped_portion = PoleDiameter * 1000 / dz
+                        wrap_x = 500 - PoleRadius - 50
+                        wrap_z = 500 + PoleRadius + 50
+                        new_wrap_state = $CounterXPosZPos
                     end
                 end
             end
