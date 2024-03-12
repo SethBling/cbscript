@@ -13,7 +13,7 @@ define @CubeInteraction = @Interaction[tag=CubeInteraction]
 end
 
 define @RopeSegment = @Entity[type=block_display,tag=RopeSegment]
-    create {block_state: {Name: "minecraft:brown_wool", count: 0b}, transformation:{scale:[0.01f, 0.01f, 0.01f]}}
+    create {block_state: {Name: "minecraft:brown_wool", count: 0b}, teleport_duration:1, interpolation_duration: 1, transformation:{scale:[0.05f, 0.05f, 0.05f]}, Tags:["RopeSegment"]}
 end
 
 $Precision = 1000
@@ -121,7 +121,7 @@ clock tick
     spring_neutral = 8000
     spring_constant = 100
     local_att_x = 0
-    local_att_y = 1500
+    local_att_y = 750
     local_att_z = 0
     
     for i = 1 to max_collider
@@ -137,6 +137,7 @@ clock tick
     
     as @PhysicsBlock at @s ~ ~-1.5 ~
         id = @s.collider_id
+        segments = @s.segments
         
         as @CubeInteraction if @s.id == id
             /tp @s ~ ~ ~
@@ -144,6 +145,38 @@ clock tick
             as create @CubeInteraction
                 @s.id = id
             end
+        end
+        
+        as @RopeSegment if @s.id == id and @s.segment == segments
+            with
+                $(collider) = id
+            collider_local_to_world(0, 750, 0, True)
+            
+            dx = world_x - 500
+            dy = world_y - 68000
+            dz = world_z - 500
+
+            len = sqrt(dx*dx + dy*dy + dz*dz)
+            
+            /data modify storage $namespace:global scale set value [0.05f, 0.05f, 0.05f]
+            /execute store result storage $namespace:global scale[2] float 0.001 run scoreboard players get Global len
+            /data modify entity @s transformation.scale set from storage $namespace:global scale
+            /data modify entity @s start_interpolation set value 0b
+            
+            /tp @Position 0.5 68.0 0.5
+            at @Position            
+                @Position.<pos> = <world_x, world_y, world_z>
+                facing @Position
+                    /tp @s ~ ~ ~ ~ ~
+                end
+            end
+        else
+            as create @RopeSegment
+                @s.segment = 1
+                @s.id = id
+            end
+            
+            @s.segments = 1
         end
     end
 end
