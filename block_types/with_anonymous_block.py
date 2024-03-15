@@ -1,5 +1,5 @@
 import traceback
-from CompileError import CompileError
+from CompileError import CompileError, Pos
 from .block_base import block_base
 
 class with_anonymous_block(block_base):
@@ -17,11 +17,9 @@ class with_anonymous_block(block_base):
         try:
             anon_func.compile_blocks(self.sub)
         except CompileError as e:
-            print(e)
-            raise CompileError(f'Unable to compile with block contents at line {self.line}')
+            raise CompileError(f'Unable to compile with block contents at line {self.line}', Pos(self.line)) from e
         except Exception as e:
-            print(traceback.format_exc())
-            raise CompileError(f'Unable to compile with block contents at line {self.line}')
+            raise CompileError(f'Unable to compile with block contents at line {self.line}', Pos(self.line)) from e
         
         unique = func.get_unique_id()
         func_name = f'line{self.line:03}/{"with"}{unique:03}'

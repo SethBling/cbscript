@@ -1,6 +1,6 @@
 from .block_base import block_base
 from data_types.relcoords import relcoords
-from CompileError import CompileError
+from CompileError import CompileError, Pos
 
 class block_definition_block(block_base):
 	def __init__(self, line, block_id, items, coords):
@@ -21,7 +21,10 @@ class block_definition_block(block_base):
 			coords = self.coords
 			
 		if path not in self.paths:
-			raise CompileError(f'No path "{path}" defined for [{self.block_id}].')
+			raise CompileError(
+				f'No path "{path}" defined for [{self.block_id}].',
+				Pos(self.line)
+			)
 			
 		self.paths[id].copy_to_objective(func, coords, macro_args, objective)
 		
@@ -30,7 +33,10 @@ class block_definition_block(block_base):
 			coords = self.coords
 			
 		if path not in self.paths:
-			raise CompileError(f'No path "{path}" defined for [{self.block_id}].')
+			raise CompileError(
+				f'No path "{path}" defined for [{self.block_id}].',
+				Pos(self.line)
+			)
 			
 		self.paths[path].copy_from(func, coords, macro_args, var)
 		
@@ -39,6 +45,6 @@ class block_definition_block(block_base):
 			coords = self.coords
 			
 		if path not in self.paths:
-			raise CompileError(f'No path "{path}" defined for [{self.block_id}].')
+			raise CompileError(f'No path "{path}" defined for [{self.block_id}].',Pos(self.line))
 		
 		return self.paths[path].get_command(func, coords, macro_args)

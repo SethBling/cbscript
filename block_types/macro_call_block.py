@@ -1,6 +1,6 @@
 from .block_base import block_base
 from mcfunction import isNumber
-from CompileError import CompileError
+from CompileError import CompileError, Pos
 import traceback
 
 class macro_call_block(block_base):
@@ -10,12 +10,12 @@ class macro_call_block(block_base):
 		
 	def compile(self, func):
 		if self.macro not in func.macros:
-			raise CompileError(f'Line {self.line}: macro "{self.macro}" does not exist')
+			raise CompileError(f'Line {self.line}: macro "{self.macro}" does not exist', Pos(self.line))
 			
 		params, sub = func.macros[self.macro]
 			
 		if len(self.args) != len(params):
-			raise CompileError(f'Tried to call Macro "{macro}" with {len(args)} arguments at line {get_line(line)}, but it requires {len(params)}')
+			raise CompileError(f'Tried to call Macro "{self.macro}" with {len(self.args)} arguments at line {self.line}, but it requires {len(params)}', Pos(self.line))
 			
 		new_env = func.clone_environment()
 			
@@ -27,10 +27,8 @@ class macro_call_block(block_base):
 		try:
 			func.compile_blocks(sub)
 		except CompileError as e:
-			print(e)
-			raise CompileError(f'Unable to compile macro contents at line {self.line}')
+			raise CompileError(f'Unable to compile macro contents at line {self.line}', Pos(self.line)) from e
 		except Exception as e:
-			print(traceback.format_exc())
-			raise CompileError(f'Unable to compile macro contents at line {self.line}')
+			raise CompileError(f'Unable to compile macro contents at line {self.line}') from e
 			
 		func.pop_environment()

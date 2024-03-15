@@ -1,5 +1,5 @@
 from .execute_base import execute_base
-from CompileError import CompileError
+from CompileError import CompileError, Pos
 import traceback
 
 class execute_block(execute_base):
@@ -38,11 +38,9 @@ class execute_block(execute_base):
 			try:
 				exec_func.compile_blocks(else_sub)
 			except CompileError as e:
-				print(e)
-				raise CompileError(f'Unable to compile else block contents at line {self.display_name()}')
+				raise CompileError(f'Unable to compile else block contents at line {self.display_name()}', Pos(self.line)) from e
 			except Exception as e:
-				print(traceback.format_exc())
-				raise CompileError(f'Unable to compile else block contents at line {self.display_name()}')
+				raise CompileError(f'Unable to compile else block contents at line {self.display_name()}',Pos(self.line)) from e
 				
 			if execute_items == None:
 				exec_text = ''

@@ -1,6 +1,6 @@
 from .block_base import block_base
 from variable_types.scoreboard_var import scoreboard_var
-from CompileError import CompileError
+from CompileError import CompileError, Pos
 
 class vector_assignment_base(block_base):
 	def perform_vector_assignment(self, func):
@@ -17,7 +17,7 @@ class vector_assignment_base(block_base):
 			selector, id = var_content
 			components = [scoreboard_var(selector, f'_{id}_{i}') for i in range(3)]
 		elif var_type == 'VAR_CONST':
-			raise CompileError(f'Cannot assign to vector constant at line {self.line}.')
+			raise CompileError(f'Cannot assign to vector constant at line {self.line}.', Pos(self.line))
 		
 		if op == '=':
 			assignto = []

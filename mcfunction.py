@@ -4,7 +4,7 @@ from source_file import source_file
 from variable_types.scoreboard_var import scoreboard_var
 from block_types.push_block import push_block
 from block_types.pop_block import pop_block
-from CompileError import CompileError
+from CompileError import CompileError, cur_file_var, Pos
 import math
 import traceback
 import json
@@ -772,8 +772,7 @@ class mcfunction(object):
 			try:
 				block.compile(self)
 			except CompileError as e:
-				print(e)
-				raise CompileError(f'Error compiling block at line {block.line}')
+				raise e
 			except:
 				print(traceback.format_exc())
 				raise CompileError(f'Error compiling block at line {block.line}')
@@ -786,10 +785,12 @@ class mcfunction(object):
 		self.environment.register_dependency(filename)
 
 		file = source_file(filename)
-		
+
 		result = self.parser('import ' + file.get_text() + '\n')
 		if result == None:
 			raise CompileError(f'Unable to parse file "{filename}"')
+		
+
 		
 		type, parsed = result
 		if type != 'lib':
@@ -798,7 +799,12 @@ class mcfunction(object):
 		for line in parsed['lines']:
 			line.register(self.global_context)
 			
-		self.compile_blocks(parsed['lines'])
+		token = cur_file_var.set(file.filename)
+		try:
+			self.compile_blocks(parsed['lines'])
+		finally:
+			cur_file_var.reset(token)
+
 		
 	def import_python_file(self, filename):
 		self.environment.register_dependency(filename)
