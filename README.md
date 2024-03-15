@@ -14,7 +14,7 @@ You can use cbscript-npp-highlighting.xml with Notepad++ to add syntax highlight
 
 # Running the Compiler
 
-When you use run.cmd with your .cbscript file as an argument, a command window will pop up. This command window will monitor your .cbscript file for changes, and recompile any time it observes the file has been changed. Each cbscript file has a world file at the beginning that specifies where to place the compiled datapack. The compiled datapack will be placed in that world's /datapacks folder, with the same base name as the .cbscript file, overwriting it as necessary. You can use /reload in game to reload the datapack when it's been recompiled.
+When you use run.cmd with your .cbscript file as an argument, a command window will pop up. You can also invoke compile.py directly. This command window will monitor your .cbscript file for changes, and recompile any time it observes the file has been changed. Each cbscript file has a world file at the beginning that specifies where to place the compiled datapack. The compiled datapack will be placed in that world's /datapacks folder, with the same base name as the .cbscript file, overwriting it as necessary. You can use /reload in game to reload the datapack when it's been recompiled.
 
 # Features
 
