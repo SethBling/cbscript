@@ -37,15 +37,26 @@ $ClockXPosZPos = 2
 $ClockXNegZPos = 3
 $ClockXNegZNeg = 4
 $ClockXPosZNeg = 5
+$ClockMin = $ClockXPosZPos
+$ClockMax = $ClockXPosZNeg
 $CounterXPosZPos = 6
 $CounterXPosZNeg = 7
 $CounterXNegZNeg = 8
 $CounterXNegZPos = 9
+$CounterMin = $CounterXPosZPos
+$CounterMax = $CounterXNegZPos
 
 reset
     /scoreboard objectives add absorbed minecraft.custom:minecraft.damage_dealt_absorbed
+    
+    /scoreboard objectives add normal_game trigger
+    /scoreboard objectives add prev_game trigger
+    /scoreboard objectives add next_game trigger
+    /scoreboard objectives add restart_game trigger
 
     initialize_transforms()
+    
+    tell @a "{G[\[Normal Game\]](/trigger normal_game set 1) {C[\[Prev Game\]](/trigger prev_game set 1) [\[Next Game\]](/trigger next_game set 1) {Y[\[Restart Game\]](/trigger restart_game set 1)"
 end
 
 function clear_game()
@@ -63,6 +74,12 @@ function clear_game()
     CubeInvRotInt = 200
     GravityGun = False
     @Player.gravity_cube = None
+    
+    /bossbar remove score
+    /bossbar add score ["Score"]
+    /bossbar set score players @a
+    /bossbar set score max 100
+    /bossbar set score value 50
 end
 
 function finalize_game()
@@ -90,6 +107,8 @@ end
 function start_normal_game()
     clear_game()
     
+    gamemode = 1
+    
     /fill 0 56 0 0 67 0 minecraft:birch_fence
     
     PoleRadius = 125
@@ -100,6 +119,8 @@ function start_normal_game()
     with
         $(block_name) = "target"
     add_tether_block(1000, 60000, 1000)
+    
+    /bossbar set score name "<-Counter    Normal    Clockwise->"
 
     finalize_game()
 end
@@ -107,6 +128,8 @@ end
 function start_multi_game()
     clear_game()
     
+    gamemode = 5
+
     /fill 0 56 0 0 67 0 minecraft:birch_fence
     
     PoleRadius = 125
@@ -126,11 +149,16 @@ function start_multi_game()
         $(block_name) = "cyan_wool"
     add_tether_block(1000, 60000, 2000)
 
+    /bossbar set score name "<-Counter    Multi    Clockwise->"
+
     finalize_game()
 end
 
 function start_fat_game()
     clear_game()
+    
+    gamemode = 2
+
     
     /fill 0 56 0 0 67 0 minecraft:birch_planks
     
@@ -143,11 +171,15 @@ function start_fat_game()
         $(block_name) = "target"
     add_tether_block(2000, 60000, 0)
 
+    /bossbar set score name "<-Counter    Fat    Clockwise->"
+
     finalize_game()
 end
 
 function start_obese_game()
     clear_game()
+    
+    gamemode = 3
     
     /fill -1 56 -1 1 67 1 minecraft:birch_planks
     
@@ -160,12 +192,16 @@ function start_obese_game()
         $(block_name) = "target"
     add_tether_block(2000, 60000, 0)
 
+    /bossbar set score name "<-Counter    Obese    Clockwise->"
+    
     finalize_game()
 end
 
 function start_cup_game()
     clear_game()
     
+    gamemode = 4
+
     PunchPower = 3000
     
     /fill -4 68 -4 4 71 4 minecraft:black_stained_glass
@@ -181,12 +217,16 @@ function start_cup_game()
         $(block_name) = "target"
     add_tether_block(1000, 60000, 1000)
 
+    /bossbar remove score
+
     finalize_game()
 end
 
 function start_water_game()
     clear_game()
     
+    gamemode = 6
+
     /fill -9 56 -9 9 64 9 minecraft:water
     /fill 0 56 0 0 67 0 minecraft:birch_fence
     
@@ -199,11 +239,15 @@ function start_water_game()
         $(block_name) = "target"
     add_tether_block(1000, 60000, 1000)
 
+    /bossbar set score name "<-Counter    Water    Clockwise->"
+    
     finalize_game()
 end
 
 function start_gravity_game()
     clear_game()
+    
+    gamemode = 7
     
     /fill 0 56 0 0 67 0 minecraft:birch_fence
     
@@ -222,7 +266,36 @@ function start_gravity_game()
     CubeInvRotInt = 400
     CubeInvMass = 200
 
+    /bossbar set score name "<-Counter    Gravity Gun    Clockwise->"
+    
     finalize_game()
+end
+
+$MaxGame = 7
+function start_selected_game()
+    switch gamemode
+        case 1
+            start_normal_game()
+        end
+        case 2
+            start_fat_game()
+        end
+        case 3
+            start_obese_game()
+        end
+        case 4
+            start_cup_game()
+        end
+        case 5
+            start_multi_game()
+        end
+        case 6
+            start_water_game()
+        end
+        case 7
+            start_gravity_game()
+        end
+    end
 end
 
 clock tick
@@ -245,6 +318,46 @@ clock tick
                 @s.id = id
             end
         end
+        
+        if @s.normal_game
+            start_normal_game()
+            @s.normal_game = False
+        end
+        
+        if @s.next_game
+            gamemode++
+            if gamemode > $MaxGame
+                gamemode = 1
+            end
+            start_selected_game()
+        
+            @s.next_game = False
+        end
+        
+        if @s.prev_game
+            gamemode--
+            if gamemode < 1
+                gamemode = $MaxGame
+            end
+            start_selected_game()
+
+            @s.prev_game = False
+        end
+
+        if @s.restart_game
+            unless gamemode
+                gamemode = 1
+            end
+            
+            start_selected_game()
+
+            @s.restart_game = False
+        end
+        
+        /scoreboard players enable @s normal_game
+        /scoreboard players enable @s prev_game
+        /scoreboard players enable @s next_game
+        /scoreboard players enable @s restart_game
     end
     
     as @PlayerInteraction
@@ -367,6 +480,7 @@ clock tick
             @Position.<pos> = <@s.attack_x, @s.attack_y, @s.attack_z>
             at @Position
                 /particle minecraft:explosion ~ ~ ~ 0 0 0 0 1 force
+                /playsound minecraft:entity.generic.small_fall block @a ~ ~ ~ 1 0
             end
         
             @s.attacking = 0
@@ -439,6 +553,9 @@ clock tick
     colliders_get_new_collisions()
     colliders_resolve_collisions()
     colliders_finalize_tick()
+    
+    total_score = 0
+    score_count = 0
     
     as @TetherBlock at @s ~ ~-1.5 ~
         id = @s.collider_id
@@ -574,8 +691,6 @@ clock tick
             end
             
             if new_wrap_state
-                @s.bound_length = bound_length
-
                 wrapped_dy = dy * wrapped_portion / 1000
                 wrap_y = @s.origin_y + wrapped_dy
 
@@ -586,6 +701,8 @@ clock tick
                 stretched_length = wrapped_portion * len / 1000
                 bound_length = wrapped_portion * free_length / 1000
                 free_length -= bound_length
+
+                @s.bound_length = bound_length
                 
                 if Debug
                     tell @a "Wrapping..."
@@ -636,11 +753,11 @@ clock tick
             end
             
             if unwrap
+                /kill @s
                 segments--
-                as @RopeSegment if @s.segment == segments
+                as @RopeSegment if @s.id == id and @s.segment == segments
                     free_length += @s.bound_length
                 end
-                /kill @s
             end
         end
         
@@ -671,6 +788,15 @@ clock tick
                     /tp @s ~ ~ ~ ~ ~
                 end
             end
+            
+            if @s.wrap_state >= $ClockMin and @s.wrap_state <= $ClockMax
+                total_score += 110 - free_length * 60 / TetherLength
+            else if @s.wrap_state >= $CounterMin and @s.wrap_state <= $CounterMax
+                total_score += -10 + free_length * 60 / TetherLength
+            else
+                total_score += 50
+            end
+            score_count++
         else
             as create @RopeSegment
                 @s.segment = 1
@@ -684,6 +810,9 @@ clock tick
             @s.segments = 1
         end
     end
+    
+    total_score /= score_count
+    /execute store result bossbar score value run scoreboard players get Global total_score
 end
 
 function get_targeted_block()
