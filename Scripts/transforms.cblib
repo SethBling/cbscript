@@ -244,6 +244,18 @@ function collider_integrate_velocity()
     collider.recent_motion += motion
 end
 
+function collider_set_orientation(w, i, j, k)
+    define name collider = "collider_$(collider)"
+    
+    collider.w = w
+    collider.i = i
+    collider.j = j
+    collider.k = k
+    
+    collider_normalize_quaternion() with macros
+    collider_quaternion_to_transform() with macros
+end
+
 function collider_integrate_rotation()
     define name collider = "collider_$(collider)"
     
