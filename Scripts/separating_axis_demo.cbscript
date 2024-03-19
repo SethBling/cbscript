@@ -21,8 +21,8 @@ function do_reset()
     /team add red
     /team add green
     
-    /team modify red color red
-    /team modify green color green
+    /team modify red color dark_purple
+    /team modify green color aqua
 
     CubeSize = 1500
     CubeInvMass = 800
@@ -41,16 +41,31 @@ function do_reset()
             add_collider(x2 + axis * 6000, y2 + 58000, z2)
         end
         
+        for axis = 0 to 14
+            with
+                $(block_name) = "cyan_stained_glass"
+            add_collider(x1 + axis * 6000, y1 + 58000, z1)
+            
+            with
+                $(block_name) = "purple_stained_glass"
+            add_collider(x2 + axis * 6000, y2 + 58000, z2)
+        end
+
+        
         pair = 1
         init_cubes()
     
         as @PhysicsBlock
-            @s.glowing = True
+            /data modify entity @s interpolation_duration set value 0            
             
-            if @s.collider_id % 2 == 0
-                /team join red
-            else
-                /team join green
+            if @s.collider_id <= 30
+                @s.glowing = True
+                
+                if @s.collider_id % 2 == 0
+                    /team join red
+                else
+                    /team join green
+                end
             end
         end
         
@@ -64,7 +79,7 @@ function tell_options()
     tell @a "{Y[\[Prev\]](/function $namespace:prev_pair) {C[\[Next\]](/function $namespace:next_pair)"
 end
 
-$MaxPair = 3
+$MaxPair = 4
 function prev_pair()
     pair--
     if pair < 1
@@ -123,8 +138,28 @@ function init_cubes()
         y2 = 0
         z2 = 1050
     end
-
+    
     if pair == 3
+        w1 = 500
+        i1 = 1000
+        j1 = 700
+        k1 = 500
+        
+        x1 = 0
+        y1 = 0
+        z1 = -925
+
+        w2 = 800
+        i2 = 800
+        j2 = 200
+        k2 = 600
+        
+        x2 = 0
+        y2 = 0
+        z2 = 1075
+    end
+
+    if pair == 4
         w1 = 200
         i1 = 3000
         j1 = 700
@@ -156,11 +191,32 @@ function init_cubes()
             collider_set_orientation(w1, i1, j1, k1) with macros
             
             collider_calculate_vertex_world_positions() with macros
-            tell @a "(x1), (y1), (z1)"
         end
         
         with
             $(collider) = axis * 2 + 2
+        do
+            collider.x = x2 + axis * 6000
+            collider.y = y2 + 58000
+            collider.z = z2
+            collider_set_orientation(w2, i2, j2, k2) with macros
+
+            collider_calculate_vertex_world_positions() with macros
+        end
+
+        with
+            $(collider) = axis * 2 + 1 + 30
+        do
+            collider.x = x1 + axis * 6000
+            collider.y = y1 + 58000
+            collider.z = z1
+            collider_set_orientation(w1, i1, j1, k1) with macros
+            
+            collider_calculate_vertex_world_positions() with macros
+        end
+        
+        with
+            $(collider) = axis * 2 + 2 + 30
         do
             collider.x = x2 + axis * 6000
             collider.y = y2 + 58000
