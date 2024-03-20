@@ -1,0 +1,453 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.20\saves\Blocket League"
+desc "Blocket League game"
+scale 1000
+
+import common
+import math
+import colliders
+
+define @PlayerInteraction = @Entity[type=interaction, tag=PlayerInteraction]
+    create {Tags:["PlayerInteraction"], width:6, height:6, teleport_duration:1}
+end
+
+define @Vehicle = @Entity[type=pig, tag=Vehicle]
+    create {Tags:["Vehicle"], Invisible:1, NoAI:1, teleport_duration:1, Invulnerable:1}
+end
+
+@PlayerBlock = @Entity[type=block_display,tag=PlayerBlock]
+@BallBlock = @Entity[type=block_display,tag=BallBlock,limit=1]
+
+define @Glass = @Entity[type=block_display,tag=Glass]
+    create {Tags:["Glass"], block_state:{Name:"minecraft:black_stained_glass"}, transformation:{left_rotation: [0f, 0f, 0f, 1f], translation: [-20f, -30f, -10f], right_rotation: [0f, 0f, 0f, 1f], scale:[40f, 60f, 20f]}}
+    
+    <scale> : transformation.scale float 1000
+    scale_x : transformation.scale[0] float 1000
+    scale_y : transformation.scale[1] float 1000
+    scale_z : transformation.scale[2] float 1000
+
+    <translation> : transformation.translation float 1000
+    translation_x : transformation.translation[0] float 1000
+    translation_y : transformation.translation[1] float 1000
+    translation_z : transformation.translation[2] float 1000
+    
+end
+
+$Precision = 1000
+$Half = 500
+$Billion = 1000000000
+
+reset
+    initialize_transforms()
+    
+    reset_game()
+end
+
+function reset_game()
+    destroy_colliders()
+    /kill @PlayerInteraction
+    
+    as @Player
+        /ride @s dismount
+    end
+    
+    as @Vehicle
+        /tp @s ~ -200 ~
+        /kill @s
+    end
+    
+    /kill @Glass
+    
+    YnegPlane = 56000
+    YposPlane = 86000
+    XnegPlane = -40000
+    XposPlane = 40000
+    ZnegPlane = -20000
+    ZposPlane = 20000
+    
+    @Position.<pos> = <0, (YnegPlane + YposPlane) / 2, ZposPlane>
+    at @Position
+        as create @Glass
+            @s.<scale> = <XposPlane - XnegPlane, YposPlane - YnegPlane, 10>
+            @s.<translation> = <XnegPlane, (YnegPlane - YposPlane) / 2, 0>
+        end
+    end
+    
+    @Position.<pos> = <0, (YnegPlane + YposPlane) / 2, ZnegPlane>
+    at @Position
+        as create @Glass
+            @s.<scale> = <XposPlane - XnegPlane, YposPlane - YnegPlane, 10>
+            @s.<translation> = <XnegPlane, (YnegPlane - YposPlane) / 2, 0>
+        end
+    end
+
+    @Position.<pos> = <XposPlane, (YnegPlane + YposPlane) / 2, 0>
+    at @Position
+        as create @Glass
+            @s.<scale> = <10, YposPlane - YnegPlane, ZposPlane - ZnegPlane>
+            @s.<translation> = <0, (YnegPlane - YposPlane) / 2, ZnegPlane>
+        end
+    end
+    
+    @Position.<pos> = <XnegPlane, (YnegPlane + YposPlane) / 2, 0>
+    at @Position
+        as create @Glass
+            @s.<scale> = <10, YposPlane - YnegPlane, ZposPlane - ZnegPlane>
+            @s.<translation> = <0, (YnegPlane - YposPlane) / 2, ZnegPlane>
+        end
+    end
+    
+    @Position.<pos> = <0, YposPlane, 0>
+    at @Position
+        as create @Glass
+            @s.<scale> = <XposPlane - XnegPlane, 10, ZposPlane - ZnegPlane>
+            @s.<translation> = <XnegPlane, 0, ZnegPlane>
+        end
+    end
+
+
+    # Disable world collisions
+    colliders.world_collisions = 0
+    
+    Restitution = 2000
+    Gravity = 20
+    Friction = 1000
+
+    CubeSize = 5000
+    CubeInvMass = 1200
+    CubeInvRotInt = 200
+
+    with
+        $(block_name) = "target"
+    add_collider(0, 59000, 0)
+    as @PhysicsBlock
+        /tag @s add BallBlock
+    end
+    
+    CubeSize = 1500
+    CubeInvMass = 200
+    CubeInvRotInt = 100
+end
+
+function add_player_block()
+    with
+        $(block_name) = "red_wool"
+    add_collider(-3000, 58000, 0)
+end
+
+clock tick
+    /kill @Position
+    create @Position
+    
+    as @PlayerInteraction
+        on attacker
+            @s.boosting = 10
+        end
+        
+        on target
+            @s.jumping = True
+        end
+        /data remove entity @s attack
+        /data remove entity @s interaction
+    end
+    
+    @PlayerBlock.current = False
+    
+    for @player in @Player
+        at @s ~ ~ ~
+            <x, y, z> = @s.<pos>
+            at @s ^ ^ ^1
+                /tp @Position ~ ~ ~
+                <dx, dy, dz> = @Position.<pos> - <x, y, z>
+            end
+            rx = @s.rx
+            ry = @s.ry
+            
+            unless @s.id
+                player_id++
+                @s.id = player_id
+            end
+            
+            current_id = @s.id
+            
+            jumping = @s.jumping
+            @s.jumping = False
+            
+            boosting = @s.boosting
+            @s.boosting--
+        
+            as @PlayerInteraction if @s.id == current_id
+                /tp @s ~ ~-2 ~
+            else
+                as create @PlayerInteraction
+                    @s.id = current_id
+                end
+            end
+
+            as @PlayerBlock at @s if @s.player_id == current_id
+                @s.current = True
+                as @Vehicle if @s.id == current_id
+                    dismounted = result
+                        /ride @player mount @s
+                        
+                    #/tp @s ~ ~ ~
+                    @s.rx = rx
+                    @s.ry = ry
+                else
+                    dismounted = False
+                    as create @Vehicle
+                        /effect give @s minecraft:invisibility infinite 0 true
+                        @s.id = current_id
+                        /ride @s mount @PlayerBlock[current >= 1, limit=1]
+                    end
+                end
+                
+                if dismounted
+                    @s.braking = True
+                end
+                
+                with
+                    $(collider) = @s.collider_id
+                do
+                    define name collider = "collider_$(collider)"
+                    
+                    if jumping and collider.y <= YnegPlane + 3000
+                        collider.velocity_y = 750
+                        @s.braking = False
+                    end
+                    
+                    if boosting
+                        collider.velocity_x += dx / 15
+                        collider.velocity_y += dy / 15
+                        collider.velocity_z += dz / 15
+                        
+                        @s.braking = False
+                    else if @s.braking
+                        collider.velocity_x *= 3
+                        collider.velocity_x /= 4
+                        collider.velocity_z *= 3
+                        collider.velocity_z /= 4
+                    else
+                        collider.velocity_x += dx / 40
+                        collider.velocity_y += dy / 55
+                        collider.velocity_z += dz / 40
+                    end
+                    
+                    collider_wake_up() with macros
+                end
+                
+                @s.current = False
+            else
+                @PhysicsBlock.block_age = 1
+                add_player_block()
+                as @PhysicsBlock 
+                    @s.block_age++
+                    if @s.block_age == 1
+                        @s.player_id = current_id
+                        @s.braking = True
+                        /tag @s add PlayerBlock
+                    end                
+                end
+            end
+        end
+    end
+    
+    as @PlayerInteraction
+        id = @s.id
+        as @Player if @s.id == id
+        else
+            /kill @s
+        end
+    end
+    
+    as @Vehicle
+        id = @s.id
+        as @Player if @s.id == id
+        else
+            /tp @s 0 -200 0
+            /kill @s
+        end
+    end
+    
+    as @PlayerBlock at @s
+        
+    end
+    
+    colliders_physics_tick()
+    colliders_get_new_collisions()
+    get_plane_collisions()
+    colliders_resolve_collisions()
+    colliders_finalize_tick()
+end
+
+function get_plane_collisions()
+    for collider_iter = 1 to max_collider
+        with
+            $(collider) = collider_iter
+        do
+            define name collider = "collider_$(collider)"
+            define name collider_axis_0 = "collider_$(collider)"
+            
+            y = collider.min_y
+            if y <= YnegPlane
+                pen = YnegPlane - y
+                
+                if pen > collider.max_pen
+                    with
+                        $(vertex) = collider.min_y_vertex
+                    do
+                        define name vertex = "collider_$(collider)_v$(vertex)"
+
+                        x = vertex.x
+                        z = vertex.z
+                    end
+                    
+                    nx = 0
+                    ny = $Precision
+                    nz = 0
+                    
+                    create_plane_collision() with macros
+                end
+            end
+            
+            y = collider.max_y
+            if y >= YposPlane
+                pen = y - YposPlane
+                
+                if pen > collider.max_pen
+                    with
+                        $(vertex) = collider.max_y_vertex
+                    do
+                        define name vertex = "collider_$(collider)_v$(vertex)"
+
+                        x = vertex.x
+                        z = vertex.z
+                    end
+                    
+                    nx = 0
+                    ny = -$Precision
+                    nz = 0
+                    
+                    create_plane_collision() with macros
+                end
+            end
+
+            x = collider.min_x
+            if x <= XnegPlane
+                pen = XnegPlane - x
+                
+                if pen > collider.max_pen
+                    with
+                        $(vertex) = collider.min_x_vertex
+                    do
+                        define name vertex = "collider_$(collider)_v$(vertex)"
+
+                        x = vertex.x
+                        z = vertex.z
+                    end
+                    
+                    nx = $Precision
+                    ny = 0
+                    nz = 0
+                    
+                    create_plane_collision() with macros
+                end
+            end
+            
+            x = collider.max_x
+            if x >= XposPlane
+                pen = x - XposPlane
+                
+                if pen > collider.max_pen
+                    with
+                        $(vertex) = collider.max_x_vertex
+                    do
+                        define name vertex = "collider_$(collider)_v$(vertex)"
+
+                        x = vertex.x
+                        z = vertex.z
+                    end
+                    
+                    nx = -$Precision
+                    ny = 0
+                    nz = 0
+                    
+                    create_plane_collision() with macros
+                end
+            end
+
+            z = collider.min_z
+            if z <= ZnegPlane
+                pen = ZnegPlane - z
+                
+                if pen > collider.max_pen
+                    with
+                        $(vertex) = collider.min_z_vertex
+                    do
+                        define name vertex = "collider_$(collider)_v$(vertex)"
+
+                        x = vertex.x
+                        z = vertex.z
+                    end
+                    
+                    nx = 0
+                    ny = 0
+                    nz = $Precision
+                    
+                    create_plane_collision() with macros
+                end
+            end
+            
+            z = collider.max_z
+            if z >= ZposPlane
+                pen = z - ZposPlane
+                
+                if pen > collider.max_pen
+                    with
+                        $(vertex) = collider.max_z_vertex
+                    do
+                        define name vertex = "collider_$(collider)_v$(vertex)"
+
+                        x = vertex.x
+                        z = vertex.z
+                    end
+                    
+                    nx = 0
+                    ny = 0
+                    nz = -$Precision
+                    
+                    create_plane_collision() with macros
+                end
+            end
+        end
+    end
+end
+
+function create_plane_collision()
+    define name collider = "collider_$(collider)"
+    
+    id = get_unused_collision_id()
+    with
+        $(collision) = id
+    do
+        define name collision = "collision_$(collision)"
+        collision.id = id
+        collision.type = 0
+        collision.pen = pen
+        
+        collision.x = x
+        collision.y = y
+        collision.z = z
+        
+        collision.nx = nx
+        collision.ny = ny
+        collision.nz = nz
+        
+        collision.restitution = 600
+        
+        collision.collider1 = collider_iter
+    end
+
+    collider.max_pen = pen
+    collider.max_pen_col = id
+
+end

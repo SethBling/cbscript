@@ -815,21 +815,27 @@ function collider_calculate_vertex_world_positions()
             define name vertex = "collider_$(collider)_v$(vertex)"
             if vertex.x < collider.min_x
                 collider.min_x = vertex.x
+                collider.min_x_vertex = vertex
             end
             if vertex.x > collider.max_x
                 collider.max_x = vertex.x
+                collider.max_x_vertex = vertex
             end
             if vertex.y < collider.min_y
                 collider.min_y = vertex.y
+                collider.min_y_vertex = vertex
             end
             if vertex.y > collider.max_y
                 collider.max_y = vertex.y
+                collider.max_y_vertex = vertex                
             end
             if vertex.z < collider.min_z
                 collider.min_z = vertex.z
+                collider.min_z_vertex = vertex
             end
             if vertex.z > collider.max_z
                 collider.max_z = vertex.z
+                collider.max_z_vertex = vertex
             end
         end
     end
@@ -2182,8 +2188,7 @@ function update_collision()
                 delete_collision() with macros
             end
         end
-    end
-    if type == $CollisionCubeFaceWorldPoint
+    else if type == $CollisionCubeFaceWorldPoint
         with
             $(collider) = collision.collider1
         do
@@ -2243,8 +2248,7 @@ function update_collision()
                 delete_collision() with macros
             end
         end
-    end
-    if type == $CollisionCubeEdgeWorldEdge
+    else if type == $CollisionCubeEdgeWorldEdge
         with
             $(collider) = collision.collider1
         do
@@ -2314,8 +2318,7 @@ function update_collision()
                 delete_collision() with macros
             end
         end
-    end
-    if type == $CollisionCubeFaceCubePoint
+    else if type == $CollisionCubeFaceCubePoint
         with
             $(collider2) = collision.collider2
             $(vertex) = collision.vertex
@@ -2382,8 +2385,7 @@ function update_collision()
                 delete_collision() with macros
             end
         end
-    end
-    if type == $CollisionCubeEdgeCubeEdge
+    else if type == $CollisionCubeEdgeCubeEdge
         with
             $(collider1) = collision.collider1
             $(collider2) = collision.collider2
@@ -2466,6 +2468,9 @@ function update_collision()
                 delete_collision() with macros
             end
         end
+    else
+        # No type specified
+        delete_collision() with macros
     end
     
     if collision.pen < -100
@@ -2963,6 +2968,10 @@ function handle_collision_impulse()
     c_vel_z = (ct_02 * vel_x + ct_12 * vel_y + ct_22 * vel_z + $Half) / $Precision
     
     restitution = Restitution
+    if collision.restitution
+        restitution = collision.restitution
+    end
+    
     if c_vel_y > $CancelRestitution
         restitution = 0
     end
