@@ -10,15 +10,12 @@ define @PlayerInteraction = @Entity[type=interaction, tag=PlayerInteraction]
     create {Tags:["PlayerInteraction"], width:6, height:6, teleport_duration:1}
 end
 
-define @Vehicle = @Entity[type=pig, tag=Vehicle]
-    create {Tags:["Vehicle"], Invisible:1, NoAI:1, teleport_duration:1, Invulnerable:1}
-end
-
+@Playing = @Player[gamemode=adventure]
 @PlayerBlock = @Entity[type=block_display,tag=PlayerBlock]
 @BallBlock = @Entity[type=block_display,tag=BallBlock,limit=1]
 
 define @Glass = @Entity[type=block_display,tag=Glass]
-    create {Tags:["Glass"], block_state:{Name:"minecraft:black_stained_glass"}, transformation:{left_rotation: [0f, 0f, 0f, 1f], translation: [-20f, -30f, -10f], right_rotation: [0f, 0f, 0f, 1f], scale:[40f, 60f, 20f]}}
+    create {Tags:["Glass"], block_state:{Name:"minecraft:black_stained_glass"}, transformation:{left_rotation: [0f, 0f, 0f, 1f], translation: [-20f, -30f, -10f], right_rotation: [0f, 0f, 0f, 1f], scale:[40f, 60f, 20f]}, view_range:10f}
     
     <scale> : transformation.scale float 1000
     scale_x : transformation.scale[0] float 1000
@@ -36,102 +33,215 @@ $Precision = 1000
 $Half = 500
 $Billion = 1000000000
 
+$Red = 1
+$Blue = 2
+
 reset
-    initialize_transforms()
+    /gamerule playersNetherPortalCreativeDelay 1000000
+    /gamerule playersNetherPortalDefaultDelay 1000000
     
+    /team add red "Red"
+    /team modify red color red
+    /team add blue "Blue"
+    /team modify blue color blue
+    
+    /scoreboard objectives add join_red_team trigger
+    /scoreboard objectives add join_blue_team trigger
+    /scoreboard objectives add spectate trigger
+    /scoreboard objectives add start_game trigger
+    
+    as @Player
+        tell_options()
+    end
+end
+
+function tell_options()
+    tell @s "{R[\[Join Red\]](/trigger join_red_team set 1) {B[\[Join Blue\]](/trigger join_blue_team set 1) {Y[\[Spectate\]](/trigger spectate set 1) {G[\[Start Game\]](/trigger start_game set 1)"
+end
+
+function join_red_team()
+    if @s[team=red]
+        tell @s "You're already on {Rred team{-"
+    else
+        /team join red @s
+        /gamemode adventure @s
+        tell @a "(@s) joined the {Rred team{-."
+    end
+    
+    tell_options()
+end
+
+function join_blue_team()
+    if @s[team=blue]
+        tell @s "You're already on {Bblue team{-."
+    else
+        /team join blue @s
+        /gamemode adventure @s
+        tell @a "(@s) joined the {Bblue team{-."
+    end
+    
+    tell_options()
+end
+
+function spectate()
+    if @s[gamemode=spectator]
+        tell @s "You're already spectating."
+    else
+        /team leave @s
+        /gamemode spectator @s
+        tell @a "(@s) is now spectating."
+    end
+    
+    tell_options()
+end
+
+function start_game()
     reset_game()
 end
 
 function reset_game()
+    initialize_transforms()
+    
     destroy_colliders()
     /kill @PlayerInteraction
     
-    as @Player
+    as @Playing
         /ride @s dismount
-    end
-    
-    as @Vehicle
-        /tp @s ~ -200 ~
-        /kill @s
     end
     
     /kill @Glass
     
     YnegPlane = 56000
-    YposPlane = 86000
-    XnegPlane = -40000
-    XposPlane = 40000
-    ZnegPlane = -20000
-    ZposPlane = 20000
     
-    @Position.<pos> = <0, (YnegPlane + YposPlane) / 2, ZposPlane>
+    YposPlane = YnegPlane + 36000
+    XposPlane = 45600
+    ZposPlane = 30000
+    XnegPlane = -XposPlane + 1000
+    ZnegPlane = -ZposPlane + 1000
+    
+    @Position.<pos> = <(XnegPlane + XposPlane) / 2, (YnegPlane + YposPlane) / 2, ZposPlane>
     at @Position
         as create @Glass
             @s.<scale> = <XposPlane - XnegPlane, YposPlane - YnegPlane, 10>
-            @s.<translation> = <XnegPlane, (YnegPlane - YposPlane) / 2, 0>
+            @s.<translation> = <(XnegPlane - XposPlane) / 2, (YnegPlane - YposPlane) / 2, 0>
         end
     end
     
-    @Position.<pos> = <0, (YnegPlane + YposPlane) / 2, ZnegPlane>
+    @Position.<pos> = <(XnegPlane + XposPlane) / 2, (YnegPlane + YposPlane) / 2, ZnegPlane>
     at @Position
         as create @Glass
             @s.<scale> = <XposPlane - XnegPlane, YposPlane - YnegPlane, 10>
-            @s.<translation> = <XnegPlane, (YnegPlane - YposPlane) / 2, 0>
+            @s.<translation> = <(XnegPlane - XposPlane) / 2, (YnegPlane - YposPlane) / 2, 0>
         end
     end
 
-    @Position.<pos> = <XposPlane, (YnegPlane + YposPlane) / 2, 0>
+    @Position.<pos> = <XposPlane, (YnegPlane + YposPlane) / 2, (ZnegPlane + ZposPlane) / 2>
     at @Position
         as create @Glass
             @s.<scale> = <10, YposPlane - YnegPlane, ZposPlane - ZnegPlane>
-            @s.<translation> = <0, (YnegPlane - YposPlane) / 2, ZnegPlane>
+            @s.<translation> = <0, (YnegPlane - YposPlane) / 2, (ZnegPlane - ZposPlane) / 2>
+            /data modify entity @s block_state.Name set value "minecraft:red_stained_glass"
         end
     end
     
-    @Position.<pos> = <XnegPlane, (YnegPlane + YposPlane) / 2, 0>
+    @Position.<pos> = <XnegPlane, (YnegPlane + YposPlane) / 2, (ZnegPlane + ZposPlane) / 2>
     at @Position
         as create @Glass
             @s.<scale> = <10, YposPlane - YnegPlane, ZposPlane - ZnegPlane>
-            @s.<translation> = <0, (YnegPlane - YposPlane) / 2, ZnegPlane>
+            @s.<translation> = <0, (YnegPlane - YposPlane) / 2, (ZnegPlane - ZposPlane) / 2>
+            /data modify entity @s block_state.Name set value "minecraft:blue_stained_glass"
         end
     end
     
-    @Position.<pos> = <0, YposPlane, 0>
+    @Position.<pos> = <(XnegPlane + XposPlane) / 2, YposPlane, (ZnegPlane + ZposPlane) / 2>
     at @Position
         as create @Glass
             @s.<scale> = <XposPlane - XnegPlane, 10, ZposPlane - ZnegPlane>
-            @s.<translation> = <XnegPlane, 0, ZnegPlane>
+            @s.<translation> = <(XnegPlane - XposPlane) / 2, 0, (ZnegPlane - ZposPlane) / 2>
         end
     end
+    
+    PortalHeight = (24000) / 3 / $Precision * $Precision
+    PortalWidth = (59000) / 5 / $Precision * $Precision
+    
+    #@Position.<pos> = <XnegPlane, YnegPlane + PortalHeight / 2, (ZnegPlane + ZposPlane) / 2>
+    #at @Position
+    #    as create @Glass
+    #        @s.<scale> = <100, PortalHeight, PortalWidth>
+    #        @s.<translation> = <-50, -PortalHeight / 2, -PortalWidth / 2>
+    #        /data modify entity @s block_state.Name set value "minecraft:purple_wool"
+    #    end
+    #end
+    
+    #@Position.<pos> = <XposPlane, YnegPlane + PortalHeight / 2, (ZnegPlane + ZposPlane) / 2>
+    #at @Position
+    #    as create @Glass
+    #        @s.<scale> = <100, PortalHeight, PortalWidth>
+    #        @s.<translation> = <-50, -PortalHeight / 2, -PortalWidth / 2>
+    #        /data modify entity @s block_state.Name set value "minecraft:purple_wool"
+    #    end
+    #end
+
+    ObsidianHeight = PortalHeight + 2000
+    ObsidianWidth = PortalWidth + 2000
+    
+    #@Position.<pos> = <XnegPlane, YnegPlane + PortalHeight / 2, (ZnegPlane + ZposPlane) / 2>
+    #at @Position
+    #    as create @Glass
+    #        @s.<scale> = <50, ObsidianHeight, ObsidianWidth>
+    #        @s.<translation> = <-25, -ObsidianHeight / 2, -ObsidianWidth / 2>
+    #        /data modify entity @s block_state.Name set value "minecraft:obsidian"
+    #    end
+    #end
+    
+    #@Position.<pos> = <XposPlane, YnegPlane + PortalHeight / 2, (ZnegPlane + ZposPlane) / 2>
+    #at @Position
+    #    as create @Glass
+    #        @s.<scale> = <50, ObsidianHeight, ObsidianWidth>
+    #        @s.<translation> = <-25, -ObsidianHeight / 2, -ObsidianWidth / 2>
+    #        /data modify entity @s block_state.Name set value "minecraft:obsidian"
+    #    end
+    #end
 
 
     # Disable world collisions
-    colliders.world_collisions = 0
+    colliders.world_collisions = False
+    
+    # Enable Impact Sounds
+    transforms.impact_sounds = True
     
     Restitution = 2000
-    Gravity = 20
+    Gravity = 15
     Friction = 1000
 
-    CubeSize = 5000
+    CubeSize = 4000
     CubeInvMass = 1200
     CubeInvRotInt = 200
 
     with
         $(block_name) = "target"
-    add_collider(0, 59000, 0)
+    add_collider(500, 56000 + CubeSize / 2, 500)
     as @PhysicsBlock
         /tag @s add BallBlock
+        @s.BallBlock = True
     end
     
-    CubeSize = 1500
+    collider_1.recent_motion = 0
+    collider_1.recent_rotation = 0
+    
+    CubeSize = 800
     CubeInvMass = 200
-    CubeInvRotInt = 100
+    CubeInvRotInt = 200
+    
+    as @Player
+        tell_options()
+    end
 end
 
 function add_player_block()
     with
         $(block_name) = "red_wool"
-    add_collider(-3000, 58000, 0)
+    add_collider(-10000, 56000 + CubeSize / 2, 0)
 end
 
 clock tick
@@ -152,15 +262,57 @@ clock tick
     
     @PlayerBlock.current = False
     
-    for @player in @Player
+    as @Player[gamemode=survival]
+        /gamemode adventure @s
+    end
+    
+    as @Player
+        if @s.join_red_team
+            join_red_team()
+            @s.join_red_team = False
+        end
+        /scoreboard players enable @s join_red_team
+        
+        if @s.join_blue_team
+            join_blue_team()
+            @s.join_blue_team = False
+        end
+        /scoreboard players enable @s join_blue_team
+        
+        if @s.spectate
+            spectate()
+            @s.spectate = False
+        end
+        /scoreboard players enable @s spectate
+
+        if @s.start_game
+            start_game()
+            @s.start_game = False
+        end
+        /scoreboard players enable @s start_game
+    end
+    
+    
+    for @player in @Playing
+        /effect give @s minecraft:resistance infinite 5 true
+        /effect give @s minecraft:instant_health infinite 5 true
+        /effect give @s minecraft:saturation infinite 5 true
+        
         at @s ~ ~ ~
             <x, y, z> = @s.<pos>
             at @s ^ ^ ^1
                 /tp @Position ~ ~ ~
                 <dx, dy, dz> = @Position.<pos> - <x, y, z>
             end
-            rx = @s.rx
-            ry = @s.ry
+            
+            vx = @s.vx
+            vz = @s.vz
+            speed = sqrt(vx*vx + vz*vz)
+            
+            horiz_mag = sqrt(dx*dx + dz*dz)
+            
+            dx = vx * horiz_mag / speed
+            dz = vz * horiz_mag / speed
             
             unless @s.id
                 player_id++
@@ -172,8 +324,20 @@ clock tick
             jumping = @s.jumping
             @s.jumping = False
             
-            boosting = @s.boosting
             @s.boosting--
+            boosting = @s.boosting
+            
+            if @s.menu_cooldown
+                @s.menu_cooldown--
+            end
+            
+            if @s[team=red]
+                team = $Red
+            else if @s[team=blue]
+                team = $Blue
+            else
+                team = None
+            end
         
             as @PlayerInteraction if @s.id == current_id
                 /tp @s ~ ~-2 ~
@@ -184,25 +348,22 @@ clock tick
             end
 
             as @PlayerBlock at @s if @s.player_id == current_id
-                @s.current = True
-                as @Vehicle if @s.id == current_id
-                    dismounted = result
-                        /ride @player mount @s
-                        
-                    #/tp @s ~ ~ ~
-                    @s.rx = rx
-                    @s.ry = ry
-                else
-                    dismounted = False
-                    as create @Vehicle
-                        /effect give @s minecraft:invisibility infinite 0 true
-                        @s.id = current_id
-                        /ride @s mount @PlayerBlock[current >= 1, limit=1]
-                    end
+                dismounted = result
+                    /ride @player mount @s
+                    
+                if dismounted as @player unless @s.menu_cooldown > 0
+                    tell_options()
+                    @s.menu_cooldown = 20
                 end
                 
-                if dismounted
-                    @s.braking = True
+                unless team == @s.team
+                    if team == $Red
+                        /data modify entity @s block_state.Name set value "minecraft:red_wool"
+                    else if team == $Blue
+                        /data modify entity @s block_state.Name set value "minecraft:blue_wool"
+                    end
+
+                    @s.team = team
                 end
                 
                 with
@@ -210,32 +371,66 @@ clock tick
                 do
                     define name collider = "collider_$(collider)"
                     
-                    if jumping and collider.y <= YnegPlane + 3000
-                        collider.velocity_y = 750
+                    vx = collider.velocity_x
+                    vy = collider.velocity_y
+                    vz = collider.velocity_z
+                    
+                    horiz_vel = sqrt(vx*vx + vz*vz)
+                    norm_vx = vx * $Precision / horiz_vel
+                    norm_vz = vz * $Precision / horiz_vel
+                    
+                    braking_dot = -(dx * norm_vx + dz * norm_vz) / $Precision
+                    
+                    if braking_dot > 0
+                        dx = dx * braking_dot * 2/ $Precision
+                        dz = dz * braking_dot * 2 / $Precision
+                    end
+                    
+                    if jumping and collider.y <= YnegPlane + 2000
+                        vy = 500
                         @s.braking = False
                     end
                     
-                    if boosting
-                        collider.velocity_x += dx / 15
-                        collider.velocity_y += dy / 15
-                        collider.velocity_z += dz / 15
-                        
-                        @s.braking = False
-                    else if @s.braking
-                        collider.velocity_x *= 3
-                        collider.velocity_x /= 4
-                        collider.velocity_z *= 3
-                        collider.velocity_z /= 4
-                    else
-                        collider.velocity_x += dx / 40
-                        collider.velocity_y += dy / 55
-                        collider.velocity_z += dz / 40
+                    if boosting and @s.boost_meter > 0
+                        @s.boost_meter--
+                    else if @s.boost_meter < 100
+                        @s.boost_meter++
+                        boosting = 0
                     end
+                    
+                    if boosting
+                        vx += dx / 20
+                        vy += dy / 20
+                        vz += dz / 20
+                        
+                        if boosting == 9
+                            /playsound minecraft:entity.blaze.shoot master @a ~ ~ ~ 0.2 2
+                        end
+                        /particle minecraft:soul_fire_flame ~ ~ ~ 0 0 0 0 1 force
+                    else
+                        vx += dx / 30
+                        vy += dy / 80
+                        vz += dz / 30
+                        
+                        /particle minecraft:flame ~ ~ ~ 0 0 0 0 1 force
+                    end
+                    
+                    # Extra gravity on the vehicle
+                    vy -= 15
+
+                    collider.velocity_x = vx
+                    collider.velocity_y = vy
+                    collider.velocity_z = vz
+
                     
                     collider_wake_up() with macros
                 end
                 
-                @s.current = False
+                with
+                    $(id) = current_id
+                do
+                    /execute store result bossbar boost_$(id) value run scoreboard players get @s boost_meter
+                end
             else
                 @PhysicsBlock.block_age = 1
                 add_player_block()
@@ -243,11 +438,29 @@ clock tick
                     @s.block_age++
                     if @s.block_age == 1
                         @s.player_id = current_id
-                        @s.braking = True
                         /tag @s add PlayerBlock
+                        /ride @player mount @s
+                        @s.boost_meter = 100
+                        
+                        with
+                            $(id) = current_id
+                        do
+                            /bossbar add boost_$(id) "Boost Meter"
+                            /bossbar set boost_$(id) players @player
+                            /bossbar set boost_$(id) value 100
+                        end
+                        
+                        if team == $Red
+                            /data modify entity @s block_state.Name set value "minecraft:red_wool"
+                        else if team == $Blue
+                            /data modify entity @s block_state.Name set value "minecraft:blue_wool"
+                        end
+                        @s.team = team
                     end                
                 end
             end
+            
+            @s.boosting = boosting
         end
     end
     
@@ -259,11 +472,18 @@ clock tick
         end
     end
     
-    as @Vehicle
-        id = @s.id
-        as @Player if @s.id == id
+    as @PlayerBlock
+        current_id = @s.player_id
+        as @Playing if @s.id == current_id
+            player = True
         else
-            /tp @s 0 -200 0
+            player = False
+        end
+        
+        if not player
+            with
+                $(collider) = @s.collider_id
+            destroy_collider()
             /kill @s
         end
     end
@@ -341,8 +561,14 @@ function get_plane_collisions()
                     do
                         define name vertex = "collider_$(collider)_v$(vertex)"
 
-                        x = vertex.x
+                        y = vertex.y
                         z = vertex.z
+                    end
+                    
+                    if collider_iter == 1 and y <= YnegPlane + PortalHeight and z >= (ZnegPlane + ZposPlane) / 2 - PortalWidth / 2 and z <= (ZnegPlane + ZposPlane) / 2 + PortalWidth / 2
+                        as @Player at @s
+                            /playsound minecraft:ui.toast.challenge_complete master @s 0 0 0 1 1 1
+                        end
                     end
                     
                     nx = $Precision
@@ -363,8 +589,14 @@ function get_plane_collisions()
                     do
                         define name vertex = "collider_$(collider)_v$(vertex)"
 
-                        x = vertex.x
+                        y = vertex.y
                         z = vertex.z
+                    end
+                    
+                    if collider_iter == 1 and y <= YnegPlane + PortalHeight and z >= (ZnegPlane + ZposPlane) / 2 - PortalWidth / 2 and z <= (ZnegPlane + ZposPlane) / 2 + PortalWidth / 2
+                        as @Player at @s
+                            /playsound minecraft:ui.toast.challenge_complete master @s 0 0 0 1 1 1
+                        end
                     end
                     
                     nx = -$Precision
@@ -386,7 +618,7 @@ function get_plane_collisions()
                         define name vertex = "collider_$(collider)_v$(vertex)"
 
                         x = vertex.x
-                        z = vertex.z
+                        y = vertex.y
                     end
                     
                     nx = 0
@@ -408,7 +640,7 @@ function get_plane_collisions()
                         define name vertex = "collider_$(collider)_v$(vertex)"
 
                         x = vertex.x
-                        z = vertex.z
+                        y = vertex.y
                     end
                     
                     nx = 0

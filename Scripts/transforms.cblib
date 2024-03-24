@@ -168,7 +168,7 @@ function create_collider(x, y, z, size, inv_mass, inv_rot_int)
     
     collider_quaternion_to_transform() with macros
 
-    /$summon minecraft:block_display ~ ~ ~ {block_state:{Name:"minecraft:$(block_name)",Count:0b}, interpolation_duration: 1, teleport_duration: 1, Tags:["physics_block"]}
+    /$summon minecraft:block_display ~ ~ ~ {block_state:{Name:"minecraft:$(block_name)",Count:0b}, interpolation_duration: 1, teleport_duration: 1, Tags:["physics_block"], view_range:10f}
     @PhysicsBlock.age++
     as @PhysicsBlock[age == 1]
         /scoreboard players set @s collider_id $(collider)
@@ -2974,6 +2974,20 @@ function handle_collision_impulse()
     
     if c_vel_y > $CancelRestitution
         restitution = 0
+    end
+    
+    if transforms.impact_sounds
+        if c_vel_y < -500
+            @Position.<pos> = <collision.x, collision.y, collision.z>
+            at @Position
+                /playsound minecraft:block.wool.fall master @a ~ ~ ~ 1 2
+            end
+        else if c_vel_y < -300
+            @Position.<pos> = <collision.x, collision.y, collision.z>
+            at @Position
+                /playsound minecraft:block.wool.fall master @a ~ ~ ~ 0.5 2
+            end
+        end
     end
     
     desired_vx = 0

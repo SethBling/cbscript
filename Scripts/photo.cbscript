@@ -1,0 +1,416 @@
+dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.20\saves\Photo World"
+desc "Takes photographs with display entities."
+scale 1000
+
+import common
+import math
+
+define @PhotoBlock = @Entity[type=block_display,tag=PhotoBlock]
+    create {Tags:["PhotoBlock"], block_state:{Name:"minecraft:sandstone"}, transformation:{left_rotation: [0f, 0f, 0f, 1f], translation: [-0.5f, -0.5f, -0.5f], right_rotation: [0f, 0f, 0f, 1f], scale:[1f, 1f, 1f]}}
+end
+
+$Precision = 1000
+$Half = 500
+$Billion = 1000000000
+
+define block_tag ignore
+    air
+    structure_void
+    light
+end
+
+define block_tag seethrough
+    water
+	oak_sapling
+	spruce_sapling
+	birch_sapling
+	jungle_sapling
+	acacia_sapling
+	dark_oak_sapling
+	glass
+	white_bed
+	orange_bed
+	magenta_bed
+	light_blue_bed
+	yellow_bed
+	lime_bed
+	pink_bed
+	gray_bed
+	light_gray_bed
+	cyan_bed
+	purple_bed
+	blue_bed
+	brown_bed
+	green_bed
+	red_bed
+	black_bed
+	powered_rail
+	detector_rail
+	moving_piston
+	dandelion
+	poppy
+	blue_orchid
+	allium
+	azure_bluet
+	red_tulip
+	orange_tulip
+	white_tulip
+	pink_tulip
+	oxeye_daisy
+	brown_mushroom
+	red_mushroom
+	torch
+	wall_torch
+	redstone_wire
+	rail
+	lever
+	redstone_torch
+	redstone_wall_torch
+	stone_button
+	repeater
+	glass_pane
+	attached_pumpkin_stem
+	attached_melon_stem
+	pumpkin_stem
+	melon_stem
+	nether_wart
+	brewing_stand
+	cocoa
+	tripwire_hook
+	tripwire
+	flower_pot
+	potted_oak_sapling
+	potted_spruce_sapling
+	potted_birch_sapling
+	potted_jungle_sapling
+	potted_acacia_sapling
+	potted_dark_oak_sapling
+	potted_fern
+	potted_dandelion
+	potted_poppy
+	potted_blue_orchid
+	potted_allium
+	potted_azure_bluet
+	potted_red_tulip
+	potted_orange_tulip
+	potted_white_tulip
+	potted_pink_tulip
+	potted_oxeye_daisy
+	potted_red_mushroom
+	potted_brown_mushroom
+	potted_dead_bush
+	potted_cactus
+	carrots
+	potatoes
+	oak_button
+	spruce_button
+	birch_button
+	jungle_button
+	acacia_button
+	dark_oak_button
+	skeleton_wall_skull
+	skeleton_skull
+	wither_skeleton_wall_skull
+	wither_skeleton_skull
+	zombie_wall_head
+	zombie_head
+	player_wall_head
+	player_head
+	creeper_wall_head
+	creeper_head
+	dragon_wall_head
+	dragon_head
+	comparator
+	barrier
+	end_rod
+	chorus_plant
+	chorus_flower
+	beetroots
+	turtle_egg
+	dead_tube_coral_wall_fan
+	dead_brain_coral_wall_fan
+	dead_bubble_coral_wall_fan
+	dead_fire_coral_wall_fan
+	dead_horn_coral_wall_fan
+	tube_coral_wall_fan
+	brain_coral_wall_fan
+	bubble_coral_wall_fan
+	fire_coral_wall_fan
+	horn_coral_wall_fan
+	dead_tube_coral_fan
+	dead_brain_coral_fan
+	dead_bubble_coral_fan
+	dead_fire_coral_fan
+	dead_horn_coral_fan
+	tube_coral_fan
+	brain_coral_fan
+	bubble_coral_fan
+	fire_coral_fan
+	horn_coral_fan
+	sea_pickle
+	void_air
+	cave_air
+	bubble_column
+	green_carpet
+	oak_leaves
+	spruce_leaves
+	birch_leaves
+	jungle_leaves
+	acacia_leaves
+	dark_oak_leaves
+    tall_grass
+    short_grass
+end
+
+reset
+    unless @Position do create @Position
+    
+    /kill @e[type=block_display]
+    
+    photo_id++
+    
+    as @Player[limit=1,sort=nearest] at @s eyes
+        <stored_pos> = @s.<pos>
+        stored_rx = @s.rx
+        stored_ry = @s.ry
+        
+        /tp @Position ^ ^ ^
+        <ox, oy, oz> = @Position.<pos>
+        
+        /tp @Position ^-3 ^2 ^2
+        <tl> = @Position.<pos>
+        /tp @Position ^3 ^2 ^2
+        <tr> = @Position.<pos>
+        /tp @Position ^-3 ^-2 ^2
+        <bl> = @Position.<pos>
+        
+        <colspan> = <tr> - <tl>
+        <rowspan> = <bl> - <tl>
+        
+        <base_ray> = (<tl> - <ox, oy, oz>)
+        
+        NumRows = 40
+        NumCols = 40
+        
+        for row = 1 to NumRows
+            <row_pos> = <base_ray> + <rowspan> * row / NumRows
+            for col = 1 to NumCols
+                /tp @Position ^0.2 ^ ^
+                
+                <dx, dy, dz> = <row_pos> + <colspan> * col / NumCols
+                
+                mag = sqrt(dx*dx + dy*dy + dz*dz)
+                dx = dx * $Precision / mag
+                dy = dy * $Precision / mag
+                dz = dz * $Precision / mag
+                
+                raycast(ox, oy, oz, dx, dy, dz)
+            end
+        end
+        
+        $Downsize = 10
+        $AxisScale = $int($Precision / $Downsize)
+        
+        as @PhotoBlock
+            <px, py, pz> = @s.<pos> - <ox, oy, oz>
+            
+            depth = sqrt(px*px + py*py + pz*pz)
+            nx = px * $Precision / depth
+            ny = py * $Precision / depth
+            nz = pz * $Precision / depth
+            
+            nxx = nx * nx / $Precision
+            nxy = nx * ny / $Precision
+            nxz = nx * nz / $Precision
+            nyy = ny * ny / $Precision
+            nyz = ny * nz / $Precision
+            nzz = nz * nz / $Precision
+            
+            # Scaling formula: https://www.mauriciopoppe.com/notes/computer-graphics/transformation-matrices/scale/
+            
+            d00 = ($Precision + ($AxisScale - $Precision) * nxx / $Precision)
+            d01 = (($AxisScale - $Precision) * nxy / $Precision)
+            d02 = (($AxisScale - $Precision) * nxz / $Precision)
+            d10 = (($AxisScale - $Precision) * nxy / $Precision)
+            d11 = ($Precision + ($AxisScale - $Precision) * nyy / $Precision)
+            d12 = (($AxisScale - $Precision) * nyz / $Precision)
+            d20 = (($AxisScale - $Precision) * nxz / $Precision)
+            d21 = (($AxisScale - $Precision) * nyz / $Precision)
+            d22 = ($Precision + ($AxisScale - $Precision) * nzz / $Precision)
+            dx = -$Half * depth_scale / $Precision
+            dy = -$Half * depth_scale / $Precision
+            dz = -$Half * depth_scale / $Precision
+            
+            /data modify storage $namespace:global transformation set value [1f,0f,0f,0f,0f,1f,0f,0f,0f,0f,1f,0f,0f,0f,0f,1f]
+
+            for $pair in [[0,"d00"], [1,"d01"], [2,"d02"], [3,"dx"], [4,"d10"], [5,"d11"], [6,"d12"], [7,"dy"], [8,"d20"], [9,"d21"], [10,"d22"], [11,"dz"]]
+                $idx = $pair[0]
+                $var = $pair[1]
+                $downscale = 1.0 / $Precision / $Downsize
+                /execute store result storage $namespace:global transformation[$idx] float $downscale run scoreboard players get Global $var
+            end
+
+            /data modify entity @s transformation set from storage $namespace:global transformation
+            /data modify entity @s interpolation_duration set value 0
+            
+            @s.<pos> = <ox, oy, oz> + <px, py, pz> / $Downsize * 9 / 10
+        end
+    end
+    
+    move @Player ~ ~10 ~
+    move @PhotoBlock ~ ~10 ~
+    
+    tell @a "{G[\[Reset Position\]](/function $namespace:reset_position)"
+end
+
+function reset_position()
+    @Position.<pos> = <stored_pos>
+    @Position.rx = stored_rx
+    @Position.ry = stored_ry
+    
+    at @Position
+        /tp @s ~ ~10 ~ ~ ~
+    end
+end
+
+clock tick
+
+end
+
+function raycast(ray_ox, ray_oy, ray_oz, ray_dx, ray_dy, ray_dz)
+    if ray_dx == 0 then ray_dx = 1
+    if ray_dy == 0 then ray_dy = 1
+    if ray_dz == 0 then ray_dz = 1
+
+    x = ray_ox
+    y = ray_oy
+    z = ray_oz
+    
+    next_x = x / $Precision * $Precision
+    if ray_dx > 0
+        next_x += $Precision
+    else
+        next_x -= 1   
+    end
+    
+    next_y = y / $Precision * $Precision
+    if ray_dy > 0
+        next_y += $Precision
+    else
+        next_y -= 1
+    end
+    
+    next_z = z / $Precision * $Precision
+    if ray_dz > 0
+        next_z += $Precision
+    else
+        next_z -= 1
+    end
+    
+    t = 0
+    
+    next_t_x = (next_x - ray_ox) * $Precision / ray_dx
+    next_t_y = (next_y - ray_oy) * $Precision / ray_dy
+    next_t_z = (next_z - ray_oz) * $Precision / ray_dz
+    
+    @Position.<pos> = <x, y, z>
+    
+    for i = 1 to 100
+        at @Position
+            continue = False
+            if block ~ ~ ~ seethrough
+                create_photo_block()
+                continue = True
+            end
+            if block ~ ~ ~ ignore
+                continue = True
+            end
+            
+            if continue
+                if next_t_x < next_t_y and next_t_x < next_t_z
+                    t = next_t_x
+
+                    x = next_x
+                    y = ray_oy + ray_dy * t / $Precision 
+                    z = ray_oz + ray_dz * t / $Precision 
+                    
+                    if ray_dx > 0
+                        next_x += $Precision
+                    else
+                        next_x -= $Precision
+                    end
+
+                    next_t_x = (next_x - ray_ox) * $Precision / ray_dx
+                else if next_t_y < next_t_z
+                    t = next_t_y
+
+                    x = ray_ox + ray_dx * t / $Precision 
+                    y = next_y
+                    z = ray_oz + ray_dz * t / $Precision 
+                    
+                    if ray_dy > 0
+                        next_y += $Precision
+                    else
+                        next_y -= $Precision
+                    end
+
+                    next_t_y = (next_y - ray_oy) * $Precision / ray_dy
+                else
+                    t = next_t_z
+
+                    x = ray_ox + ray_dx * t / $Precision 
+                    y = ray_oy + ray_dy * t / $Precision 
+                    z = next_z
+                    
+                    if ray_dz > 0
+                        next_z += $Precision
+                    else
+                        next_z -= $Precision
+                    end
+                    
+                    next_t_z = (next_z - ray_oz) * $Precision / ray_dz
+                end
+                    
+                @Position.<pos> = <x, y, z>
+            else
+                # Non-passthrough block
+                i = $Billion
+                create_photo_block()
+            end
+
+            if t >= 30 * $Precision
+                i = $Billion
+            end
+        end
+    end
+end
+
+function create_photo_block()
+    <block_x, block_y, block_z> = <x, y, z> / $Precision
+    with
+        $(x) = block_x
+        $(y) = block_y
+        $(z) = block_z
+    do
+        define name pos = "b$(x)$(y)$(z)"
+        
+        unless pos.photo_id == photo_id
+            pos.photo_id = photo_id
+            at @Position align xyz at ~0.5 ~0.5 ~0.5
+                as create @PhotoBlock
+                    <px, py, pz> = @s.<pos> - <ray_ox, ray_oy, ray_oz>
+                    px /= 10
+                    py /= 10
+                    pz /= 10
+                    dist = sqrt(px*px + py*py + pz*pz)
+                    dist *= 10
+                    switch block
+                        default
+                            /data modify entity @s block_state.Name set value "minecraft:$block_name"
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
