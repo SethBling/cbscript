@@ -36,6 +36,12 @@ $Billion = 1000000000
 $Red = 1
 $Blue = 2
 
+$Lobby = 1
+$StartingGame = 2
+$Tipoff = 3
+$Playing = 4
+$Scored = 5
+
 reset
     /gamerule playersNetherPortalCreativeDelay 1000000
     /gamerule playersNetherPortalDefaultDelay 1000000
@@ -66,6 +72,8 @@ function join_red_team()
         /team join red @s
         /gamemode adventure @s
         tell @a "(@s) joined the {Rred team{-."
+        
+        spawn_additional_player()
     end
     
     tell_options()
@@ -78,6 +86,8 @@ function join_blue_team()
         /team join blue @s
         /gamemode adventure @s
         tell @a "(@s) joined the {Bblue team{-."
+        
+        spawn_additional_player()
     end
     
     tell_options()
@@ -97,6 +107,8 @@ end
 
 function start_game()
     reset_game()
+        
+    gamemode = $StartingGame
 end
 
 function reset_game()
@@ -233,6 +245,8 @@ function reset_game()
     CubeInvMass = 200
     CubeInvRotInt = 200
     
+    spawned_players = False
+    
     as @Player
         tell_options()
     end
@@ -240,11 +254,45 @@ end
 
 function add_player_block()
     with
-        $(block_name) = "red_wool"
+        $(block_name) = "yellow_wool"
     add_collider(-10000, 56000 + CubeSize / 2, 0)
 end
 
 clock tick
+    unless gamemode
+        gamemode = $Lobby
+    end
+    
+    allow_movement = False
+    if gamemode == $Lobby
+        allow_movement = True
+    end
+    if gamemode == $Playing
+        allow_movement = True
+    end
+
+    if gamemode == $Scored
+        scored_timer--
+        
+        if scored_timer == 0
+            start_tipoff()
+        end
+    end
+    
+    if gamemode == $Tipoff
+        if tipoff_timer % 20 == 0
+            tipoff_seconds = tipoff_timer / 20
+            title @a 0 15 5 "(tipoff_seconds)"
+        end
+        
+        tipoff_timer--
+        
+        if tipoff_timer == 0
+            title @a 0 15 5 "Go!"
+            gamemode = $Playing
+        end
+    end
+
     /kill @Position
     create @Position
     
@@ -375,53 +423,56 @@ clock tick
                     vy = collider.velocity_y
                     vz = collider.velocity_z
                     
-                    horiz_vel = sqrt(vx*vx + vz*vz)
-                    norm_vx = vx * $Precision / horiz_vel
-                    norm_vz = vz * $Precision / horiz_vel
-                    
-                    braking_dot = -(dx * norm_vx + dz * norm_vz) / $Precision
-                    
-                    if braking_dot > 0
-                        dx = dx * braking_dot * 2/ $Precision
-                        dz = dz * braking_dot * 2 / $Precision
-                    end
-                    
-                    if jumping and collider.y <= YnegPlane + 2000
-                        vy = 500
-                        @s.braking = False
-                    end
-                    
-                    if boosting and @s.boost_meter > 0
-                        @s.boost_meter--
-                    else if @s.boost_meter < 100
-                        @s.boost_meter++
-                        boosting = 0
-                    end
-                    
-                    if boosting
-                        vx += dx / 20
-                        vy += dy / 20
-                        vz += dz / 20
+                    if allow_movement
+                        horiz_vel = sqrt(vx*vx + vz*vz)
+                        norm_vx = vx * $Precision / horiz_vel
+                        norm_vz = vz * $Precision / horiz_vel
                         
-                        if boosting == 9
-                            /playsound minecraft:entity.blaze.shoot master @a ~ ~ ~ 0.2 2
+                        braking_dot = -(dx * norm_vx + dz * norm_vz) / $Precision
+                        
+                        if braking_dot > 0
+                            dx = dx * braking_dot * 2/ $Precision
+                            dz = dz * braking_dot * 2 / $Precision
                         end
-                        /particle minecraft:soul_fire_flame ~ ~ ~ 0 0 0 0 1 force
-                    else
-                        vx += dx / 30
-                        vy += dy / 80
-                        vz += dz / 30
                         
-                        /particle minecraft:flame ~ ~ ~ 0 0 0 0 1 force
+                        if jumping and collider.y <= YnegPlane + 2000
+                            vy = 500
+                            @s.braking = False
+                        end
+                        
+                        if boosting and @s.boost_meter > 0
+                            @s.boost_meter--
+                        else if @s.boost_meter < 100
+                            @s.boost_meter++
+                            boosting = 0
+                        end
+                        
+                        if boosting
+                            vx += dx / 20
+                            vy += dy / 20
+                            vz += dz / 20
+                            
+                            if boosting == 9
+                                /playsound minecraft:entity.blaze.shoot master @a ~ ~ ~ 0.2 2
+                            end
+                            /particle minecraft:soul_fire_flame ~ ~ ~ 0 0 0 0 1 force
+                        else
+                            vx += dx / 30
+                            vy += dy / 80
+                            vz += dz / 30
+                            
+                            /particle minecraft:flame ~ ~ ~ 0 0 0 0 1 force
+                        end
                     end
                     
-                    # Extra gravity on the vehicle
-                    vy -= 15
+                    unless gamemode == $Scored
+                        # Extra gravity on the vehicle
+                        vy -= 15
+                    end
 
                     collider.velocity_x = vx
                     collider.velocity_y = vy
                     collider.velocity_z = vz
-
                     
                     collider_wake_up() with macros
                 end
@@ -464,6 +515,12 @@ clock tick
         end
     end
     
+    as @BallBlock at @s
+        if gamemode == $Scored and @s.collider_id == 1
+            /particle explosion ~ ~ ~ 2 2 2 0 10 force
+        end
+    end
+    
     as @PlayerInteraction
         id = @s.id
         as @Player if @s.id == id
@@ -488,8 +545,12 @@ clock tick
         end
     end
     
-    as @PlayerBlock at @s
-        
+    unless spawned_players
+        spawn_players()
+    end
+    
+    if gamemode == $StartingGame
+        start_tipoff()
     end
     
     colliders_physics_tick()
@@ -565,10 +626,9 @@ function get_plane_collisions()
                         z = vertex.z
                     end
                     
-                    if collider_iter == 1 and y <= YnegPlane + PortalHeight and z >= (ZnegPlane + ZposPlane) / 2 - PortalWidth / 2 and z <= (ZnegPlane + ZposPlane) / 2 + PortalWidth / 2
-                        as @Player at @s
-                            /playsound minecraft:ui.toast.challenge_complete master @s 0 0 0 1 1 1
-                        end
+                    if gamemode == $Playing and collider_iter == 1 and y <= YnegPlane + PortalHeight and z >= (ZnegPlane + ZposPlane) / 2 - PortalWidth / 2 and z <= (ZnegPlane + ZposPlane) / 2 + PortalWidth / 2
+                        goal = $Blue
+                        score_goal()
                     end
                     
                     nx = $Precision
@@ -593,10 +653,9 @@ function get_plane_collisions()
                         z = vertex.z
                     end
                     
-                    if collider_iter == 1 and y <= YnegPlane + PortalHeight and z >= (ZnegPlane + ZposPlane) / 2 - PortalWidth / 2 and z <= (ZnegPlane + ZposPlane) / 2 + PortalWidth / 2
-                        as @Player at @s
-                            /playsound minecraft:ui.toast.challenge_complete master @s 0 0 0 1 1 1
-                        end
+                    if gamemode == $Playing and collider_iter == 1 and y <= YnegPlane + PortalHeight and z >= (ZnegPlane + ZposPlane) / 2 - PortalWidth / 2 and z <= (ZnegPlane + ZposPlane) / 2 + PortalWidth / 2
+                        goal = $Red
+                        score_goal()
                     end
                     
                     nx = -$Precision
@@ -681,5 +740,177 @@ function create_plane_collision()
 
     collider.max_pen = pen
     collider.max_pen_col = id
+end
 
+function spawn_players()
+    @Player.team = None
+    @Player[team=red].team = $Red
+    @Player[team=blue].team = $Blue
+    @Player.spawned = False
+    
+    as @Player
+        @s.spawn_seed = result
+            /random value 1..999999999
+    end
+    
+    for team = $Red to $Blue
+        for spawn = 1 to $Billion
+            lowest_seed = $Billion
+            as @Player
+                if @s.team == team and not @s.spawned and @s.spawn_seed <= lowest_seed
+                    lowest_seed = @s.spawn_seed
+                    lowest_id = @s.id
+                end
+                
+                if lowest_seed < $Billion
+                    as @Player if @s.id == lowest_id
+                        spawn_player_slot()
+                    end
+                else
+                    spawn = $Billion
+                end
+            end
+        end
+    end
+    
+    spawned_players = True
+end
+
+function spawn_additional_player()
+    @Player[team=red].team = $Red
+    @Player[team=blue].team = $Blue
+    
+    team = @s.team
+    spawn = 0
+    
+    as @Player if @s.team == team
+        spawn++
+    end
+    
+    spawn_player_slot()
+end
+
+function spawn_player_slot()
+    if spawn == 1
+        dx = 15000
+        dz = 15000
+    else if spawn == 2
+        dx = 15000
+        dz = -15000
+    else if spawn == 3
+        dx = 40000
+        dz = 0
+    else
+        dx = 40000
+        dz = result
+            /random value -15000..15000
+    end
+    
+    if team == $Blue
+        dx *= -1
+        dz *= -1
+    end
+    
+    spawn_player()
+end
+
+function spawn_player()
+    spawn_x = $Half + dx
+    spawn_y = YnegPlane + CubeSize / 2
+    spawn_z = $Half + dz
+    
+    id = @s.id
+                
+    as @PlayerBlock
+        if @s.player_id == id
+            with
+                $(collider) = @s.collider_id
+            do
+                define name collider = "collider_$(collider)"
+                collider.x = spawn_x
+                collider.y = spawn_y
+                collider.z = spawn_z
+                collider_clear_velocity() with macros
+                collider_clear_rotation() with macros
+                collider.w = $Precision
+                collider.i = 0
+                collider.j = 0
+                collider.k = 0
+            end
+        end
+        
+        @s.boost_meter = 100
+    end
+                        
+    @s.spawned = True
+end
+
+function reset_ball()
+    with
+        $(collider) = 1
+    do
+        define name collider = "collider_$(collider)"
+        collider.x = $Half
+        collider.y = YnegPlane + CubeSize / 2
+        collider.z = $Half
+        collider_clear_velocity() with macros
+        collider_clear_rotation() with macros
+        collider.w = $Precision
+        collider.i = 0
+        collider.j = 0
+        collider.k = 0
+    end
+end
+
+function score_goal()
+    gamemode = $Scored
+    as @Player at @s
+        /playsound minecraft:ui.toast.challenge_complete master @s 0 0 0 1 1 1
+    end
+    
+    if goal == $Red
+        title @a 0 40 20 "Goal on {RRed{-!"
+    else
+        title @a 0 40 20 "Goal on {BBlue{-!"
+    end
+    
+    for collider_iter = 2 to max_collider
+        with
+            $(collider) = collider_iter
+        do
+            define name collider = "collider_$(collider)"
+            
+            dx = collider.x - x
+            dy = collider.y - y
+            dz = collider.z - z
+            
+            vx = collider.velocity_x
+            vy = collider.velocity_y
+            vz = collider.velocity_z
+            
+            dist = sqrt(dx*dx + dy*dy + dz*dz)
+            
+            vx += dx * $Precision / dist * 3
+            vy += dy * $Precision / dist * 3
+            vz += dz * $Precision / dist * 3
+            
+            vx /= 2
+            vy /= 2
+            vz /= 2
+            
+            collider.velocity_x = vx
+            collider.velocity_y = vy
+            collider.velocity_z = vz
+        end
+    end
+    
+    scored_timer = 100
+end
+
+function start_tipoff()
+    gamemode = $Tipoff
+    
+    spawn_players()
+    reset_ball()
+    tipoff_timer = 100
 end
