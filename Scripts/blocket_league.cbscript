@@ -42,6 +42,9 @@ $Tipoff = 3
 $Playing = 4
 $Scored = 5
 
+$BallSize = 4000
+$PlayerSize = 800
+
 reset
     /gamerule playersNetherPortalCreativeDelay 1000000
     /gamerule playersNetherPortalDefaultDelay 1000000
@@ -226,7 +229,7 @@ function reset_game()
     Gravity = 15
     Friction = 1000
 
-    CubeSize = 4000
+    CubeSize = $BallSize
     CubeInvMass = 1200
     CubeInvRotInt = 200
 
@@ -241,7 +244,7 @@ function reset_game()
     collider_1.recent_motion = 0
     collider_1.recent_rotation = 0
     
-    CubeSize = 800
+    CubeSize = $PlayerSize
     CubeInvMass = 200
     CubeInvRotInt = 200
     
@@ -851,7 +854,7 @@ function reset_ball()
     do
         define name collider = "collider_$(collider)"
         collider.x = $Half
-        collider.y = YnegPlane + CubeSize / 2
+        collider.y = YnegPlane + $BallSize / 2
         collider.z = $Half
         collider_clear_velocity() with macros
         collider_clear_rotation() with macros
@@ -859,6 +862,10 @@ function reset_ball()
         collider.i = 0
         collider.j = 0
         collider.k = 0
+                    
+        collider_quaternion_to_transform() with macros
+        collider_set_transform() with macros
+        collider_sleep() with macros
     end
 end
 
