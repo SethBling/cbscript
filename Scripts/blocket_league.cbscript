@@ -58,6 +58,9 @@ reset
     /scoreboard objectives add join_blue_team trigger
     /scoreboard objectives add spectate trigger
     /scoreboard objectives add start_game trigger
+    /scoreboard objectives add stop_game trigger
+    
+    /scoreboard objectives add score dummy "Score"
     
     as @Player
         tell_options()
@@ -65,7 +68,7 @@ reset
 end
 
 function tell_options()
-    tell @s "{R[\[Join Red\]](/trigger join_red_team set 1) {B[\[Join Blue\]](/trigger join_blue_team set 1) {Y[\[Spectate\]](/trigger spectate set 1) {G[\[Start Game\]](/trigger start_game set 1)"
+    tell @s "{R[\[Join Red\]](/trigger join_red_team set 1) {B[\[Join Blue\]](/trigger join_blue_team set 1) {Y[\[Spectate\]](/trigger spectate set 1) {G[\[Start Game\]](/trigger start_game set 1) {R[\[Stop Game\]](/trigger stop_game set 1)"
 end
 
 function join_red_team()
@@ -109,9 +112,55 @@ function spectate()
 end
 
 function start_game()
-    reset_game()
+    if gamemode == $Lobby
+        reset_game()
         
-    gamemode = $StartingGame
+        /kill @Glass[tag=Board]
+            
+        gamemode = $StartingGame
+        Red.score = 0
+        Blue.score = 0
+        game_timer.score = -1
+        game_timer = 20*60*5
+        
+        /scoreboard players display numberformat game_timer score fixed "5:00"
+        /scoreboard players display name game_timer score "Time"
+            
+        /scoreboard objectives setdisplay sidebar score
+    else
+        tell @s "The game has already begun!"
+    end
+end
+
+function stop_game()
+    if gamemode == $Lobby
+        tell @s "The game is already stopped."
+    else
+        reset_game()
+        
+        gamemode = $Lobby
+        /scoreboard objectives setdisplay sidebar
+        
+        @Position.<pos> = <XnegPlane, YnegPlane + PortalHeight / 2 + 1000, (ZnegPlane + ZposPlane) / 2 + 1000>
+        at @Position
+            as create @Glass
+                @s.<scale> = <1000, PortalHeight-2000, PortalWidth-2000>
+                @s.<translation> = <-500, -PortalHeight / 2, -PortalWidth / 2>
+                /data modify entity @s block_state.Name set value "minecraft:birch_planks"
+                /tag @s add Board
+            end
+        end
+        
+        @Position.<pos> = <XposPlane, YnegPlane + PortalHeight / 2 + 1000, (ZnegPlane + ZposPlane) / 2 + 1000>
+        at @Position
+            as create @Glass
+                @s.<scale> = <1000, PortalHeight-2000, PortalWidth-2000>
+                @s.<translation> = <-500, -PortalHeight / 2, -PortalWidth / 2>
+                /data modify entity @s block_state.Name set value "minecraft:birch_planks"
+                /tag @s add Board
+            end
+        end
+    end
 end
 
 function reset_game()
@@ -263,7 +312,7 @@ end
 
 clock tick
     unless gamemode
-        gamemode = $Lobby
+        stop_game()
     end
     
     allow_movement = False
@@ -272,6 +321,7 @@ clock tick
     end
     if gamemode == $Playing
         allow_movement = True
+        game_timer--
     end
 
     if gamemode == $Scored
@@ -295,6 +345,22 @@ clock tick
             gamemode = $Playing
         end
     end
+    
+    total_seconds = game_timer / 20
+    disp_seconds = total_seconds % 60
+    disp_minutes = total_seconds / 60
+    with
+        $(sec) = disp_seconds
+        $(min) = disp_minutes
+    do
+        if disp_seconds < 10
+            /scoreboard players display numberformat game_timer score fixed "$(min):0$(sec)"
+        else
+            /scoreboard players display numberformat game_timer score fixed "$(min):$(sec)"
+        end
+    end
+    
+    
 
     /kill @Position
     create @Position
@@ -341,6 +407,12 @@ clock tick
             @s.start_game = False
         end
         /scoreboard players enable @s start_game
+
+        if @s.stop_game
+            stop_game()
+            @s.stop_game = False
+        end
+        /scoreboard players enable @s stop_game
     end
     
     
@@ -876,9 +948,11 @@ function score_goal()
     end
     
     if goal == $Red
-        title @a 0 40 20 "Goal on {RRed{-!"
+        title @a 0 40 20 "Goal scored by {BBlue{-!"
+        Blue.score++
     else
-        title @a 0 40 20 "Goal on {BBlue{-!"
+        title @a 0 40 20 "Goal scored by {RRed{-!"
+        Red.score++
     end
     
     for collider_iter = 2 to max_collider
@@ -908,6 +982,10 @@ function score_goal()
             collider.velocity_x = vx
             collider.velocity_y = vy
             collider.velocity_z = vz
+            
+            collider.rotation_x /= 2
+            collider.rotation_y /= 2
+            collider.rotation_z /= 2
         end
     end
     
