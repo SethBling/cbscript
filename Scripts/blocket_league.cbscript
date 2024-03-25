@@ -60,6 +60,8 @@ reset
     /scoreboard objectives add start_game trigger
     /scoreboard objectives add stop_game trigger
     
+    /scoreboard objectives add leave_game minecraft.custom:minecraft.leave_game
+    
     /scoreboard objectives add score dummy "Score"
     
     as @Player
@@ -79,7 +81,7 @@ function join_red_team()
         /gamemode adventure @s
         tell @a "(@s) joined the {Rred team{-."
         
-        spawn_additional_player()
+        @s.needs_spawn = True
     end
     
     tell_options()
@@ -93,7 +95,7 @@ function join_blue_team()
         /gamemode adventure @s
         tell @a "(@s) joined the {Bblue team{-."
         
-        spawn_additional_player()
+        @s.needs_spawn = True
     end
     
     tell_options()
@@ -167,6 +169,8 @@ function start_lobby()
             /tag @s add Board
         end
     end
+
+    /tp @Position 0 0 0
 end
 
 function reset_game()
@@ -273,6 +277,7 @@ function reset_game()
     #    end
     #end
 
+    /tp @Position 0 0 0
 
     # Disable world collisions
     colliders.world_collisions = False
@@ -303,7 +308,8 @@ function reset_game()
     CubeInvMass = 200
     CubeInvRotInt = 200
     
-    spawned_players = False
+    tick_players()
+    spawn_players()
     
     as @Player
         tell_options()
@@ -317,42 +323,132 @@ function add_player_block()
 end
 
 clock tick
-    unless gamemode
-        stop_game()
-    end
-    
-    allow_movement = False
-    if gamemode == $Lobby
-        allow_movement = True
-    end
-    if gamemode == $Playing
-        allow_movement = True
-        game_timer--
+    at 0.0 56.0 0.0
+        unless gamemode
+            stop_game()
+        end
+        
+        allow_movement = False
+        if gamemode == $Lobby
+            allow_movement = True
+        end
+        if gamemode == $Playing
+            allow_movement = True
+            game_timer--
 
-        total_seconds = game_timer / 20
-        disp_seconds = total_seconds % 60
-        disp_minutes = total_seconds / 60
-        with
-            $(sec) = disp_seconds
-            $(min) = disp_minutes
-        do
-            if disp_seconds < 10
-                /scoreboard players display numberformat game_timer score fixed "$(min):0$(sec)"
-            else
-                /scoreboard players display numberformat game_timer score fixed "$(min):$(sec)"
+            total_seconds = game_timer / 20
+            disp_seconds = total_seconds % 60
+            disp_minutes = total_seconds / 60
+            with
+                $(sec) = disp_seconds
+                $(min) = disp_minutes
+            do
+                if disp_seconds < 10
+                    /scoreboard players display numberformat game_timer score fixed "$(min):0$(sec)"
+                else
+                    /scoreboard players display numberformat game_timer score fixed "$(min):$(sec)"
+                end
+            end
+            
+            if game_timer == 1200
+                title @a 0 35 15 "1 Minute"
+            end
+            
+            if game_timer > 0 and game_timer <= 100 and game_timer % 20 == 0
+                seconds = game_timer / 20
+                title @a 0 15 5 "(seconds)"
+                as @Player at @s
+                    /playsound minecraft:block.note_block.bit master @a ~ ~ ~ 1 1
+                end
+            end
+        end
+
+        if gamemode == $Scored
+            scored_timer--
+            
+            if scored_timer == 0
+                start_tipoff()
             end
         end
         
-        if game_timer == 1200
-            title @a 0 35 15 "1 Minute"
+        if gamemode == $Tipoff
+            if tipoff_timer % 20 == 0
+                tipoff_seconds = tipoff_timer / 20
+                title @a 0 15 5 "(tipoff_seconds)"
+                
+                if tipoff_seconds <= 3 as @Player at @s
+                    /playsound minecraft:block.note_block.bit master @a ~ ~ ~ 1 1
+                end
+            end
+            
+            tipoff_timer--
+            
+            if tipoff_timer == 0
+                title @a 0 15 5 "Go!"
+                gamemode = $Playing
+                as @Player at @s
+                    /playsound minecraft:block.note_block.bit master @a ~ ~ ~ 1 2
+                end
+            end
         end
         
-        if game_timer > 0 and game_timer <= 100 and game_timer % 20 == 0
-            seconds = game_timer / 20
-            title @a 0 15 5 "(seconds)"
+        as @Player[gamemode=survival]
+            /gamemode adventure @s
         end
         
-        if game_timer == 0
+        as @Player
+            if @s.join_red_team
+                join_red_team()
+                @s.join_red_team = False
+            end
+            /scoreboard players enable @s join_red_team
+            
+            if @s.join_blue_team
+                join_blue_team()
+                @s.join_blue_team = False
+            end
+            /scoreboard players enable @s join_blue_team
+            
+            if @s.spectate
+                spectate()
+                @s.spectate = False
+            end
+            /scoreboard players enable @s spectate
+
+            if @s.start_game
+                start_game()
+                @s.start_game = False
+            end
+            /scoreboard players enable @s start_game
+
+            if @s.stop_game
+                stop_game()
+                @s.stop_game = False
+            end
+            /scoreboard players enable @s stop_game
+            
+            unless @s.leave_game == 0
+                spectate()
+                @s.leave_game = 0
+            end
+        end
+
+
+        create @Position 0.0 0.0 0.0
+        
+        as @PlayerInteraction
+            on attacker
+                @s.boosting = 10
+            end
+            
+            on target
+                @s.jumping = True
+            end
+            /data remove entity @s attack
+            /data remove entity @s interaction
+        end
+        
+        if gamemode == $Playing and game_timer == 0
             if Red.score > Blue.score
                 title @a 0 55 25 "{RRed{- Team Wins!"
             end
@@ -369,94 +465,70 @@ clock tick
             
             start_lobby()
         end
-    end
-
-    if gamemode == $Scored
-        scored_timer--
         
-        if scored_timer == 0
+        
+        tick_players()
+        
+        as @BallBlock at @s
+            if gamemode == $Scored and @s.collider_id == 1
+                /particle explosion ~ ~ ~ 2 2 2 0 10 force
+            end
+        end
+        
+        as @PlayerInteraction
+            id = @s.id
+            as @Player if @s.id == id
+            else
+                /kill @s
+            end
+        end
+        
+        as @PlayerBlock
+            current_id = @s.player_id
+            as @Playing if @s.id == current_id
+                player = True
+            else
+                player = False
+            end
+            
+            if not player
+                with
+                    $(collider) = @s.collider_id
+                destroy_collider()
+                /kill @s
+            end
+        end
+        
+        as @Player if @s.needs_spawn
+            spawn_additional_player()
+            @s.needs_spawn = False
+        end
+        
+        if gamemode == $StartingGame
             start_tipoff()
         end
-    end
-    
-    if gamemode == $Tipoff
-        if tipoff_timer % 20 == 0
-            tipoff_seconds = tipoff_timer / 20
-            title @a 0 15 5 "(tipoff_seconds)"
-        end
         
-        tipoff_timer--
-        
-        if tipoff_timer == 0
-            title @a 0 15 5 "Go!"
-            gamemode = $Playing
-        end
+        colliders_physics_tick()
+        colliders_get_new_collisions()
+        get_plane_collisions()
+        colliders_resolve_collisions()
+        colliders_finalize_tick()
     end
+end
 
-    /kill @Position
-    create @Position
-    
-    as @PlayerInteraction
-        on attacker
-            @s.boosting = 10
-        end
-        
-        on target
-            @s.jumping = True
-        end
-        /data remove entity @s attack
-        /data remove entity @s interaction
-    end
-    
-    @PlayerBlock.current = False
-    
-    as @Player[gamemode=survival]
-        /gamemode adventure @s
-    end
-    
-    as @Player
-        if @s.join_red_team
-            join_red_team()
-            @s.join_red_team = False
-        end
-        /scoreboard players enable @s join_red_team
-        
-        if @s.join_blue_team
-            join_blue_team()
-            @s.join_blue_team = False
-        end
-        /scoreboard players enable @s join_blue_team
-        
-        if @s.spectate
-            spectate()
-            @s.spectate = False
-        end
-        /scoreboard players enable @s spectate
-
-        if @s.start_game
-            start_game()
-            @s.start_game = False
-        end
-        /scoreboard players enable @s start_game
-
-        if @s.stop_game
-            stop_game()
-            @s.stop_game = False
-        end
-        /scoreboard players enable @s stop_game
-    end
-    
-    
+function tick_players()
     for @player in @Playing
         /effect give @s minecraft:resistance infinite 5 true
         /effect give @s minecraft:instant_health infinite 5 true
         /effect give @s minecraft:saturation infinite 5 true
         
         at @s ~ ~ ~
+            <dx, dy, dz> = <0, 0, 0>
             <x, y, z> = @s.<pos>
             at @s ^ ^ ^1
                 /tp @Position ~ ~ ~
                 <dx, dy, dz> = @Position.<pos> - <x, y, z>
+                /tp @Position 0 0 0
             end
             
             vx = @s.vx
@@ -623,50 +695,6 @@ clock tick
             @s.boosting = boosting
         end
     end
-    
-    as @BallBlock at @s
-        if gamemode == $Scored and @s.collider_id == 1
-            /particle explosion ~ ~ ~ 2 2 2 0 10 force
-        end
-    end
-    
-    as @PlayerInteraction
-        id = @s.id
-        as @Player if @s.id == id
-        else
-            /kill @s
-        end
-    end
-    
-    as @PlayerBlock
-        current_id = @s.player_id
-        as @Playing if @s.id == current_id
-            player = True
-        else
-            player = False
-        end
-        
-        if not player
-            with
-                $(collider) = @s.collider_id
-            destroy_collider()
-            /kill @s
-        end
-    end
-    
-    unless spawned_players
-        spawn_players()
-    end
-    
-    if gamemode == $StartingGame
-        start_tipoff()
-    end
-    
-    colliders_physics_tick()
-    colliders_get_new_collisions()
-    get_plane_collisions()
-    colliders_resolve_collisions()
-    colliders_finalize_tick()
 end
 
 function get_plane_collisions()
@@ -852,37 +880,59 @@ function create_plane_collision()
 end
 
 function spawn_players()
-    @Player.team = None
-    @Player[team=red].team = $Red
-    @Player[team=blue].team = $Blue
-    @Player.spawned = False
+    as @Playing[team=red]
+        @s.team = $Red
+    end
+    as @Playing[team=blue]
+        @s.team = $Blue
+    end
     
-    as @Player
+    as @Playing
         @s.spawn_seed = result
             /random value 1..999999999
+        @s.spawned = False
     end
     
-    for team = $Red to $Blue
-        for spawn = 1 to $Billion
-            lowest_seed = $Billion
-            as @Player
-                if @s.team == team and not @s.spawned and @s.spawn_seed <= lowest_seed
-                    lowest_seed = @s.spawn_seed
-                    lowest_id = @s.id
-                end
-                
-                if lowest_seed < $Billion
-                    as @Player if @s.id == lowest_id
-                        spawn_player_slot()
-                    end
-                else
-                    spawn = $Billion
-                end
-            end
-        end
-    end
+    team = $Red
+    spawn_team()
+    
+    team = $Blue
+    spawn_team()
     
     spawned_players = True
+end
+
+function spawn_team()
+    for spawn = 1 to 100
+        lowest_seed = $Billion
+        as @Playing
+            is_lower = True
+            
+            unless @s.team == team
+                is_lower = False
+            end
+            
+            if @s.spawned
+                is_lower = False
+            end
+            
+            if @s.spawn_seed > lowest_seed
+                is_lower = False
+            end
+            if is_lower
+                lowest_seed = @s.spawn_seed
+                lowest_id = @s.id
+            end
+        end
+            
+        if lowest_seed < $Billion
+            as @Playing if @s.id == lowest_id
+                spawn_player_slot()
+            end
+        else
+            spawn = $Billion
+        end
+    end
 end
 
 function spawn_additional_player()
@@ -901,32 +951,32 @@ end
 
 function spawn_player_slot()
     if spawn == 1
-        dx = 15000
-        dz = 15000
+        spawn_dx = 15000
+        spawn_dz = 15000
     else if spawn == 2
-        dx = 15000
-        dz = -15000
+        spawn_dx = 15000
+        spawn_dz = -15000
     else if spawn == 3
-        dx = 40000
-        dz = 0
+        spawn_dx = 30000
+        spawn_dz = 0
     else
-        dx = 40000
-        dz = result
+        spawn_dx = 30000
+        spawn_dz = result
             /random value -15000..15000
     end
     
     if team == $Blue
-        dx *= -1
-        dz *= -1
+        spawn_dx *= -1
+        spawn_dz *= -1
     end
     
     spawn_player()
 end
 
 function spawn_player()
-    spawn_x = $Half + dx
+    spawn_x = $Half + spawn_dx
     spawn_y = YnegPlane + CubeSize / 2
-    spawn_z = $Half + dz
+    spawn_z = $Half + spawn_dz
     
     id = @s.id
                 
@@ -950,7 +1000,7 @@ function spawn_player()
         
         @s.boost_meter = 100
     end
-                        
+    
     @s.spawned = True
 end
 

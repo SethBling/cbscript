@@ -101,12 +101,14 @@ end
 function destroy_collider()
     define name collider = "collider_$(collider)"
     
-    if max_collider == collider.id
+    id = collider.id
+    
+    if max_collider == id
         max_collider--
     end
     
     as @PhysicsBlock
-        if @s.id == collider.id
+        if @s.collider_id == id
             /kill @s
         end
     end
