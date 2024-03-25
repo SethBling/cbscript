@@ -50,7 +50,7 @@ def t_FUNCTIONID(t):
 	return t
 	
 def t_ID(t):
-    r'[A-Za-z_][A-Za-z0-9_]*'
+    r'[A-Za-z_][A-Za-z0-9_\\]*'
     if t.value in keywords:
         t.type = t.value
     return t
