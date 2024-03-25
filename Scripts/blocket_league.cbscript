@@ -129,36 +129,42 @@ function start_game()
         /scoreboard objectives setdisplay sidebar score
     else
         tell @s "The game has already begun!"
+        tell_options()
     end
 end
 
 function stop_game()
     if gamemode == $Lobby
         tell @s "The game is already stopped."
+        tell_options()
     else
-        reset_game()
-        
-        gamemode = $Lobby
         /scoreboard objectives setdisplay sidebar
-        
-        @Position.<pos> = <XnegPlane, YnegPlane + PortalHeight / 2 + 1000, (ZnegPlane + ZposPlane) / 2 + 1000>
-        at @Position
-            as create @Glass
-                @s.<scale> = <1000, PortalHeight-2000, PortalWidth-2000>
-                @s.<translation> = <-500, -PortalHeight / 2, -PortalWidth / 2>
-                /data modify entity @s block_state.Name set value "minecraft:birch_planks"
-                /tag @s add Board
-            end
+        start_lobby()
+    end
+end
+
+function start_lobby()
+    reset_game()
+    
+    gamemode = $Lobby
+    
+    @Position.<pos> = <XnegPlane, YnegPlane + PortalHeight / 2 + 1000, (ZnegPlane + ZposPlane) / 2 + 1000>
+    at @Position
+        as create @Glass
+            @s.<scale> = <1000, PortalHeight-2000, PortalWidth-2000>
+            @s.<translation> = <-500, -PortalHeight / 2, -PortalWidth / 2>
+            /data modify entity @s block_state.Name set value "minecraft:birch_planks"
+            /tag @s add Board
         end
-        
-        @Position.<pos> = <XposPlane, YnegPlane + PortalHeight / 2 + 1000, (ZnegPlane + ZposPlane) / 2 + 1000>
-        at @Position
-            as create @Glass
-                @s.<scale> = <1000, PortalHeight-2000, PortalWidth-2000>
-                @s.<translation> = <-500, -PortalHeight / 2, -PortalWidth / 2>
-                /data modify entity @s block_state.Name set value "minecraft:birch_planks"
-                /tag @s add Board
-            end
+    end
+    
+    @Position.<pos> = <XposPlane, YnegPlane + PortalHeight / 2 + 1000, (ZnegPlane + ZposPlane) / 2 + 1000>
+    at @Position
+        as create @Glass
+            @s.<scale> = <1000, PortalHeight-2000, PortalWidth-2000>
+            @s.<translation> = <-500, -PortalHeight / 2, -PortalWidth / 2>
+            /data modify entity @s block_state.Name set value "minecraft:birch_planks"
+            /tag @s add Board
         end
     end
 end
@@ -322,6 +328,47 @@ clock tick
     if gamemode == $Playing
         allow_movement = True
         game_timer--
+
+        total_seconds = game_timer / 20
+        disp_seconds = total_seconds % 60
+        disp_minutes = total_seconds / 60
+        with
+            $(sec) = disp_seconds
+            $(min) = disp_minutes
+        do
+            if disp_seconds < 10
+                /scoreboard players display numberformat game_timer score fixed "$(min):0$(sec)"
+            else
+                /scoreboard players display numberformat game_timer score fixed "$(min):$(sec)"
+            end
+        end
+        
+        if game_timer == 1200
+            title @a 0 35 15 "1 Minute"
+        end
+        
+        if game_timer > 0 and game_timer <= 100 and game_timer % 20 == 0
+            seconds = game_timer / 20
+            title @a 0 15 5 "(seconds)"
+        end
+        
+        if game_timer == 0
+            if Red.score > Blue.score
+                title @a 0 55 25 "{RRed{- Team Wins!"
+            end
+            
+            if Red.score < Blue.score
+                title @a 0 55 25 "{BBlue{- Team Wins!"
+            end
+            
+            if Red.score == Blue.score
+                title @a 0 55 25 "Draw!"
+            end
+            
+            /scoreboard players reset game_timer score
+            
+            start_lobby()
+        end
     end
 
     if gamemode == $Scored
@@ -345,22 +392,6 @@ clock tick
             gamemode = $Playing
         end
     end
-    
-    total_seconds = game_timer / 20
-    disp_seconds = total_seconds % 60
-    disp_minutes = total_seconds / 60
-    with
-        $(sec) = disp_seconds
-        $(min) = disp_minutes
-    do
-        if disp_seconds < 10
-            /scoreboard players display numberformat game_timer score fixed "$(min):0$(sec)"
-        else
-            /scoreboard players display numberformat game_timer score fixed "$(min):$(sec)"
-        end
-    end
-    
-    
 
     /kill @Position
     create @Position
@@ -513,6 +544,7 @@ clock tick
                         if jumping and collider.y <= YnegPlane + 2000
                             vy = 500
                             @s.braking = False
+                            /playsound minecraft:entity.goat.long_jump master @a ~ ~ ~
                         end
                         
                         if boosting and @s.boost_meter > 0
@@ -540,7 +572,9 @@ clock tick
                         end
                     end
                     
-                    unless gamemode == $Scored
+                    if gamemode == $Scored
+                        vy += 7
+                    else
                         # Extra gravity on the vehicle
                         vy -= 15
                     end
