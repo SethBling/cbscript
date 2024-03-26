@@ -1,0 +1,35 @@
+# This is a syntax highlighting file for Nano
+#
+# Install this file at ~/.nano/cbscript.nanorc and then
+# add "include ~/.nano/cbscript.nanorc" to your ~/.nanorc file.
+
+# Define the file extensions
+syntax cbscript "\.cb(lib|script)$"
+comment "#"
+
+# Identifiers
+color italic,cyan "\<\b[A-Za-z_][A-Za-z0-9_]*\b\>"
+
+# Keywords
+color red "\<(for|dir|desc|in|end|not|and|or|to|by|import|name|with|macros|at|as|on|facing|rotated|align|here|the_end|the_nether|overworld|move|create|tell|title|subtitle|actionbar|reset|clock|function|if|unless|then|do|else|switch|case|default|return|while|macro|block|block_data|block_tag|entity_tag|item_tag|define|array|remove|success|result|shaped|recipe|keys|eyes|feet|advancement|loot_table|predicate|push|pop)\>"
+color brightgreen "\<(minecraft|advancement|bossbar|clear|clone|data|datapack|debug|defaultgamemode|difficulty|effect|enchant|execute|experience|fill|forceload|gamemode|gamerule|give|help|kill|list|locate|me|msg|particle|playsound|recipe|reload|replaceitem|say|scoreboard|seed|setblock|setworldpsawn|spawnpoint|spreadplayers|stopsound|summon|tag|team|teleport|tell|tellraw|time|title|tp|trigger|w|weather|worldborder|xp|gamemode|creative|survival|adventure|spectator|distance|type|entity|limit|sort|nearest|furthest|random|arbitrar|level|team|run|merge|get|set|feet|eyes|item|loot|||area_effect_cloud|armor_stand|arrow|bat|blaze|boat|cat|cave_spider|chest_minecart|chicken|cod|command_block_minecart|cow|creeper|dolphin|donkey|dragon_fireball|drowned|egg|elder_guardian|end_crystal|ender_dragon|ender_pearl|enderman|endermite|evoker|evoker_fangs|experience_bottle|experience_orb|eye_of_ender|falling_block|fireball|firework_rocket|fox|furnace_minecart|ghast|giant|guardian|hopper_minecart|horse|husk|illusioner|iron_golem|item|item_frame|leash_knot|lightning_bolt|llama|llama_spit|magma_cube|minecart|mooshroom|mule|ocelot|painting|panda|parrot|phantom|pig|pillager|polar_bear|potion|pufferfish|rabbit|ravager|salmon|sheep|shulker|shulker_bullet|silverfish|skeleton|skeleton_horse|slime|small_fireball|snow_golem|snowball|spawner_minecart|spectral_arrow|spider|squid|stray|tnt|tnt_minecart|trader_llama|triden|tropical_fish|turtile|vex|villager|vindicator|wandering_trader|witch|wither|wither_skeleton|wither_skull|wolf|zombie|zombie_horse|zombie_pigman|zombie_villager|replace|hotbar|inventory|armor|mine|weapon|mainhand|offhand|feet|legs|chest|head|container|enderchest|horse|armor|chest|saddle|villager|air|announceAdvancements|commandBlockOutput|disableElytryMovementCheck|disableRaids|doDaylightCycle|doEntityDrops|doFireTick|doImmediateRespawn|doInsomnia|doLimitedCrafting|doMobLoot|doMobSpawning|doTileDrops|doWeatherCycle|drowningDamage|fallDamage|fireDamage|keepInventory|logAdminCommands|maxCommandChainLength|maxEntityCramming|mobGriefing|naturalRegeneration|randomTickSpeed|reducedDebugInfo|sendCommandFeedback|showDeathMessages|spawnRadius|spectatorsGenerateChunks|true|false|scale|level|stats|recipes|advancements|survival|adventure|creative|spectator|condition|player|storage|chance|fluid|tag|nbt|state|light|position|x|y|z|flags|biome|value|min|max|period|nbt|state|offsetX|offsetY|offsetZ|is_on_fire|is_sneaking|is_sprinting|is_swimming|is_baby|scores|inverted|term|inverse|killed_by_player|alternative|terms|block_state_property|properties|damage_source_properties|entity_present|biome|dimension|feature|match_tool|name|raining|thundering|enchantments|enchantment|levels|attacker|target)\>"
+
+# Operators
+color red "[:/=~,%\*+@$^!&<>-]"
+
+# Brackets
+color white "[(){}]|\\[|\\]"
+
+# Constants
+color magenta "\<(True|False)\>"
+color magenta "\<([0-9]+\.[0-9]+|[0-9]+|0x[0-9A-Fa-f]+|0b[01]+)(b|B|f|F|l|L|s|S)?\>"
+
+# Strings
+color yellow "\"(\\.|[^\"])*\"|'([^']|\\.)*'"
+
+# Selectors
+color magenta "@[p|r|a|e|s]\b"
+
+# Comments
+color bold,brightred "#.*$"
+
