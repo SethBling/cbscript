@@ -1,5 +1,5 @@
 from .block_switch_base import block_switch_base
-from CompileError import CompileError
+from CompileError import CompileError, Pos
 
 class block_switch_block(block_switch_base):
 	def __init__(self, line, coords, cases, include_block_states):
@@ -98,7 +98,7 @@ class block_switch_block(block_switch_base):
 			case.compile(block.replace('minecraft:', ''), block_state, id, case_func, falling_block_nbt)
 		except CompileError as e:
 			print(e)
-			raise CompileError(f'Unable to compile block switch case "{block_state}" at line {self.line}')
+			raise CompileError(f'Unable to compile block switch case "{block_state}" at line {self.line}', Pos(self.line)) from e
 			
 		func.call_function(
 			case_func,

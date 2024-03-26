@@ -1,4 +1,4 @@
-dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.20\saves\Stupid Mobile Game Test"
+dir "Stupid Mobile Game Test"
 desc "Physics engine for stupid mobile game."
 scale 1000
 

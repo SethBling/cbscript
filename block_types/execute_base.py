@@ -1,6 +1,6 @@
 from .block_base import block_base
 import traceback
-from CompileError import CompileError
+from CompileError import CompileError, Pos
 
 class execute_base(block_base):
 	# Override to force the creation of a sub function, even for a single command
@@ -20,16 +20,14 @@ class execute_base(block_base):
 		
 		cmd = 'execute ' + func.get_execute_items(self.exec_items, exec_func)
 		if cmd == None:
-			raise CompileError(f'Unable to compile {self.display_name()} block at line {self.line}')
+			raise CompileError(f'Unable to compile {self.display_name()} block at line {self.line}', Pos(self.line))
 		
 		try:
 			exec_func.compile_blocks(self.sub)
 		except CompileError as e:
-			print(e)
-			raise CompileError(f'Unable to compile {self.display_name()} block contents at line {self.line}')
+			raise CompileError(f'Unable to compile {self.display_name()} block contents at line {self.line}', Pos(self.line)) from e
 		except Exception as e:
-			print(traceback.format_exc())
-			raise CompileError(f'Unable to compile {self.display_name()} block contents at line {self.line}')
+			raise CompileError(f'Unable to compile {self.display_name()} block contents at line {self.line}') from e
 
 		single = exec_func.single_command()
 		if single == None or self.force_sub_function():

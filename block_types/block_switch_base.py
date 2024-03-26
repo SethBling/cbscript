@@ -1,5 +1,5 @@
 from .block_base import block_base
-from CompileError import CompileError
+from CompileError import CompileError, Pos
 
 class block_switch_base(block_base):
 	def __init__(self):
@@ -7,7 +7,8 @@ class block_switch_base(block_base):
 		for case in self.cases:
 			if case.is_default:
 				if self.default_case:
-					raise CompileError(f'Block switch at line {self.line} has multiple default cases.')
+					raise CompileError(
+						f'Block switch at line {self.line} has multiple default cases.', Pos(self.line))
 				else:
 					self.default_case = case
 	

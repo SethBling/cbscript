@@ -108,6 +108,7 @@ class mcworld(object):
 	def write_zip(self):
 		self.zip.close()
 	
-		zip_filename = os.path.join(self.dir, f'datapacks/{self.namespace}.zip')
-		with open(zip_filename, 'wb') as file:
+		zip_filename = self.dir / 'datapacks' / f'{self.namespace}.zip'
+		zip_filename.parent.mkdir(parents=True,exist_ok=True)
+		with zip_filename.open('wb') as file:
 			file.write(self.zipbytes.getvalue())

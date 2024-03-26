@@ -4,13 +4,15 @@ from environment import environment
 from mcfunction import mcfunction, compile_section
 from selector_definition import selector_definition
 from source_file import source_file
-from CompileError import CompileError
+from CompileError import CompileError, pretty_print_error, cur_file_var
 import tellraw
 import traceback
 import math
 import collections
 import time
 import os
+
+from config import Config
 
 class cbscript(object):
 	def __init__(self, source_file, parse_func):
@@ -75,27 +77,30 @@ class cbscript(object):
 		except SyntaxError as e:
 			self.log(str(e) + '\a')
 		except CompileError as e:
-			self.log(str(e) + '\a')
+			pretty_print_error(e)
 		except Exception as e:
 			self.log("Compiler encountered unexpected error during compilation:\a")
 			self.log_traceback()
 		
-	def create_world(self, dir, namespace):
-		return mcworld.mcworld(dir, namespace)
+	def create_world(self, world: str, namespace):
+		return mcworld.mcworld(Config.get_world(world), namespace)
 	
 	def compile_all(self):
 		text = self.source_file.get_text()
+		token = cur_file_var.set(self.source_file.filename)
 	
 		result = self.parse(text + "\n")
 		
 		if result == None:
 			self.log('Unable to parse script.')
+			cur_file_var.reset(token)
 			return False
 		
 		type, parsed = result
 		
 		if type != 'program':
 			self.log('Script does not contain a full program.')
+			cur_file_var.reset(token)
 			return False
 			
 		self.global_context = global_context.global_context(self.namespace)
@@ -103,10 +108,11 @@ class cbscript(object):
 		global_environment.set_dollarid('namespace', self.namespace)
 		global_environment.set_dollarid('get_num_blocks', self.global_context.get_num_blocks)
 		global_environment.set_dollarid('get_num_block_states', self.global_context.get_num_block_states)
-		global_environment.set_dollarid('global_scale', parsed['scale'])
+
+		global_environment.set_dollarid('global_scale', parsed.get('scale',1))
 		global_func = mcfunction(global_environment)
 		
-		self.global_context.scale = parsed['scale']
+		self.global_context.scale = parsed.get('scale',1)
 		self.global_context.parser = self.parse
 
 		lines = parsed['lines']
@@ -119,8 +125,9 @@ class cbscript(object):
 		try:
 			global_func.compile_blocks(lines)
 		except Exception as e:
-			print(e)
+			pretty_print_error(e)
 			self.dependencies = [source_file(d) for d in self.global_context.dependencies]
+			cur_file_var.reset(token)
 			return False
 		
 		self.post_processing()
@@ -142,6 +149,7 @@ class cbscript(object):
 		
 		self.dependencies = [source_file(d) for d in self.global_context.dependencies]
 			
+		cur_file_var.reset(token)
 		return True
 		
 	def post_processing(self):

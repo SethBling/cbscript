@@ -1,5 +1,5 @@
 from .block_switch_base import block_switch_base
-from CompileError import CompileError
+from CompileError import CompileError, Pos
 
 class block_id_switch_block(block_switch_base):
 	def __init__(self, line, expr, cases, include_block_states):
@@ -15,8 +15,7 @@ class block_id_switch_block(block_switch_base):
 			var = self.expr.compile(func)
 			self.condition_var = var.get_scoreboard_var(func)
 		except CompileError as e:
-			print(e)
-			raise CompileError(f'Unable to compile switch expression at line {self.line}.')
+			raise CompileError(f'Unable to compile switch expression at line {self.line}.', Pos(self.line)) from e
 		
 	def case_condition(self, block_id):
 		return f'score {self.condition_var.selector} {self.condition_var.objective} matches {block_id}'
@@ -36,8 +35,7 @@ class block_id_switch_block(block_switch_base):
 		try:
 			case.compile(block, block_state, id, case_func, falling_block_nbt)
 		except CompileError as e:
-			print(e)
-			raise CompileError(f'Unable to compile block switch at line {self.line}')
+			raise CompileError(f'Unable to compile block switch at line {self.line}', Pos(self.line)) from e
 			
 		func.call_function(
 			case_func,

@@ -1,6 +1,6 @@
 from .block_base import block_base
 import math
-from CompileError import CompileError
+from CompileError import CompileError, Pos
 
 class python_tuple_assignment_block(block_base):
 	def __init__(self, line, ids, val):
@@ -12,11 +12,10 @@ class python_tuple_assignment_block(block_base):
 		try:
 			val_len = len(val)
 		except Exception as e:
-			print(e)
-			raise CompileError(f'Expression at line {self.line} is not a tuple.')
+			raise CompileError(f'Expression at line {self.line} is not a tuple.', Pos(self.line)) from e
 		
 		if val_len != len(self.ids):
-			raise CompileError(f'Expected {len(self.ids)} values for tuple expression at line {self.line}, got {len(val)}')
+			raise CompileError(f'Expected {len(self.ids)} values for tuple expression at line {self.line}, got {len(val)}', Pos(self.line))
 		
 		for idx in range(val_len):
 			func.set_dollarid(self.ids[idx], val[idx])

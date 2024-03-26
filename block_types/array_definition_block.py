@@ -1,7 +1,7 @@
 from .block_base import block_base
 from .command_block import command_block
 from variable_types.scoreboard_var import scoreboard_var
-from CompileError import CompileError
+from CompileError import CompileError, Pos
 
 class array_definition_block(block_base):
 	def __init__(self, line, name, from_val, to_val, selector_based):
@@ -16,7 +16,7 @@ class array_definition_block(block_base):
 			from_val = int(self.from_val.get_value(func))
 			to_val = int(self.to_val.get_value(func))
 		except Exception:
-			raise CompileError(f'Unable to get array range for "{self.name}" at line {self.line}')
+			raise CompileError(f'Unable to get array range for "{self.name}" at line {self.line}', Pos(self.line)) from None
 			
 		name = self.name
 
