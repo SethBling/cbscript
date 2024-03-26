@@ -10,7 +10,13 @@ The CBScript compiler requires python 3. In order to run it via the run.cmd file
 
 There are instructions in run.cmd for setting up your Windows registry to be able to double click .cbscript files in order to run the compiler.
 
-You can use cbscript-npp-highlighting.xml with Notepad++ to add syntax highlighting.
+### Syntax Highlighting
+
+This project includes syntax highlighting files that you can use with various popular editors:
+
+- `cbscript-npp-highlighting.xml` for Notepad++
+- `cbscript.nanorc` for GNU Nano
+- `cbscript-micro.yaml` for [Micro](https://github.com/zyedidia/micro)
 
 # Running the Compiler
 
