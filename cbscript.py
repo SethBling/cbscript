@@ -97,7 +97,7 @@ class cbscript(object):
 		if type != 'program':
 			self.log('Script does not contain a full program.')
 			return False
-			
+
 		self.global_context = global_context.global_context(self.namespace)
 		global_environment = environment(self.global_context)
 		global_environment.set_dollarid('namespace', self.namespace)
@@ -138,6 +138,7 @@ class cbscript(object):
 		world.write_advancements(self.global_context.advancements)
 		world.write_loot_tables(self.global_context.loot_tables)
 		world.write_predicates(self.global_context.predicates)
+		world.write_data(parsed['data'])
 		world.write_zip()
 		
 		self.dependencies = [source_file(d) for d in self.global_context.dependencies]
