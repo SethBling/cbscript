@@ -1,9 +1,11 @@
 import copy
 from scratch_tracker import scratch_tracker
 from CompileError import CompileError
+import re
 
 '''
 {C for color
+{#FFFFFF for custom hex color
 {U for underline, {u to exit underline, same for {D bold, {S strikethrough and {I italic
 {- to clear formatting
 [text](command) for a command click event
@@ -114,6 +116,7 @@ def parseTextFormatting(text):
 	COMMAND = 4
 	SCOREBOARD = 5
 	PROPERTY = 6
+	CUSTOM_COLOR = 7
 
 	escaped = False
 	
@@ -124,6 +127,9 @@ def parseTextFormatting(text):
 	segments = []
 	properties = {"color": None, "bold": False, "underlined": False, "italic": False, "strikethrough": False}
 	
+	hex_char_regex = re.compile("[A-Fa-f0-9]", re.IGNORECASE)
+	color_string = ""
+
 	for ch in text:
 		if ch == "\\" and not escaped:
 			escaped = True
@@ -178,9 +184,23 @@ def parseTextFormatting(text):
 				mode = NONE
 			else:
 				seg = seg + ch
+		elif mode == CUSTOM_COLOR:
+			if len(color_string) < 7:
+				if hex_char_regex.match(ch) is None:
+					raise CompileError(f'Unexpected hex color character {{{ch} in tell command')
+				
+				color_string += ch
+			else:
+				properties["color"] = color_string
+				color_string = ""
+				mode = NONE
+				seg += ch
 		elif mode == PROPERTY:
 			if ch in COLORS:
 				properties["color"] = COLORS[ch]
+			elif ch == "#":
+				mode = CUSTOM_COLOR
+				color_string += "#"
 			elif ch == "-":
 				properties["color"] = None
 				properties["bold"] = False
@@ -208,7 +228,8 @@ def parseTextFormatting(text):
 			else:
 				raise CompileError(f'Unexpected formatting character {{{ch} in tell command')
 			
-			mode = NONE
+			if mode != CUSTOM_COLOR:
+				mode = NONE
 	
 	if len(seg) > 0:
 		segments.append((seg, copy.copy(properties)))
