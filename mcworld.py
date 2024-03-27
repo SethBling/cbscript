@@ -23,6 +23,19 @@ class mcworld(object):
 		
 		return logfile
 	
+	def write_data(self, data):
+		data_dir = 'data/'
+		if data is not None:
+			for subdir, dirs, files in os.walk(data):
+				for file in files:
+					data_copy_path = os.path.join(subdir, file)
+
+					data_raw_path = os.path.relpath(data_copy_path, data)
+					data_zip_path = os.path.join(data_dir, data_raw_path)
+					with open(data_copy_path, "rb") as file:
+						file_bytes = file.read()
+						self.zip.writestr(data_zip_path, file_bytes)
+
 	def write_functions(self, functions):
 		function_dir = f'data/{self.namespace}/functions/'
 		

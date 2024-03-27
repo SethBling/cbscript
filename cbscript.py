@@ -131,6 +131,7 @@ class cbscript(object):
 		if os.path.exists(latest_log_filename):
 			self.latest_log_file = source_file(latest_log_filename)
 
+		world.write_data(parsed['data'])
 		world.write_functions(self.global_context.functions)
 		world.write_tags(self.global_context.clocks, self.global_context.block_tags, self.global_context.entity_tags, self.global_context.item_tags)
 		world.write_mcmeta(parsed['desc'])
