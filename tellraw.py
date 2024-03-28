@@ -185,16 +185,16 @@ def parseTextFormatting(text):
 			else:
 				seg = seg + ch
 		elif mode == CUSTOM_COLOR:
-			if len(color_string) < 7:
+			if len(color_string) < 6:
 				if hex_char_regex.match(ch) is None:
 					raise CompileError(f'Unexpected hex color character {{{ch} in tell command')
 				
 				color_string += ch
 			else:
+				color_string += ch
 				properties["color"] = color_string
 				color_string = ""
 				mode = NONE
-				seg += ch
 		elif mode == PROPERTY:
 			if ch in COLORS:
 				properties["color"] = COLORS[ch]
