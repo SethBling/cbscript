@@ -103,6 +103,9 @@ class cbscript(object):
 		global_environment.set_dollarid('namespace', self.namespace)
 		global_environment.set_dollarid('get_num_blocks', self.global_context.get_num_blocks)
 		global_environment.set_dollarid('get_num_block_states', self.global_context.get_num_block_states)
+
+		if 'scale' not in parsed:
+			parsed['scale'] = 10000
 		global_environment.set_dollarid('global_scale', parsed['scale'])
 		global_func = mcfunction(global_environment)
 		
@@ -138,6 +141,7 @@ class cbscript(object):
 		world.write_advancements(self.global_context.advancements)
 		world.write_loot_tables(self.global_context.loot_tables)
 		world.write_predicates(self.global_context.predicates)
+		world.write_item_modifiers(self.global_context.item_modifiers)
 		world.write_zip()
 		
 		self.dependencies = [source_file(d) for d in self.global_context.dependencies]
