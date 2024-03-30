@@ -2978,13 +2978,11 @@ function handle_collision_impulse()
     
     if transforms.impact_sounds
         if c_vel_y < -500
-            @Position.<pos> = <collision.x, collision.y, collision.z>
-            at @Position
+            as @PhysicsBlock if @s.collider_id == collider_1.id at @s
                 /playsound minecraft:block.wool.fall master @a ~ ~ ~ 1 2
             end
         else if c_vel_y < -300
-            @Position.<pos> = <collision.x, collision.y, collision.z>
-            at @Position
+            as @PhysicsBlock if @s.collider_id == collider_1.id at @s
                 /playsound minecraft:block.wool.fall master @a ~ ~ ~ 0.5 2
             end
         end
