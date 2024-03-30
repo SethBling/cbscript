@@ -1854,10 +1854,5 @@ def parse(data,debug=0):
 	scriptlex.lexer.lineno = 1
 	bparser.error = 0
 	bparser.data = data
-	try:
-		p = bparser.parse(data,debug=debug,tracking=True)
-		return p
-	except SyntaxError as e:
-		print(e)
-	except Exception as e:
-		print(traceback.format_exc())
+	p = bparser.parse(data,debug=debug,tracking=True)
+	return p

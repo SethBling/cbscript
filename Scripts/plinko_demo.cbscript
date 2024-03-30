@@ -1,4 +1,4 @@
-dir "C:\Users\Seth\AppData\Roaming\.minecraft 1.20\saves\Plinko Demo"
+dir "Plinko Demo"
 desc "Demonstrates plinko"
 scale 1000
 

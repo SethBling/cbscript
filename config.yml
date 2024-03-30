@@ -1,0 +1,7 @@
+instance_path:
+
+# in the form
+#   from: to
+#
+# from can be a glob pattern
+world_redirects:
