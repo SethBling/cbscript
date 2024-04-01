@@ -99,7 +99,15 @@ class mcworld(object):
 			for name in predicates:
 				predicate_file = os.path.join(predicate_dir, f'{name}.json')
 				self.zip.writestr(predicate_file, predicates[name])
-		
+
+	def write_item_modifiers(self, item_modifiers):
+		if len(item_modifiers) > 0:
+			item_modifier_dir = f'data/{self.namespace}/item_modifiers/'
+			
+			for name in item_modifiers:
+				item_modifier_file = os.path.join(item_modifier_dir, f'{name}.json')
+				self.zip.writestr(item_modifier_file, item_modifiers[name])
+
 	def write_mcmeta(self, desc):
 		mcmeta_file = 'pack.mcmeta'
 		

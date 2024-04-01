@@ -30,6 +30,7 @@ from block_types.nbt_remove_block import nbt_remove_block
 from block_types.pop_block import pop_block
 from block_types.pointer_decl_block import pointer_decl_block
 from block_types.predicate_definition_block import predicate_definition_block
+from block_types.item_modifier_definition_block import item_modifier_definition_block
 from block_types.print_block import print_block
 from block_types.push_block import push_block
 from block_types.python_assignment_block import python_assignment_block
@@ -421,6 +422,7 @@ def p_top_level_blocks(p):
 						| advancement_definition newlines top_level_blocks
 						| loot_table_definition newlines top_level_blocks
 						| predicate_definition newlines top_level_blocks
+						| item_modifier_definition newlines top_level_blocks
 						| section_commented newlines top_level_blocks'''
 	p[0] = [p[1]] + p[3]
 	
@@ -1846,6 +1848,11 @@ def p_loot_table_definition(p):
 def p_predicate_definition(p):
 	'''predicate_definition : predicate ID json_object'''
 	p[0] = predicate_definition_block(p.lineno(1), p[2], p[3])
+	
+#### Item Modifiers
+def p_item_modifier_definition(p):
+	'''item_modifier_definition : item_modifier ID json_object'''
+	p[0] = item_modifier_definition_block(p.lineno(1), p[2], p[3])
 	
 #### Empty
 def p_empty(p):

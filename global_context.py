@@ -48,6 +48,7 @@ class global_context(object):
 		self.advancements = {}
 		self.loot_tables = {}
 		self.predicates = {}
+		self.item_modifiers = {}
 		self.block_state_list = None
 		self.block_list = None
 
@@ -156,6 +157,9 @@ class global_context(object):
 		
 	def add_predicate(self, name, predicate):
 		self.predicates[name] = predicate
+		
+	def add_item_modifier(self, name, item_modifier):
+		self.item_modifiers[name] = item_modifier
 		
 	def get_block_state_list(self, include_block_states):
 		if include_block_states:

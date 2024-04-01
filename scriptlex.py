@@ -7,7 +7,7 @@ keywords = (
     'move', 'create', 'tell', 'title', 'subtitle', 'actionbar',
     'reset', 'clock', 'function', 'if', 'unless', 'then', 'do', 'else', 'switch', 'case', 'default',
     'return', 'while', 'macro', 'block', 'block_data', 'block_tag', 'entity_tag', 'item_tag', 'define', 'array', 'remove', 'success', 'result',
-	'shaped', 'recipe', 'keys', 'eyes', 'feet',	'advancement', 'loot_table', 'predicate',
+	'shaped', 'recipe', 'keys', 'eyes', 'feet',	'advancement', 'loot_table', 'predicate', "item_modifier",
 	'push', 'pop', 'true', 'false', 'data'
 )
 

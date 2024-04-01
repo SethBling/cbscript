@@ -846,6 +846,9 @@ class mcfunction(object):
 		
 	def add_predicate(self, name, predicate):
 		self.environment.add_predicate(name, predicate)
+
+	def add_item_modifier(self, name, item_modifier):
+		self.environment.add_item_modifier(name, item_modifier)
 		
 	def get_block_state_list(self, include_block_states):
 		return self.environment.get_block_state_list(include_block_states)

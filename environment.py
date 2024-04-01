@@ -392,6 +392,9 @@ class environment(object):
 		
 	def add_predicate(self, name, predicate):
 		self.global_context.add_predicate(name, predicate)
+
+	def add_item_modifier(self, name, item_modifier):
+		self.global_context.add_item_modifier(name, item_modifier)
 		
 	def get_block_state_list(self, include_block_states):
 		return self.global_context.get_block_state_list(include_block_states)
