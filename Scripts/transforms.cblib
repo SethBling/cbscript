@@ -14,7 +14,7 @@ $CollisionCubeEdgeWorldEdge = 3
 $CollisionCubeFaceCubePoint = 4
 $CollisionCubeEdgeCubeEdge = 5
 
-define @PhysicsBlock = @Entity[type=block_display,tag=physics_block]
+define @PhysicsBlock = @Entity[type=item_display,tag=physics_block]
 
 end
 
@@ -168,7 +168,7 @@ function create_collider(x, y, z, size, inv_mass, inv_rot_int)
     
     collider_quaternion_to_transform() with macros
 
-    /$summon minecraft:block_display ~ ~ ~ {block_state:{Name:"minecraft:$(block_name)",Count:0b}, interpolation_duration: 1, teleport_duration: 1, Tags:["physics_block"], view_range:10f}
+    /$summon minecraft:item_display ~ ~ ~ {item:{id:"minecraft:$(block_name)",Count:1b}, item_display:"Fixed", interpolation_duration: 1, teleport_duration: 1, Tags:["physics_block"], view_range:10f}
     @PhysicsBlock.age++
     as @PhysicsBlock[age == 1]
         /scoreboard players set @s collider_id $(collider)
@@ -280,20 +280,42 @@ end
 
 function collider_set_transform()
     define name collider = "collider_$(collider)"
+    
+    size = collider.size
+    render_scale = collider.render_scale
+    render_dy = collider.render_dy
 
     /data modify storage $namespace:global transformation set value [1f,0f,0f,0f,0f,1f,0f,0f,0f,0f,1f,0f,0f,0f,0f,1f]
-    d00 = collider.t00 * collider.size / $Precision
-    d01 = collider.t01 * collider.size / $Precision
-    d02 = collider.t02 * collider.size / $Precision
-    d10 = collider.t10 * collider.size / $Precision
-    d11 = collider.t11 * collider.size / $Precision
-    d12 = collider.t12 * collider.size / $Precision
-    d20 = collider.t20 * collider.size / $Precision
-    d21 = collider.t21 * collider.size / $Precision
-    d22 = collider.t22 * collider.size / $Precision
-    dx = (d00 + d01 + d02) / -2
-    dy = (d10 + d11 + d12) / -2
-    dz = (d20 + d21 + d22) / -2
+    d00 = collider.t00 * size / $Precision
+    d01 = collider.t01 * size / $Precision
+    d02 = collider.t02 * size / $Precision
+    d10 = collider.t10 * size / $Precision
+    d11 = collider.t11 * size / $Precision
+    d12 = collider.t12 * size / $Precision
+    d20 = collider.t20 * size / $Precision
+    d21 = collider.t21 * size / $Precision
+    d22 = collider.t22 * size / $Precision
+    dx = 0
+    dy = 0
+    dz = 0
+    
+    if render_scale
+        d00 = d00 * render_scale / $Precision
+        d01 = d01 * render_scale / $Precision
+        d02 = d02 * render_scale / $Precision
+        d10 = d10 * render_scale / $Precision
+        d11 = d11 * render_scale / $Precision
+        d12 = d12 * render_scale / $Precision
+        d20 = d20 * render_scale / $Precision
+        d21 = d21 * render_scale / $Precision
+        d22 = d22 * render_scale / $Precision
+    end
+    
+    if render_dy
+        dx = d01 * render_dy / $Precision
+        dy = d11 * render_dy / $Precision
+        dz = d21 * render_dy / $Precision
+    end
     
     for $pair in [[0,"d00"], [1,"d01"], [2,"d02"], [3,"dx"], [4,"d10"], [5,"d11"], [6,"d12"], [7,"dy"], [8,"d20"], [9,"d21"], [10,"d22"], [11,"dz"]]
         $idx = $pair[0]
@@ -2622,6 +2644,8 @@ function merge_collisions_down()
                     free_collision.nx = collision.nx
                     free_collision.ny = collision.ny
                     free_collision.nz = collision.nz
+                    
+                    free_collision.restitution = collision.restitution
                     
                     free_collision.type = collision.type
                     free_collision.collider1 = collision.collider1
