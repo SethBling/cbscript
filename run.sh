@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # To make double clicking cbscript files work,
 # modify the defaults of your desktop environment.
@@ -20,7 +20,7 @@ fi
 
 echo -ne "\033]0;$(basename $1)\007"
 pushd $(dirname $0)
-python3 compile.py $1
+python compile.py $1
 popd
 
 read -p "Press enter to continue..."
