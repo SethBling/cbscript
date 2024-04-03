@@ -20,7 +20,7 @@ fi
 
 ABS_DIR="$(pwd)/$1"
 pushd $(dirname $0)
-python3 compile.py ABS_DIR
+python3 compile.py $ABS_DIR
 popd
 
 read -p "Press enter to continue..."
