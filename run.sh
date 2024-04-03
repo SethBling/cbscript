@@ -18,9 +18,9 @@ if ! [ -f $1 ]; then
     exit
 fi
 
-echo -ne "\033]0;$(basename $1)\007"
+ABS_DIR="$(pwd)/$1"
 pushd $(dirname $0)
-python3 compile.py $1
+python3 compile.py ABS_DIR
 popd
 
 read -p "Press enter to continue..."
