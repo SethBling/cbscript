@@ -1,0 +1,64 @@
+<NotepadPlus>
+    <UserLang name="CBScript (Dark Mode)" ext="cbscript cblib" udlVersion="2.1">
+        <Settings>
+            <Global caseIgnored="no" allowFoldOfComments="no" foldCompact="no" forcePureLC="0" decimalSeparator="0" />
+            <Prefix Keywords1="no" Keywords2="no" Keywords3="yes" Keywords4="yes" Keywords5="yes" Keywords6="yes" Keywords7="no" Keywords8="no" />
+        </Settings>
+        <KeywordLists>
+            <Keywords name="Comments">00# 01 02 03 04</Keywords>
+            <Keywords name="Numbers, prefix1">0x 0b</Keywords>
+            <Keywords name="Numbers, prefix2"></Keywords>
+            <Keywords name="Numbers, extras1"></Keywords>
+            <Keywords name="Numbers, extras2"></Keywords>
+            <Keywords name="Numbers, suffix1">b B f F l L s S</Keywords>
+            <Keywords name="Numbers, suffix2"></Keywords>
+            <Keywords name="Numbers, range"></Keywords>
+            <Keywords name="Operators1">: &quot; / = ~ , [ ] ( ) % / * + - ^ ! &lt; &gt; . { } &amp;</Keywords>
+            <Keywords name="Operators2"></Keywords>
+            <Keywords name="Folders in code1, open"></Keywords>
+            <Keywords name="Folders in code1, middle"></Keywords>
+            <Keywords name="Folders in code1, close"></Keywords>
+            <Keywords name="Folders in code2, open"></Keywords>
+            <Keywords name="Folders in code2, middle"></Keywords>
+            <Keywords name="Folders in code2, close"></Keywords>
+            <Keywords name="Folders in comment, open"></Keywords>
+            <Keywords name="Folders in comment, middle"></Keywords>
+            <Keywords name="Folders in comment, close"></Keywords>
+            <Keywords name="Keywords1">for dir at in end as not and or move create tell reset clock function if then do else detect return while macro block block_tag entity_tag item_tag define byte double float int long short True False rotated facing unless align desc to by here None title subtitle actionbar switch case array import remove success result shaped recipe keys advancement loot_table predicate item_modifier default push pop name with macros on</Keywords>
+            <Keywords name="Keywords2">minecraft&#x000D;&#x000A;&#x000D;&#x000A;advancement bossbar clear clone data datapack debug defaultgamemode difficulty effect enchant execute experience fill forceload function gamemode gamerule give help kill list locate me msg particle playsound recipe reload replaceitem say scoreboard seed setblock setworldpsawn spawnpoint spreadplayers stopsound summon tag team teleport tell tellraw time title tp trigger w weather worldborder xp gamemode creative survival adventure spectator distance type entity limit sort nearest furthest random arbitrar level team run merge get set feet eyes item loot &#x000D;&#x000A;area_effect_cloud armor_stand arrow bat blaze boat cat cave_spider chest_minecart chicken cod command_block_minecart cow creeper dolphin donkey dragon_fireball drowned egg elder_guardian end_crystal ender_dragon ender_pearl enderman endermite evoker evoker_fangs experience_bottle experience_orb eye_of_ender falling_block fireball firework_rocket fox furnace_minecart ghast giant guardian hopper_minecart horse husk illusioner iron_golem item item_frame leash_knot lightning_bolt llama llama_spit magma_cube minecart mooshroom mule ocelot painting panda parrot phantom pig pillager polar_bear potion pufferfish rabbit ravager salmon sheep shulker shulker_bullet silverfish skeleton skeleton_horse slime small_fireball snow_golem snowball spawner_minecart spectral_arrow spider squid stray tnt tnt_minecart trader_llama triden tropical_fish turtile vex villager vindicator wandering_trader witch wither wither_skeleton wither_skull wolf zombie zombie_horse zombie_pigman zombie_villager&#x000D;&#x000A;&#x000D;&#x000A;replace hotbar inventory armor mine weapon mainhand offhand feet legs chest head container enderchest horse armor chest saddle villager&#x000D;&#x000A;&#x000D;&#x000A;air&#x000D;&#x000A;&#x000D;&#x000A;announceAdvancements commandBlockOutput disableElytryMovementCheck disableRaids doDaylightCycle doEntityDrops doFireTick doImmediateRespawn doInsomnia doLimitedCrafting doMobLoot doMobSpawning doTileDrops doWeatherCycle drowningDamage fallDamage fireDamage keepInventory logAdminCommands maxCommandChainLength maxEntityCramming mobGriefing naturalRegeneration randomTickSpeed reducedDebugInfo sendCommandFeedback showDeathMessages spawnRadius spectatorsGenerateChunks&#x000D;&#x000A;&#x000D;&#x000A;true false scale&#x000D;&#x000A;&#x000D;&#x000A;level stats recipes advancements survival adventure creative spectator condition player storage chance fluid tag nbt state light position x y z flags biome value min max period nbt state offsetX offsetY offsetZ is_on_fire is_sneaking is_sprinting is_swimming is_baby scores inverted term inverse killed_by_player alternative terms block_state_property properties damage_source_properties entity_present biome dimension feature match_tool name raining thundering enchantments enchantment levels&#x000D;&#x000A;&#x000D;&#x000A;attacker target</Keywords>
+            <Keywords name="Keywords3">$</Keywords>
+            <Keywords name="Keywords4">@</Keywords>
+            <Keywords name="Keywords5">0x 0b</Keywords>
+            <Keywords name="Keywords6"></Keywords>
+            <Keywords name="Keywords7"></Keywords>
+            <Keywords name="Keywords8"></Keywords>
+            <Keywords name="Delimiters">00&quot; 01\ 02&quot; 03&apos; 04\ 05&apos; 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23</Keywords>
+        </KeywordLists>
+        <Styles>
+            <WordsStyle name="DEFAULT" fgColor="FFFFFF" bgColor="000000" colorStyle="1" fontStyle="0" nesting="0" />
+            <WordsStyle name="COMMENTS" fgColor="404040" bgColor="000000" colorStyle="1" fontStyle="0" nesting="0" />
+            <WordsStyle name="LINE COMMENTS" fgColor="7F9F7F" bgColor="000000" colorStyle="1" fontStyle="3" nesting="0" />
+            <WordsStyle name="NUMBERS" fgColor="FF8080" bgColor="000000" colorStyle="1" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS1" fgColor="DFC47D" bgColor="000000" colorStyle="1" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS2" fgColor="FF8040" bgColor="000000" colorStyle="1" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS3" fgColor="80FF80" bgColor="000000" colorStyle="1" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS4" fgColor="FF00FF" bgColor="000000" colorStyle="1" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS5" fgColor="FF8080" bgColor="000000" colorStyle="1" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS6" fgColor="8000FF" bgColor="000000" colorStyle="1" fontStyle="1" nesting="0" />
+            <WordsStyle name="KEYWORDS7" fgColor="FFFFFF" bgColor="000000" colorStyle="1" fontStyle="0" nesting="0" />
+            <WordsStyle name="KEYWORDS8" fgColor="FFFFFF" bgColor="000000" colorStyle="1" fontStyle="0" nesting="0" />
+            <WordsStyle name="OPERATORS" fgColor="000080" bgColor="FFFFFF" fontStyle="1" nesting="0" />
+            <WordsStyle name="FOLDER IN CODE1" fgColor="0000FF" bgColor="000000" colorStyle="1" fontStyle="1" nesting="0" />
+            <WordsStyle name="FOLDER IN CODE2" fgColor="FFFFFF" bgColor="000000" colorStyle="1" fontStyle="0" nesting="0" />
+            <WordsStyle name="FOLDER IN COMMENT" fgColor="FFFFFF" bgColor="000000" colorStyle="1" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS1" fgColor="808080" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS2" fgColor="808080" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS3" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS4" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS5" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS6" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS7" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+            <WordsStyle name="DELIMITERS8" fgColor="000000" bgColor="FFFFFF" fontStyle="0" nesting="0" />
+        </Styles>
+    </UserLang>
+</NotepadPlus>
