@@ -55,7 +55,8 @@ $Playing = 4
 $Scored = 5
 
 $BallSize = 4000
-$PlayerSize = 800
+$PlayerSize = 1200
+$DemoVelocity = 1000
 
 $Triggers = [
     "join_red_team",
@@ -616,8 +617,8 @@ clock tick
         ball_old_vz = collider_1.velocity_z
         
         get_plane_collisions()
-        colliders_resolve_collisions()
         collision_game_logic()
+        colliders_resolve_collisions()
         colliders_finalize_tick()
         
         ball_new_vx = collider_1.velocity_x
@@ -908,6 +909,11 @@ function tick_players()
             end
             
             @s.boosting = boosting
+        end
+        
+        if @s.demo_sound at @s
+            @s.demo_sound = False
+            /playsound minecraft:entity.generic.explode master @s ~ ~ ~ 1 1 0.5
         end
     end
 end
@@ -1270,6 +1276,12 @@ end
 function spawn_player()
     spawn_x = $Half + spawn_dx
     spawn_y = YnegPlane + CubeSize / 2
+    
+    if spawn_offset
+        spawn_y += spawn_offset
+        spawn_offset = 0
+    end
+    
     spawn_z = $Half + spawn_dz
     
     id = @s.id
@@ -1419,17 +1431,17 @@ end
 function set_player_head_transformation()
     define name collider = "collider_$(collider)"
     
-    $head_scale = 900
+    size = collider.size * 11 / 10
     
-    d00 = collider.t00 * $head_scale / $Precision
-    d01 = collider.t01 * $head_scale / $Precision
-    d02 = collider.t02 * $head_scale / $Precision
-    d10 = collider.t10 * $head_scale / $Precision
-    d11 = collider.t11 * $head_scale / $Precision
-    d12 = collider.t12 * $head_scale / $Precision
-    d20 = collider.t20 * $head_scale / $Precision
-    d21 = collider.t21 * $head_scale / $Precision
-    d22 = collider.t22 * $head_scale / $Precision
+    d00 = collider.t00 * size / $Precision
+    d01 = collider.t01 * size / $Precision
+    d02 = collider.t02 * size / $Precision
+    d10 = collider.t10 * size / $Precision
+    d11 = collider.t11 * size / $Precision
+    d12 = collider.t12 * size / $Precision
+    d20 = collider.t20 * size / $Precision
+    d21 = collider.t21 * size / $Precision
+    d22 = collider.t22 * size / $Precision
     dx = d01 * 250 / $Precision
     dy = d11 * 250 / $Precision
     dz = d21 * 250 / $Precision
@@ -1582,6 +1594,94 @@ function collision_game_logic()
                         last_blue_time = time
                     end
                 end
+            end
+            
+            player_id1 = None
+            player_id2 = None
+            
+            if collider1 as @PlayerBlock if @s.collider_id == collider1
+                with
+                    $(collider) = collider1
+                do
+                    define name collider = "collider_$(collider)"
+                    v1x = collider.velocity_x
+                    v1y = collider.velocity_y
+                    v1z = collider.velocity_z
+                end
+                
+                player_id1 = @s.player_id
+                team1 = @s.team
+            end
+            
+            if collider2 as @PlayerBlock if @s.collider_id == collider2
+                with
+                    $(collider) = collider2
+                do
+                    define name collider = "collider_$(collider)"
+                    v2x = collider.velocity_x
+                    v2y = collider.velocity_y
+                    v2z = collider.velocity_z
+                end
+
+                player_id2 = @s.player_id
+                team2 = @s.team
+            end
+            
+            if player_id1 and player_id2 unless team1 == team2            
+                v1 = sqrt(v1x*v1x + v1y*v1y + v1z*v1z)
+                v2 = sqrt(v2x*v2x + v2y*v2y + v2z*v2z)
+                
+                if v1 > v2 and v1 > $DemoVelocity
+                    demolish(player_id1, player_id2)
+                    delete_collision() with macros
+                else if v2 > v1 and v2 > $DemoVelocity
+                    demolish(player_id2, player_id1)
+                    delete_collision() with macros
+                end
+            end
+        end
+    end
+end
+
+function demolish(demolishing, demolished)
+    @Player.demolishing = False
+    @Player.demolished = False
+
+    as @Playing
+        if @s.id == demolishing
+            @s.demolishing = True
+        end
+        
+        if @s.id == demolished
+            @s.demolished = True
+        end
+    end
+    
+    as @Playing
+        if @s.id == demolishing
+            tell @s "You demolished (@Playing[demolished])!"
+        end
+
+        if @s.id == demolished
+            at @s
+                /particle minecraft:explosion ~ ~ ~ 2 2 2 0 20 force
+                /playsound minecraft:entity.generic.explode master @a ~ ~ ~ 1 1 0.5
+                @s.demo_sound = True
+            end
+        
+            @s.demolished = True
+            tell @s "You were demolished by (@Playing[demolishing])!"
+            
+            as @PlayerBlock if @s.player_id == demolished
+                team = @s.team
+            end
+            
+            spawn = 3
+            spawn_offset = 10000
+            spawn_player_slot()
+
+            as @PlayerBlock if @s.player_id == demolished
+                @s.boost_meter = -60
             end
         end
     end
