@@ -15,7 +15,7 @@ end
 @BallBlock = @PhysicsBlock[tag=BallBlock,limit=1]
 
 define @PlayerHead = @Entity[type=item_display,tag=PlayerHead]
-    create {Tags:["PlayerHead"], item:{id:"minecraft:player_head", Count:1b, tag:{}}, teleport_duration:1}
+    create {Tags:["PlayerHead"], item:{id:"minecraft:player_head", Count:1b, tag:{}}, teleport_duration:1, interpolation_duration: 1}
 end
 
 define @Glass = @Entity[type=block_display,tag=Glass]
@@ -441,7 +441,7 @@ clock tick
                 game_timer--
             end
 
-            total_seconds = game_timer / 20
+            total_seconds = (game_timer + 19) / 20
             disp_seconds = total_seconds % 60
             disp_minutes = total_seconds / 60
             with
@@ -475,6 +475,8 @@ clock tick
                 if overtime
                     /scoreboard players reset game_timer score
                     start_lobby()
+                else if game_timer <= 0
+                    end_game_time()
                 else
                     start_tipoff()
                 end
@@ -482,7 +484,17 @@ clock tick
         end
         
         if gamemode == $Tipoff
-            if tipoff_timer <= 100 and tipoff_timer % 20 == 0
+            display_time = False
+            
+            if tipoff_timer <= 60
+                display_time = True
+            end
+            
+            if tipoff_timer <= 100 unless overtime
+                display_time = True
+            end
+        
+            if display_time and tipoff_timer % 20 == 0
                 tipoff_seconds = tipoff_timer / 20
                 title @a 0 15 5 "(tipoff_seconds)"
                 
@@ -793,7 +805,10 @@ function tick_players()
                                 vy += dy / 80
                                 vz += dz / 30
                                 
-                                /particle minecraft:flame ~ ~ ~ 0 0 0 0 1 force
+                                if dx == 0 and dz == 0
+                                else
+                                    /particle minecraft:flame ~ ~ ~ 0 0 0 0 1 force
+                                end
                             end
                         end
                         
@@ -1133,10 +1148,10 @@ function start_overtime()
     overtime = True
     
     title @a 0 40 20 "Overtime!"
-    subtitle @a 0 40 20 "Next goal wins"
+    subtitle @a 0 40 20 "Next goal wins!"
     
     start_tipoff()
-    tipoff_timer = 160
+    tipoff_timer = 120
 end
 
 function end_game()
@@ -1404,15 +1419,17 @@ end
 function set_player_head_transformation()
     define name collider = "collider_$(collider)"
     
-    d00 = collider.t00
-    d01 = collider.t01
-    d02 = collider.t02
-    d10 = collider.t10
-    d11 = collider.t11
-    d12 = collider.t12
-    d20 = collider.t20
-    d21 = collider.t21
-    d22 = collider.t22
+    $head_scale = 900
+    
+    d00 = collider.t00 * $head_scale / $Precision
+    d01 = collider.t01 * $head_scale / $Precision
+    d02 = collider.t02 * $head_scale / $Precision
+    d10 = collider.t10 * $head_scale / $Precision
+    d11 = collider.t11 * $head_scale / $Precision
+    d12 = collider.t12 * $head_scale / $Precision
+    d20 = collider.t20 * $head_scale / $Precision
+    d21 = collider.t21 * $head_scale / $Precision
+    d22 = collider.t22 * $head_scale / $Precision
     dx = d01 * 250 / $Precision
     dy = d11 * 250 / $Precision
     dz = d21 * 250 / $Precision
@@ -1425,7 +1442,7 @@ function set_player_head_transformation()
     end
     
     /data modify entity @s transformation set from storage $namespace:global transformation
-    /data modify entity @s start_interpolation set value 0b
+    /data modify entity @s start_interpolation set value 0
 end
 
 function colliders_get_sphere_bounds()
