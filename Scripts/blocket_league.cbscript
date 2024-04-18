@@ -432,6 +432,20 @@ clock tick
             stop_game()
         end
         
+        # Handle triggers
+        as @Player
+            unless @s.leave_game == 0
+                spectate()
+                @s.leave_game = 0
+            end
+            
+            for $trigger in $Triggers
+                /execute if score @s $trigger >= c1 Constant run function $namespace:$trigger
+                /scoreboard players set @s $trigger 0
+                /scoreboard players enable @s $trigger
+            end
+        end
+        
         allow_movement = False
         if gamemode == $Lobby
             allow_movement = True
@@ -519,20 +533,6 @@ clock tick
             /gamemode adventure @s
         end
         
-        as @Player
-            unless @s.leave_game == 0
-                spectate()
-                @s.leave_game = 0
-            end
-            
-            for $trigger in $Triggers
-                /execute if score @s $trigger >= c1 Constant run function $namespace:$trigger
-                /scoreboard players set @s $trigger 0
-                /scoreboard players enable @s $trigger
-            end
-        end
-
-
         create @Position 0.0 0.0 0.0
         
         as @PlayerInteraction
@@ -693,6 +693,7 @@ function tick_players()
             
             mx = @s.vx
             mz = @s.vz
+            
             speed = sqrt(mx*mx + mz*mz)
             
             horiz_mag = sqrt(dx*dx + dz*dz)
@@ -763,10 +764,6 @@ function tick_players()
                         vy = collider.velocity_y
                         vz = collider.velocity_z
                         
-                        if vx == 0 and vy == 0 and vz == 0
-                            velocity_clear = True
-                        end
-                        
                         if allow_movement
                             horiz_vel = sqrt(vx*vx + vz*vz)
                             norm_vx = vx * $Precision / horiz_vel
@@ -775,8 +772,8 @@ function tick_players()
                             braking_dot = -(dx * norm_vx + dz * norm_vz) / $Precision
                             
                             if braking_dot > 0
-                                dx = dx * braking_dot * 2/ $Precision
-                                dz = dz * braking_dot * 2 / $Precision
+                                dx = dx * ($Precision + braking_dot) / $Precision
+                                dz = dz * ($Precision + braking_dot) / $Precision
                             end
                             
                             if jumping and collider.y <= JumpPlane
@@ -823,10 +820,6 @@ function tick_players()
                         collider.velocity_x = vx
                         collider.velocity_y = vy
                         collider.velocity_z = vz
-                        
-                        if velocity_clear
-                            velocity_clear = False
-                        end
                         
                         collider_wake_up() with macros
                     else
@@ -1517,13 +1510,13 @@ function get_sphere_sphere_collision()
             dist = sqrt(dist_sq)
             
             pen = halfsize - dist
-            x = x1 + dx * halfsize1 / $Precision
-            y = y1 + dy * halfsize1 / $Precision
-            z = z1 + dz * halfsize1 / $Precision
-            
             nx = dx * -$Precision / dist
             ny = dy * -$Precision / dist
             nz = dz * -$Precision / dist
+
+            x = x1 - nx * halfsize1 / $Precision
+            y = y1 - ny * halfsize1 / $Precision
+            z = z1 - nz * halfsize1 / $Precision
             
             id = get_unused_collision_id()
             
@@ -1586,6 +1579,13 @@ function collision_game_logic()
             
             as @BallBlock if @s.collider_id == collider1
                 as @PlayerBlock if @s.collider_id == collider2
+                    @Position.<pos> = <collision.x, collision.y, collision.z>
+                    
+                    at @Position
+                        /playsound minecraft:block.note_block.basedrum master @a ~ ~ ~ 1 1
+                        /particle minecraft:item_snowball ~ ~ ~ 0.2 0.2 0.2 0 10 force
+                    end
+
                     if @s.team == $Red
                         last_red_hit = @s.player_id
                         last_red_time = time
@@ -1685,6 +1685,8 @@ function demolish(demolishing, demolished)
             end
         end
     end
+    
+    tell @a[not demolished, not demolishing] "(@Playing[demolishing]) demolished (@Playing[demolished])"
 end
 
 function check_for_save()
