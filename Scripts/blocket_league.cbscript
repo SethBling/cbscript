@@ -13,6 +13,12 @@ end
 @Playing = @Player[gamemode=adventure]
 @PlayerBlock = @PhysicsBlock[tag=PlayerBlock]
 @BallBlock = @PhysicsBlock[tag=BallBlock,limit=1]
+define @RopeSegment = @Entity[type=block_display,tag=RopeSegment]
+    create {block_state: {Name: "minecraft:blue_concrete", count: 0b}, teleport_duration: 1, interpolation_duration: 1, transformation:{left_rotation: [0f, 0f, 0f, 1f], translation: [0f, 0f, 0f], right_rotation: [0f, 0f, 0f, 1f], scale:[0.05f, 0.05f, 0.05f]}, Tags:["RopeSegment"]}
+    
+    tele_dur: teleport_duration int 1
+    interp_dur = interpolation_duration int 1
+end
 
 define @PlayerHead = @Entity[type=item_display,tag=PlayerHead]
     create {Tags:["PlayerHead"], item:{id:"minecraft:player_head", Count:1b, tag:{}}, teleport_duration:1, interpolation_duration: 1}
@@ -90,6 +96,11 @@ reset
     
     as @Player
         tell_options()
+    end
+    
+    /kill @RopeSegment
+    if DisplayAcc
+        create @RopeSegment
     end
 end
 
@@ -386,7 +397,9 @@ function reset_game()
     transforms.impact_sounds = True
     
     Restitution = 2000
-    Gravity = 15
+    Gravity = 20
+    PlayerGravity = 30 - Gravity
+    GoalGravity = 8 - Gravity
     Friction = 1000
     
     SphereDrag = 990
@@ -394,6 +407,8 @@ function reset_game()
     CubeSize = $BallSize
     CubeInvMass = 1200
     CubeInvRotInt = 200
+    
+    sphere_mode = False
 
     with
         $(block_name) = "target"
@@ -410,12 +425,7 @@ function reset_game()
     CubeInvMass = 200
     CubeInvRotInt = 1000
     
-    tick_players()
-    spawn_players()
-    
-    as @Player
-        tell_options()
-    end
+    start_lobby()
 end
 
 function add_player_block()
@@ -628,6 +638,27 @@ clock tick
         if gamemode == $Playing
             check_for_save()
         end
+        
+        if DisplayAcc
+            as @PlayerBlock
+                @Position.<pos> = @s.<pos>
+                at @Position
+                    @Position.<pos> += <player_acc_x, 0, player_acc_z>
+                    facing @Position
+                        as @RopeSegment
+                            len = sqrt(player_acc_x*player_acc_x + player_acc_z*player_acc_z)
+            
+                            /data modify storage $namespace:global scale set value [0.05f, 0.05f, 0.05f]
+                            /execute store result storage $namespace:global scale[2] float 0.001 run scoreboard players get Global len
+                            /data modify entity @s transformation.scale set from storage $namespace:global scale
+                            #/data modify entity @s start_interpolation set value 0b
+
+                            /tp @s ~ ~ ~ ~ ~
+                        end
+                    end
+                end
+            end
+        end
 
         as @NameTag
             current_id = @s.player_id
@@ -697,6 +728,9 @@ function tick_players()
             speed = sqrt(mx*mx + mz*mz)
             
             horiz_mag = sqrt(dx*dx + dz*dz)
+            if DisplayAcc
+                horiz_mag = 1000
+            end
             
             dx = mx * horiz_mag / speed
             dz = mz * horiz_mag / speed
@@ -810,11 +844,14 @@ function tick_players()
                             end
                         end
                         
+                        player_acc_x = dx
+                        player_acc_z = dz
+                        
                         if gamemode == $Scored
-                            vy += 7
+                            vy -= GoalGravity
                         else
                             # Extra gravity on the vehicle
-                            vy -= 15
+                            vy -= PlayerGravity
                         end
 
                         collider.velocity_x = vx
@@ -917,189 +954,192 @@ function get_plane_collisions()
             $(collider) = collider_iter
         do
             define name collider = "collider_$(collider)"
-            define name collider_axis_0 = "collider_$(collider)"
             
-            y = collider.min_y
-            if y <= YnegPlane
-                pen = YnegPlane - y
+            if collider.id
+                define name collider_axis_0 = "collider_$(collider)"
                 
-                if pen > collider.max_pen
-                    with
-                        $(vertex) = collider.min_y_vertex
-                    do
-                        if sphere_mode
-                            x = collider.x
-                            z = collider.z
-                        else
-                            define name vertex = "collider_$(collider)_v$(vertex)"
+                y = collider.min_y
+                if y <= YnegPlane
+                    pen = YnegPlane - y
+                    
+                    if pen > collider.max_pen
+                        with
+                            $(vertex) = collider.min_y_vertex
+                        do
+                            if sphere_mode
+                                x = collider.x
+                                z = collider.z
+                            else
+                                define name vertex = "collider_$(collider)_v$(vertex)"
 
-                            x = vertex.x
-                            z = vertex.z
+                                x = vertex.x
+                                z = vertex.z
+                            end
                         end
+                        
+                        nx = 0
+                        ny = $Precision
+                        nz = 0
+                        
+                        create_plane_collision() with macros
                     end
                     
-                    nx = 0
-                    ny = $Precision
-                    nz = 0
-                    
-                    create_plane_collision() with macros
+                    if collider_iter == 1 and gamemode == $Playing and game_timer <= 0 unless overtime
+                        end_game_time()
+                    end
                 end
                 
-                if collider_iter == 1 and gamemode == $Playing and game_timer <= 0 unless overtime
-                    end_game_time()
+                y = collider.max_y
+                if y >= YposPlane
+                    pen = y - YposPlane
+                    
+                    if pen > collider.max_pen
+                        with
+                            $(vertex) = collider.max_y_vertex
+                        do
+                            if sphere_mode
+                                x = collider.x
+                                z = collider.z
+                            else
+                                define name vertex = "collider_$(collider)_v$(vertex)"
+
+                                x = vertex.x
+                                z = vertex.z
+                            end
+                        end
+                        
+                        nx = 0
+                        ny = -$Precision
+                        nz = 0
+                        
+                        create_plane_collision() with macros
+                    end
                 end
-            end
-            
-            y = collider.max_y
-            if y >= YposPlane
-                pen = y - YposPlane
-                
-                if pen > collider.max_pen
-                    with
-                        $(vertex) = collider.max_y_vertex
-                    do
-                        if sphere_mode
-                            x = collider.x
-                            z = collider.z
-                        else
-                            define name vertex = "collider_$(collider)_v$(vertex)"
 
-                            x = vertex.x
-                            z = vertex.z
+                x = collider.min_x
+                if x <= XnegPlane
+                    pen = XnegPlane - x
+                    
+                    if pen > collider.max_pen
+                        with
+                            $(vertex) = collider.min_x_vertex
+                        do
+                            if sphere_mode
+                                y = collider.y
+                                z = collider.z
+                            else
+                                define name vertex = "collider_$(collider)_v$(vertex)"
+
+                                y = vertex.y
+                                z = vertex.z
+                            end
                         end
+                        
+                        if gamemode == $Playing and collider_iter == 1 
+                            goal = $Blue
+                            if y <= YnegPlane + PortalHeight and z >= (ZnegPlane + ZposPlane) / 2 - PortalWidth / 2 and z <= (ZnegPlane + ZposPlane) / 2 + PortalWidth / 2
+                                score_goal()
+                            else
+                                check_near_miss()
+                            end
+                        end
+                        
+                        nx = $Precision
+                        ny = 0
+                        nz = 0
+                        
+                        create_plane_collision() with macros
                     end
-                    
-                    nx = 0
-                    ny = -$Precision
-                    nz = 0
-                    
-                    create_plane_collision() with macros
                 end
-            end
-
-            x = collider.min_x
-            if x <= XnegPlane
-                pen = XnegPlane - x
                 
-                if pen > collider.max_pen
-                    with
-                        $(vertex) = collider.min_x_vertex
-                    do
-                        if sphere_mode
-                            y = collider.y
-                            z = collider.z
-                        else
-                            define name vertex = "collider_$(collider)_v$(vertex)"
+                x = collider.max_x
+                if x >= XposPlane
+                    pen = x - XposPlane
+                    
+                    if pen > collider.max_pen
+                        with
+                            $(vertex) = collider.max_x_vertex
+                        do
+                            if sphere_mode
+                                y = collider.y
+                                z = collider.z
+                            else
+                                define name vertex = "collider_$(collider)_v$(vertex)"
 
-                            y = vertex.y
-                            z = vertex.z
+                                y = vertex.y
+                                z = vertex.z
+                            end
                         end
-                    end
-                    
-                    if gamemode == $Playing and collider_iter == 1 
-                        goal = $Blue
-                        if y <= YnegPlane + PortalHeight and z >= (ZnegPlane + ZposPlane) / 2 - PortalWidth / 2 and z <= (ZnegPlane + ZposPlane) / 2 + PortalWidth / 2
-                            score_goal()
-                        else
-                            check_near_miss()
+                        
+                        if gamemode == $Playing and collider_iter == 1 
+                            goal = $Red
+                            if y <= YnegPlane + PortalHeight and z >= (ZnegPlane + ZposPlane) / 2 - PortalWidth / 2 and z <= (ZnegPlane + ZposPlane) / 2 + PortalWidth / 2
+                                score_goal()
+                            else
+                                check_near_miss()
+                            end
                         end
+                        
+                        nx = -$Precision
+                        ny = 0
+                        nz = 0
+                        
+                        create_plane_collision() with macros
                     end
-                    
-                    nx = $Precision
-                    ny = 0
-                    nz = 0
-                    
-                    create_plane_collision() with macros
                 end
-            end
-            
-            x = collider.max_x
-            if x >= XposPlane
-                pen = x - XposPlane
-                
-                if pen > collider.max_pen
-                    with
-                        $(vertex) = collider.max_x_vertex
-                    do
-                        if sphere_mode
-                            y = collider.y
-                            z = collider.z
-                        else
-                            define name vertex = "collider_$(collider)_v$(vertex)"
 
-                            y = vertex.y
-                            z = vertex.z
+                z = collider.min_z
+                if z <= ZnegPlane
+                    pen = ZnegPlane - z
+                    
+                    if pen > collider.max_pen
+                        with
+                            $(vertex) = collider.min_z_vertex
+                        do
+                            if sphere_mode
+                                x = collider.x
+                                y = collider.y
+                            else
+                                define name vertex = "collider_$(collider)_v$(vertex)"
+
+                                x = vertex.x
+                                y = vertex.y
+                            end
                         end
+                        
+                        nx = 0
+                        ny = 0
+                        nz = $Precision
+                        
+                        create_plane_collision() with macros
                     end
-                    
-                    if gamemode == $Playing and collider_iter == 1 
-                        goal = $Red
-                        if y <= YnegPlane + PortalHeight and z >= (ZnegPlane + ZposPlane) / 2 - PortalWidth / 2 and z <= (ZnegPlane + ZposPlane) / 2 + PortalWidth / 2
-                            score_goal()
-                        else
-                            check_near_miss()
-                        end
-                    end
-                    
-                    nx = -$Precision
-                    ny = 0
-                    nz = 0
-                    
-                    create_plane_collision() with macros
                 end
-            end
-
-            z = collider.min_z
-            if z <= ZnegPlane
-                pen = ZnegPlane - z
                 
-                if pen > collider.max_pen
-                    with
-                        $(vertex) = collider.min_z_vertex
-                    do
-                        if sphere_mode
-                            x = collider.x
-                            y = collider.y
-                        else
-                            define name vertex = "collider_$(collider)_v$(vertex)"
+                z = collider.max_z
+                if z >= ZposPlane
+                    pen = z - ZposPlane
+                    
+                    if pen > collider.max_pen
+                        with
+                            $(vertex) = collider.max_z_vertex
+                        do
+                            if sphere_mode
+                                x = collider.x
+                                y = collider.y
+                            else
+                                define name vertex = "collider_$(collider)_v$(vertex)"
 
-                            x = vertex.x
-                            y = vertex.y
+                                x = vertex.x
+                                y = vertex.y
+                            end
                         end
+                        
+                        nx = 0
+                        ny = 0
+                        nz = -$Precision
+                        
+                        create_plane_collision() with macros
                     end
-                    
-                    nx = 0
-                    ny = 0
-                    nz = $Precision
-                    
-                    create_plane_collision() with macros
-                end
-            end
-            
-            z = collider.max_z
-            if z >= ZposPlane
-                pen = z - ZposPlane
-                
-                if pen > collider.max_pen
-                    with
-                        $(vertex) = collider.max_z_vertex
-                    do
-                        if sphere_mode
-                            x = collider.x
-                            y = collider.y
-                        else
-                            define name vertex = "collider_$(collider)_v$(vertex)"
-
-                            x = vertex.x
-                            y = vertex.y
-                        end
-                    end
-                    
-                    nx = 0
-                    ny = 0
-                    nz = -$Precision
-                    
-                    create_plane_collision() with macros
                 end
             end
         end
@@ -1378,35 +1418,37 @@ function score_goal()
         do
             define name collider = "collider_$(collider)"
             
-            dx = (collider.x - x) / 10
-            dy = (collider.y - y) / 10
-            dz = (collider.z - z) / 10
-            
-            vx = collider.velocity_x
-            vy = collider.velocity_y
-            vz = collider.velocity_z
-            
-            dist = sqrt(dx*dx + dy*dy + dz*dz)
-            
-            vx += dx * $Precision / dist * 3
-            vy += dy * $Precision / dist * 3
-            vz += dz * $Precision / dist * 3
-            
-            vx /= 2
-            vy /= 2
-            vz /= 2
-            
-            if collider.y <= JumpPlane
-                vy = 750
+            if collider.id
+                dx = (collider.x - x) / 10
+                dy = (collider.y - y) / 10
+                dz = (collider.z - z) / 10
+                
+                vx = collider.velocity_x
+                vy = collider.velocity_y
+                vz = collider.velocity_z
+                
+                dist = sqrt(dx*dx + dy*dy + dz*dz)
+                
+                vx += dx * $Precision / dist * 3
+                vy += dy * $Precision / dist * 3
+                vz += dz * $Precision / dist * 3
+                
+                vx /= 2
+                vy /= 2
+                vz /= 2
+                
+                if collider.y <= JumpPlane
+                    vy = 750
+                end
+                
+                collider.velocity_x = vx
+                collider.velocity_y = vy
+                collider.velocity_z = vz
+                
+                collider.rotation_x /= 4
+                collider.rotation_y /= 4
+                collider.rotation_z /= 4
             end
-            
-            collider.velocity_x = vx
-            collider.velocity_y = vy
-            collider.velocity_z = vz
-            
-            collider.rotation_x /= 4
-            collider.rotation_y /= 4
-            collider.rotation_z /= 4
         end
     end
     
@@ -1457,14 +1499,16 @@ function colliders_get_sphere_bounds()
         do
             define name collider = "collider_$(collider)"
             
-            halfsize = collider.halfsize
-            
-            collider.min_x = collider.x - halfsize
-            collider.max_x = collider.x + halfsize
-            collider.min_y = collider.y - halfsize
-            collider.max_y = collider.y + halfsize
-            collider.min_z = collider.z - halfsize
-            collider.max_z = collider.z + halfsize
+            if collider.id
+                halfsize = collider.halfsize
+                
+                collider.min_x = collider.x - halfsize
+                collider.max_x = collider.x + halfsize
+                collider.min_y = collider.y - halfsize
+                collider.max_y = collider.y + halfsize
+                collider.min_z = collider.z - halfsize
+                collider.max_z = collider.z + halfsize
+            end
         end
     end
 end
@@ -1475,7 +1519,14 @@ function get_sphere_sphere_collisions()
             with
                 $(collider1) = collider1
                 $(collider2) = collider2
-            get_sphere_sphere_collision()
+            do
+                define name collider1 = "collider_$(collider1)"
+                define name collider2 = "collider_$(collider2)"
+                
+                if collider1.id and collider2.id
+                    get_sphere_sphere_collision() with macros
+                end
+            end
         end
     end
 end
@@ -1560,9 +1611,11 @@ function angular_momentum_drag()
         do
             define name collider = "collider_$(collider)"
             
-            collider.rotation_x = (collider.rotation_x * SphereDrag + $Half) / $Precision
-            collider.rotation_y = (collider.rotation_y * SphereDrag + $Half) / $Precision
-            collider.rotation_z = (collider.rotation_z * SphereDrag + $Half) / $Precision
+            if collider.id            
+                collider.rotation_x = (collider.rotation_x * SphereDrag + $Half) / $Precision
+                collider.rotation_y = (collider.rotation_y * SphereDrag + $Half) / $Precision
+                collider.rotation_z = (collider.rotation_z * SphereDrag + $Half) / $Precision
+            end
         end
     end
 end
@@ -1573,70 +1626,97 @@ function collision_game_logic()
             $(collision) = collision_iter
         do
             define name collision = "collision_$(collision)"
+            define name collider = "collider_$(collider)"
             
-            collider1 = collision.collider1
-            collider2 = collision.collider2
-            
-            as @BallBlock if @s.collider_id == collider1
-                as @PlayerBlock if @s.collider_id == collider2
-                    @Position.<pos> = <collision.x, collision.y, collision.z>
+            if collision.id            
+                collider1 = collision.collider1
+                collider2 = collision.collider2
+                
+                as @BallBlock if @s.collider_id == collider1
+                    as @PlayerBlock if @s.collider_id == collider2
+                        @Position.<pos> = <collision.x, collision.y, collision.z>
+                        
+                        with
+                            $(collider) = collider1
+                        do
+                            v1x = collider.velocity_x
+                            v1y = collider.velocity_y
+                            v1z = collider.velocity_z
+                        end
+                        
+                        with
+                            $(collider) = collider2
+                        do
+                            v2x = collider.velocity_x
+                            v2y = collider.velocity_y
+                            v2z = collider.velocity_z
+                        end
+                        
+                        dvx = v2x - v1x
+                        dvy = v2y - v1y
+                        dvz = v2z - v1z
+                        
+                        dsq = (dvx*dvx + dvy*dvy + dvz*dvz)
+                        $Threshold = 200
+                        
+                        if dsq >= $Threshold * $Threshold
+                            at @Position
+                                /playsound minecraft:block.note_block.basedrum master @a ~ ~ ~ 1 1
+                                /particle minecraft:item_snowball ~ ~ ~ 0.2 0.2 0.2 0 10 force
+                            end
+                        end
+
+                        if @s.team == $Red
+                            last_red_hit = @s.player_id
+                            last_red_time = time
+                        else if @s.team == $Blue
+                            last_blue_hit = @s.player_id
+                            last_blue_time = time
+                        end
+                    end
+                end
+                
+                player_id1 = None
+                player_id2 = None
+                
+                if collider1 as @PlayerBlock if @s.collider_id == collider1
+                    with
+                        $(collider) = collider1
+                    do
+                        v1x = collider.velocity_x
+                        v1y = collider.velocity_y
+                        v1z = collider.velocity_z
+                    end
                     
-                    at @Position
-                        /playsound minecraft:block.note_block.basedrum master @a ~ ~ ~ 1 1
-                        /particle minecraft:item_snowball ~ ~ ~ 0.2 0.2 0.2 0 10 force
-                    end
-
-                    if @s.team == $Red
-                        last_red_hit = @s.player_id
-                        last_red_time = time
-                    else if @s.team == $Blue
-                        last_blue_hit = @s.player_id
-                        last_blue_time = time
-                    end
-                end
-            end
-            
-            player_id1 = None
-            player_id2 = None
-            
-            if collider1 as @PlayerBlock if @s.collider_id == collider1
-                with
-                    $(collider) = collider1
-                do
-                    define name collider = "collider_$(collider)"
-                    v1x = collider.velocity_x
-                    v1y = collider.velocity_y
-                    v1z = collider.velocity_z
+                    player_id1 = @s.player_id
+                    team1 = @s.team
                 end
                 
-                player_id1 = @s.player_id
-                team1 = @s.team
-            end
-            
-            if collider2 as @PlayerBlock if @s.collider_id == collider2
-                with
-                    $(collider) = collider2
-                do
-                    define name collider = "collider_$(collider)"
-                    v2x = collider.velocity_x
-                    v2y = collider.velocity_y
-                    v2z = collider.velocity_z
-                end
+                if collider2 as @PlayerBlock if @s.collider_id == collider2
+                    with
+                        $(collider) = collider2
+                    do
+                        define name collider = "collider_$(collider)"
+                        v2x = collider.velocity_x
+                        v2y = collider.velocity_y
+                        v2z = collider.velocity_z
+                    end
 
-                player_id2 = @s.player_id
-                team2 = @s.team
-            end
-            
-            if player_id1 and player_id2 unless team1 == team2            
-                v1 = sqrt(v1x*v1x + v1y*v1y + v1z*v1z)
-                v2 = sqrt(v2x*v2x + v2y*v2y + v2z*v2z)
+                    player_id2 = @s.player_id
+                    team2 = @s.team
+                end
                 
-                if v1 > v2 and v1 > $DemoVelocity
-                    demolish(player_id1, player_id2)
-                    delete_collision() with macros
-                else if v2 > v1 and v2 > $DemoVelocity
-                    demolish(player_id2, player_id1)
-                    delete_collision() with macros
+                if player_id1 and player_id2 unless team1 == team2            
+                    v1 = sqrt(v1x*v1x + v1y*v1y + v1z*v1z)
+                    v2 = sqrt(v2x*v2x + v2y*v2y + v2z*v2z)
+                    
+                    if v1 > v2 and v1 > $DemoVelocity
+                        demolish(player_id1, player_id2)
+                        delete_collision() with macros
+                    else if v2 > v1 and v2 > $DemoVelocity
+                        demolish(player_id2, player_id1)
+                        delete_collision() with macros
+                    end
                 end
             end
         end
