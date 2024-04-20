@@ -21,7 +21,7 @@ advancement damage_click_detector {
 function click_advancement_reward()
 	/advancement revoke @s only $namespace:damage_click_detector
 	@s.destroy_click()
-	
+
 	if @s.enable_click
 		@s.create_click()
 		left_click_callback()
@@ -39,14 +39,14 @@ end
 define @Player : @Player
 	click_pos: @ClickPos
 	click_detector: @ClickDetector
-	
+
 	function enable_click()
 		unless @s.enable_click
 			@s.enable_click = True
 			@s.create_click()
 		end
 	end
-	
+
 	function create_click()
 		at @s eyes ^ ^ ^1
 			@s.click_pos = create @ClickPos ~ ~1000 ~
@@ -56,7 +56,7 @@ define @Player : @Player
 				@s.air = 1
 			end
 		end
-		
+
 		as @NewClickDetector
 			/tag @s remove NewClickDetector
 			/effect give @s invisibility 1 0 true
@@ -65,12 +65,12 @@ define @Player : @Player
 		end
 		@s.click_detector = id
 	end
-	
+
 	function disable_click()
 		@s.enable_click = False
 		@s.destroy_click()
 	end
-	
+
 	function destroy_click()
 		as @s.click_pos
 			@s.kill = True
@@ -104,7 +104,7 @@ clock left_right_click_clock
 					/data merge entity @s {Air:1s}
 				end
 			end
-			
+
 			if @s.right_clicked
 				right_click_callback()
 			end

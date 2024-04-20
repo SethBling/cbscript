@@ -22,7 +22,7 @@ reset
 	/kill @Enderman
 	/fill -10 56 179 29 66 190 air
 	/fill -10 55 179 29 55 190 red_sandstone
-	
+
 	at @p
 		for x = 17 to 27
 			for y = 56 to 58
@@ -35,12 +35,12 @@ reset
 			end
 		end
 	end
-	
+
 	create @Enderman 20 56 185
 	as @Marker[pile] at @s
 		/setblock ~ ~ ~ diamond_block
 	end
-	
+
 	for digit = 1 to 4
 		for vseg = 1 to 3
 			for piece = 1 to 5
@@ -50,7 +50,7 @@ reset
 					@s.digit = digit
 					@s.vseg = vseg
 					@s.piece = piece
-					
+
 					@s.x = scale * (-16 + digit * 7 + piece) + 500
 					if digit >= 3
 						@s.x += 3 * scale
@@ -58,9 +58,9 @@ reset
 					@s.y = scale * (52 + vseg * 4) + 500
 					@s.z = 180 * scale + 500
 				end
-			end		
+			end
 		end
-		
+
 		for hseg = 1 to 2
 			for vseg = 1 to 2
 				for piece = 1 to 5
@@ -71,7 +71,7 @@ reset
 						@s.hseg = hseg
 						@s.vseg = vseg
 						@s.piece = piece
-						
+
 						@s.x = scale * (-19 + digit * 7 + hseg * 4) + (scale / 2)
 						if digit >= 3
 							@s.x += 3000
@@ -82,49 +82,49 @@ reset
 				end
 			end
 		end
-	end	
-	
+	end
+
 	/setblock 6 59 180 diamond_block
 	/setblock 6 61 180 diamond_block
-	
+
 	hour = 9
 	minute = 58
 	second = 0
 	clock_tick = 0
-	
+
 	tell @a '{C[\[Add 20 Seconds\]](/scoreboard players add Global second 20) {Y[\[Add 10 Minutes\]](/scoreboard players add Global minute 10) {G[\[Add Hour\]](/scoreboard players add Global hour 1)'
 end
 
 clock main
 	@Enderman.vx = 0
 	@Enderman.vz = 0
-	
+
 	clock_tick++
 	if clock_tick >= 20
 		clock_tick -= 20
 		second++
 	end
-	
+
 	if second >= 60
 		second -= 60
 		minute++
 	end
-	
+
 	if minute >= 60
 		minute -= 60
 		hour++
 	end
-	
+
 	if hour >= 13
 		hour -= 12
 	end
-	
+
 	for digit = 1 to 4
 		if digit == 1 then val = hour / 10
 		if digit == 2 then val = hour % 10
 		if digit == 3 then val = minute / 10
 		if digit == 4 then val = minute % 10
-		
+
 		as @Marker[segment] if @s.digit == digit
 			@s.on = False
 			if val == 0
@@ -173,15 +173,15 @@ clock main
 			end
 		end
 	end
-	
+
 	as @Marker[segment, not on] at @s ~ ~-20 ~
 		/setblock ~ ~ ~ iron_block
 	end
-	
+
 	as @Marker[segment, on] at @s ~ ~-20 ~
 		/setblock ~ ~ ~ diamond_block
 	end
-	
+
 	as @Marker[segment, not on] at @s
 		if block ~ ~-20 ~ diamond_block
 			@s.on = True
@@ -191,41 +191,41 @@ clock main
 	end
 
 	#as @Marker[segment, not on] at @s
-	#	/setblock ~ ~ ~ air		
+	#	/setblock ~ ~ ~ air
 	#end
 	#as @Marker[segment, on] at @s
-	#	/setblock ~ ~ ~ diamond_block		
+	#	/setblock ~ ~ ~ diamond_block
 	#end
-	
+
 	unless @Position do create @Position
-	
+
 	cooldown++
 	if cooldown >= 25
 		cooldown = 0
-		
+
 		as @Marker at @s
 			@s.has_block = False
 			unless block ~ ~ ~ air
 				@s.has_block = True
 			end
-			
+
 			@s.available = False
 			if block ~ ~1 ~ air
 				@s.available = True
 			end
-			
+
 			@s.supported = False
 			unless block ~ ~-1 ~ air
 				@s.supported = True
 			end
 		end
-		
+
 		found = False
 		i = 0
 		while not found and i < 500
 			i++
 			@Marker.current = False
-			
+
 			type = rand(2)
 			attached = False
 			if type == 0
@@ -257,7 +257,7 @@ clock main
 				if dx >= -400 and dx <= 400 and dy == -2
 					dy--
 				end
-				
+
 				check_x = @s.x + dx
 				check_y = @s.y + dy * scale - 500
 				if check_y == 56000
@@ -265,11 +265,11 @@ clock main
 				end
 				check_z = @s.z + dz
 				@Position.<pos> = <check_x, check_y, check_z>
-				
+
 				at @Position unless block ~ ~-1 ~ air if block ~ ~ ~ air and block ~ ~1 ~ air and block ~ ~2 ~ air
 					found = True
 				end
-			end			
+			end
 		end
 	end
 	if found
@@ -283,7 +283,7 @@ clock main
 				/tp @s ~ ~ ~
 			end
 		end
-	
+
 		if cooldown == 5
 			if type == 0
 				@Marker[pile].current_pile = False
@@ -297,7 +297,7 @@ clock main
 				end
 			end
 		end
-		
+
 		if cooldown == 10
 			if type == 0
 				as @Marker[current_pile] at @s
@@ -312,7 +312,7 @@ clock main
 				end
 			end
 		end
-		
+
 		if cooldown == 15
 			if type == 0
 				as @Enderman
@@ -325,10 +325,10 @@ clock main
 				end
 			end
 			if type == 1
-			
+
 			end
 		end
-		
+
 		if cooldown == 20
 			if type == 1
 				@Marker[pile].current_pile = False
@@ -342,7 +342,7 @@ clock main
 				end
 			end
 		end
-		
+
 		if cooldown == 23
 			if type == 0
 				as @Marker[current] at @s
@@ -366,6 +366,6 @@ clock main
 			@s.fall = 0
 		end
 	end
-	
+
 	/effect give @Enderman instant_health 1 1 true
 end

@@ -5,15 +5,15 @@ import common
 
 reset
     step = 0
-    
+
     tell @a "v6"
 end
 
 clock tick
     $iters = 200
-    
+
     step++
-    
+
     if step == 50
         val_1.val = 0
         tell @a "(val_1.val)"
@@ -30,7 +30,7 @@ clock tick
         end
         tell @a "(val_1.val)"
     end
-    
+
     if step == 70
         val_1.val = 0
         tell @a "(val_1.val)"

@@ -44,7 +44,7 @@ define [Line] at <$LineStorage>
 	new_z1: RecordItem.tag.lines[-1].z1 int 1
 	new_z2: RecordItem.tag.lines[-1].z2 int 1
 	new_id: RecordItem.tag.lines[-1].id int 1
-	
+
 	cur_x1: RecordItem.tag.line_iter[-1].x1 int 1
 	cur_x2: RecordItem.tag.line_iter[-1].x2 int 1
 	cur_y1: RecordItem.tag.line_iter[-1].y1 int 1
@@ -56,19 +56,19 @@ end
 
 define @Line : @Entity[type=area_effect_cloud,tag=Line]
 	create {Tags:["Line"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
-	
+
 	function get_transformed_pos()
 		<tpos> = @s.<pos1>
 		apply_animation()
 		apply_camera_transform()
 		<x1, y1, z1> = <tpos>
-		
+
 		<tpos> = @s.<pos2>
 		apply_animation()
 		apply_camera_transform()
 		<x2, y2, z2> = <tpos>
 	end
-	
+
 	function apply_animation()
 		switch Animation
 			case $RandomSpin
@@ -79,14 +79,14 @@ define @Line : @Entity[type=area_effect_cloud,tag=Line]
 			end
 		end
 	end
-	
+
 	function random_spin_transform()
 		rotate_around_z_axis(t*2/3)
 		rotate_around_y_axis(t)
 		rotate_around_x_axis(t/2)
 		<tpos> += <sin(2*t), sin(3*t), 2*sin(t*5/3)+3000>
 	end
-	
+
 	function slime_jump_transform()
 		if t < 10
 			<x, y, z> = <tpos>
@@ -102,24 +102,24 @@ define @Line : @Entity[type=area_effect_cloud,tag=Line]
 			t = 0
 		end
 	end
-	
+
 	function get_perspective_pos()
 		pz1 = z1 + 500
 		px1 = x1 * 10000 / pz1
 		py1 = y1 * 10000 / pz1
-		
+
 		pz2 = z2 + 500
 		px2 = x2 * 10000 / pz2
 		py2 = y2 * 10000 / pz2
-		
+
 		dpx = px2 - px1
 		dpy = py2 - py1
 		length = sqrt(dpx^2 + dpy^2)
-		
+
 		unit_x = dpx * 1000 / length
 		unit_y = dpy * 1000 / length
 	end
-	
+
 	function get_angles_and_angle_offsets()
 		as @Position
 			/tp @s ~ ~ ~
@@ -130,7 +130,7 @@ define @Line : @Entity[type=area_effect_cloud,tag=Line]
 				angle = @s.ry
 				pose_angle = 260000 - angle
 			end
-			
+
 			# Get offset from shoulder to tip of arm
 			@s.ry = angle + 100000
 			<pos1> = @s.<pos>
@@ -138,21 +138,21 @@ define @Line : @Entity[type=area_effect_cloud,tag=Line]
 			<ox, oy, oz> = @s.<pos> - <pos1>
 		end
 	end
-	
+
 	function render_line()
 		@s.get_transformed_pos()
-		
+
 		if z1 >= 0 and z2 >= 0
 			@s.get_perspective_pos()
 			if px1 >= -30000 and px1 <= 30000 and px2 >= -30000 and px2 <= 30000 and py1 >= -20000 and py1 <= 20000 and py2 >= -20000 and py2 <= 20000
 				@s.get_angles_and_angle_offsets()
-				
+
 				segments = length / 1000
 				id = &@s
-				
+
 				base_x = $BaseX + px1 + 250 + ox
 				base_y = $BaseY + py1 - 1600 + oz
-				
+
 				store_line_properties()
 			else
 				segments = -1
@@ -180,7 +180,7 @@ define @Segment : @Entity[type=armor_stand, tag=Segment]
 		Silent:1b
 	}
 	pose_angle: Pose.RightArm[0] float 1000
-	
+
 	function hide()
 		unless not @s.was_visibile
 			/replaceitem entity @s weapon.mainhand air
@@ -210,7 +210,7 @@ define @Segment : @Entity[type=armor_stand, tag=Segment]
 
 	function render_segment()
 		get_line_properties()
-		
+
 		if @s.segment <= segments + 2
 			if @s.segment > 0 and (@s.segment+1) * 1000 - 150 > length
 				# special case for over-extension
@@ -218,16 +218,16 @@ define @Segment : @Entity[type=armor_stand, tag=Segment]
 			else
 				seg_off = @s.segment * 1000 + 150
 			end
-			
+
 			if @s.segment <= segments
 				@s.show()
 			else
 				@s.hide()
 			end
-			
+
 			@s.x = base_x + unit_x * seg_off / 1000
 			@s.y = base_y + unit_y * seg_off / 1000
-			
+
 			@s.pose_angle = pose_angle
 		else
 			@s.hide()
@@ -241,17 +241,17 @@ function create_die_faces()
 	<pos1> = <0, 100, 4000>
 	<pos2> = <0, -100, 4000>
 	create_line()
-	
+
 	#6
 	material = 6
 	<pos1> = <-2000, -2100, -4000>
 	<pos2> = <-2000, -1900, -4000>
 	create_line()
-	
+
 	<pos1> = <0, -2100, -4000>
 	<pos2> = <0, -1900, -4000>
 	create_line()
-	
+
 	<pos1> = <2000, -2100, -4000>
 	<pos2> = <2000, -1900, -4000>
 	create_line()
@@ -259,53 +259,53 @@ function create_die_faces()
 	<pos1> = <-2000, 1900, -4000>
 	<pos2> = <-2000, 2100, -4000>
 	create_line()
-	
+
 	<pos1> = <0, 1900, -4000>
 	<pos2> = <0, 2100, -4000>
 	create_line()
-	
+
 	<pos1> = <2000, 1900, -4000>
 	<pos2> = <2000, 2100, -4000>
 	create_line()
-	
+
 	#2
 	material = 2
 	<pos1> = <-2000, 4000, -2100>
 	<pos2> = <-2000, 4000, -1900>
 	create_line()
-	
+
 	<pos1> = <2000, 4000, 2100>
 	<pos2> = <2000, 4000, 1900>
 	create_line()
-	
+
 	#5
 	material = 5
 	<pos1> = <-2000, -4000, -2100>
 	<pos2> = <-2000, -4000, -1900>
 	create_line()
-	
+
 	<pos1> = <2000, -4000, -2100>
 	<pos2> = <2000, -4000, -1900>
 	create_line()
-	
+
 	<pos1> = <2000, -4000, 1900>
 	<pos2> = <2000, -4000, 2100>
 	create_line()
-	
+
 	<pos1> = <-2000, -4000, 1900>
 	<pos2> = <-2000, -4000, 2100>
 	create_line()
-	
+
 	<pos1> = <0, -4000, -100>
 	<pos2> = <0, -4000, 100>
 	create_line()
-	
+
 	#3
 	material = 3
 	<pos1> = <4000, 0, -100>
 	<pos2> = <4000, 0, 100>
 	create_line()
-	
+
 	<pos1> = <4000, -2000, -2100>
 	<pos2> = <4000, -2000, -1900>
 	create_line()
@@ -313,7 +313,7 @@ function create_die_faces()
 	<pos1> = <4000, 2000, 1900>
 	<pos2> = <4000, 2000, 2100>
 	create_line()
-	
+
 	#4
 	material = 4
 	<pos1> = <-4000, -2000, -2100>
@@ -323,7 +323,7 @@ function create_die_faces()
 	<pos1> = <-4000, 2000, 1900>
 	<pos2> = <-4000, 2000, 2100>
 	create_line()
-	
+
 	<pos1> = <-4000, 2000, -2100>
 	<pos2> = <-4000, 2000, -1900>
 	create_line()
@@ -335,7 +335,7 @@ end
 
 function create_cube(radius)
 	material = -1
-	
+
 	# Y Axis
 	<pos1> = <-radius, -radius, -radius>
 	<pos2> = <-radius, radius, -radius>
@@ -352,7 +352,7 @@ function create_cube(radius)
 	<pos1> = <radius, -radius, radius>
 	<pos2> = <radius, radius, radius>
 	create_line()
-	
+
 	# X Axis
 	<pos1> = <-radius, -radius, -radius>
 	<pos2> = <radius, -radius, -radius>
@@ -369,7 +369,7 @@ function create_cube(radius)
 	<pos1> = <-radius, radius, radius>
 	<pos2> = <radius, radius, radius>
 	create_line()
-	
+
 	# Z Axis
 	<pos1> = <-radius, -radius, -radius>
 	<pos2> = <-radius, -radius, radius>
@@ -390,64 +390,64 @@ end
 
 function create_creeper_face()
 	material = -1
-	
+
 	# Left Eye
 	<pos1> = <-3000, 2000, 4000>
 	<pos2> = <-1000, 2000, 4000>
 	create_line()
-	
+
 	<pos1> = <-3000, 2000, 4000>
 	<pos2> = <-3000, 0000, 4000>
 	create_line()
-	
+
 	<pos1> = <-1000, 2000, 4000>
 	<pos2> = <-1000, -1000, 4000>
 	create_line()
-	
+
 	# Right Eye
 	<pos1> = <3000, 2000, 4000>
 	<pos2> = <1000, 2000, 4000>
 	create_line()
-	
+
 	<pos1> = <3000, 2000, 4000>
 	<pos2> = <3000, 0000, 4000>
 	create_line()
-	
+
 	<pos1> = <1000, 2000, 4000>
 	<pos2> = <1000, -1000, 4000>
 	create_line()
-	
+
 	# Mouth
-	
+
 	# Top of mouth + bottom of eyes
 	<pos1> = <-3000, 0000, 4000>
 	<pos2> = <3000, 0000, 4000>
 	create_line()
-	
+
 	<pos1> = <-2000, -1000, 4000>
 	<pos2> = <-1000, -1000, 4000>
 	create_line()
-	
+
 	<pos1> = <2000, -1000, 4000>
 	<pos2> = <1000, -1000, 4000>
 	create_line()
-	
+
 	<pos1> = <-2000, -1000, 4000>
 	<pos2> = <-2000, -4000, 4000>
 	create_line()
-	
+
 	<pos1> = <2000, -1000, 4000>
 	<pos2> = <2000, -4000, 4000>
 	create_line()
-	
+
 	<pos1> = <-1000, -3000, 4000>
 	<pos2> = <-1000, -4000, 4000>
 	create_line()
-	
+
 	<pos1> = <1000, -3000, 4000>
 	<pos2> = <1000, -4000, 4000>
 	create_line()
-	
+
 	<pos1> = <-1000, -3000, 4000>
 	<pos2> = <1000, -3000, 4000>
 	create_line()
@@ -470,9 +470,9 @@ macro $create_line($x1, $y1, $z1, $x2, $y2, $z2)
 end
 
 function create_tie_fighter()
-	
+
 	create_cube(1500)
-	
+
 	# Wing arms
 	$create_line(1500, 1500, 1500, 6000, 800, 800)
 	$create_line(1500, -1500, 1500, 6000, -800, 800)
@@ -482,7 +482,7 @@ function create_tie_fighter()
 	$create_line(-1500, -1500, 1500, -6000, -800, 800)
 	$create_line(-1500, 1500, -1500, -6000, 800, -800)
 	$create_line(-1500, -1500, -1500, -6000, -800, -800)
-	
+
 	for $m in [-1, 1]
 		$create_line(-6000*$m, -2000, -4000, -6000*$m, 2000, -4000)
 		$create_line(-6000*$m, -2000, 4000, -6000*$m, 2000, 4000)
@@ -503,23 +503,23 @@ function delete_object()
 	/setblock $LineStoragePos air
 	/setblock $LineStoragePos jukebox
 	[<$LineStorage>].{RecordItem} = {id:"minecraft:diamond", Count:1, tag:{lines:[]}}
-	
-	
+
+
 	line_id = 0
 end
 
 reset
 	spawn_cube(4000)
 	#spawn_tie_fighter()
-	
+
 	<camera_pos> = <0, 0, -10000>
 	camera_rx = 0
 	camera_ry = 0
-	
+
 	as @Player
 		draw_buttons()
 	end
-	
+
 	unless Material >= 0
 		Material = 0
 	end
@@ -529,10 +529,10 @@ function create_line()
 	as create @Line
 		@s.<pos1> = <pos1>
 		@s.<pos2> = <pos2>
-		
+
 		<delta> = <pos1> - <pos2>
 		length = sqrt(<delta>*<delta>)
-		
+
 		id = &@s
 		@s.line_id = line_id
 		for i = 0 to (length * 2 / 1000)
@@ -541,13 +541,13 @@ function create_line()
 				@s.segment = i
 				@s.material = material
 				@s.line_id = line_id
-				
+
 				@s.<pos> = <$BaseX, $BaseY, $BaseZ>
 				move @s ~ ~ ~
 			end
 		end
 	end
-	
+
 	line_id++
 end
 
@@ -561,7 +561,7 @@ function new_create_line()
 	[Line].new_x2 = x2
 	[Line].new_y2 = y2
 	[Line].new_z2 = z2
-	
+
 	line_id++
 	[Line].new_id = line_id
 end
@@ -613,21 +613,21 @@ clock main
 	/gamerule sendCommandFeedback true
 
 	unless @Position do create @Position
-	
+
 	t += 2
 
 	@Line.render_line()
 	@Segment.render_segment()
-	
+
 	if AngleUp then camera_rx -= 2000
 	if AngleDown then camera_rx += 2000
 	if AngleLeft then camera_ry -= 2000
 	if AngleRight then camera_ry += 2000
-	
+
 	<up> = <0, 500, 0>
 	<forward> = <sin(camera_ry/1000)/2, 0, cos(camera_ry/1000)/2>
 	<left> = <cos(camera_ry/1000)/2, 0, -sin(camera_ry/1000)/2>
-	
+
 	if MoveForward then <camera_pos> += <forward>
 	if MoveBackward then <camera_pos> -= <forward>
 	if MoveLeft then <camera_pos> -= <left>
@@ -649,7 +649,7 @@ function draw_buttons()
 	else
 		tell @s "\          {w[\[up\]](call angle_up)"
 	end
-	
+
 	if AngleLeft
 		tell @s "\     {W[\[LEFT\]](call angle_left) {w[\[right\]](call angle_right)"
 	else if AngleRight
@@ -657,7 +657,7 @@ function draw_buttons()
 	else
 		tell @s "\     {w[\[left\]](call angle_left) {w[\[right\]](call angle_right)"
 	end
-	
+
 	if AngleDown
 		tell @s "\         {W[\[DOWN\]](call angle_down)"
 	else
@@ -665,7 +665,7 @@ function draw_buttons()
 	end
 
 	tell @s     '\          {YMove'
-	
+
 	if MoveForward
 		tell @s "{Y[\[FORWARD\]](call move_forward) {y[\[backward\]](call move_backward)"
 	else if MoveBackward
@@ -673,13 +673,13 @@ function draw_buttons()
 	else
 		tell @s "{y[\[forward\]](call move_forward) {y[\[backward\]](call move_backward)"
 	end
-	
+
 	if MoveUp
 		tell @s "\          {Y[\[UP\]](call move_up)"
 	else
 		tell @s "\          {y[\[up\]](call move_up)"
 	end
-	
+
 	if MoveLeft
 		tell @s "\     {Y[\[LEFT\]](call move_left) {y[\[right\]](call move_right)"
 	else if MoveRight
@@ -687,7 +687,7 @@ function draw_buttons()
 	else
 		tell @s "\     {y[\[left\]](call move_left) {y[\[right\]](call move_right)"
 	end
-	
+
 	if MoveDown
 		tell @s "\         {Y[\[DOWN\]](call move_down)"
 	else

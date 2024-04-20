@@ -13,7 +13,7 @@ define @Stack = @StackFrame[depth == 0, limit=1]
 			end
 		end
 	end
-	
+
 	function pop()
 		@StackFrame.depth--
 		unless @Stack

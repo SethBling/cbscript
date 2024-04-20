@@ -21,13 +21,13 @@ end
 function create_waveblock(mag)
 	switch block at ~ ~ ~
 		case air
-		
+
 		end
 		default
 			/summon falling_block ~ ~ ~ {Time:1b, BlockState:{$falling_block_nbt}, Tags:["WaveBlock", "NewWaveBlock"], Motion:[0d, 0.2d, 0d]}
 		end
 	end
-	
+
 	/setblock ~ ~ ~ air
 	as @NewWaveBlock
 		@s.mag = mag

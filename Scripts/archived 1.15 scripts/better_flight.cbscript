@@ -32,14 +32,14 @@ clock main
 		as @s.prev_pos(@Marker)
 			<vx, vy, vz> = (@s.<pos> - @player.<pos>)
 			speedsq = vx^2 + vy^2 + vz^2
-			
+
 			at @s if speedsq < 90000
 				/say stop
 			end
-			
+
 			/kill @s
 		end
-		
+
 		at @s
 			@s.prev_pos = create @Marker
 		end

@@ -29,20 +29,20 @@ end
 
 define @MiniBlock = @Entity[type=armor_stand,name=MiniBlock]
 	create '{CustomName:"\"MiniBlock\"", Pose:{Head:[0.0001f,0f,0f]}, $marker}'
-	
+
 	pose_rot_x = Pose.Head[0] float
 	pose_rot_y = Pose.Head[1] float
-	
+
 	function update()
 		@s.<pos> = here - <0, 1700, 0>
-		
+
 		/data merge entity @s {Pose:{Head:[0.0001f,0.0001f,0.0001f]}}
 		@s.pose_rot_x = @s.rot_x
 		@s.pose_rot_y = @s.rot_y
-		
+
 		my_rx = @s.rot_x
 		my_ry = @s.rot_y
-		
+
 		as create @Marker
 			<base> = @s.<pos>
 
@@ -50,26 +50,26 @@ define @MiniBlock = @Entity[type=armor_stand,name=MiniBlock]
 			@s.rx = my_rx
 			@s.ry = my_ry
 			move @s ^ ^0.287 ^
-			
+
 			<delta> = <base> - @s.<pos>
-			
+
 			/kill @s
 		end
-		
+
 		@s.<pos> += <delta>
-		
-		/data merge entity @s {Fire:32767s}	
-		
+
+		/data merge entity @s {Fire:32767s}
+
 		at @s rotated @s
 			/tp @s ~ ~ ~ 0 0
 		end
-	end	
+	end
 end
 
 reset
 	/kill @MiniBlock
 	/kill @Marker
-	
+
 	at @p
 		seg = 0
 		while seg < $NumSegments
@@ -82,20 +82,20 @@ reset
 
 					@s.seg = seg
 					@s.piece = piece
-					
+
 					@s.nonstick = True
 				end
 			end
-			
+
 			as create @Marker
 				@s.seg = seg
 				@s.drx = -25000
 				@s.dry = 20000
-				
+
 				@s.nonstick = True
 			end
 		end
-		
+
 		as create @MiniBlock
 			/replaceitem entity @s armor.head white_banner
 			@s.claw_left = True
@@ -123,33 +123,33 @@ function apply_rotation()
 			if @s.drx < -180000
 				@s.drx += 360000
 			end
-			
+
 			crx += @s.drx
 			cry += @s.dry
-			
+
 			if seg == 4 and crx < 30000
 				crx = 30000
 			end
-			
+
 			if seg == 4 and crx  > 170000
 				crx = 170000
 			end
-			
+
 			if seg == 1 and crx > 50000
 				crx = 50000
 			end
-			
+
 			if seg == 1 and crx < -170000
 				crx = -170000
 			end
-			
+
 			if crx > 180000
 				crx -= 360000
 			end
 			if crx < -180000
 				crx += 360000
 			end
-			
+
 			local_ry = cry
 			local_rx = crx
 
@@ -173,15 +173,15 @@ function apply_rotation()
 					@s.rot_y = local_ry
 					@s.update()
 				end
-				
+
 				move @s ^ ^ ^0.6
 			end
 			<arm_pos> = @s.<pos>
 		end
 	end
-	
+
 	<dx, dy, dz> = <arm_pos> - <target>
-	
+
 	tdist = sqrt(dx^2+dy^2+dz^2)
 end
 
@@ -203,17 +203,17 @@ clock main
 		if @s.hooked
 			<target> = <101500, 63500, 129500>
 		end
-		
+
 		unless @s.hooked
 			<target> = @s.<pos>
 		end
 	end
-	
+
 	live = False
-	
+
 	apply_rotation()
 	basedist = tdist
-	
+
 	@Marker[seg==1].drx += 50
 	apply_rotation()
 	dist1x = tdist - basedist
@@ -254,7 +254,7 @@ clock main
 	dist4y = tdist - basedist
 	@Marker[seg==4].dry -= 50
 
-	
+
 	mag = sqrt(dist1x^2 + dist1y^2 + dist2x^2 + dist2y^2 + dist3x^2 + dist3y^2 + dist4x^2 + dist4y^2)
 
 	if basedist > 500
@@ -266,12 +266,12 @@ clock main
 		@Marker[seg==3].dry -= dist3y * 2000 / mag
 		@Marker[seg==4].drx -= dist4x * 2000 / mag
 		@Marker[seg==4].dry -= dist4y * 2000 / mag
-		
+
 		live = True
-	
+
 		apply_rotation()
 	end
-	
+
 	if @Entity[target, hooked, not drop]
 		@MiniBlock[claw_left].rot_x = 165000
 		@MiniBlock[claw_right].rot_x = 165000
@@ -282,12 +282,12 @@ clock main
 		@MiniBlock[claw_right].rot_x = 135000
 		@MiniBlock[claw_right].rot_y = 180000
 	end
-		
+
 	at <arm_pos>
 		@MiniBlock[claw_left].update()
 		@MiniBlock[claw_right].update()
 	end
-	
+
 	if tdist > 18000 then @Entity[target,not hooked].target = False
 	if tdist < 750 then @Entity[target, hooked].drop = True
 	if tdist < 750 then @Entity[target].hooked = True
@@ -297,4 +297,3 @@ clock main
 
 	move @MiniBlock ~ ~ ~
 end
-

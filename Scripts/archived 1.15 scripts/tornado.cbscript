@@ -49,9 +49,9 @@ clock main
 				as create @Spit
 					@s.<vel> = <-dz, 200, dx> / 4
 				end
-			end		
+			end
 		end
-	
+
 		@s.<pos> += @s.<v>
 		@s.<v> += <randint(-10, 11), 0, randint(-10, 11)>
 	end
@@ -59,7 +59,7 @@ clock main
 	as @Spit
 		@s.air = 1
 		@s.air = 0
-		
+
 		@s.age++
 		if @s.age >= 20
 			/kill @s

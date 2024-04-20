@@ -6,7 +6,7 @@ import miniblock
 
 define @Magnified: @Entity[type=falling_block, tag=Magnified]
 	time: Time byte 1
-end	
+end
 
 define @NewPosition = @Entity[type=area_effect_cloud,tag=Position,limit=1]
 	create {Tags:["NewPosition"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
@@ -30,21 +30,21 @@ clock main
 			end
 		end
 		@s.magnification = magnification
-		
+
 		if magnification > 0
 			if @s.rx == @s.prev_rx and @s.ry == @s.prev_ry and @s.<pos> == @s.<prev_pos> and @s.prev_mag == @s.magnification
 			else
 				/kill @Magnified
-				
+
 				rx = @s.rx
 				ry = @s.ry
-				
+
 				first_match = True
-				
+
 				drx = 0
 				dry = 0
 				cast_magnifier_ray()
-				
+
 				for dx = 0 to 10000 by 2000
 					for dy = 0 to 10000 by 2000
 						drx = dx / magnification
@@ -95,8 +95,8 @@ clock main
 					end
 				end
 			end
-			
-			
+
+
 			@s.prev_rx = @s.rx
 			@s.prev_ry = @s.ry
 			@s.<prev_pos> = @s.<pos>
@@ -104,10 +104,10 @@ clock main
 			/kill @Magnified
 			/kill @MiniBlock[side >= 0]
 		end
-		
+
 		@s.prev_mag = magnification
 	end
-		
+
 	for @bamboo in @Entity[type=item,nbt={Item:{id:"minecraft:bamboo", Count:1b}}]
 		for $c in $range(2, 65)
 			at @s unless @s[nbt={Item:{tag:{spyglass:1b}}}] as @Entity[type=item,nbt={Item:{id:"minecraft:glass_pane",Count:$cb}},distance=..0.5,limit=1] at @s
@@ -118,7 +118,7 @@ clock main
 			end
 		end
 	end
-	
+
 	as @Magnified
 		@s.time = 1
 	end
@@ -129,31 +129,31 @@ function cast_magnifier_ray()
 		/tp @s ~ ~ ~ ~ ~
 		@s.rx += drx
 		@s.ry += dry
-		
+
 		at @s feet ^ ^ ^
 			/tp @s ~ ~ ~
 		end
-		
+
 		for step = 1 to 400
 			at @s feet ^ ^ ^0.25
 				/tp @s ~ ~ ~
 			end
-			
+
 			at @s align xyz at ~0.5 ~0.5 ~0.5 unless block ~ ~ ~ air
 				if first_match
 					first_match = False
 					<delta> = @s.<pos> - (@Player[limit=1].<pos> + <0, 1600, 0>)
 					<offset> = <delta> - <delta> / magnification
 				end
-				
+
 				/tp @s ~ ~ ~
 				@s.<pos> -= <offset>
-				
+
 				#<delta> = @s.<pos> - @Player[limit=1].<pos>
 				#<offset> = <delta> - <delta> / magnification
 				#/tp @s ~ ~ ~
 				#@s.<pos> -= <offset>
-				
+
 				create_magnified_block()
 				step = 1000000
 			end

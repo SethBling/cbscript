@@ -13,12 +13,12 @@ reset
 				@s.rot_x = 0
 				@s.rot_y = 0
 				@s.seg = i
-				
+
 				/replaceitem entity @s weapon.mainhand diamond_block
 			end
 		end
 	end
-	
+
 	rx = 0
 	ry = 0
 end
@@ -28,14 +28,14 @@ clock main
 	if swap_timer >= 40
 		rx += -10000
 		#ry += -20000
-		
+
 		unless @Position do create @Position
 		@Position.rx = rx
 		@Position.ry = ry
 		<pos1> = @Position.<pos>
 		move @Position ^ ^ ^0.325
 		<delta> = @Position.<pos> - <pos1>
-		
+
 		as @TinyBlock
 			@Position.<pos> = <$TestPos> + <delta> * @s.seg
 			@s.rot_x = rx
@@ -44,9 +44,9 @@ clock main
 				@s.update_tiny()
 			end
 		end
-		
+
 
 		swap_timer = 0
 	end
-	
+
 end

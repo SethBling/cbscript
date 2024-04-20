@@ -140,10 +140,10 @@ reset
 
 	unless game_mode > 0 do game_mode = $ModeNone
 	click_detector_reset()
-	
+
 	/team add tappable
 	/team modify stasis_target color yellow
-	
+
 	unless build_plate[0] >= 0
 		for $x in $range(8)
 			for $y in $range(3)
@@ -163,11 +163,11 @@ function refresh_landscape(force)
 				/replaceitem entity @s armor.head player_head
 			end
 		end
-	
+
 		unless @Position do create @Position
 		base_x = @s.x / 10000 * 10000
 		base_z = @s.z / 10000 * 10000
-		
+
 		if base_x == @s.base_x and base_z == @s.base_z and not force
 		else
 			@Terrain.unused = True
@@ -180,7 +180,7 @@ function refresh_landscape(force)
 			end
 			/kill @Terrain[unused]
 		end
-		
+
 		@s.base_x = base_x
 		@s.base_z = base_z
 	end
@@ -192,7 +192,7 @@ function create_terrain()
 		y = 255 * scale
 		z = base_z + (col - $Diameter / 2) * 10 * scale
 		@s.<pos> = <x, y, z>
-		
+
 		used_existing = False
 		as @Terrain
 			unless used_existing if @s.terrain_x == x and @s.terrain_z == z
@@ -245,18 +245,18 @@ function move_landscape()
 		<ox, oy, oz> = (<player_pos> - <player_pos> / 10000 * 10000) * 6 / 100
 		ry = @s.ry
 		unless @Position do create @Position
-		
+
 		as @Position
 			/tp @s ~ ~ ~ ~ ~
 			move @s ^ ^ ^5
-			
+
 			at @s ~ ~1.1 ~
 				as @MiniBlock[player_head]
 					@s.rot_y = ry
 					@s.update()
 				end
 			end
-			
+
 			@s.<pos> -= <ox, 0, oz>
 			at @s
 				for $row in $range($Diameter)
@@ -283,9 +283,9 @@ function handle_tappables()
 			move @s ^ ^ ^5
 		end
 	end
-	
+
 	tappable_count = 0
-	
+
 	as @Tappable at @s
 		<delta> = @s.<world_pos> - <player_pos>
 		<dx, dy, dz> = <delta> / scale
@@ -302,17 +302,17 @@ function handle_tappables()
 		else
 			@s.<pos> = @s.<world_pos>
 		end
-		
+
 		if dsq < 10000
 			tappable_count++
 		end
 	end
-	
+
 	if tappable_count < 10
 		as create @TinyBlock
 			@s.tappable = True
 			@s.<world_pos> = <player_pos> + <rand(-80000, 80000), 1000000, rand(-80000, 80000)>
-			
+
 			@s.type = rand(0, $NumTappableTypes)
 			for $type in $range($len($TappableTypes))
 				if @s.type == $type
@@ -365,7 +365,7 @@ function switch_mode(mode)
 			end
 		end
 	end
-	
+
 	# Set up the new mode
 	switch mode
 		case $ModeWorld
@@ -405,7 +405,7 @@ function switch_mode(mode)
 						if drop[2] == drop[1] then finished = False
 					end
 				end
-			end		
+			end
 		end
 		case $ModePlacingPlate
 			@Player[limit=1].create_click()
@@ -443,14 +443,14 @@ end
 
 clock main
 	unless @Position do create @Position
-	
+
 	as @Player
 		if @s[nbt={SelectedItem:{id:"minecraft:dirt",tag:{display:{Name:"{\"text\":\"Minecraft Earth\"}"}}}}]
 			@s.hold_earth = True
 		else
 			@s.hold_earth = False
 		end
-		
+
 		if @s.hold_earth and game_mode == $ModeNone
 			switch_mode($ModeWorld)
 		end
@@ -458,13 +458,13 @@ clock main
 			switch_mode($ModeNone)
 		end
 		@s.was_hold_earth = @s.hold_earth
-		
+
 		if @s[nbt={SelectedItem:{id:"minecraft:light_weighted_pressure_plate",tag:{display:{Name:"{\"text\":\"Build Plate\"}"}}}}]
 			@s.hold_plate = True
 		else
 			@s.hold_plate = False
 		end
-		
+
 		if @s.hold_plate and game_mode == $ModeNone
 			switch_mode($ModePlacingPlate)
 		end
@@ -473,7 +473,7 @@ clock main
 		end
 		@s.was_hold_plate = @s.hold_plate
 	end
-	
+
 	switch game_mode
 		case $ModeWorld
 			refresh_landscape(False)
@@ -501,7 +501,7 @@ clock main
 					end
 				end
 			end
-			
+
 			if tap_count >= 5
 				reward_type = @Tappable[current_tappable,limit=1].type
 				switch_mode($ModeReward)
@@ -551,8 +551,8 @@ clock main
 									end
 								end
 							end
-						end	
-					
+						end
+
 						switch_mode($ModeWorld)
 					end
 				end
@@ -575,11 +575,11 @@ clock main
 					@s.<pos> += <plate_delta>
 				end
 			end
-			
+
 			as @PlateBlock
 				@s.time = 1
 			end
-			
+
 			as @Player[limit=1]
 				if @s.check_clicked()
 					as @Position
@@ -592,8 +592,8 @@ clock main
 					switch_mode($ModeBuilding)
 				end
 			end
-			
-			
+
+
 		end
 		case $ModeBuilding
 			<delta> = (@Player[limit=1].<pos> - <plate_center>) / scale
@@ -602,7 +602,7 @@ clock main
 			end
 		end
 	end
-	
+
 	click_detector_tick()
 end
 
@@ -620,7 +620,7 @@ function spawn_reward_tiny_block(drop, vx, vz)
 					end
 				end
 			end
-		end		
+		end
 		/data merge entity @s {Pose:{RightArm:[-45f,0f,0f]}}
 		facing @Player[limit=1]
 			/tp @s ~ ~ ~ ~ ~

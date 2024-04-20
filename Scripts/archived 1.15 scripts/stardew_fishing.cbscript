@@ -44,14 +44,14 @@ clock main
 			playing = True
 			end_game = False
 			win = False
-			
+
 			/kill @Fish
 			/kill @Bar
 			create @Fish
 			height = 0
 			vel = 0
 			acc = 0
-			
+
 			reelheight = 0
 			reelvel = 0
 
@@ -62,7 +62,7 @@ clock main
 			as @Fish at @s rotated @s
 				/tp @s ^ ^ ^7
 			end
-			
+
 			bottom = @Fish.y
 			at @Fish
 				for $i in: range(10)
@@ -76,23 +76,23 @@ clock main
 				end
 				@Reel.offset += 180
 			end
-		
+
 			@s.caught = 0
-			
+
 			progress = 0
-			
+
 			/bossbar add stardew_fishing:progress "Reel"
 			/bossbar set stardew_fishing:progress value 0
 			/bossbar set stardew_fishing:progress max 100
 			/bossbar set stardew_fishing:progress players @s
 		end
 	end
-	
+
 	if playing
 		acc += rand(-1, 2)
 		vel += acc
 		height += vel
-		
+
 		if height > 480
 			height = 480
 		end
@@ -107,7 +107,7 @@ clock main
 			vel = -10
 			acc = 1
 		end
-		
+
 		if @p.shift > 0
 			@p.shift = 0
 			reelvel += 4
@@ -122,11 +122,11 @@ clock main
 			reelheight = 420
 			reelvel = -3 * reelvel / 4
 		end
-			
+
 		as @Reel
 			@s.y = bottom + reelheight + @s.offset
 		end
-		
+
 		reelmax = reelheight + 80
 		reelmin = reelheight - 80
 		scoring = False
@@ -135,10 +135,10 @@ clock main
 		end
 		if scoring then progress++
 		if not scoring then progress--
-		
-		@Fish.y = bottom + height	
+
+		@Fish.y = bottom + height
 		/execute store result bossbar stardew_fishing:progress value run scoreboard players get Global progress
-		
+
 		end_game = False
 		if progress < 0 then end_game = True
 		if progress >= 100
@@ -175,7 +175,7 @@ clock main
 			/kill @Fish
 			/kill @Bar
 			/kill @Reel
-			/bossbar remove stardew_fishing:progress	
+			/bossbar remove stardew_fishing:progress
 			playing = False
 		end
 	end

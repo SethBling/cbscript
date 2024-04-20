@@ -9,7 +9,7 @@ end
 
 clock main
 	test_step++
-	
+
 	if test_step >= 3
 		test_step = 0
 

@@ -8,7 +8,7 @@ define @Flame: @Entity[type=pig, tag=Flame]
 end
 
 reset
-	
+
 end
 
 clock main
@@ -24,15 +24,15 @@ clock main
 				end
 			end
 		end
-		
+
 		if @s.fuel > 0
 			@s.fuel--
-			
+
 			@s.get_aim()
-			
+
 			rx = @s.rx
 			ry = @s.ry
-			
+
 			at ^ ^1 ^2
 				/tp @Position ~ ~ ~ ~ ~
 				as create @Flame ~ ~ ~

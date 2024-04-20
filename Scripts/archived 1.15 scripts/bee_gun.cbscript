@@ -47,7 +47,7 @@ define @Bullet : @Entity[type=bee, tag=Bullet]
 		Tags: ["Bullet"],
 		NoAI:1
 	}
-	
+
 	function tick()
 		at @s
 			@s.age = -20000
@@ -56,7 +56,7 @@ define @Bullet : @Entity[type=bee, tag=Bullet]
 			if @Target
 				/tp @Position2 @Target
 				move @Position2 ~ ~1 ~
-				
+
 				at @Position2 if @s[distance=..0.5]
 					as @Target
 						hp = @s.hp
@@ -70,7 +70,7 @@ define @Bullet : @Entity[type=bee, tag=Bullet]
 						target_ry = @Position.ry
 						target_rx = @Position.rx
 					end
-					
+
 					dry = (@s.my_ry + 180000 - target_ry) % 360000 - 180000
 					if dry > 5000
 						@s.my_ry -= 5000
@@ -79,7 +79,7 @@ define @Bullet : @Entity[type=bee, tag=Bullet]
 					else
 						@s.my_ry -= dry
 					end
-					
+
 					drx = @s.my_rx - target_rx
 					if drx > 5000
 						@s.my_rx -= 5000
@@ -93,10 +93,10 @@ define @Bullet : @Entity[type=bee, tag=Bullet]
 
 			@s.rx = @s.my_rx
 			@s.ry = @s.my_ry
-			
+
 			@s.rx += randint(-1000, 1000)
 			@s.ry += randint(-1000, 1000)
-			
+
 			at @s ^ ^ ^0.3 if block ~ ~ ~ no_collision
 				/tp @s ~ ~ ~ ~ ~
 			else at @s
@@ -108,7 +108,7 @@ define @Bullet : @Entity[type=bee, tag=Bullet]
 				else
 					bounce_z = True
 				end
-				
+
 				/tp @Position ^ ^ ^0.3
 				@Position.x = @s.x
 				@Position.z = @s.z
@@ -117,7 +117,7 @@ define @Bullet : @Entity[type=bee, tag=Bullet]
 				else
 					bounce_y = True
 				end
-				
+
 				/tp @Position ^ ^ ^0.3
 				@Position.y = @s.y
 				@Position.z = @s.z
@@ -126,13 +126,13 @@ define @Bullet : @Entity[type=bee, tag=Bullet]
 				else
 					bounce_x = True
 				end
-				
+
 				if not bounce_x and not bounce_y and not bounce_z
 					bounce_x = True
 					bounce_y = True
 					bounce_z = True
 				end
-				
+
 				/tp @Position ^ ^ ^0.3
 				<dx, dy, dz> = @Position.<pos> - @s.<pos>
 				if bounce_x then dx *= -1
@@ -146,12 +146,12 @@ define @Bullet : @Entity[type=bee, tag=Bullet]
 					@s.my_ry = @s.ry
 				end
 			end
-			
+
 			@s.ticks++
-			
+
 			if @s.ticks >= 100
 				/kill @s
-			end		
+			end
 		end
 	end
 end
@@ -214,17 +214,17 @@ clock main
 				@s.my_ry = ry + randint(-10000, 10000)
 				@s.my_rx = rx + randint(-10000, 10000)
 			end
-			
+
 			unless @s.bee_meter >= 0
 				@s.bee_meter = 30
 			end
 			@s.bee_meter--
 			assign_bossbar()
 			set_bossbar_value()
-			
+
 			@s.recent_shot = 20
 		end
-		
+
 		if @s.recent_shot > 0
 			@s.recent_shot--
 		else
@@ -245,9 +245,9 @@ clock main
 				end
 			end
 		end
-		
+
 		@s.shot_gun = False
 	end
-	
+
 	@Bullet.tick()
 end

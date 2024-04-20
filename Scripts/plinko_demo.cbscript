@@ -28,7 +28,7 @@ clock tick
             else
                 @s.tele_duration = 1
             end
-            
+
             if collider.y < 52000
                 collider.y = 72000
             end

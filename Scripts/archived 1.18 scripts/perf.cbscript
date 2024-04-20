@@ -19,7 +19,7 @@ function test()
 	for i=1 to 90
 		create @Marker
 	end
-	
+
 
 	tell @a "Test A: All entities on each command"
 	count = 0
@@ -40,6 +40,6 @@ function test()
 		end
 	end
 	tell @a "Test B Complete"
-	
+
 	/kill @Marker
 end

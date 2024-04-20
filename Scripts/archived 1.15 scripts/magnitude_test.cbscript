@@ -17,7 +17,7 @@ define @Entity = @e
 	rx = Rotation[1] float
 	on_ground = OnGround byte 1
 	no_gravity = NoGravity byte 1
-	
+
 	function get_facing_dir()
 		at @s rotated @s at ^ ^ ^1 do @s.<facing_dir> = here - @s.<pos>
 	end
@@ -47,7 +47,7 @@ clock main
 	end
 	tell @a: (s)
 	/say Done
-	
+
 	/say Lookat method
 	for i = 1 to 5000
 		as @mark
@@ -63,7 +63,7 @@ clock main
 					if uy == 0
 						s = z * scale / uz
 					end
-				end				
+				end
 			end
 		end
 	end

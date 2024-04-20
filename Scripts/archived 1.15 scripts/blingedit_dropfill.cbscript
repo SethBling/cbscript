@@ -32,12 +32,12 @@ define @Player = @Entity[type=player]
 			if loaded
 				tell @s: Performing drop fill...
 				/bossbar set progress players @s
-				
+
 				as create @Marker
 					for x = box_xmin to box_xmax
 						percent = (x - box_xmin) * 100 / (box_xmax - box_xmin)
 						/execute store result bossbar progress value run scoreboard players get Global percent
-						
+
 						for z = box_zmin to box_zmax
 							/setblock 0 1 0 air
 							for y = box_ymax to box_ymin by -1
@@ -49,13 +49,13 @@ define @Player = @Entity[type=player]
 							end
 						end
 					end
-					
+
 					/kill @s
 				end
 				tell @s: Drop fill complete.
 			end
 		end
-		
+
 		/gamerule sendCommandFeedback false
 	end
 end

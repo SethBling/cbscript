@@ -33,7 +33,7 @@ function handle_beginning()
 end
 
 function handle_main()
-	
+
 end
 
 function handle_combat()

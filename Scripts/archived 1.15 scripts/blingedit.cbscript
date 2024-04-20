@@ -35,7 +35,7 @@ end
 
 define @CloneDisplay = @Entity[type=armor_stand,tag=CloneDisplay]
     create {CustomName:"\"CloneDisplay\"", Tags:["CloneDisplay"], Glowing:1b, NoGravity:1b, NoAI: 1b, Silent:1b, AbsorptionAmount: 100f, LeftHanded:0b, Invulnerable:1, ShowArms:1b, Pose:{LeftArm:[-90f,0f,0f],RightArm:[-90f,0f,0f]}}
-	
+
 	function replace_items()
 		if @s.left_handed
 			/replaceitem entity @s weapon.offhand diamond_sword
@@ -45,8 +45,8 @@ define @CloneDisplay = @Entity[type=armor_stand,tag=CloneDisplay]
 			/replaceitem entity @s weapon.offhand shield
 		end
 	end
-	
-		
+
+
 	function clone_flip_horizontal()
 		if flip_x
             lh = @s.left_handed
@@ -71,7 +71,7 @@ define @Player = @Entity[type=player]
 	from_display: @CloneDisplay
 	to_display: @CloneDisplay
 	moving: @Corner
-    
+
     function tell_actions()
         tell @s ''
         tell @s 'BlingEdit: {C[\[Options\]](/function blingedit:options) {B[\[Help\]](https://docs.google.com/document/d/13jC-XnCvyyaTaVWAqNc3Gyqu6JEOWAa-xGfhFC8AU50/edit?usp=sharing)'
@@ -85,19 +85,19 @@ define @Player = @Entity[type=player]
         tell @s 'Region Particle Outline: {G[\[On\]](/function blingedit:particles_on) {R[\[Off\]](/function blingedit:particles_off)'
         /gamerule sendCommandFeedback false
     end
-    
+
     function particles_on()
         tell @s 'Region Outline Particles {Genabled{-.'
         @s.particles = True
         /gamerule sendCommandFeedback false
     end
-    
+
     function particles_off()
         tell @s 'Region Outline Particles {Rdisabled{-'
         @s.particles = False
         /gamerule sendCommandFeedback false
     end
-    
+
     function get_cursor_position()
         if @s.raycast_select
             @Player.cursor_current = False
@@ -107,7 +107,7 @@ define @Player = @Entity[type=player]
 				unless @Position do create @Position
 				/tp @Position @s
 				move @Position ~ ~1.6 ~
-				
+
 				step = 0
 				if @s.cursor_inside
 					while step < 250 at @Position if block ~ ~ ~ cursor_continue
@@ -120,18 +120,18 @@ define @Player = @Entity[type=player]
 						step++
 					end
 				end
-				
+
 				at @Position align xyz at ~0.5 ~ ~0.5
 					/tp @Position ~ ~ ~
 				end
 				<cursor> = @Position.<pos>
             end
         end
-		
+
 		if i == 5
 			i = 5
 		end
-        
+
         unless @s.raycast_select
             if @s.cursor_range == 5
                 at @s ~ ~1.6 ~ at ^ ^ ^5 align xyz at ~0.5 ~ ~0.5
@@ -155,46 +155,46 @@ define @Player = @Entity[type=player]
             end
         end
     end
-    
+
     function cursor_range_5()
         @s.cursor_range = 5
         tell @s 'Set cursor range to {G5'
         /gamerule sendCommandFeedback false
     end
-    
+
     function cursor_range_10()
         @s.cursor_range = 10
         tell @s 'Set cursor range to {G10'
         /gamerule sendCommandFeedback false
     end
-    
+
     function cursor_range_15()
         @s.cursor_range = 15
         tell @s 'Set cursor range to {G15'
         /gamerule sendCommandFeedback false
     end
-    
+
     function cursor_range_20()
         @s.cursor_range = 20
         tell @s 'Set cursor range to {G20'
         /gamerule sendCommandFeedback false
     end
-    
+
     function cursor_inside()
         @s.cursor_inside = True
         tell @s 'Set cursor raycast to stop {GInside Blocks'
         /gamerule sendCommandFeedback false
     end
-    
+
     function cursor_before()
         @s.cursor_inside = False
         tell @s 'Set cursor raycast to stop just {GBefore Blocks'
         /gamerule sendCommandFeedback false
     end
-    
+
     function get_minmax()
         has_box = -1
-        
+
         as @s.pick1
             <x1, y1, z1> = @s.<pos>
             has_box++
@@ -203,7 +203,7 @@ define @Player = @Entity[type=player]
             <x2, y2, z2> = @s.<pos>
             has_box++
         end
-        
+
         if x1 < x2
             xmin = x1
             xmax = x2
@@ -228,21 +228,21 @@ define @Player = @Entity[type=player]
             zmin = z2
             zmax = z1
         end
-        
+
         <min> = <xmin, ymin, zmin>
         <max> = <xmax, ymax, zmax>
         <size> = <max> - <min>
-        
+
         <box_xmin, box_ymin, box_zmin> = <min> / 1000
         <box_xmax, box_ymax, box_zmax> = <max> / 1000
         <box_center_x, box_center_y, box_center_z> = (<min> + <max>) / 2 / scale
         <box_size_x, box_size_y, box_size_z> = <size> / scale + <1, 1, 1>
     end
-    
+
     function get_dest_minmax()
         player = &@s
         has_dest_box = False
-                
+
         first = True
         as @Corner if @s.player == player and @s.type == $Type_Dest
             if first
@@ -255,9 +255,9 @@ define @Player = @Entity[type=player]
             if y < dest_ymin then dest_ymin = y
             if z < dest_zmin then dest_zmin = z
         end
-        
+
         <dest_min> = <dest_xmin, dest_ymin, dest_zmin>
-        
+
         first = True
         as @Corner if @s.player == player and @s.type == $Type_Dest
             if first
@@ -269,24 +269,24 @@ define @Player = @Entity[type=player]
             if y > dest_ymax then dest_ymax = y
             if z > dest_zmax then dest_zmax = z
         end
-        
+
         <dest_max> = <dest_xmax, dest_ymax, dest_zmax>
     end
 
     function clone_air()
         @s.clone_air = True
         tell @s 'Clone air: {GEnabled'
-    
+
         /gamerule sendCommandFeedback false
     end
-    
+
     function dont_clone_air()
         @s.clone_air = False
         tell @s 'Clone air: {RDisabled'
-    
+
         /gamerule sendCommandFeedback false
     end
-	
+
 	function toggle_clone_in_place()
 		if @s.clone_in_place
 			@s.clone_in_place = False
@@ -295,15 +295,15 @@ define @Player = @Entity[type=player]
 		end
 		@s.cancel()
 		@s.clone()
-		
+
 		/gamerule sendCommandFeedback false
 	end
-    
+
     function clone_flip_leftright()
 		ry = (@s.ry/scale + @s.clone_rotation) % 360
 		flip_x = False
 		flip_z = False
-		
+
 		if ry < 45
 			flip_x = True
 		end
@@ -319,21 +319,21 @@ define @Player = @Entity[type=player]
 		if ry >= 315
 			flip_x = True
 		end
-		
+
 		@s.invert_clone_flip()
-		
+
         as @s.to_display
 			@s.clone_flip_horizontal()
         end
         /gamerule sendCommandFeedback false
     end
-	
+
     function clone_flip_frontback()
 		ry = (@s.ry/scale + @s.clone_rotation) % 360
-		
+
 		flip_x = False
 		flip_z = False
-		
+
 		if ry < 45
 			flip_z = True
 		end
@@ -349,15 +349,15 @@ define @Player = @Entity[type=player]
 		if ry >= 315
 			flip_z = True
 		end
-		
+
 		@s.invert_clone_flip()
-		
+
 		as @s.to_display
 			@s.clone_flip_horizontal()
         end
         /gamerule sendCommandFeedback false
     end
-	
+
 	function invert_clone_flip_x()
 		if flip_x
 			if @s.clone_flip_x
@@ -375,7 +375,7 @@ define @Player = @Entity[type=player]
 		end
 	end
 
-    
+
     function clone_rotate_left()
 		@s.clone_rotation -= 90
 		if @s.clone_rotation < 0
@@ -385,7 +385,7 @@ define @Player = @Entity[type=player]
             @s.ry -= 90000
         end
 		@s.rotate_dest_horizontal()
-		
+
         /gamerule sendCommandFeedback false
     end
 
@@ -398,42 +398,42 @@ define @Player = @Entity[type=player]
             @s.ry += 90000
         end
 		@s.rotate_dest_horizontal()
-		
+
         /gamerule sendCommandFeedback false
     end
-	
+
 	function rotate_dest_horizontal()
 		@s.get_dest_minmax()
 		clone_rotation = @s.clone_rotation
-		
+
 		<cx, cy, cz> = (<dest_min> + <dest_max>) / 2
-		
+
 		<sx, sy, sz> = <dest_max> - <dest_min>
 		mod = (cx + cz) % scale
-		
+
 		x_offset = 0
 		z_offset = 0
 		unless mod == 0
 			x_offset = 500
 			if clone_rotation == 90 then x_offset = -500
 			if clone_rotation == 180 then x_offset = -500
-			
+
 			z_offset = 500
 			if clone_rotation == 180 then z_offset = -500
 			if clone_rotation == 270 then z_offset = -500
 		end
 
-		
+
 		player = &@s
 		as @Corner if @s.player == player and @s.type == $Type_Dest
 			dx = cx - @s.x
 			dz = cz - @s.z
-			
+
 			@s.x = cx - dz + x_offset
 			@s.z = cz - dx + z_offset
 		end
 	end
-    
+
     function plugin_can_run()
         plugin_can_run = False
         if @s.state == $EditSource
@@ -443,23 +443,23 @@ define @Player = @Entity[type=player]
             end
         end
     end
-    
+
     function list_plugins()
         @s.prime_plugins = True
-        
+
         /gamerule sendCommandFeedback false
     end
-    
+
     function randomize_menu()
         tell @s ''
         tell @s '{cRandomization Options:'
         tell @s '{C[\[Store Selected Region as Random Block Pool\]](/function blingedit:store_random)'
         tell @s '{C[\[Fill Selected Region from Random Block Pool\]](/function blingedit:fill_random)'
         tell @s '{C[\[Replace in Selected Region from Random Block Pool\]](/function blingedit:replace_random)'
-        
+
         /gamerule sendCommandFeedback false
     end
-    
+
     function store_random()
         unless @s.state == $EditSource
             tell @s "You can't store a region right now."
@@ -470,7 +470,7 @@ define @Player = @Entity[type=player]
                 @s.<rand_min> = <min> / scale
                 @s.<rand_max> = <max> / scale
                 @s.has_rand = True
-                
+
                 <rx1, ry1, rz1> = @s.<rand_min>
                 <rx2, ry2, rz2> = @s.<rand_max>
                 tell @s 'Random Block Pool region stored as \((rx1), (ry1), (rz1)\) to \((rx2), (ry2), (rz2)\)'
@@ -478,10 +478,10 @@ define @Player = @Entity[type=player]
 				tell @s "You don't currently have a region selected."
             end
         end
-        
+
         /gamerule sendCommandFeedback false
     end
-    
+
     function fill_random()
         if @s.state == $EditSource
             unless @s.has_rand
@@ -489,23 +489,23 @@ define @Player = @Entity[type=player]
             end
             if @s.has_rand
                 check_loaded()
-                
+
                 if loaded
                     @s.get_minmax()
                     if has_box
                         replaced_blocks = 0
-                    
+
                         <rx1, ry1, rz1> = @s.<rand_min>
                         <rx2, ry2, rz2> = @s.<rand_max>
-						
+
 						<rand_min> = @s.<rand_min>
                         random_replace = @s.random_replace
                         /bossbar set progress players @s
                         store_tile_drops()
-						
+
 						unless @Position do create @Position
 						unless @Position2 do create @Position2
-						
+
                         as @Position
                             for x = xmin to xmax by scale
                                 percent = (x - xmin) * 100 / (xmax - xmin)
@@ -525,13 +525,13 @@ define @Player = @Entity[type=player]
 												rx = randint(rx1, rx2+1)
                                                 ry = randint(ry1, ry2+1)
                                                 rz = randint(rz1, rz2+1)
-												
+
 												@Position2.<pos> = <rx, ry, rz> * scale
 												<tx, ty, tz> = @Position2.<pos>
 												at @Position2
                                                     /clone ~ ~ ~ ~ ~ ~ 0 1 0
                                                 end
-                                            
+
                                                 replaced_blocks++
                                                 /clone 0 1 0 0 1 0 ~ ~ ~
                                             end
@@ -548,35 +548,35 @@ define @Player = @Entity[type=player]
 		else
 			tell @s "You can't store a region right now."
         end
-        
+
         /gamerule sendCommandFeedback false
     end
-    
+
     function replace_random()
         @s.state = $ReplaceWaitRandom
         tell @s 'Use {w[/setblock ~ ~ ~ <block>](//setblock ~ ~ ~ minecraft:){- to pick the blocks to replace.'
         tell @s 'Or replace {C[\[air\]](/function blingedit:replace_random_air)'
-    
+
         /gamerule sendCommandFeedback false
     end
-    
+
     function replace_random_air()
         /setblock 0 2 0 air
         perform_random_replace()
-    
+
         /gamerule sendCommandFeedback false
     end
-    
+
     function perform_random_replace()
         @s.random_replace = True
         @s.state = $EditSource
-        
+
         @s.fill_random()
 
         @s.random_replace = False
         tell @s 'Replaced (replaced_blocks) blocks.'
     end
-    
+
     function clone()
         if @s.state == $EditSource
             @s.get_minmax()
@@ -588,20 +588,20 @@ define @Player = @Entity[type=player]
                 <dx, dy, dz> = <max> - <min>
                 <center> = (<max> + <min>) / 2
                 <center> -= <center> % scale + <scale/2, 0, scale/2>
-                
+
                 player = &@s
                 @s.get_cursor_position()
 				if @s.clone_in_place
 					<cursor> = <center>
 				end
-                
+
                 as @Corner if @s.player == player and @s.type == $Type_Source
                     <dpos> = @s.<pos> - <center>
                     bottom_center = False
                     if @s.center_x and @s.center_z and @s.y == ymin
                         bottom_center = True
                     end
-                        
+
                     as create @Corner
                         @s.type = $Type_Dest
                         @s.<pos> = <cursor> + <dpos>
@@ -613,19 +613,19 @@ define @Player = @Entity[type=player]
                         end
                     end
                 end
-                
+
                 move @Corner ~ ~ ~
-				
+
 				if @s.clone_in_place
 					@s.state = $EditDest
 				end
-				
+
 				unless @s.clone_in_place
 					@s.moving = moving
 					@s.state = $MovingDest
 					@s.enable_click()
 				end
-                
+
                 @s.from_display = create @CloneDisplay
                 as @s.from_display
                     /replaceitem entity @s weapon.mainhand diamond_sword
@@ -640,11 +640,11 @@ define @Player = @Entity[type=player]
                     /replaceitem entity @s armor.head player_head{SkullOwner:"SethBling"}
                     /team join dest
                 end
-				
+
 				@s.clone_rotation = 0
 				@s.clone_flip_x = False
 				@s.clone_flip_z = False
-                
+
                 tell @s ''
                 tell @s 'Move {BDest{w: {C[\[Up\]](/function blingedit:move_up) [\[Down\]](/function blingedit:move_down) [\[Left\]](/function blingedit:move_left) [\[Right\]](/function blingedit:move_right) [\[Forward\]](/function blingedit:move_forward) [\[Backward\]](/function blingedit:move_backward)'
                 tell @s "Clone Options: {g[\[Do Clone Air\]](/function blingedit:clone_air) [\[Don't Clone Air\]](/function blingedit:dont_clone_air)"
@@ -657,14 +657,14 @@ define @Player = @Entity[type=player]
 		else
 			tell @s "You can't clone a box right now."
         end
-        
+
         /gamerule sendCommandFeedback false
     end
-    
+
     function confirm_clone()
         if @s.state == $EditDest
             @s.perform_clone()
-            if loaded				
+            if loaded
                 <move_by> = <dest_min> - <min>
                 @s.cancel()
                 as @Corner if @s.player == player and @s.type == $Type_Source
@@ -684,19 +684,19 @@ define @Player = @Entity[type=player]
 		else
 			tell @s "You can't confirm a clone right now."
         end
-    
+
         /gamerule sendCommandFeedback false
     end
-    
+
     function clone_and_repeat()
         if @s.state == $EditDest
 			okay_rotation = True
 			if @s.clone_rotation == 90 then okay_rotation = False
 			if @s.clone_rotation == 270 then okay_rotation = False
-			
+
 			if okay_rotation
 				@s.perform_clone()
-				if loaded				
+				if loaded
 					<move_by> = <dest_min> - <min>
 					as @Corner if @s.player == player
 						@s.<pos> += <move_by>
@@ -709,15 +709,15 @@ define @Player = @Entity[type=player]
 		else
 			tell @s "You can't confirm a clone right now."
         end
-    
-        /gamerule sendCommandFeedback false	
+
+        /gamerule sendCommandFeedback false
     end
-    
+
     function clone_brush()
         can_do = False
         if @s.state == $EditDest then can_do = True
         if @s.state == $MovingDest then can_do = True
-        
+
         if can_do
             @s.state = $CloneBrush
             @s.enable_click()
@@ -729,32 +729,32 @@ define @Player = @Entity[type=player]
 		else
 			tell @s "You can't confirm a clone right now."
         end
-        
+
         /gamerule sendCommandFeedback false
     end
-    
+
     function perform_clone()
 		unless @Position do create @Position
         /spreadplayers 0 0 1 1 false @Position
-        
+
         /setblock 0 1 0 stone
         /execute store success score Global loaded run setblock 0 1 0 sandstone
-        
+
         unless loaded
             tell @s "Chunk 0,0 wasn't loaded. Try again \(or use {C/forceload add 0 0{W\)"
         end
         if loaded
             @s.get_minmax()
-            
+
             unless has_box
                 tell @s "You don't currently have a region selected."
             end
             if has_box
                 @s.get_dest_minmax()
-                
+
                 <size_x, size_y, size_z> = <size>
                 clone_air = @s.clone_air
-                
+
                 if dest_xmin <= xmin
                     start_dx = 0
                     end_dx = size_x
@@ -785,31 +785,31 @@ define @Player = @Entity[type=player]
                     end_dz = 0
                     step_dz = -scale
                 end
-                
+
                 /bossbar set progress players @s
                 store_tile_drops()
-				
+
 				rotation = 0
 				rotation = @s.clone_rotation
 				flip_x = @s.clone_flip_x
 				flip_z = @s.clone_flip_z
-				
+
 				dest_start_y = dest_ymin
-				
+
 				if rotation == 0
 					dest_start_x = dest_xmin
 					dest_start_z = dest_zmin
 					flipped_x = dest_xmax
 					flipped_z = dest_zmax
 				end
-				
+
 				if rotation == 90
 					dest_start_x = dest_xmax
 					dest_start_z = dest_zmin
 					flipped_x = dest_xmin
 					flipped_z = dest_zmax
 				end
-				
+
 				if rotation == 180
 					dest_start_x = dest_xmax
 					dest_start_z = dest_zmax
@@ -823,10 +823,10 @@ define @Player = @Entity[type=player]
 					flipped_x = dest_xmax
 					flipped_z = dest_zmin
 				end
-					
+
 				if flip_x then dest_start_x = flipped_x
 				if flip_z then dest_start_z = flipped_z
-				
+
 				unless @Position do create @Position
 				unless @Position2 do create @Position2
                 as @Position
@@ -844,7 +844,7 @@ define @Player = @Entity[type=player]
                                         skip = True
                                     end
                                 end
-                                
+
                                 unless skip
 									if rotation == 0 then <dest_dx, dest_dy, dest_dz> = <dx, dy, dz>
 									if rotation == 90 then <dest_dx, dest_dy, dest_dz> = <-dz, dy, dx>
@@ -852,7 +852,7 @@ define @Player = @Entity[type=player]
 									if rotation == 270 then <dest_dx, dest_dy, dest_dz> = <dz, dy, -dx>
 									if flip_x then dest_dx = dest_dx * -1
 									if flip_z then dest_dz = dest_dz * -1
-										
+
                                     @Position2.<pos> = <dest_start_x, dest_start_y, dest_start_z> + <dest_dx, dest_dy, dest_dz>
 									at @Position2
 										/clone 0 1 0 0 1 0 ~ ~ ~
@@ -862,12 +862,12 @@ define @Player = @Entity[type=player]
                         end
                     end
                 end
-                
+
                 restore_tile_drops()
             end
         end
     end
-    
+
     function cancel()
         handled = False
         can_cancel = False
@@ -884,17 +884,17 @@ define @Player = @Entity[type=player]
             @s.tell_actions()
             handled = True
         end
-        
+
         if not handled
             tell @s "You can't cancel right now."
         end
-        
+
         /gamerule sendCommandFeedback false
     end
 
     function delete()
         @s.get_minmax()
-        
+
         if has_box
             tell @s 'Deleting (box_xmin), (box_ymin), (box_zmin) to (box_xmax), (box_ymax), (box_zmax)'
             /bossbar set progress players @s
@@ -914,11 +914,11 @@ define @Player = @Entity[type=player]
 			end
             restore_tile_drops()
         end
-        
+
         unless has_box
             tell @s 'You must select a region first.'
         end
-        
+
         /gamerule sendCommandFeedback false
     end
 
@@ -927,23 +927,23 @@ define @Player = @Entity[type=player]
         @s.state = $FillWait
         /gamerule sendCommandFeedback false
     end
-    
+
     function replace()
         tell @s 'Use {w[/setblock ~ ~ ~ <block>](//setblock ~ ~ ~ minecraft:){- to pick the block to be replaced.'
         tell @s 'Or pick {C[\[air\]](/function blingedit:replace1_air){-'
         @s.state = $ReplaceWait1
         /gamerule sendCommandFeedback false
     end
-    
+
     function replace1_air()
         /setblock ~ ~ ~ air
         @s.tell_replace2()
         /gamerule sendCommandFeedback false
     end
-    
+
     function tell_replace2()
         check_loaded()
-                
+
         if loaded
             /clone ~ ~ ~ ~ ~ ~ 0 2 0
             @s.state = $ReplaceWait2
@@ -955,24 +955,24 @@ define @Player = @Entity[type=player]
             tell @s "Chunk 0,0 wasn't loaded. Try again \(or use {C/forceload add 0 0{W\)"
         end
     end
-    
+
     function replace2_air()
         /setblock ~ ~ ~ air
         @s.perform_replace()
         /gamerule sendCommandFeedback false
     end
-    
+
     function perform_replace()
         check_loaded()
-        
+
         if loaded
             /clone ~ ~ ~ ~ ~ ~ 0 1 0
-            
+
             @s.get_minmax()
-            
+
             if has_box
                 tell @s 'Replacing (box_xmin), (box_ymin), (box_zmin) to (box_xmax), (box_ymax), (box_zmax)'
-                
+
                 /bossbar set progress players @s
                 store_tile_drops()
                 count = 0
@@ -997,18 +997,18 @@ define @Player = @Entity[type=player]
 					end
 				end
                 restore_tile_drops()
-                
+
                 tell @s 'Replaced (count) blocks.'
                 @s.state = $EditSource
             end
             /setblock ~ ~ ~ air
-            
+
             unless has_box
                 tell @s 'You must select a box first.'
             end
         end
     end
-    
+
     function move_up()
         type = None
         if @s.state == $EditSource
@@ -1048,12 +1048,12 @@ define @Player = @Entity[type=player]
         end
         player = &@s
         ry = (@s.ry / scale) % 360
-        
+
         move_dir()
-            
+
         /gamerule sendCommandFeedback false
     end
-    
+
     function move_backward()
         type = None
         if @s.state == $EditSource
@@ -1064,12 +1064,12 @@ define @Player = @Entity[type=player]
         end
         player = &@s
         ry = (@s.ry / scale + 180) % 360
-        
+
         move_dir()
-    
+
         /gamerule sendCommandFeedback false
     end
-    
+
     function move_left()
         type = None
         if @s.state == $EditSource
@@ -1080,9 +1080,9 @@ define @Player = @Entity[type=player]
         end
         player = &@s
         ry = (@s.ry / scale - 90) % 360
-        
+
         move_dir()
-            
+
         /gamerule sendCommandFeedback false
     end
 
@@ -1096,21 +1096,21 @@ define @Player = @Entity[type=player]
         end
         player = &@s
         ry = (@s.ry / scale + 90) % 360
-        
+
         move_dir()
 
         /gamerule sendCommandFeedback false
     end
-    
+
     function corner_target(type)
         player = &@s
-        
+
         at @s ~ ~1.6 ~
 			<start_pos> = here
 			at ^ ^ ^1 do <look> = (here - <start_pos>)
-            
+
 			@Corner.looking = False
-			
+
             as @Corner[distance=..30] if @s.player == player and @s.type == type
 				@s.highlight = False
                 <delta> = (@s.<pos> + <0, 500, 0> - <start_pos>)
@@ -1118,14 +1118,14 @@ define @Player = @Entity[type=player]
 				delta2 = <delta> * <delta> / scale
 				tca2 = tca * tca / scale
 				d2 = delta2 - tca2
-				if d2 < 1700 and tca > 0 then @s.looking = True				
+				if d2 < 1700 and tca > 0 then @s.looking = True
             end
-			
+
 			as @Corner[sort=nearest,limit=1,looking]
 				@s.highlight = True
 			end
-            
-            as @Corner[distance=..30] if @s.player == player and @s.type == type                    
+
+            as @Corner[distance=..30] if @s.player == player and @s.type == type
 				if @s.highlight
                     /team join highlight
                     @s.highlighted = True
@@ -1139,24 +1139,24 @@ define @Player = @Entity[type=player]
             end
         end
     end
-	
+
 	function left_click_callback()
 		@s.click()
 	end
-	
+
 	function right_click_callback()
 		@s.click()
 	end
-	
+
 	function click()
 		@Player.current = False
 		@s.current = True
 		@player = @Player[current,limit=1]
-		
+
 		move_dest = False
 		if @s.state == $MovingDest then move_dest = True
 		if @s.state == $CloneBrush then move_dest = True
-		
+
 		if @s.state == $EditSource
 			as @Corner if @s.player == &@player and @s.type == $Type_Source and @s.highlighted
 				/team join moving
@@ -1176,7 +1176,7 @@ define @Player = @Entity[type=player]
 						<tx, ty, tz> = <x, y, z> / scale
 						tell @player '2nd corner at {R(tx), (ty), (tz)'
 						@player.tell_actions()
-						@player.tell_actions = False							
+						@player.tell_actions = False
 					end
 				end
 			end
@@ -1208,7 +1208,7 @@ define @Player = @Entity[type=player]
 				end
 				@s.state = $EditingSource
 				@s.tell_actions = True
-				
+
 				@s.pick2 = create @Corner
 				as @s.pick2
 					@s.player = &@player
@@ -1219,18 +1219,18 @@ define @Player = @Entity[type=player]
 					@s.edit_zmax = True
 				end
 				@s.moving = @player.pick2
-				
+
 				for ex = -1 to 1
 					for ey = -1 to 1
 						for ez = -1 to 1
 							skip = False
 							sum = abs(ex + ey + ez)
-							
+
 							skip = False
 							if ex == -1 and ey == -1 and ez == -1 then skip = True
 							if ex == 1 and ey == 1 and ez == 1 then skip = True
 							if ex == 0 and ey == 0 and ez == 0 then skip = True
-							
+
 							if not skip
 								as create @Corner
 									@s.player = &@player
@@ -1239,7 +1239,7 @@ define @Player = @Entity[type=player]
 									if ex == -1 then @s.edit_xmin = True
 									if ex == 0 then @s.center_x = True
 									if ex == 1 then @s.edit_xmax = True
-									
+
 									if ey == -1 then @s.edit_ymin = True
 									if ey == 0 then @s.center_y = True
 									if ey == 1 then @s.edit_ymax = True
@@ -1256,7 +1256,7 @@ define @Player = @Entity[type=player]
 				move @Corner ~ ~ ~
 			end
 		end
-	end	
+	end
 end
 
 function move_dir()
@@ -1285,35 +1285,35 @@ reset
 	/team add source
     /team modify source color red
     /team modify source collisionRule never
-		
+
     /team add moving
     /team modify moving color yellow
     /team modify moving collisionRule never
-    
+
     /team add highlight
     /team modify highlight color blue
     /team modify highlight collisionRule never
-    
+
     /team add dest
     /team modify dest color green
     /team modify dest collisionRule never
-    
+
     /execute store result score Global feedback run gamerule sendCommandFeedback
     /gamerule maxCommandChainLength 1000000000
-    
+
     /bossbar add progress "Progress"
     /bossbar set progress max 100
-	
+
 	/scoreboard objectives remove used_carrot
 	/scoreboard objectives add used_carrot minecraft.used:minecraft.carrot_on_a_stick
-    
+
     /say Loaded BlingEdit v1.0.6 by SethBling
 end
 
 function check_loaded()
     /setblock 0 1 0 stone
     /execute store success score Global loaded run setblock 0 1 0 sandstone
-    
+
     unless loaded
         tell @s "Chunk 0,0 wasn't loaded. Try again \(or use {C{U[/forceload add 0 0](//forceload add 0 0){u{W\)"
     end
@@ -1396,11 +1396,11 @@ end
 
 clock main
     tick++
-    
+
     if feedback
         /gamerule sendCommandFeedback true
     end
-	
+
     as @Entity[type=item] at @s
         @s[nbt={Item:{tag:{display:{Name:"{\"text\":\"BlingEdit\"}"}}}}].edit = True
         if @s.edit
@@ -1409,7 +1409,7 @@ clock main
                 if @s.edit
                     @s.holding_item = True
 					unless @s[nbt={SelectedItem:{}}] do @s.holding_item = False
-                    unless @s.holding_item	
+                    unless @s.holding_item
                         if @s.carrot_on_stick
                             /replaceitem entity @s weapon.mainhand carrot_on_a_stick{display:{Name:"{\"text\":\"BlingEdit\"}"},Enchantments:[{lvl:5s,id:"minecraft:sharpness"}]} 1
                         end
@@ -1417,7 +1417,7 @@ clock main
                             /replaceitem entity @s weapon.mainhand diamond_sword{display:{Name:"{\"text\":\"BlingEdit\"}"}} 1
                         end
                         found_player = True
-                        
+
                         handled = False
                         if @s.raycast_select
                             @s.raycast_select = False
@@ -1436,7 +1436,7 @@ clock main
             /kill @s
         end
     end
-    
+
     for @player in @Player
         at @s
 			unless @s.cursor_range >= 0
@@ -1445,12 +1445,12 @@ clock main
             unless @s.cursor_inside >= 0
                 @s.cursor_inside = True
             end
-			
+
 			if @s.used_carrot
 				@s.click()
 			end
 			@s.used_carrot = 0
-		    
+
             # Make sure there's a value in edit
             unless @s.edit do @s.edit = False
             @s.prev_edit = @s.edit
@@ -1460,13 +1460,13 @@ clock main
             @s[nbt={"SelectedItem":{id:"minecraft:carrot_on_a_stick"}}].carrot_on_stick = True
 
 			@s.disp_plugins = False
-            
+
             if @s.prime_plugins
                 @s.prime_plugins = False
                 @s.disp_plugins = True
                 tell @s '{cPlugins:'
             end
-            
+
             if @s.edit unless @s.prev_edit
                 @s.state = $Pick1
                 at @s ~ ~200 ~
@@ -1482,7 +1482,7 @@ clock main
                 end
 				@s.enable_click()
             end
-            
+
             if @s.prev_edit unless @s.edit
                 @s.pick1 = None
                 @s.pick2 = None
@@ -1495,7 +1495,7 @@ clock main
 					end
                 end
             end
-            
+
             @s.get_minmax()
             if has_box and @s.particles
                 @s.grid_display++
@@ -1503,19 +1503,19 @@ clock main
                     @s.grid_display = 0
                     <p_xmin, p_ymin, p_zmin> = <min> - <450, -175, 450>
                     <p_xmax, p_ymax, p_zmax> = <max> + <450, 1075, 450>
-                    
+
                     draw_particle_box()
-                    
+
                     @s.get_dest_minmax()
                     if has_dest_box
                         <p_xmin, p_ymin, p_zmin> = <dest_min> - <450, -175, 450>
                         <p_xmax, p_ymax, p_zmax> = <dest_max> + <450, 1075, 450>
-                        
+
                         draw_particle_box()
                     end
                 end
             end
-            
+
             if @s.state == $Pick1
                 @s.get_cursor_position()
                 corner_exists = False
@@ -1527,19 +1527,19 @@ clock main
                         /tp @s ~ ~ ~
                     end
                 end
-                
+
                 if not corner_exists
                     tell @s "BlingEdit doesn't work in peaceful mode."
                     @s.state = $Closed
                 end
             end
-            
+
             @s.get_minmax()
             if has_box
                 vol = box_size_x * box_size_y * box_size_z
                 actionbar @s "Size: {y{D(box_size_x){-x{y{D(box_size_y){-x{y{D(box_size_z){- Volume: {y{D(vol){-"
             end
-            
+
             @s.get_dest_minmax()
             if has_dest_box
                 at @s ^7 ^6 ^10
@@ -1556,7 +1556,7 @@ clock main
                 @s.from_display = None
                 @s.to_display = None
             end
-            
+
             if @s.state == $EditingSource
                 @s.get_cursor_position()
 				unless @Position do create @Position
@@ -1594,20 +1594,20 @@ clock main
                     end
                 end
             end
-			
+
 			if @s.state == $EditSource
 				@s.corner_target($Type_Source)
 			end
-		
-            
+
+
             if @s.state == $EditDest
                 @s.corner_target($Type_Dest)
             end
-            
+
             move_dest = False
             if @s.state == $MovingDest then move_dest = True
             if @s.state == $CloneBrush then move_dest = True
-            
+
             if move_dest
                 @s.get_cursor_position()
 				unless @Position do create @Position
@@ -1623,17 +1623,17 @@ clock main
                     end
                 end
             end
-            
+
             if @s.state == $FillWait at @s unless block ~ ~ ~ air
 				check_loaded()
-				
+
 				if loaded
 					/clone ~ ~ ~ ~ ~ ~ 0 1 0
 					@s.get_minmax()
-					
+
 					if has_box
 						tell @s 'Filling (box_xmin), (box_ymin), (box_zmin) to (box_xmax), (box_ymax), (box_zmax)'
-						
+
 						/bossbar set progress players @s
 						store_tile_drops()
 						unless @Position do create @Position
@@ -1650,29 +1650,29 @@ clock main
 							end
 						end
 						restore_tile_drops()
-						
+
 						@s.state = $EditSource
 					end
 					/setblock ~ ~ ~ air
-					
+
 					unless has_box
 						tell @s 'You must select a box first.'
 					end
 				end
             end
-            
+
             if @s.state == $ReplaceWait1 at @s unless block ~ ~ ~ air
-                @s.tell_replace2()					
+                @s.tell_replace2()
             end
-            
+
             if @s.state == $ReplaceWait2 at @s unless block ~ ~ ~ air
                 @s.perform_replace()
             end
-            
+
             if @s.state == $ReplaceWaitRandom at @s unless block ~ ~ ~ air
 				/clone ~ ~ ~ ~ ~ ~ 0 2 0
 				/setblock ~ ~ ~ air
-				
+
 				@s.perform_random_replace()
             end
         end
@@ -1690,14 +1690,14 @@ function collect_garbage()
         /effect give @s invisibility 1000000 0 true
         move @s ~ ~ ~
     end
-    
+
     as @CloneDisplay
         @s.absorption = 100
         @s.fire = 0
         @s.<vel> = 0
         move @s ~ ~ ~
     end
-    
+
     @Corner.kill = True
     @CloneDisplay.kill = True
     as @Player
@@ -1714,7 +1714,7 @@ function collect_garbage()
             end
         end
     end
-    
+
     as @e[kill] at @s
         move @s ~ -100 ~
         /kill @s
