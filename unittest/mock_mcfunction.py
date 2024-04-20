@@ -1,4 +1,3 @@
-import math
 from mock_environment import mock_environment
 from mock_selector_definition import mock_selector_definition
 

@@ -1,6 +1,5 @@
 from .call_block_base import call_block_base
 from mcfunction import mcfunction
-from environment import isNumber, isInt
 from variable_types.scoreboard_var import scoreboard_var
 
 

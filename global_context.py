@@ -1,4 +1,3 @@
-from mcfunction import mcfunction
 from CompileError import CompileError
 import json
 

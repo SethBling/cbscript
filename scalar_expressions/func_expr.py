@@ -1,6 +1,5 @@
 from .scalar_expression_base import scalar_expression_base
 from variable_types.scoreboard_var import scoreboard_var
-from environment import isInt
 import math
 
 

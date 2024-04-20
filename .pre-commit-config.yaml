@@ -20,6 +20,13 @@ repos:
       - id: check-case-conflict
       - id: sort-simple-yaml
         files: .pre-commit-config.yaml
+  - repo: https://github.com/hadialqattan/pycln
+    rev: v2.4.0
+    hooks:
+      - id: pycln
+        args: [--config=pyproject.toml, src]
+        types: [file]
+        types_or: [python, pyi]
   - repo: https://github.com/psf/black-pre-commit-mirror
     rev: 24.3.0
     hooks:

@@ -1,11 +1,9 @@
 from selector_definition import selector_definition
-from environment import isNumber
 from source_file import source_file
 from variable_types.scoreboard_var import scoreboard_var
 from block_types.push_block import push_block
 from block_types.pop_block import pop_block
 from CompileError import CompileError
-import math
 import traceback
 import json
 

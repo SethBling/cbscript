@@ -1,5 +1,4 @@
 from .block_base import block_base
-from mcfunction import isNumber
 from CompileError import CompileError
 import traceback
 

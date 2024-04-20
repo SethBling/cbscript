@@ -1,5 +1,4 @@
 import copy
-from scratch_tracker import scratch_tracker
 from CompileError import CompileError
 
 """

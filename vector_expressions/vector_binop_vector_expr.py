@@ -1,5 +1,4 @@
 from .vector_binop_base import vector_binop_base
-from variable_types.scoreboard_var import scoreboard_var
 
 
 class vector_binop_vector_expr(vector_binop_base):

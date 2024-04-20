@@ -1,6 +1,5 @@
 from .scalar_expression_base import scalar_expression_base
 from variable_types.virtualint_var import virtualint_var
-from variable_types.scoreboard_var import scoreboard_var
 
 
 class unary_expr(scalar_expression_base):

@@ -1,5 +1,4 @@
 from .block_base import block_base
-from data_types.relcoords import relcoords
 from CompileError import CompileError
 
 

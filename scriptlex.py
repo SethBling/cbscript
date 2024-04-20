@@ -1,4 +1,4 @@
-from ply import *
+from ply import lex
 
 keywords = (
     "for",

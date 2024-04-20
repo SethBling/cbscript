@@ -1,14 +1,10 @@
 import global_context
 import mcworld
 from environment import environment
-from mcfunction import mcfunction, compile_section
-from selector_definition import selector_definition
+from mcfunction import mcfunction
 from source_file import source_file
 from CompileError import CompileError
-import tellraw
 import traceback
-import math
-import collections
 import time
 import os
 

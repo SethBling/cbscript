@@ -52,7 +52,6 @@ from block_types.vector_assignment_scalar_block import (
 from block_types.while_block import while_block
 
 from data_types.const_number import const_number
-from data_types.const_string import const_string
 from data_types.python_identifier import python_identifier
 from data_types.interpreted_python import interpreted_python
 from data_types.relcoord import relcoord

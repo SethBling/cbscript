@@ -1,5 +1,4 @@
 from .block_base import block_base
-import math
 from CompileError import CompileError
 
 

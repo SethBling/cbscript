@@ -1,5 +1,4 @@
 from .scalar_expression_base import scalar_expression_base
-from variable_types.scoreboard_var import scoreboard_var
 
 
 class dot_expr(scalar_expression_base):

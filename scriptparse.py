@@ -1,4 +1,4 @@
-from ply import *
+from ply import yacc
 import traceback
 import scriptlex
 from block_types.advancement_definition_block import (
@@ -67,7 +67,6 @@ from data_types.block_case import block_case
 from data_types.const_number import const_number
 from data_types.const_string import const_string
 from data_types.number_macro_path import number_macro_path
-from data_types.python_identifier import python_identifier
 from data_types.interpreted_python import interpreted_python
 from data_types.relcoord_vector import relcoord_vector
 from data_types.relcoord import relcoord
@@ -102,7 +101,6 @@ from vector_expressions.vector_expr import vector_expr
 from vector_expressions.vector_here_expr import vector_here_expr
 from vector_expressions.vector_var_const_vector import vector_var_const_vector
 from vector_expressions.vector_var_expr import vector_var_expr
-import mcfunction
 
 tokens = scriptlex.tokens
 

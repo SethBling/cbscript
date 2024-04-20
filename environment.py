@@ -1,4 +1,3 @@
-import copy
 import math
 from scratch_tracker import scratch_tracker
 from selector_definition import selector_definition
