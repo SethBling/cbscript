@@ -1,2 +1,0 @@
-ply
-pyyaml
