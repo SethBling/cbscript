@@ -1,31 +1,41 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from cb_script import mcfunction
+
 from cb_script.variable_types.var_base import var_base
 
 
 class scoreboard_var(var_base):
-    def __init__(self, selector, objective):
+    __slots__ = ("selector", "objective")
+
+    def __init__(self, selector: str, objective: str) -> None:
         self.selector = selector
         self.objective = objective
 
-    def get_path(self, func):
+    def get_path(self, func: mcfunction):  # x | None
         if self.selector.startswith("@s"):
             seldef = func.get_self_selector_definition()
         else:
             seldef = func.get_selector_definition(self.selector)
 
-        if seldef != None:
+        if seldef is not None:
             if self.objective in seldef.paths:
                 return seldef.paths[self.objective]
 
         return None
 
-    # Returns a scoreboard_var for this variable.
-    # If assignto isn't None, then this function may
-    # use the assignto objective to opimtize data flow.
-    def get_scoreboard_var(self, func, assignto=None):
+    def get_scoreboard_var(self, func: mcfunction, assignto=None):
+        """Returns a scoreboard_var for this variable.
+
+        If assignto isn't None, then this function may
+        use the assignto objective to opimtize data flow."""
         path_data = self.get_path(func)
 
         if path_data:
-            if assignto == None:
+            if assignto is None:
                 assignto = scoreboard_var("Global", func.get_scratch())
 
             assignto.copy_from(func, self)
@@ -35,20 +45,20 @@ class scoreboard_var(var_base):
             func.register_objective(self.objective)
 
             name_def = func.get_name_definition(self.selector)
-            if name_def != None:
+            if name_def is not None:
                 return scoreboard_var(name_def, self.objective)
 
             return self
 
-    def compile(self, func, assignto=None):
+    def compile(self, func: mcfunction, assignto=None) -> Self:
         name_def = func.get_name_definition(self.selector)
-        if name_def != None:
+        if name_def is not None:
             return scoreboard_var(name_def, self.objective)
         else:
             return self
 
-    # Returns a command that will get this variable's value to be used with "execute store result"
-    def get_command(self, func):
+    def get_command(self, func: mcfunction) -> str:
+        """Returns a command that will get this variable's value to be used with "execute store result"""
         path_data = self.get_path(func)
         if path_data:
             path, data_type, scale = path_data
@@ -58,13 +68,13 @@ class scoreboard_var(var_base):
 
             selector = self.selector
             name_def = func.get_name_definition(self.selector)
-            if name_def != None:
+            if name_def is not None:
                 selector = name_def
 
             return f"scoreboard players get {selector} {self.objective}"
 
     # Returns an execute prefix that can be used to set this variable's value when paired with a get_command() command
-    def set_command(self, func):
+    def set_command(self, func: mcfunction):
         path_data = self.get_path(func)
         if path_data:
             path, data_type, scale = path_data
@@ -74,27 +84,26 @@ class scoreboard_var(var_base):
 
             selector = self.selector
             name_def = func.get_name_definition(self.selector)
-            if name_def != None:
+            if name_def is not None:
                 selector = name_def
 
             return f"execute store result score {selector} {self.objective}"
 
     # Gets a constant integer value for this variable if there is one, otherwise returns None.
-    def get_const_value(self, func):
+    def get_const_value(self, func: mcfunction):
         return None
 
-    # Returns true if this variable is a scoreboard_var with the specified selector and objective,
-    # to reduce extranious copies.
-    def is_objective(self, func, selector, objective):
+    def is_objective(self, func: mcfunction, selector: str, objective) -> bool:
+        """Returns true if this variable is a scoreboard_var with the specified selector and objective, to reduce extranious copies."""
         path_data = self.get_path(func)
 
         myselector = self.selector
         name_def = func.get_name_definition(self.selector)
-        if name_def != None:
+        if name_def is not None:
             myselector = name_def
 
         if (
-            path_data == None
+            path_data is None
             and myselector == selector
             and self.objective == objective
         ):
@@ -102,22 +111,22 @@ class scoreboard_var(var_base):
         else:
             return False
 
-    def same_as(self, func, var):
-        if var == None:
+    def same_as(self, func: mcfunction, var) -> bool:
+        if var is None:
             return False
 
         myselector = self.selector
         name_def = func.get_name_definition(self.selector)
-        if name_def != None:
+        if name_def is not None:
             myselector = name_def
 
         return var.is_objective(func, myselector, self.objective)
 
-    # Returns true if this varariable/expression references the specified scoreboard variable
-    def references_scoreboard_var(self, func, var):
+    def references_scoreboard_var(self, func: mcfunction, var) -> bool:
+        """Returns true if this varariable/expression references the specified scoreboard variable."""
         return self.same_as(func, var)
 
-    def is_fast_selector(self):
+    def is_fast_selector(self) -> bool:
         if not self.selector.startswith("@"):
             return True
 
@@ -126,18 +135,18 @@ class scoreboard_var(var_base):
 
         return False
 
-    # Gets an assignto value for this variable if there is one.
-    def get_assignto(self, func):
+    def get_assignto(self, func: mcfunction) -> Self | None:
+        """Gets an assignto value for this variable if there is one."""
         path_data = self.get_path(func)
-        if path_data == None and self.is_fast_selector():
+        if path_data is None and self.is_fast_selector():
             func.register_objective(self.objective)
 
             return self
         else:
             return None
 
-    # Copies the value from a target variable to this variable
-    def copy_from(self, func, var):
+    def copy_from(self, func: mcfunction, var):
+        """Copies the value from a target variable to this variable."""
         path_data = self.get_path(func)
 
         var_const = var.get_const_value(func)
@@ -145,7 +154,7 @@ class scoreboard_var(var_base):
         if path_data:
             path, data_type, scale = path_data
 
-            if var_const != None:
+            if var_const is not None:
                 suffix = {
                     "byte": "b",
                     "short": "s",
@@ -171,17 +180,17 @@ class scoreboard_var(var_base):
 
             selector = self.selector
             name_def = func.get_name_definition(self.selector)
-            if name_def != None:
+            if name_def is not None:
                 selector = name_def
 
-            if var_const != None:
+            if var_const is not None:
                 func.add_command(
                     f"scoreboard players set {selector} {self.objective} {var_const}"
                 )
             elif not var.is_objective(func, selector, self.objective):
                 selvar = var.get_selvar(func)
 
-                if selvar == None:
+                if selvar is None:
                     func.add_command(
                         f"{self.set_command(func)} run {var.get_command(func)}"
                     )
@@ -191,7 +200,7 @@ class scoreboard_var(var_base):
                     )
 
     # Returns a scoreboard_var which can be modified as needed without side effects
-    def get_modifiable_var(self, func, assignto):
+    def get_modifiable_var(self, func: mcfunction, assignto):
         path_data = self.get_path(func)
 
         if path_data:
@@ -210,17 +219,17 @@ class scoreboard_var(var_base):
                 return modifiable_var
 
     # If this is a scratch variable, free it up
-    def free_scratch(self, func):
+    def free_scratch(self, func: mcfunction) -> None:
         func.free_scratch(self.objective)
 
-    def uses_macro(self, func):
+    def uses_macro(self, func: mcfunction) -> bool:
         return (
-            func.get_name_definition(self.selector) != None
+            func.get_name_definition(self.selector) is not None
             or "$(" in self.selector
         )
 
-    # Returns the selector and objective of this variable if it is a scoreboard_var, otherwise returns None
-    def get_selvar(self, func):
+    def get_selvar(self, func: mcfunction) -> str | None:
+        """Returns the selector and objective of this variable if it is a scoreboard_var, otherwise returns None"""
         path_data = self.get_path(func)
         if path_data:
             return None
@@ -229,13 +238,12 @@ class scoreboard_var(var_base):
 
         name_def = func.get_name_definition(self.selector)
 
-        if name_def != None:
+        if name_def is not None:
             return f"{name_def} {self.objective}"
         else:
             return f"{self.selector} {self.objective}"
 
-    # This should only be used for scoreboard variables that are known to
-    # be Global
     @property
-    def selvar(self):
+    def selvar(self) -> str:
+        """This should only be used for scoreboard variables that are known to be Global"""
         return f"{self.selector} {self.objective}"

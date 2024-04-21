@@ -2,7 +2,7 @@ from cb_script.block_types.block_base import block_base
 
 
 class function_section(block_base):
-    def __init__(self, line, name, params, lines):
+    def __init__(self, line: int, name: str, params, lines):
         self.line = line
         self.name = name
         self.params = params
@@ -23,5 +23,5 @@ class function_section(block_base):
         global_context.register_function_params(self.name, self.params)
 
     @property
-    def block_name(self):
+    def block_name(self) -> str:
         return f'function "{self.name}"'

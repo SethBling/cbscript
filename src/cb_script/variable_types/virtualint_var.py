@@ -7,19 +7,20 @@ class virtualint_var(var_base):
     def __init__(self, val):
         self.val = val
 
-    def get_value(self, func):
+    def get_value(self, func) -> int:
         return int(func.apply_replacements(self.val))
 
-    # Returns a scoreboard objective for this variable.
-    # If assignto isn't None, then this function may
-    # use the assignto objective to opimtize data flow.
     def get_scoreboard_var(self, func, assignto=None):
+        """Returns a scoreboard objective for this variable.
+
+        If assignto isn't None, then this function may
+        use the assignto objective to opimtize data flow."""
         return scoreboard_var(
             func.add_constant(self.get_value(func)), "Constant"
         )
 
     # Returns a command that will get this variable's value to be used with "execute store result"
-    def get_command(self, func):
+    def get_command(self, func) -> str:
         return f"scoreboard players get {func.add_constant(self.get_value(func))} Constant"
 
     # Gets a constant integer value for this variable if there is one, otherwise returns None.

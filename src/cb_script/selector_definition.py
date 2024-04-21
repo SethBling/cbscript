@@ -1,7 +1,18 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from cb_script.CompileError import CompileError
 
+if TYPE_CHECKING:
+    from collections.abc import Buffer
 
-def split_qualifier(qualifier):
+    from typing_extensions import SupportsFloat, SupportsIndex
+
+    from cb_script.environment import environment
+
+
+def split_qualifier(qualifier: str) -> tuple[str, str, str] | None:
     for op in ["==", "<=", ">=", "<", ">"]:
         if op in qualifier:
             before, after = tuple(qualifier.split(op, 1))
@@ -13,7 +24,7 @@ def split_qualifier(qualifier):
     return None
 
 
-def isNumber(s):
+def isNumber(s: str | Buffer | SupportsFloat | SupportsIndex) -> bool:
     try:
         float(s)
         return True
@@ -22,21 +33,34 @@ def isNumber(s):
 
 
 class selector_definition:
-    def __init__(self, selector, env):
-        self.parts = []
-        self.scores_min = {}
-        self.scores_max = {}
+    def __init__(self, selector: str, env: environment) -> None:
+        self.parts: list[str | tuple[str, ...]] = []
+        self.scores_min: dict[str, int] = {}
+        self.scores_max: dict[str, int] = {}
         self.environment = env
-        self.tag = None
-        self.paths = {}
-        self.vector_paths = {}
-        self.pointers = {}
-        self.uuid = None
-        self.predicates = {}
+        self.tag: str | None = None
+        # types: name-defined error: Name "Any" is not defined
+        # types: note: Did you forget to import it from "typing"? (Suggestion: "from typing import Any")
+        self.paths: dict[str, Any] = {}
+        # types:              ^
+        # types: name-defined error: Name "Any" is not defined
+        # types: note: Did you forget to import it from "typing"? (Suggestion: "from typing import Any")
+        self.vector_paths: dict[str, Any] = {}
+        # types:                     ^
+        # types: name-defined error: Name "Any" is not defined
+        # types: note: Did you forget to import it from "typing"? (Suggestion: "from typing import Any")
+        self.pointers: dict[str, Any] = {}
+        # types:                 ^
+        self.uuid: str | None = None
+        # types: name-defined error: Name "Any" is not defined
+        # types: note: Did you forget to import it from "typing"? (Suggestion: "from typing import Any")
+        self.predicates: dict[str, Any] = {}
+        # types:                           ^
 
         selector = env.apply_replacements(selector)
 
         base_name = selector
+        self.base_name: str
 
         if base_name[0] == "@":
             base_name = base_name[1:]
@@ -97,12 +121,12 @@ class selector_definition:
                 except:
                     None
 
-            nbt_part = None
+            nbt_part: str | None = None
             lbrack = 0
             rbrack = 0
 
             for part in parts:
-                if len(part) == 0:
+                if not part:
                     continue
 
                 if part.startswith("nbt") or part.startswith("scores"):
@@ -113,7 +137,7 @@ class selector_definition:
                         nbt_part = part
                         continue
 
-                if nbt_part != None:
+                if nbt_part is not None:
                     lbrack += part.count("{")
                     rbrack += part.count("}")
                     if rbrack < lbrack:
@@ -124,7 +148,7 @@ class selector_definition:
                         nbt_part = None
 
                 op_parts = split_qualifier(part)
-                if op_parts == None:
+                if op_parts is None:
                     if "=" in part:
                         subparts = part.split("=")
                         subparts = [part.strip() for part in subparts]
@@ -161,13 +185,13 @@ class selector_definition:
                         else:
                             if part in self.predicates:
                                 if ":" in part:
-                                    self.parts.append(["predicate", part])
+                                    self.parts.append(("predicate", part))
                                 else:
                                     self.parts.append(
-                                        [
+                                        (
                                             "predicate",
                                             f"{env.namespace}:{part}",
-                                        ]
+                                        )
                                     )
                             else:
                                 self.scores_min[part] = 1
@@ -194,7 +218,7 @@ class selector_definition:
 
                     env.register_objective(before)
 
-    def compile(self):
+    def compile(self) -> str:
         if self.uuid:
             return self.uuid
 
@@ -229,18 +253,18 @@ class selector_definition:
 
         return f"@{base_name}[{','.join(major_parts)}]"
 
-    def get_type(self):
+    def get_type(self) -> str | None:
         for part in self.parts:
             if part[0] == "type":
                 return part[1]
 
         return None
 
-    def set_part(self, name, value):
+    def set_part(self, name: str, value: str) -> None:
         self.parts = [part for part in self.parts if part[0] != name]
         self.parts.append((name, value))
 
-    def single_entity(self):
+    def single_entity(self) -> bool:
         if self.uuid:
             return True
 

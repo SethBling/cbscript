@@ -1,52 +1,64 @@
-# Base class for Minecraft variables. Each variable subclass must implement at least one of the get() functions.
-# If the variable is settable, it must implement set_value as well.
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from cb_script import mcfunction
+
+
 class var_base:
-    # Returns a scoreboard objective for this variable.
-    # If assignto isn't None, then this function may
-    # use the assignto objective to opimtize data flow.
-    def get_scoreboard_var(self, func, assignto=None):
+    """Base class for Minecraft variables. Each variable subclass must implement at least one of the get() functions.
+
+    If the variable is settable, it must implement set_value as well."""
+
+    __slots__ = ()
+
+    def get_scoreboard_var(self, func: mcfunction, assignto=None) -> None:
+        """Returns a scoreboard objective for this variable.
+
+        If assignto isn't None, then this function may
+        use the assignto objective to opimtize data flow."""
         raise NotImplementedError()
 
-    # Returns a command that will get this variable's value to be used with "execute store result"
-    def get_command(self, func):
+    def get_command(self, func: mcfunction) -> str:
+        """Returns a command that will get this variable's value to be used with "execute store result"""
         raise NotImplementedError()
 
-    # Gets a constant integer value for this variable if there is one, otherwise returns None.
-    def get_const_value(self, func):
+    def get_const_value(self, func: mcfunction):
+        """Gets a constant integer value for this variable if there is one, otherwise returns None."""
         return None
 
-    # Returns true if this variable is a scoreboard_var with the specified selector and objective,
-    # to reduce extranious copies.
-    def is_objective(self, func, selector, objective):
+    def is_objective(self, func: mcfunction, selector, objective) -> bool:
+        """Returns True if this variable is a scoreboard_var with the specified selector and objective, to reduce extranious copies."""
         return False
 
-    # Gets an assignto value for this variable if there is one.
-    def get_assignto(self, func):
+    def get_assignto(self, func: mcfunction) -> Self | None:
+        """Gets an assignto value for this variable if there is one."""
         return None
 
-    # Copies the value from a target variable to this variable
-    def copy_from(self, func, var):
+    def copy_from(self, func: mcfunction, var):
+        """Copies the value from a target variable to this variable."""
         raise NotImplementedError()
 
-    # Returns a scoreboard_var which can be modified as needed without side effects
-    def get_modifiable_var(self, func, assignto):
+    def get_modifiable_var(self, func: mcfunction, assignto):
+        """Returns a scoreboard_var which can be modified as needed without side effects."""
         raise NotImplementedError()
 
-    # If this is a scratch variable, free it up
-    def free_scratch(self, func):
+    def free_scratch(self, func: mcfunction) -> None:
+        """If this is a scratch variable, free it up"""
         None
 
     def get_global_id(self):
         return None
 
-    # Returns the selector and objective of this variable if it is a scoreboard_var, otherwise returns None
-    def get_selvar(self, func):
+    def get_selvar(self, func: mcfunction) -> str | None:
+        """Returns the selector and objective of this variable if it is a scoreboard_var, otherwise returns None."""
         return None
 
-    # Returns true if this varariable/expression references the specified scoreboard variable
-    def references_scoreboard_var(self, func, var):
+    def references_scoreboard_var(self, func: mcfunction, var) -> bool:
+        """Returns true if this varariable/expression references the specified scoreboard variable"""
         return False
 
-    # Used to evaluate a variable as an expression
-    def compile(self, func, assignto=None):
+    def compile(self, func: mcfunction, assignto=None) -> Self:
+        """Used to evaluate a variable as an expression."""
         return self

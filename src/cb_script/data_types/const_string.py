@@ -1,6 +1,8 @@
-class const_string:
-    def __init__(self, val):
-        self.val = val
+from typing import NamedTuple
 
-    def get_value(self, func):
+
+class const_string(NamedTuple):
+    val: str
+
+    def get_value(self, func) -> str:
         return self.val

@@ -7,7 +7,9 @@ from cb_script.CompileError import CompileError
 
 
 class mcworld:
-    def __init__(self, leveldir, namespace):
+    __slots__ = ("dir", "zipbytes", "zip", "namespace")
+
+    def __init__(self, leveldir: str, namespace: str) -> None:
         self.dir = leveldir
         self.zipbytes = io.BytesIO()
         self.zip = zipfile.ZipFile(
@@ -15,7 +17,7 @@ class mcworld:
         )
         self.namespace = namespace
 
-    def get_latest_log_file(self):
+    def get_latest_log_file(self) -> str:
         savesdir = os.path.split(self.dir)[0]
         versiondir = os.path.split(savesdir)[0]
         logsdir = os.path.join(versiondir, "logs")
@@ -23,7 +25,7 @@ class mcworld:
 
         return logfile
 
-    def write_functions(self, functions):
+    def write_functions(self, functions) -> None:
         function_dir = f"data/{self.namespace}/functions/"
 
         for name in functions:
@@ -75,7 +77,7 @@ class mcworld:
                         ),
                     )
 
-    def write_recipes(self, recipes):
+    def write_recipes(self, recipes) -> None:
         if len(recipes) > 0:
             recipe_dir = f"data/{self.namespace}/recipes/"
 
@@ -91,7 +93,7 @@ class mcworld:
                     recipe_file, json.dumps(recipe_struct, indent=4)
                 )
 
-    def write_advancements(self, advancements):
+    def write_advancements(self, advancements: dict[str, str]) -> None:
         if len(advancements) > 0:
             advancement_dir = f"data/{self.namespace}/advancements/"
 
@@ -101,7 +103,9 @@ class mcworld:
                 )
                 self.zip.writestr(advancement_file, advancements[name])
 
-    def write_loot_tables(self, loot_tables):
+    def write_loot_tables(
+        self, loot_tables: dict[str, tuple[str, str]]
+    ) -> None:
         if len(loot_tables) > 0:
             for name in loot_tables:
                 (type, contents) = loot_tables[name]
@@ -123,7 +127,7 @@ class mcworld:
                 )
                 self.zip.writestr(loot_table_file, contents)
 
-    def write_predicates(self, predicates):
+    def write_predicates(self, predicates: dict[str, str]) -> None:
         if len(predicates) > 0:
             predicate_dir = f"data/{self.namespace}/predicates/"
 
@@ -131,7 +135,7 @@ class mcworld:
                 predicate_file = os.path.join(predicate_dir, f"{name}.json")
                 self.zip.writestr(predicate_file, predicates[name])
 
-    def write_item_modifiers(self, item_modifiers):
+    def write_item_modifiers(self, item_modifiers: dict[str, str]) -> None:
         if len(item_modifiers) > 0:
             item_modifier_dir = f"data/{self.namespace}/item_modifiers/"
 
@@ -141,7 +145,7 @@ class mcworld:
                 )
                 self.zip.writestr(item_modifier_file, item_modifiers[name])
 
-    def write_mcmeta(self, desc):
+    def write_mcmeta(self, desc: str) -> None:
         mcmeta_file = "pack.mcmeta"
 
         self.zip.writestr(
@@ -151,7 +155,7 @@ class mcworld:
             ),
         )
 
-    def write_zip(self):
+    def write_zip(self) -> None:
         self.zip.close()
 
         zip_filename = os.path.join(

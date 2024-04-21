@@ -1,6 +1,4 @@
-import copy
-
-from CompileError import CompileError
+from __future__ import annotations
 
 """
 {C for color
@@ -14,10 +12,26 @@ from CompileError import CompileError
 (Score) to display a Global score.
 """
 
+import copy
+from typing import TYPE_CHECKING, Final, TypedDict
 
-def getPropertiesText(properties):
+from cb_script.CompileError import CompileError
+
+if TYPE_CHECKING:
+    from cb_script.mcfunction import mcfunction
+
+
+class TextProperties(TypedDict):
+    color: str | None
+    bold: bool
+    underlined: bool
+    italic: bool
+    strikethrough: bool
+
+
+def getPropertiesText(properties: TextProperties) -> str:
     text = ""
-    if properties["color"] != None:
+    if properties["color"] is not None:
         text = text + ',"color":"' + properties["color"] + '"'
     if properties["bold"]:
         text = text + ',"bold":true'
@@ -31,19 +45,18 @@ def getPropertiesText(properties):
     return text
 
 
-def formatJsonText(func, text):
+def formatJsonText(func: mcfunction, text: str) -> str:
     formatted = '[""'
-    local_scratch = []
 
     for segment, properties in parseTextFormatting(text):
         propertiesText = getPropertiesText(properties)
         if isinstance(segment, str):
             text_data = segment.replace('"', '\\"')
-            properties_text = getPropertiesText(properties)
-            formatted += f',{{"text":"{text_data}"{properties_text}}}'
+            formatted += f',{{"text":"{text_data}"{propertiesText}}}'
         else:
             unformatted, command = segment
-            if unformatted == None:
+            if unformatted is None:
+                assert command is not None
                 parts = command.split(".")
                 if len(parts) > 2:
                     raise CompileError(
@@ -55,7 +68,7 @@ def formatJsonText(func, text):
                     elif parts[0][0] == "@":
                         formatted = (
                             formatted
-                            + f',{{"selector":"{parts[0]}"{getPropertiesText(properties)}}}'
+                            + f',{{"selector":"{parts[0]}"{propertiesText}}}'
                         )
                     elif ":" in parts[0]:
                         storage_parts = parts[0].split(":")
@@ -74,7 +87,7 @@ def formatJsonText(func, text):
                     else:
                         formatted = (
                             formatted
-                            + f',{{"score":{{"name":"Global","objective":"{parts[0]}"{getPropertiesText(properties)}}}}}'
+                            + f',{{"score":{{"name":"Global","objective":"{parts[0]}"{propertiesText}}}}}'
                         )
                 if len(parts) == 2:
                     name = parts[0]
@@ -83,9 +96,9 @@ def formatJsonText(func, text):
                         name = name_def
                     formatted = (
                         formatted
-                        + f',{{"score":{{"name":"{name}","objective":"{parts[1]}"{getPropertiesText(properties)}}}}}'
+                        + f',{{"score":{{"name":"{name}","objective":"{parts[1]}"{propertiesText}}}}}'
                     )
-            elif command == None:
+            elif command is None:
                 formatted = formatted + f',{{"text":"{0}"{1}}}'.format(
                     unformatted.replace('"', '\\"'),
                     getPropertiesText(properties),
@@ -105,18 +118,14 @@ def formatJsonText(func, text):
                 else:
                     action = "run_command"
                 text_data = unformatted.replace('"', '\\"')
-                properties_text = getPropertiesText(properties)
-                formatted += f',{{"text":"{text_data}","clickEvent":{{"action":"{action}","value":"{command}"}}{properties_text}}}'
+                formatted += f',{{"text":"{text_data}","clickEvent":{{"action":"{action}","value":"{command}"}}{propertiesText}}}'
 
-    formatted = formatted + "]"
-
-    for scratch_var in local_scratch:
-        func.free_scratch(scratch_var)
+    formatted += "]"
 
     return formatted
 
 
-COLORS = {
+COLORS: Final = {
     "k": "black",
     "K": "dark_gray",
     "w": "gray",
@@ -136,7 +145,9 @@ COLORS = {
 }
 
 
-def parseTextFormatting(text):
+def parseTextFormatting(
+    text: str,
+) -> list[tuple[str | tuple[str | None, str | None], TextProperties]]:
     NONE = 1
     FORMATTED = 2
     ENDFORMATTED = 3
@@ -150,14 +161,18 @@ def parseTextFormatting(text):
     seg = ""
     formatted = ""
 
-    segments = []
-    properties = {
-        "color": None,
-        "bold": False,
-        "underlined": False,
-        "italic": False,
-        "strikethrough": False,
-    }
+    segments: list[
+        tuple[str | tuple[str | None, str | None], TextProperties]
+    ] = []
+    properties = TextProperties(
+        {
+            "color": None,
+            "bold": False,
+            "underlined": False,
+            "italic": False,
+            "strikethrough": False,
+        }
+    )
 
     for ch in text:
         if ch == "\\" and not escaped:

@@ -42,6 +42,8 @@ include = ["*.py", "*.pyi", "**/pyproject.toml"]
 [tool.ruff.lint]
 select = [
     "I",     # isort
+    "PYI",   # flake8-pyi
+    "TCH",   # flake8-type-checking
     "UP",    # pyupgrade
 ]
 extend-ignore = [

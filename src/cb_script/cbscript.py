@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import os
 import time
 import traceback
+from typing import TYPE_CHECKING
 
 from cb_script import global_context, mcworld
 from cb_script.CompileError import CompileError
@@ -8,22 +11,52 @@ from cb_script.environment import environment
 from cb_script.mcfunction import mcfunction
 from cb_script.source_file import source_file
 
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
+
+    from cb_script.source_file import source_file as SourceFile
+
+
+class ParseResult:
+    scale: int
+    # types: name-defined error: Name "Any" is not defined
+    # types: note: Did you forget to import it from "typing"? (Suggestion: "from typing import Any")
+    lines: Iterable[Any]
+    # types:        ^
+    dir: str
+    desc: str
+
 
 class cbscript:
-    def __init__(self, source_file, parse_func):
+    __slots__ = (
+        "source_file",
+        "parse",
+        "namespace",
+        "dependencies",
+        "latest_log_file",
+        "global_context",
+    )
+
+    def __init__(
+        self,
+        source_file: SourceFile,
+        parse_func: Callable[[str], tuple[str, ParseResult] | None],
+    ) -> None:
         self.source_file = source_file
         self.parse = parse_func
         self.namespace = self.source_file.get_base_name().split(".")[0].lower()
+        # types: var-annotated error: Need type annotation for "dependencies" (hint: "dependencies: List[<type>] = ...")
         self.dependencies = []
-        self.latest_log_file = None
+        # types: ^^^^^^^^
+        self.latest_log_file: SourceFile | None = None
 
-    def log(self, text):
+    def log(self, text: str) -> None:
         print(text)
 
-    def log_traceback(self):
+    def log_traceback(self) -> None:
         traceback.print_exc()
 
-    def check_for_update(self):
+    def check_for_update(self) -> None:
         recompile = False
         # It's important to go through all the files, to make sure that if multiple were updated
         # we don't try to compile multiple times
@@ -38,8 +71,8 @@ class cbscript:
             log_text = self.latest_log_file.get_text(only_new_text=True)
             self.search_log_for_errors(log_text)
 
-    def search_log_for_errors(self, log_text):
-        lines = log_text.split("\n")
+    def search_log_for_errors(self, log_text: str) -> None:
+        lines = log_text.splitlines()
         error_text = ""
         for line in lines:
             if len(error_text) == 0:
@@ -65,7 +98,7 @@ class cbscript:
                     if not line.startswith("\t"):
                         error_text = error_text + "\n \n" + line
 
-    def try_to_compile(self):
+    def try_to_compile(self) -> None:
         try:
             self.log(f"Compiling {self.namespace}...")
             success = self.compile_all()
@@ -83,43 +116,65 @@ class cbscript:
             )
             self.log_traceback()
 
-    def create_world(self, dir, namespace):
+    def create_world(self, dir: str, namespace: str) -> mcworld.mcworld:
         return mcworld.mcworld(dir, namespace)
 
-    def compile_all(self):
+    def compile_all(self) -> bool:
         text = self.source_file.get_text()
 
         result = self.parse(text + "\n")
 
-        if result == None:
+        if result is None:
             self.log("Unable to parse script.")
             return False
 
-        type, parsed = result
+        type_, parsed = result
 
-        if type != "program":
+        if type_ != "program":
             self.log("Script does not contain a full program.")
             return False
 
+        # types: no-untyped-call error: Call to untyped function "global_context" in typed context
         self.global_context = global_context.global_context(self.namespace)
+        # types:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        # types: no-untyped-call error: Call to untyped function "environment" in typed context
         global_environment = environment(self.global_context)
+        # types:             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        # types: no-untyped-call error: Call to untyped function "set_dollarid" in typed context
         global_environment.set_dollarid("namespace", self.namespace)
+        # types: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        # types: no-untyped-call error: Call to untyped function "set_dollarid" in typed context
         global_environment.set_dollarid(
             "get_num_blocks", self.global_context.get_num_blocks
         )
+        # types: no-untyped-call error: Call to untyped function "set_dollarid" in typed context
         global_environment.set_dollarid(
             "get_num_block_states", self.global_context.get_num_block_states
         )
 
+        # types: operator error: Unsupported right operand type for in ("ParseResult | Any")
         if "scale" not in parsed:
+            # types: ^^^^^^^^^^^
+            # types: index error: Unsupported target for indexed assignment ("ParseResult | Any")
             parsed["scale"] = 10000
+        # types: ^^^^^^^^^^
+        # types: no-untyped-call error: Call to untyped function "set_dollarid" in typed context
+        # types: index error: Value of type "ParseResult | Any" is not indexable
         global_environment.set_dollarid("global_scale", parsed["scale"])
+        # types: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        # types: no-untyped-call error: Call to untyped function "mcfunction" in typed context
         global_func = mcfunction(global_environment)
+        # types:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+        # types: attr-defined error: "global_context" has no attribute "scale"
+        # types: index error: Value of type "ParseResult | Any" is not indexable
         self.global_context.scale = parsed["scale"]
+        # types: ^^^^^^^^^^^^^^^^   ^^^^^^^^^^^^^^^
         self.global_context.parser = self.parse
 
+        # types: index error: Value of type "ParseResult | Any" is not indexable
         lines = parsed["lines"]
+        # types:        ^^^^^^^^^^^^^^^
 
         # Register macros and template functions
         for line in lines:
@@ -127,7 +182,9 @@ class cbscript:
 
         # Compile all lines
         try:
+            # types: no-untyped-call error: Call to untyped function "compile_blocks" in typed context
             global_func.compile_blocks(lines)
+        # types: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         except Exception as e:
             print(e)
             self.dependencies = [
@@ -137,20 +194,25 @@ class cbscript:
 
         self.post_processing()
 
+        # types: index error: Value of type "ParseResult | Any" is not indexable
         world = self.create_world(parsed["dir"], self.namespace)
+        # types:                          ^^^^^^^^^^^^^
 
         latest_log_filename = world.get_latest_log_file()
         if os.path.exists(latest_log_filename):
             self.latest_log_file = source_file(latest_log_filename)
 
         world.write_functions(self.global_context.functions)
+        # types: no-untyped-call error: Call to untyped function "write_tags" in typed context
         world.write_tags(
             self.global_context.clocks,
             self.global_context.block_tags,
             self.global_context.entity_tags,
             self.global_context.item_tags,
         )
+        # types: index error: Value of type "ParseResult | Any" is not indexable
         world.write_mcmeta(parsed["desc"])
+        # types:           ^^^^^^^^^^^^^^
         world.write_recipes(self.global_context.recipes)
         world.write_advancements(self.global_context.advancements)
         world.write_loot_tables(self.global_context.loot_tables)
@@ -164,8 +226,10 @@ class cbscript:
 
         return True
 
-    def post_processing(self):
+    def post_processing(self) -> None:
+        # types: no-untyped-call error: Call to untyped function "finalize_functions" in typed context
         self.global_context.finalize_functions()
+        # types: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         self.add_scratch_objectives()
         self.add_temp_objectives()
         self.add_constants()
@@ -175,25 +239,33 @@ class cbscript:
         self.initialize_stack()
         self.initialize_args()
 
-    def add_max_chain_length(self):
+    def add_max_chain_length(self) -> None:
+        # types: no-untyped-call error: Call to untyped function "get_reset_function" in typed context
         f = self.global_context.get_reset_function()
+        # types: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         f.insert_command("/gamerule maxCommandChainLength 1000000000", 0)
 
-    def initialize_stack(self):
+    def initialize_stack(self) -> None:
+        # types: no-untyped-call error: Call to untyped function "get_reset_function" in typed context
         f = self.global_context.get_reset_function()
+        # types: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         f.insert_command(
             f"/data modify storage {self.namespace} stack set value []", 0
         )
 
-    def initialize_args(self):
+    def initialize_args(self) -> None:
+        # types: no-untyped-call error: Call to untyped function "get_reset_function" in typed context
         f = self.global_context.get_reset_function()
+        # types: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         f.insert_command(
             f"/data modify storage {self.namespace}:global args set value {{}}",
             0,
         )
 
-    def add_scratch_objectives(self):
+    def add_scratch_objectives(self) -> None:
+        # types: no-untyped-call error: Call to untyped function "get_reset_function" in typed context
         f = self.global_context.get_reset_function()
+        # types:    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         for prefix in self.global_context.scratch:
             for i in range(self.global_context.scratch[prefix]):
@@ -201,22 +273,29 @@ class cbscript:
                     f"/scoreboard objectives add {prefix}_scratch{i} dummy", 0
                 )
 
-    def add_temp_objectives(self):
+    def add_temp_objectives(self) -> None:
+        # types: no-untyped-call error: Call to untyped function "get_reset_function" in typed context
         f = self.global_context.get_reset_function()
+        # types:    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         for t in range(self.global_context.temp):
             f.insert_command(
                 f"scoreboard objectives add temp{str(t)} dummy", 0
             )
 
-    def add_constants(self):
+    def add_constants(self) -> None:
+        # types: no-untyped-call error: Call to untyped function "add_constant_definitions" in typed context
         self.global_context.add_constant_definitions()
 
-    def add_trigger_objectives(self):
+    # types: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    def add_trigger_objectives(self) -> None:
         None
 
-    def add_registered_objectives(self):
+    def add_registered_objectives(self) -> None:
+        # types: no-untyped-call error: Call to untyped function "get_reset_function" in typed context
         reset = self.global_context.get_reset_function()
+        # types:        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
         defined = reset.defined_objectives()
 

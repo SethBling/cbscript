@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import json
 import traceback
+from typing import TYPE_CHECKING, NamedTuple
 
 from cb_script.block_types.pop_block import pop_block
 from cb_script.block_types.push_block import push_block
@@ -8,8 +11,15 @@ from cb_script.selector_definition import selector_definition
 from cb_script.source_file import source_file
 from cb_script.variable_types.scoreboard_var import scoreboard_var
 
+if TYPE_CHECKING:
+    from collections.abc import Buffer, Iterable
+    from types import CodeType
 
-def get_undecorated_selector_name(selector):
+    from cb_script.block_types import block_base
+    from cb_script.environment import environment as Environment
+
+
+def get_undecorated_selector_name(selector: str) -> str:
     if selector.startswith("@"):
         selector = selector[1:]
     selector = selector.split("[")[0]
@@ -17,49 +27,62 @@ def get_undecorated_selector_name(selector):
     return selector
 
 
-def compile_section(section, environment):
-    type, name, template_params, params, lines = section
+class Section(NamedTuple):
+    type: str  # function, reset, clock
+    name: str
+    template_params: Any
+    params: Any
+    lines: Any
 
-    if type == "function":
+
+def compile_section(section: Section, environment: Environment) -> None:
+    type_, name, template_params, params, lines = section
+
+    if type_ == "function":
         f = mcfunction(environment.clone(new_function_name=name), True, params)
-    elif type == "reset":
+    elif type_ == "reset":
         f = environment.get_reset_function()
-        if f == None:
+        if f is None:
             f = mcfunction(environment.clone(new_function_name=name))
     else:
         f = mcfunction(environment.clone(new_function_name=name))
 
     environment.register_function(name, f)
 
-    if type == "clock":
+    if type_ == "clock":
         environment.register_clock(name)
 
     f.compile_blocks(lines)
 
 
-def real_command(cmd):
+def real_command(cmd: str) -> bool:
     return not cmd.startswith("#") and len(cmd) > 0
 
 
 class mcfunction:
-    def __init__(self, environment, callable=False, params=[]):
-        self.commands = []
+    def __init__(
+        self,
+        environment: Environment,
+        callable: bool = False,
+        params: list[str] = [],
+    ) -> None:
+        self.commands: list[str] = []
         self.environment = environment
         self.params = params
         self.callable = callable
-        self.environment_stack = []
+        self.environment_stack: list[Environment] = []
         self.has_macros = False
-        self.filename = None
+        self.filename: str | None = None
 
         for param in params:
             self.register_local(param)
 
-    def set_filename(self, filename):
+    def set_filename(self, filename: str) -> None:
         self.filename = filename
 
-    # Returns the command to call this function
-    def get_call(self):
-        if self.filename == None:
+    def get_call(self) -> str:
+        """Returns the command to call this function."""
+        if self.filename is None:
             raise CompileError(
                 "Tried to call function with no registered filename."
             )
@@ -69,38 +92,38 @@ class mcfunction:
         else:
             return f"function {self.namespace}:{self.filename}"
 
-    def evaluate_params(self, params):
+    def evaluate_params(self, params: Iterable) -> bool:
         results = []
-        for p in range(len(params)):
-            param_name = f"Param{p}"
+        for index, parameter in enumerate(params):
+            param_name = f"Param{index}"
             param_var = scoreboard_var("Global", param_name)
             try:
-                var = params[p].compile(self, None)
-            except Exception as e:
-                print(e)
-                print(f"Unable to compile parameter {p}.")
+                var = parameter.compile(self, None)
+            except Exception as exc:
+                print(exc)
+                print(f"Unable to compile parameter {index}.")
                 return False
 
             param_var.copy_from(self, var)
 
         return True
 
-    def get_arrayconst_var(self, name, idxval):
+    def get_arrayconst_var(self, name: str, idxval):
         return self.environment.get_arrayconst_var(name, idxval)
 
     def get_if_chain(self, conditions, iftype="if"):
         test = ""
-        for type, val in conditions:
-            if type == "selector":
+        for type_, val in conditions:
+            if type_ == "selector":
                 test += f"{iftype} entity {val} "
-            elif type == "predicate":
+            elif type_ == "predicate":
                 if ":" in val:
                     test += f"{iftype} predicate {val} "
                 elif val in self.predicates:
                     test += f"{iftype} predicate {self.namespace}:{val} "
                 else:
                     raise CompileError(f'Predicate "{val}" does not exist')
-            elif type == "score":
+            elif type_ == "score":
                 lexpr, op, rexpr = val
 
                 lvar = lexpr.compile(self)
@@ -109,7 +132,7 @@ class mcfunction:
                 lconst = lvar.get_const_value(self)
                 rconst = rvar.get_const_value(self)
 
-                if lconst != None and rconst != None:
+                if lconst is not None and rconst is not None:
                     result = False
                     # Perform comparison, terminate if-chain if false
                     if op == "=" and lconst == rconst:
@@ -135,12 +158,12 @@ class mcfunction:
                         # No modification to the test string is necessary
                         continue
 
-                elif lconst != None or rconst != None:
+                elif lconst is not None or rconst is not None:
                     # Continue if chain comparing the scoreboard value with numeric range
-                    if lconst != None:
+                    if lconst is not None:
                         sbvar = rvar.get_scoreboard_var(self)
                         const = lconst
-                    elif rconst != None:
+                    elif rconst is not None:
                         sbvar = lvar.get_scoreboard_var(self)
                         const = rconst
 
@@ -162,7 +185,7 @@ class mcfunction:
 
                     test += f"{iftype} score {lsbvar.selector} {lsbvar.objective} {op} {rsbvar.selector} {rsbvar.objective} "
 
-            elif type == "vector_equality":
+            elif type_ == "vector_equality":
                 if iftype == "unless":
                     raise CompileError(
                         'Vector equality may not be used with "unless"'
@@ -222,7 +245,7 @@ class mcfunction:
 
                         test += f"if score {lvar.selvar} = {rvar.selvar} "
 
-            elif type == "block":
+            elif type_ == "block":
                 relcoords, block = val
                 block = self.apply_environment(block)
 
@@ -232,18 +255,18 @@ class mcfunction:
                     block = f"minecraft:{block}"
 
                 test += f"{iftype} block {relcoords.get_value(self)} {block} "
-            elif type == "nbt_path":
+            elif type_ == "nbt_path":
                 test += f"{iftype} data {val.get_dest_path(self)} "
             else:
-                raise ValueError(f'Unknown "if" type: {type}')
+                raise ValueError(f'Unknown "if" type: {type_}')
 
         return test
 
     def get_execute_items(self, exec_items, exec_func):
         cmd = ""
         as_count = 0
-        for type, _ in exec_items:
-            if type[:2] == "As":
+        for type_, _ in exec_items:
+            if type_[:2] == "As":
                 as_count += 1
 
                 if as_count >= 2:
@@ -254,24 +277,24 @@ class mcfunction:
 
         at_vector_count = 0
 
-        for type, val in exec_items:
-            if type == "If":
+        for type_, val in exec_items:
+            if type_ == "If":
                 cmd += self.get_if_chain(val)
-            if type == "Unless":
+            if type_ == "Unless":
                 cmd += self.get_if_chain(val, "unless")
-            elif type == "As":
+            elif type_ == "As":
                 cmd += f"as {val} "
                 exec_func.update_self_selector(val)
-            elif type == "On":
+            elif type_ == "On":
                 cmd += f"on {val} "
                 exec_func.update_self_selector("@s")
-            elif type == "AsId":
+            elif type_ == "AsId":
                 var, attype = val
 
                 sbvar = var.get_scoreboard_var(self)
-                selector, id = sbvar.selector, sbvar.objective
+                selector, id_ = sbvar.selector, sbvar.objective
 
-                if attype == None:
+                if attype is None:
                     psel = "@e"
                 else:
                     psel = f"@{attype}"
@@ -279,26 +302,26 @@ class mcfunction:
                     seldef = selector_definition(selector, self.environment)
                     if (
                         seldef.base_name == "s"
-                        and self.environment.self_selector != None
-                        and id in self.environment.self_selector.pointers
+                        and self.environment.self_selector is not None
+                        and id_ in self.environment.self_selector.pointers
                     ):
-                        psel = self.environment.self_selector.pointers[id]
-                    elif id in seldef.pointers:
-                        psel = seldef.pointers[id]
+                        psel = self.environment.self_selector.pointers[id_]
+                    elif id_ in seldef.pointers:
+                        psel = seldef.pointers[id_]
                 elif selector == "Global":
-                    if id in self.environment.pointers:
-                        psel = self.environment.pointers[id]
+                    if id_ in self.environment.pointers:
+                        psel = self.environment.pointers[id_]
 
                 self.register_objective("_id")
-                self.register_objective(id)
+                self.register_objective(id_)
 
                 self.add_command(
-                    f"scoreboard players operation Global _id = {selector} {id}"
+                    f"scoreboard players operation Global _id = {selector} {id_}"
                 )
 
                 cmd += f"as {psel} if score @s _id = Global _id "
 
-                if attype != None:
+                if attype is not None:
                     exec_func.update_self_selector("@" + attype)
                 elif psel != "@e":
                     exec_func.update_self_selector(
@@ -306,7 +329,7 @@ class mcfunction:
                     )
                 else:
                     exec_func.update_self_selector("@s")
-            elif type == "AsCreate":
+            elif type_ == "AsCreate":
                 if len(exec_items) > 1:
                     print(
                         '"as create" may not be paired with other execute commands.'
@@ -327,30 +350,30 @@ class mcfunction:
                 cmd += f"as @{create_operation.atid}[_age==1,limit=1] "
 
                 exec_func.update_self_selector("@" + create_operation.atid)
-            elif type == "Rotated":
+            elif type_ == "Rotated":
                 cmd += f"rotated as {val} "
-            elif type == "FacingCoords":
+            elif type_ == "FacingCoords":
                 cmd += f"facing {val.get_value(self)} "
-            elif type == "FacingEntity":
+            elif type_ == "FacingEntity":
                 cmd += f"facing entity {val} feet "
-            elif type == "Align":
+            elif type_ == "Align":
                 cmd += f"align {val} "
-            elif type == "At":
+            elif type_ == "At":
                 selector, relcoords, anchor = val
-                if selector != None:
+                if selector is not None:
                     cmd += f"at {selector} "
-                if anchor != None:
+                if anchor is not None:
                     cmd += f"anchored {anchor} "
-                if relcoords != None:
+                if relcoords is not None:
                     cmd += f"positioned {relcoords.get_value(self)} "
-            elif type == "AtVector":
+            elif type_ == "AtVector":
                 at_vector_count += 1
                 if at_vector_count >= 2:
                     print("Tried to execute at multiple vector locations.")
                     return None
 
                 scale, expr = val
-                if scale == None:
+                if scale is None:
                     scale = self.scale
                 else:
                     scale = scale.get_value(self)
@@ -366,7 +389,7 @@ class mcfunction:
                     )
                 cmd += "at @e[_age == 1] "
                 exec_func.add_command("/kill @e[_age == 1]")
-            elif type == "In":
+            elif type_ == "In":
                 dimension = val
                 cmd += f"in {dimension} "
 
@@ -390,7 +413,7 @@ class mcfunction:
 
             if len(sub_cases) == 1:
                 vmin, vmax, sub, line, dollarid = sub_cases[0]
-                if dollarid != None:
+                if dollarid is not None:
                     case_func.set_dollarid(dollarid, vmin)
                 try:
                     case_func.compile_blocks(sub)
@@ -406,7 +429,7 @@ class mcfunction:
                     )
 
                 single_command = case_func.single_command()
-                if single_command != None:
+                if single_command is not None:
                     if vmin == vmax:
                         vrange = str(vmin)
                     else:
@@ -449,7 +472,7 @@ class mcfunction:
 
         return True
 
-    def add_operation(self, selector, id1, operation, id2):
+    def add_operation(self, selector: str, id1, operation, id2):
         selector = self.environment.apply(selector)
 
         self.add_command(
@@ -459,11 +482,11 @@ class mcfunction:
         if self.is_scratch(id2):
             self.free_scratch(id2)
 
-    def add_command(self, command):
+    def add_command(self, command: str) -> None:
         self.insert_command(command, len(self.commands))
 
-    def insert_command(self, command, index):
-        if len(command) == 0:
+    def insert_command(self, command: str, index: int) -> None:
+        if not command:
             return
 
         if command[0] != "#":
@@ -480,13 +503,13 @@ class mcfunction:
 
         self.commands.insert(index, command)
 
-    def get_utf8_text(self):
+    def get_utf8_text(self) -> bytes:
         return "\n".join(
-            [(cmd if cmd[0] != "/" else cmd[1:]) for cmd in self.commands]
+            (cmd if cmd[0] != "/" else cmd[1:]) for cmd in self.commands
         ).encode("utf-8")
 
-    def defined_objectives(self):
-        existing = {}
+    def defined_objectives(self) -> dict[str, bool]:
+        existing: dict[str, bool] = {}
         defineStr = "scoreboard objectives add "
         for cmd in self.commands:
             if cmd[0] == "/":
@@ -496,10 +519,10 @@ class mcfunction:
 
         return existing
 
-    def register_local(self, id):
-        self.environment.register_local(id)
+    def register_local(self, id_: str) -> None:
+        self.environment.register_local(id_)
 
-    def finalize(self):
+    def finalize(self) -> None:
         comments = []
         while (
             len(self.commands) > 0
@@ -522,7 +545,7 @@ class mcfunction:
 
         self.commands = comments + self.commands
 
-    def single_command(self):
+    def single_command(self) -> str | None:
         ret = None
         count = 0
         for cmd in self.commands:
@@ -535,37 +558,39 @@ class mcfunction:
 
         return ret
 
-    def is_empty(self):
+    def is_empty(self) -> bool:
         for cmd in self.commands:
             if real_command(cmd):
                 return False
 
         return True
 
-    def check_single_entity(self, selector):
+    def check_single_entity(self, selector: str) -> bool:
         if selector[0] != "@":
             return True
 
         parsed = self.environment.get_selector_definition(selector)
+        if parsed is None:
+            raise CompileError(f"Selector {selector!r} does not exist!")
         return parsed.single_entity()
 
-    def get_path(self, selector, var):
+    def get_path(self, selector: str, var) -> None:
         if selector[0] != "@":
             return
-        id = selector[1:]
-        if "[" in id:
-            id = id.split("[", 1)[0]
+        id_ = selector[1:]
+        if "[" in id_:
+            id_ = id_.split("[", 1)[0]
 
-        if id in self.environment.selectors:
-            sel_def = self.environment.selectors[id]
-        elif id == "s" and self.environment.self_selector != None:
+        if id_ in self.environment.selectors:
+            sel_def = self.environment.selectors[id_]
+        elif id_ == "s" and self.environment.self_selector is not None:
             sel_def = self.environment.self_selector
         else:
             return
 
         if var in sel_def.paths:
             path, data_type, scale = sel_def.paths[var]
-            if scale == None:
+            if scale is None:
                 scale = self.scale
 
             if not self.check_single_entity(selector):
@@ -577,23 +602,23 @@ class mcfunction:
                 f"execute store result score {selector} {var} run data get entity {selector} {path} {scale}"
             )
 
-    def set_path(self, selector, var):
+    def set_path(self, selector: str, var) -> None:
         if selector[0] != "@":
             return
-        id = selector[1:]
-        if "[" in id:
-            id = id.split("[", 1)[0]
+        id_ = selector[1:]
+        if "[" in id_:
+            id_ = id_.split("[", 1)[0]
 
-        if id in self.environment.selectors:
-            sel_def = self.environment.selectors[id]
-        elif id == "s" and self.environment.self_selector != None:
+        if id_ in self.environment.selectors:
+            sel_def = self.environment.selectors[id_]
+        elif id_ == "s" and self.environment.self_selector is not None:
             sel_def = self.environment.self_selector
         else:
             return
 
         if var in sel_def.paths:
             path, data_type, scale = sel_def.paths[var]
-            if scale == None:
+            if scale is None:
                 scale = self.scale
 
             if not self.check_single_entity(selector):
@@ -605,23 +630,23 @@ class mcfunction:
                 f"execute store result entity {selector} {path} {data_type} {1/float(scale)} run scoreboard players get {selector} {var}"
             )
 
-    def get_vector_path(self, selector, var):
+    def get_vector_path(self, selector: str, var) -> bool:
         if selector[0] != "@":
             return False
-        id = selector[1:]
-        if "[" in id:
-            id = id.split("[", 1)[0]
+        id_ = selector[1:]
+        if "[" in id_:
+            id_ = id_.split("[", 1)[0]
 
-        if id in self.environment.selectors:
-            sel_def = self.environment.selectors[id]
-        elif id == "s" and self.environment.self_selector != None:
+        if id_ in self.environment.selectors:
+            sel_def = self.environment.selectors[id_]
+        elif id_ == "s" and self.environment.self_selector is not None:
             sel_def = self.environment.self_selector
         else:
             return False
 
         if var in sel_def.vector_paths:
             path, data_type, scale = sel_def.vector_paths[var]
-            if scale == None:
+            if scale is None:
                 scale = self.scale
 
             if not self.check_single_entity(selector):
@@ -638,23 +663,23 @@ class mcfunction:
         else:
             return False
 
-    def set_vector_path(self, selector, var, values):
+    def set_vector_path(self, selector: str, var, values) -> bool:
         if selector[0] != "@":
             return False
-        id = selector[1:]
-        if "[" in id:
-            id = id.split("[", 1)[0]
+        id_ = selector[1:]
+        if "[" in id_:
+            id_ = id_.split("[", 1)[0]
 
-        if id in self.environment.selectors:
-            sel_def = self.environment.selectors[id]
-        elif id == "s" and self.environment.self_selector != None:
+        if id_ in self.environment.selectors:
+            sel_def = self.environment.selectors[id_]
+        elif id_ == "s" and self.environment.self_selector is not None:
             sel_def = self.environment.self_selector
         else:
             return False
 
         if var in sel_def.vector_paths:
             path, data_type, scale = sel_def.vector_paths[var]
-            if scale == None:
+            if scale is None:
                 scale = self.scale
 
             if not self.check_single_entity(selector):
@@ -672,28 +697,30 @@ class mcfunction:
         else:
             return False
 
-    def register_objective(self, objective):
+    def register_objective(self, objective: str) -> None:
         self.environment.register_objective(objective)
 
-    def register_array(self, name, from_val, to_val, selector_based):
+    def register_array(
+        self, name: str, from_val, to_val, selector_based: bool
+    ) -> None:
         self.environment.register_array(name, from_val, to_val, selector_based)
 
-    def apply_replacements(self, text, overrides={}):
+    def apply_replacements(self, text: str, overrides={}) -> str:
         return self.environment.apply_replacements(text, overrides)
 
-    def register_block_tag(self, name, blocks):
+    def register_block_tag(self, name: str, blocks) -> None:
         self.environment.register_block_tag(name, blocks)
 
-    def register_entity_tag(self, name, entities):
+    def register_entity_tag(self, name: str, entities) -> None:
         self.environment.register_entity_tag(name, entities)
 
-    def register_item_tag(self, name, items):
+    def register_item_tag(self, name: str, items) -> None:
         self.environment.register_item_tag(name, items)
 
-    def get_scale(self):
+    def get_scale(self) -> int:
         return self.environment.scale
 
-    def set_scale(self, scale):
+    def set_scale(self, scale: int) -> None:
         self.environment.scale = scale
 
     scale = property(get_scale, set_scale)
@@ -711,7 +738,7 @@ class mcfunction:
         return self.environment.item_tags
 
     @property
-    def namespace(self):
+    def namespace(self) -> str:
         return self.environment.namespace
 
     @property
@@ -723,82 +750,84 @@ class mcfunction:
         return self.environment.template_functions
 
     @property
-    def functions(self):
+    def functions(self) -> dict[str, Self]:
         return self.environment.functions
 
     @property
-    def selectors(self):
+    def selectors(self) -> dict[str, selector_definition]:
         return self.environment.selectors
 
-    def get_scratch(self):
+    def get_scratch(self) -> str:
         return self.environment.get_scratch()
 
-    def get_scratch_vector(self):
+    def get_scratch_vector(self) -> list[str]:
         return self.environment.get_scratch_vector()
 
-    def is_scratch(self, var):
+    def is_scratch(self, var) -> bool:
         return self.environment.is_scratch(var)
 
-    def free_scratch(self, id):
-        self.environment.free_scratch(id)
+    def free_scratch(self, id_: str) -> None:
+        self.environment.free_scratch(id_)
 
-    def get_temp_var(self):
+    def get_temp_var(self) -> str:
         return self.environment.get_temp_var()
 
-    def free_temp_var(self):
+    def free_temp_var(self) -> None:
         self.environment.free_temp_var()
 
-    def apply_environment(self, text):
+    def apply_environment(self, text: str) -> str:
         return self.environment.apply(text)
 
-    def add_constant(self, val):
+    def add_constant(self, val: int) -> str:
         return self.environment.add_constant(val)
 
-    def get_friendly_name(self):
+    def get_friendly_name(self) -> str:
         return self.environment.get_friendly_name()
 
-    def get_random_objective(self):
+    def get_random_objective(self) -> str:
         return self.environment.get_random_objective()
 
-    def register_function(self, name, func):
+    def register_function(self, name: str, func: Self) -> None:
         self.environment.register_function(name, func)
 
-    def get_unique_id(self):
+    def get_unique_id(self) -> int:
         return self.environment.get_unique_id()
 
-    def update_self_selector(self, selector):
+    def update_self_selector(self, selector: str) -> None:
         self.environment.update_self_selector(selector)
 
-    def get_self_selector_definition(self):
+    def get_self_selector_definition(self) -> selector_definition | None:
         return self.environment.self_selector
 
-    def get_python_env(self):
+    def get_python_env(self) -> dict[str, str]:
         return self.environment.get_python_env()
 
-    def clone_environment(self, new_function_name=None):
+    def clone_environment(
+        self, new_function_name: str | None = None
+    ) -> Environment:
         return self.environment.clone(new_function_name=new_function_name)
 
-    # Combines a selector with an existing selector definition in the environment
-    def get_combined_selector(self, selector):
+    def get_combined_selector(self, selector: str) -> selector_definition:
+        """Combines a selector with an existing selector definition in the environment."""
         return selector_definition(selector, self.environment)
 
-    def set_dollarid(self, id, val):
-        self.environment.set_dollarid(id, val)
+    def set_dollarid(self, id_: str, val: str) -> None:
+        self.environment.set_dollarid(id_, val)
 
-    def get_dollarid(self, id):
-        return self.environment.get_dollarid(id)
+    def get_dollarid(self, id_: str) -> str:
+        return self.environment.get_dollarid(id_)
 
-    def set_atid(self, id, fullselector):
-        return self.environment.set_atid(id, fullselector)
+    def set_atid(self, id_: str, fullselector: str) -> selector_definition:
+        return self.environment.set_atid(id_, fullselector)
 
-    def push_environment(self, new_env):
+    def push_environment(self, new_env: Environment) -> None:
         self.environment_stack.append(self.environment)
         self.environment = new_env
 
-    def pop_environment(self):
+    def pop_environment(self) -> None:
         self.environment = self.environment_stack.pop()
 
-    def run_create(self, atid, relcoords, idx=None):
+    def run_create(self, atid: str, relcoords, idx=None) -> bool:
         if atid not in self.selectors:
             print(f"Unable to create unknown entity: @{atid}")
             return False
@@ -807,11 +836,11 @@ class mcfunction:
 
         entity_type = selector.get_type()
 
-        if entity_type == None:
+        if entity_type is None:
             print(f"Unable to create @{atid}, no entity type is defined.")
             return False
 
-        if selector.tag == None:
+        if selector.tag is None:
             if idx:
                 self.add_command(
                     f"summon {entity_type} {relcoords.get_value(self)} {idx.get_value(self) + hash(atid) % (2 ** 32)}}}"
@@ -837,52 +866,51 @@ class mcfunction:
 
         return True
 
-    def register_name_definition(self, id, str):
-        self.environment.register_name_definition(id, str)
+    def register_name_definition(self, id_: str, str_: str) -> None:
+        self.environment.register_name_definition(id_, str_)
 
-    def get_name_definition(self, id):
-        return self.environment.get_name_definition(id)
+    def get_name_definition(self, id_: str) -> str | None:
+        return self.environment.get_name_definition(id_)
 
-    # Creates an empty function with a copy of the current environment
     def create_child_function(
-        self, new_function_name=None, callable=False, params=[]
-    ):
-        return mcfunction(
+        self,
+        new_function_name: str | None = None,
+        callable: bool = False,
+        params: list[str] = [],
+    ) -> Self:
+        """Creates an empty function with a copy of the current environment."""
+        return self.__class__(
             self.clone_environment(new_function_name=new_function_name),
             callable=callable,
             params=params,
         )
 
-    def compile_blocks(self, lines):
+    def compile_blocks(self, lines: Iterable[block_base]) -> None:
         for block in lines:
             try:
                 block.compile(self)
-            except CompileError as e:
-                print(e)
+            except Exception as exc:
+                print(exc)
+                traceback.print_exception(exc)
                 raise CompileError(
                     f"Error compiling block at line {block.line}"
-                )
-            except:
-                print(traceback.format_exc())
-                raise CompileError(
-                    f"Error compiling block at line {block.line}"
-                )
+                ) from exc
 
     @property
     def parser(self):
         return self.environment.parser
 
-    def import_file(self, filename):
+    def import_file(self, filename: str) -> None:
         self.environment.register_dependency(filename)
 
         file = source_file(filename)
 
         result = self.parser("import " + file.get_text() + "\n")
-        if result == None:
+        if result is None:
             raise CompileError(f'Unable to parse file "{filename}"')
 
-        type, parsed = result
-        if type != "lib":
+        type_, parsed = result
+        if type_ != "lib":
             raise CompileError(f'Unable to import non-lib-file "{filename}"')
 
         for line in parsed["lines"]:
@@ -890,15 +918,15 @@ class mcfunction:
 
         self.compile_blocks(parsed["lines"])
 
-    def import_python_file(self, filename):
+    def import_python_file(self, filename: str) -> None:
         self.environment.register_dependency(filename)
 
         try:
-            with open(filename) as file:
+            with open(filename, encoding="utf-8") as file:
                 text = file.read()
-        except Exception as e:
-            print(e)
-            raise CompileError(f'Unable to open "{filename}"')
+        except Exception as exc:
+            print(exc)
+            raise CompileError(f'Unable to open "{filename}"') from exc
 
         try:
             exec(text, globals(), self.get_python_env())
@@ -906,46 +934,50 @@ class mcfunction:
             print(e)
             raise CompileError(f'Unable to execute "{filename}"')
 
-    def eval(self, expr, line):
+    def eval(self, expr: str | Buffer | CodeType, line):
         try:
             return eval(expr, globals(), self.get_python_env())
-        except Exception as e:
-            print(e)
+        except Exception as exc:
+            print(exc)
             raise CompileError(
                 f'Could not evaluate python expression "{expr}" at line {line}'
-            )
+            ) from exc
 
-    def add_pointer(self, id, selector):
-        self.environment.add_pointer(id, selector)
+    def add_pointer(self, id_: str, selector: str) -> None:
+        self.environment.add_pointer(id_, selector)
 
-    def add_block_definition(self, id, definition):
-        self.environment.add_block_definition(id, definition)
+    def add_block_definition(self, id_: str, definition) -> None:
+        self.environment.add_block_definition(id_, definition)
 
-    def get_block_definition(self, block_id):
+    def get_block_definition(self, block_id: str):
         return self.environment.get_block_definition(block_id)
 
-    def get_selector_definition(self, selector):
+    def get_selector_definition(
+        self, selector: str
+    ) -> selector_definition | None:
         return self.environment.get_selector_definition(selector)
 
-    def add_recipe(self, recipe):
+    def add_recipe(self, recipe) -> None:
         self.environment.add_recipe(recipe)
 
-    def add_advancement(self, name, advancement):
+    def add_advancement(self, name: str, advancement) -> None:
         self.environment.add_advancement(name, advancement)
 
-    def add_loot_table(self, name, loot_table):
+    def add_loot_table(self, name: str, loot_table) -> None:
         self.environment.add_loot_table(name, loot_table)
 
-    def add_predicate(self, name, predicate):
+    def add_predicate(self, name: str, predicate) -> None:
         self.environment.add_predicate(name, predicate)
 
-    def add_item_modifier(self, name, item_modifier):
+    def add_item_modifier(self, name: str, item_modifier) -> None:
         self.environment.add_item_modifier(name, item_modifier)
 
-    def get_block_state_list(self, include_block_states):
+    def get_block_state_list(self, include_block_states: bool):
         return self.environment.get_block_state_list(include_block_states)
 
-    def call_function(self, sub_func, sub_name, prefix=""):
+    def call_function(
+        self, sub_func: Self, sub_name: str, prefix: str = ""
+    ) -> None:
         if sub_func.is_empty():
             return
 
@@ -965,35 +997,35 @@ class mcfunction:
 
             self.add_command(cmd)
 
-    def get_reset_function(self):
+    def get_reset_function(self) -> Self | None:
         return self.environment.get_reset_function()
 
-    def register_clock(self, id):
-        self.environment.register_clock(id)
+    def register_clock(self, id_: str) -> None:
+        self.environment.register_clock(id_)
 
     @property
-    def global_context(self):
+    def global_context(self) -> global_context:
         return self.environment.global_context
 
-    def copy_environment_from(self, func):
+    def copy_environment_from(self, func: Self) -> None:
         self.environment = func.environment.clone()
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         return self.environment.function_name
 
-    def get_local_variables(self):
+    def get_local_variables(self) -> list[scoreboard_var]:
         return [
             scoreboard_var("Global", l)
             for l in self.environment.get_all_locals()
         ]
 
-    def push_locals(self, locals):
-        block = push_block(0, locals)
+    def push_locals(self, locals_) -> None:
+        block = push_block(0, locals_)
         block.compile(self)
 
-    def pop_locals(self, locals):
-        block = pop_block(0, locals)
+    def pop_locals(self, locals_):
+        block = pop_block(0, locals_)
         block.compile(self)
 
     @property

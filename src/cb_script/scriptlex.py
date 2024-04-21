@@ -1,6 +1,10 @@
+from __future__ import annotations
+
+from typing import Final
+
 from ply import lex
 
-keywords = (
+keywords: Final = (
     "for",
     "dir",
     "desc",
@@ -70,7 +74,7 @@ keywords = (
     "false",
 )
 
-tokens = keywords + (
+tokens: Final = keywords + (
     "COMMAND",
     "LEQ",
     "GEQ",
@@ -266,18 +270,20 @@ def t_COMMENT(t):
     return t
 
 
-def t_error(t):
+def t_error(t) -> None:
     print(
         f'Illegal character "{t.value[0]}" was skipped at line {t.lexer.lineno}'
     )
     t.lexer.skip(1)
 
 
-# Compute column.
-#     input is the input text string
-#     token is a token instance
-def find_column(input, token):
-    line_start = input.rfind("\n", 0, token.lexpos) + 1
+def find_column(input_: str, token) -> int:
+    """Compute column.
+
+    input is the input text string
+    token is a token instance
+    """
+    line_start = input_.rfind("\n", 0, token.lexpos) + 1
     return (token.lexpos - line_start) + 1
 
 

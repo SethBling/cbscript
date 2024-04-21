@@ -1,107 +1,130 @@
+from __future__ import annotations
+
 import traceback
 
-import scriptlex
-from block_types.advancement_definition_block import (
+from ply import yacc
+
+from cb_script import scriptlex
+from cb_script.block_types.advancement_definition_block import (
     advancement_definition_block,
 )
-from block_types.array_definition_block import array_definition_block
-from block_types.block_definition_block import block_definition_block
-from block_types.block_id_switch_block import block_id_switch_block
-from block_types.block_switch_block import block_switch_block
-from block_types.block_tag_block import block_tag_block
-from block_types.clock_section import clock_section
-from block_types.command_block import command_block
-from block_types.comment_block import comment_block
-from block_types.create_block import create_block
-from block_types.define_name_block import define_name_block
-from block_types.entity_tag_block import entity_tag_block
-from block_types.execute_block import execute_block
-from block_types.for_index_block import for_index_block
-from block_types.for_selector_block import for_selector_block
-from block_types.function_call_block import function_call_block
-from block_types.function_section import function_section
-from block_types.import_block import import_block
-from block_types.item_modifier_definition_block import (
+from cb_script.block_types.array_definition_block import array_definition_block
+from cb_script.block_types.block_definition_block import block_definition_block
+from cb_script.block_types.block_id_switch_block import block_id_switch_block
+from cb_script.block_types.block_switch_block import block_switch_block
+from cb_script.block_types.block_tag_block import block_tag_block
+from cb_script.block_types.clock_section import clock_section
+from cb_script.block_types.command_block import command_block
+from cb_script.block_types.comment_block import comment_block
+from cb_script.block_types.create_block import create_block
+from cb_script.block_types.define_name_block import define_name_block
+from cb_script.block_types.entity_tag_block import entity_tag_block
+from cb_script.block_types.execute_block import execute_block
+from cb_script.block_types.for_index_block import for_index_block
+from cb_script.block_types.for_selector_block import for_selector_block
+from cb_script.block_types.function_call_block import function_call_block
+from cb_script.block_types.function_section import function_section
+from cb_script.block_types.import_block import import_block
+from cb_script.block_types.item_modifier_definition_block import (
     item_modifier_definition_block,
 )
-from block_types.item_tag_block import item_tag_block
-from block_types.loot_table_definition_block import loot_table_definition_block
-from block_types.macro_call_block import macro_call_block
-from block_types.macro_section import macro_section
-from block_types.method_call_block import method_call_block
-from block_types.move_block import move_block
-from block_types.nbt_data_block import nbt_data_block
-from block_types.nbt_remove_block import nbt_remove_block
-from block_types.pointer_decl_block import pointer_decl_block
-from block_types.pop_block import pop_block
-from block_types.predicate_definition_block import predicate_definition_block
-from block_types.print_block import print_block
-from block_types.push_block import push_block
-from block_types.python_assignment_block import python_assignment_block
-from block_types.python_for_block import python_for_block
-from block_types.python_if_block import python_if_block
-from block_types.python_import_block import python_import_block
-from block_types.python_tuple_assignment_block import (
+from cb_script.block_types.item_tag_block import item_tag_block
+from cb_script.block_types.loot_table_definition_block import (
+    loot_table_definition_block,
+)
+from cb_script.block_types.macro_call_block import macro_call_block
+from cb_script.block_types.macro_section import macro_section
+from cb_script.block_types.method_call_block import method_call_block
+from cb_script.block_types.move_block import move_block
+from cb_script.block_types.nbt_data_block import nbt_data_block
+from cb_script.block_types.nbt_remove_block import nbt_remove_block
+from cb_script.block_types.pointer_decl_block import pointer_decl_block
+from cb_script.block_types.pop_block import pop_block
+from cb_script.block_types.predicate_definition_block import (
+    predicate_definition_block,
+)
+from cb_script.block_types.print_block import print_block
+from cb_script.block_types.push_block import push_block
+from cb_script.block_types.python_assignment_block import (
+    python_assignment_block,
+)
+from cb_script.block_types.python_for_block import python_for_block
+from cb_script.block_types.python_if_block import python_if_block
+from cb_script.block_types.python_import_block import python_import_block
+from cb_script.block_types.python_tuple_assignment_block import (
     python_tuple_assignment_block,
 )
-from block_types.reset_section import reset_section
-from block_types.scoreboard_assignment_block import scoreboard_assignment_block
-from block_types.selector_assignment_block import selector_assignment_block
-from block_types.selector_definition_block import selector_definition_block
-from block_types.shaped_recipe_block import shaped_recipe_block
-from block_types.switch_block import switch_block
-from block_types.tell_block import tell_block
-from block_types.template_function_call_block import (
+from cb_script.block_types.reset_section import reset_section
+from cb_script.block_types.scoreboard_assignment_block import (
+    scoreboard_assignment_block,
+)
+from cb_script.block_types.selector_assignment_block import (
+    selector_assignment_block,
+)
+from cb_script.block_types.selector_definition_block import (
+    selector_definition_block,
+)
+from cb_script.block_types.shaped_recipe_block import shaped_recipe_block
+from cb_script.block_types.switch_block import switch_block
+from cb_script.block_types.tell_block import tell_block
+from cb_script.block_types.template_function_call_block import (
     template_function_call_block,
 )
-from block_types.template_function_section import template_function_section
-from block_types.title_block import title_block
-from block_types.vector_assignment_block import vector_assignment_block
-from block_types.vector_assignment_scalar_block import (
+from cb_script.block_types.template_function_section import (
+    template_function_section,
+)
+from cb_script.block_types.title_block import title_block
+from cb_script.block_types.vector_assignment_block import (
+    vector_assignment_block,
+)
+from cb_script.block_types.vector_assignment_scalar_block import (
     vector_assignment_scalar_block,
 )
-from block_types.while_block import while_block
-from block_types.with_anonymous_block import with_anonymous_block
-from block_types.with_items import with_items
-from data_types.block_case import block_case
-from data_types.const_number import const_number
-from data_types.const_string import const_string
-from data_types.interpreted_python import interpreted_python
-from data_types.number_macro_path import number_macro_path
-from data_types.relcoord import relcoord
-from data_types.relcoord_vector import relcoord_vector
-from data_types.relcoords import relcoords
-from nbt_types.block_nbt_path import block_nbt_path
-from nbt_types.entity_nbt_path import entity_nbt_path
-from nbt_types.nbt_json import nbt_json
-from nbt_types.storage_nbt_path import storage_nbt_path
-from ply import yacc
-from scalar_expressions.binop_expr import binop_expr
-from scalar_expressions.create_expr import create_expr
-from scalar_expressions.dot_expr import dot_expr
-from scalar_expressions.func_expr import func_expr
-from scalar_expressions.method_expr import method_expr
-from scalar_expressions.unary_expr import unary_expr
-from variable_types.array_const_var import array_const_var
-from variable_types.array_expr_var import array_expr_var
-from variable_types.block_path_var import block_path_var
-from variable_types.command_var import command_var
-from variable_types.scale_var import scale_var
-from variable_types.scoreboard_var import scoreboard_var
-from variable_types.selector_id_var import selector_id_var
-from variable_types.storage_path_var import storage_path_var
-from variable_types.virtualint_var import virtualint_var
-from vector_expressions.sel_vector_var_expr import sel_vector_var_expr
-from vector_expressions.vector_binop_scalar_expr import (
+from cb_script.block_types.while_block import while_block
+from cb_script.block_types.with_anonymous_block import with_anonymous_block
+from cb_script.block_types.with_items import with_items
+from cb_script.data_types.block_case import block_case
+from cb_script.data_types.const_number import const_number
+from cb_script.data_types.const_string import const_string
+from cb_script.data_types.interpreted_python import interpreted_python
+from cb_script.data_types.number_macro_path import number_macro_path
+from cb_script.data_types.relcoord import relcoord
+from cb_script.data_types.relcoord_vector import relcoord_vector
+from cb_script.data_types.relcoords import relcoords
+from cb_script.nbt_types.block_nbt_path import block_nbt_path
+from cb_script.nbt_types.entity_nbt_path import entity_nbt_path
+from cb_script.nbt_types.nbt_json import nbt_json
+from cb_script.nbt_types.storage_nbt_path import storage_nbt_path
+from cb_script.scalar_expressions.binop_expr import binop_expr
+from cb_script.scalar_expressions.create_expr import create_expr
+from cb_script.scalar_expressions.dot_expr import dot_expr
+from cb_script.scalar_expressions.func_expr import func_expr
+from cb_script.scalar_expressions.method_expr import method_expr
+from cb_script.scalar_expressions.unary_expr import unary_expr
+from cb_script.variable_types.array_const_var import array_const_var
+from cb_script.variable_types.array_expr_var import array_expr_var
+from cb_script.variable_types.block_path_var import block_path_var
+from cb_script.variable_types.command_var import command_var
+from cb_script.variable_types.scale_var import scale_var
+from cb_script.variable_types.scoreboard_var import scoreboard_var
+from cb_script.variable_types.selector_id_var import selector_id_var
+from cb_script.variable_types.storage_path_var import storage_path_var
+from cb_script.variable_types.virtualint_var import virtualint_var
+from cb_script.vector_expressions.sel_vector_var_expr import (
+    sel_vector_var_expr,
+)
+from cb_script.vector_expressions.vector_binop_scalar_expr import (
     vector_binop_scalar_expr,
 )
-from vector_expressions.vector_binop_vector_expr import (
+from cb_script.vector_expressions.vector_binop_vector_expr import (
     vector_binop_vector_expr,
 )
-from vector_expressions.vector_expr import vector_expr
-from vector_expressions.vector_here_expr import vector_here_expr
-from vector_expressions.vector_var_const_vector import vector_var_const_vector
-from vector_expressions.vector_var_expr import vector_var_expr
+from cb_script.vector_expressions.vector_expr import vector_expr
+from cb_script.vector_expressions.vector_here_expr import vector_here_expr
+from cb_script.vector_expressions.vector_var_const_vector import (
+    vector_var_const_vector,
+)
+from cb_script.vector_expressions.vector_var_expr import vector_var_expr
 
 tokens = scriptlex.tokens
 
@@ -116,7 +139,7 @@ precedence = (
 
 
 #### Parsed
-def p_parsed_assignment(p):
+def p_parsed_assignment(p) -> None:
     """parsed : program"""
     p[0] = ("program", p[1])
 
@@ -132,7 +155,7 @@ def p_parsed_expr(p):
 
 
 #### Program
-def p_program(p):
+def p_program(p) -> None:
     """program : optcomments dir string newlines optdesc file_params top_level_blocks"""
     p[0] = {}
     p[0]["dir"] = p[3]
@@ -221,10 +244,11 @@ def p_resetsection(p):
     p[0] = reset_section(p.lineno(1), p[3])
 
 
-def validate_mcfunction_name(str):
-    for ch in str:
+def validate_mcfunction_name(str_: str) -> None:
+    """Raise SyntaxError if string contains any uppercase letters."""
+    for ch in str_:
         if ch.isupper():
-            print(f'"{str}" is not a valid mcfunction name.')
+            print(f'"{str_}" is not a valid mcfunction name.')
             raise SyntaxError()
 
 
@@ -2237,7 +2261,7 @@ def p_item_modifier_definition(p):
 
 
 #### Empty
-def p_empty(p):
+def p_empty(p) -> None:
     """empty :"""
 
 
@@ -2259,7 +2283,7 @@ def p_error(p):
 bparser = yacc.yacc()
 
 
-def parse(data, debug=0):
+def parse(data, debug: int = 0) -> yacc:
     scriptlex.lexer.lineno = 1
     bparser.error = 0
     bparser.data = data
