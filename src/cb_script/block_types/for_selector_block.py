@@ -1,3 +1,12 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from cb_script.CompileError import CompileError
+
+if TYPE_CHECKING:
+
+    from cb_script.mcfunction import mcfunction
 import traceback
 
 from cb_script.block_types.block_base import block_base
@@ -5,13 +14,13 @@ from cb_script.CompileError import CompileError
 
 
 class for_selector_block(block_base):
-    def __init__(self, line, id, selector, sub):
-        self.line = line
+    def __init__(self, line: str, id, selector, sub) -> None:
+        super().__init__(line)
         self.id = id
         self.selector = selector
         self.sub = sub
 
-    def compile(self, func):
+    def compile(self, func: mcfunction) -> None:
         scratch_id = func.get_scratch()
 
         exec_func = func.create_child_function()

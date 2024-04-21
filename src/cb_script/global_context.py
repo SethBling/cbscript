@@ -47,9 +47,7 @@ class global_context:
         self.reset = None
         self.objectives: dict[str, bool] = {}
         self.constants: list[int] = []
-        # types: var-annotated error: Need type annotation for "arrays" (hint: "arrays: Dict[<type>, <type>] = ...")
-        self.arrays = {}
-        # types: ^^
+        self.arrays: dict[str, tuple[int, int, bool]] = {}
         self.scratch: dict[str, int] = {}
         self.temp = 0
         self.unique = 0
@@ -117,9 +115,8 @@ class global_context:
     def register_function_params(self, name: str, params) -> None:
         self.function_params[name] = params
 
-    # types: no-untyped-def error: Function is missing a type annotation for one or more arguments
     def register_array(
-        self, name: str, from_val, to_val, selector_based: bool
+        self, name: str, from_val: int, to_val: int, selector_based: bool
     ) -> None:
         if name in self.arrays:
             raise CompileError(f'Array "{name}" is defined multiple times.')

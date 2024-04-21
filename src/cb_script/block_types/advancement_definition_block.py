@@ -3,8 +3,10 @@ from cb_script.mcfunction import mcfunction
 
 
 class advancement_definition_block(block_base):
-    def __init__(self, line, name: str, json):
-        self.line = line
+    __slots__ = ("name", "json")
+
+    def __init__(self, line: str, name: str, json) -> None:
+        super().__init__(line)
         self.name = name
         self.json = json
 

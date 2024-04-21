@@ -1,3 +1,13 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from cb_script.CompileError import CompileError
+
+if TYPE_CHECKING:
+
+    from cb_script.mcfunction import mcfunction
+
 from cb_script.block_types.block_base import block_base
 from cb_script.block_types.command_block import command_block
 from cb_script.CompileError import CompileError
@@ -5,14 +15,18 @@ from cb_script.variable_types.scoreboard_var import scoreboard_var
 
 
 class array_definition_block(block_base):
-    def __init__(self, line, name, from_val, to_val, selector_based):
-        self.line = line
+    __slots__ = ("name", "from_val", "to_val", "selector_based")
+
+    def __init__(
+        self, line: str, name: str, from_val, to_val, selector_based: str
+    ) -> None:
+        super().__init__(line)
         self.name = name
         self.from_val = from_val
         self.to_val = to_val
         self.selector_based = selector_based
 
-    def compile(self, func):
+    def compile(self, func: mcfunction) -> None:
         try:
             from_val = int(self.from_val.get_value(func))
             to_val = int(self.to_val.get_value(func))

@@ -12,9 +12,12 @@ if TYPE_CHECKING:
 
 
 class block_base:
-    __slots__ = ()
+    __slots__ = ("line",)
 
-    def compile(self, func: mcfunction):
+    def __init__(self, line: str) -> None:
+        self.line = line
+
+    def compile(self, func: mcfunction) -> None:
         raise NotImplementedError("Section does not implement compile()")
 
     def register(self, global_context: global_context) -> None:

@@ -1,3 +1,12 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from cb_script.CompileError import CompileError
+
+if TYPE_CHECKING:
+
+    from cb_script.mcfunction import mcfunction
 import traceback
 
 from cb_script.block_types.block_base import block_base
@@ -5,15 +14,15 @@ from cb_script.CompileError import CompileError
 
 
 class for_index_block(block_base):
-    def __init__(self, line, var, fr, to, by, sub):
-        self.line = line
+    def __init__(self, line: str, var, fr, to, by, sub):
+        super().__init__(line)
         self.var = var
         self.fr = fr
         self.to = to
         self.by = by
         self.sub = sub
 
-    def compile(self, func):
+    def compile(self, func: mcfunction) -> None:
         var, fr, to, by, sub = self.var, self.fr, self.to, self.by, self.sub
 
         from_var = fr.compile(func, var.get_assignto(func))

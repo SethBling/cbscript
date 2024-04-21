@@ -272,9 +272,8 @@ class environment:
         if id_ in self.selectors:
             self.self_selector = self.selectors[id_]
 
-    # types: no-untyped-def error: Function is missing a type annotation for one or more arguments
     def register_array(
-        self, name: str, from_val, to_val, selector_based: bool
+        self, name: str, from_val: int, to_val: int, selector_based: bool
     ) -> None:
         self.global_context.register_array(
             name, from_val, to_val, selector_based

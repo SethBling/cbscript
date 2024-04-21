@@ -1,20 +1,27 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from cb_script.CompileError import CompileError
+
+if TYPE_CHECKING:
+
+    from cb_script.mcfunction import mcfunction
+
 from cb_script.block_types.block_switch_base import block_switch_base
 from cb_script.CompileError import CompileError
 
 
 class block_switch_block(block_switch_base):
-    def __init__(self, line, coords, cases, include_block_states):
-        self.line = line
+    def __init__(self, line: str, coords, cases, include_block_states):
+        super().__init__(line, cases, default_case=False)
         self.coords = coords
-        self.cases = cases
         self.include_block_states = include_block_states
 
-        super().__init__()
-
-    def case_condition(self, func, block_state):
+    def case_condition(self, func: mcfunction, block_state: str):
         return f"block {self.coords.get_value(func)} {block_state}"
 
-    def compile_block_case(self, func, block):
+    def compile_block_case(self, func: mcfunction, block: str) -> None:
         single_case = self.get_matching_case(func, block, {})
 
         if single_case and not single_case.is_default:
@@ -63,7 +70,12 @@ class block_switch_block(block_switch_base):
             )
 
     def compile_property_case(
-        self, func, block, prop_names, props, partial_block_state
+        self,
+        func: mcfunction,
+        block: str,
+        prop_names,
+        props,
+        partial_block_state,
     ):
         cur_prop_name = prop_names[0]
         cur_prop = props[cur_prop_name]
@@ -95,7 +107,12 @@ class block_switch_block(block_switch_base):
                 )
 
     def compile_single_case(
-        self, func, block, block_test, block_state, case_func_name
+        self,
+        func: mcfunction,
+        block: str,
+        block_test,
+        block_state,
+        case_func_name,
     ):
         id = self.block_state_ids[block_state]
         case = self.block_state_list[block_state]
@@ -110,11 +127,11 @@ class block_switch_block(block_switch_base):
                 case_func,
                 falling_block_nbt,
             )
-        except CompileError as e:
-            print(e)
+        except CompileError as exc:
+            print(exc)
             raise CompileError(
                 f'Unable to compile block switch case "{block_state}" at line {self.line}'
-            )
+            ) from exc
 
         func.call_function(
             case_func,
@@ -122,7 +139,7 @@ class block_switch_block(block_switch_base):
             f"execute if {self.case_condition(func, block_test)} run ",
         )
 
-    def get_range_condition(self, func, blocks):
+    def get_range_condition(self, func: mcfunction, blocks):
         unique = func.get_unique_id()
         block_tag_name = f"switch_{unique}"
         func.register_block_tag(
@@ -132,5 +149,5 @@ class block_switch_block(block_switch_base):
 
         return f"block {self.coords.get_value(func)} #{func.namespace}:{block_tag_name}"
 
-    def get_case_ids(self):
+    def get_case_ids(self) -> list[str]:
         return sorted(self.block_list.keys())

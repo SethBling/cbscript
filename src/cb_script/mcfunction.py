@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from types import CodeType
 
     from cb_script.block_types import block_base
+    from cb_script.block_types.command_block import command_block
     from cb_script.environment import environment as Environment
 
 
@@ -30,14 +31,25 @@ def get_undecorated_selector_name(selector: str) -> str:
 class Section(NamedTuple):
     type: str  # function, reset, clock
     name: str
+    # types: name-defined error: Name "Any" is not defined
+    # types: note: Did you forget to import it from "typing"? (Suggestion: "from typing import Any")
     template_params: Any
+    # types:         ^
+    # types: name-defined error: Name "Any" is not defined
+    # types: note: Did you forget to import it from "typing"? (Suggestion: "from typing import Any")
     params: Any
+    # types: name-defined error: Name "Any" is not defined
+    # types: note: Did you forget to import it from "typing"? (Suggestion: "from typing import Any")
     lines: Any
+
+
+# types:   ^
 
 
 def compile_section(section: Section, environment: Environment) -> None:
     type_, name, template_params, params, lines = section
 
+    f: mcfunction | None
     if type_ == "function":
         f = mcfunction(environment.clone(new_function_name=name), True, params)
     elif type_ == "reset":
@@ -46,6 +58,7 @@ def compile_section(section: Section, environment: Environment) -> None:
             f = mcfunction(environment.clone(new_function_name=name))
     else:
         f = mcfunction(environment.clone(new_function_name=name))
+    assert f is not None
 
     environment.register_function(name, f)
 
@@ -108,10 +121,24 @@ class mcfunction:
 
         return True
 
-    def get_arrayconst_var(self, name: str, idxval):
+    def get_arrayconst_var(self, name: str, idxval) -> Any:
         return self.environment.get_arrayconst_var(name, idxval)
 
-    def get_if_chain(self, conditions, iftype="if"):
+    # types: no-untyped-def error: Function is missing a type annotation
+    def get_if_chain(
+        self,
+        conditions: list[
+            tuple[Literal[selector] | Literal[predicate], str]
+            | tuple[Literal[score], tuple[left, str, right]]
+            | tuple[
+                Literal[vector_equality],
+                tuple[tuple[str, Any], tuple[str, Any]],
+            ]
+            | tuple[Literal[block], tuple[Any, str]]
+            | tuple[Literal[nbtpath], Any]
+        ],
+        iftype: str = "if",
+    ) -> bool:
         test = ""
         for type_, val in conditions:
             if type_ == "selector":
@@ -233,7 +260,9 @@ class mcfunction:
                             lvar = var1[i].get_scoreboard_var(self)
 
                         if type2 == "VAR_CONST":
+                            # types: name-defined error: Name "sco1" is not defined
                             test += f"if score {sel1} {sco1} matches {const_vals[i]} "
+                        # types:                      ^
                         else:
                             if type2 == "VAR_ID":
                                 rvar = scoreboard_var("Global", f"_{var2}_{i}")
@@ -262,7 +291,26 @@ class mcfunction:
 
         return test
 
-    def get_execute_items(self, exec_items, exec_func):
+    # types: no-untyped-def error: Function is missing a type annotation
+    def get_execute_items(
+        self,
+        exec_items: list[
+            tuple[Literal[If], str]
+            | tuple[Literal[Unless], str]
+            | tuple[Literal[As], str]
+            | tuple[Literal[On], str]
+            | tuple[Literal[AsId], tuple[str, str]]
+            | tuple[Literal[AsCreate], tuple[str, Any]]
+            | tuple[Literal[Rotated], tuple[str, Any]]
+            | tuple[Literal[FacingCoords], Any]
+            | tuple[Literal[FacingEntity], str]
+            | tuple[Literal[Align], str]
+            | tuple[Literal[At], tuple[str | None, Any | None, str | None]]
+            | tuple[Literal[AtVector], tuple[Any | None, Any]]
+            | tuple[Literal[In], str]
+        ],
+        exec_func: Self,
+    ) -> str | None:
         cmd = ""
         as_count = 0
         for type_, _ in exec_items:
@@ -279,9 +327,13 @@ class mcfunction:
 
         for type_, val in exec_items:
             if type_ == "If":
+                # types: no-untyped-call error: Call to untyped function "get_if_chain" in typed context
                 cmd += self.get_if_chain(val)
+            # types:   ^^^^^^^^^^^^^^^^^^^^^^
             if type_ == "Unless":
+                # types: no-untyped-call error: Call to untyped function "get_if_chain" in typed context
                 cmd += self.get_if_chain(val, "unless")
+            # types:   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
             elif type_ == "As":
                 cmd += f"as {val} "
                 exec_func.update_self_selector(val)
@@ -392,12 +444,19 @@ class mcfunction:
             elif type_ == "In":
                 dimension = val
                 cmd += f"in {dimension} "
+            else:
+                raise ValueError(f'Unknown "execute_item" type: {type_}')
 
         return cmd
 
+    # types: no-untyped-def error: Function is missing a type annotation for one or more arguments
     def switch_cases(
-        self, var, cases, switch_func_name="switch", case_func_name="case"
-    ):
+        self,
+        var,
+        cases: list[tuple[int, int, list[command_block], str, None]],
+        switch_func_name: str = "switch",
+        case_func_name: str = "case",
+    ) -> bool:
         for q in range(4):
             imin = q * len(cases) // 4
             imax = (q + 1) * len(cases) // 4
@@ -414,7 +473,9 @@ class mcfunction:
             if len(sub_cases) == 1:
                 vmin, vmax, sub, line, dollarid = sub_cases[0]
                 if dollarid is not None:
+                    # types: unreachable error: Statement is unreachable
                     case_func.set_dollarid(dollarid, vmin)
+                # types: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
                 try:
                     case_func.compile_blocks(sub)
                 except CompileError as e:
@@ -472,7 +533,9 @@ class mcfunction:
 
         return True
 
-    def add_operation(self, selector: str, id1, operation, id2):
+    def add_operation(
+        self, selector: str, id1: str, operation: str, id2: str
+    ) -> None:
         selector = self.environment.apply(selector)
 
         self.add_command(
@@ -574,6 +637,7 @@ class mcfunction:
             raise CompileError(f"Selector {selector!r} does not exist!")
         return parsed.single_entity()
 
+    # types: no-untyped-def error: Function is missing a type annotation for one or more arguments
     def get_path(self, selector: str, var) -> None:
         if selector[0] != "@":
             return
@@ -602,6 +666,7 @@ class mcfunction:
                 f"execute store result score {selector} {var} run data get entity {selector} {path} {scale}"
             )
 
+    # types: no-untyped-def error: Function is missing a type annotation for one or more arguments
     def set_path(self, selector: str, var) -> None:
         if selector[0] != "@":
             return
@@ -630,6 +695,7 @@ class mcfunction:
                 f"execute store result entity {selector} {path} {data_type} {1/float(scale)} run scoreboard players get {selector} {var}"
             )
 
+    # types: no-untyped-def error: Function is missing a type annotation for one or more arguments
     def get_vector_path(self, selector: str, var) -> bool:
         if selector[0] != "@":
             return False
@@ -663,6 +729,7 @@ class mcfunction:
         else:
             return False
 
+    # types: no-untyped-def error: Function is missing a type annotation for one or more arguments
     def set_vector_path(self, selector: str, var, values) -> bool:
         if selector[0] != "@":
             return False
@@ -701,24 +768,31 @@ class mcfunction:
         self.environment.register_objective(objective)
 
     def register_array(
-        self, name: str, from_val, to_val, selector_based: bool
+        self, name: str, from_val: int, to_val: int, selector_based: bool
     ) -> None:
         self.environment.register_array(name, from_val, to_val, selector_based)
 
+    # types: no-untyped-def error: Function is missing a type annotation for one or more arguments
     def apply_replacements(self, text: str, overrides={}) -> str:
         return self.environment.apply_replacements(text, overrides)
 
+    # types: no-untyped-def error: Function is missing a type annotation for one or more arguments
     def register_block_tag(self, name: str, blocks) -> None:
         self.environment.register_block_tag(name, blocks)
 
+    # types: no-untyped-def error: Function is missing a type annotation for one or more arguments
     def register_entity_tag(self, name: str, entities) -> None:
         self.environment.register_entity_tag(name, entities)
 
+    # types: no-untyped-def error: Function is missing a type annotation for one or more arguments
     def register_item_tag(self, name: str, items) -> None:
         self.environment.register_item_tag(name, items)
 
     def get_scale(self) -> int:
+        # types: no-any-return error: Returning Any from function declared to return "int"
         return self.environment.scale
+
+    # types: ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     def set_scale(self, scale: int) -> None:
         self.environment.scale = scale
@@ -726,14 +800,17 @@ class mcfunction:
     scale = property(get_scale, set_scale)
 
     @property
+    # types: no-untyped-def error: Function is missing a return type annotation
     def arrays(self):
         return self.environment.arrays
 
     @property
+    # types: no-untyped-def error: Function is missing a return type annotation
     def block_tags(self):
         return self.environment.block_tags
 
     @property
+    # types: no-untyped-def error: Function is missing a return type annotation
     def item_tags(self):
         return self.environment.item_tags
 
@@ -742,15 +819,19 @@ class mcfunction:
         return self.environment.namespace
 
     @property
+    # types: no-untyped-def error: Function is missing a return type annotation
     def macros(self):
         return self.environment.macros
 
     @property
+    # types: no-untyped-def error: Function is missing a return type annotation
     def template_functions(self):
         return self.environment.template_functions
 
     @property
+    # types: name-defined error: Name "Self" is not defined
     def functions(self) -> dict[str, Self]:
+        # types:                     ^
         return self.environment.functions
 
     @property
@@ -763,6 +844,7 @@ class mcfunction:
     def get_scratch_vector(self) -> list[str]:
         return self.environment.get_scratch_vector()
 
+    # types: no-untyped-def error: Function is missing a type annotation for one or more arguments
     def is_scratch(self, var) -> bool:
         return self.environment.is_scratch(var)
 
@@ -787,7 +869,9 @@ class mcfunction:
     def get_random_objective(self) -> str:
         return self.environment.get_random_objective()
 
+    # types: name-defined error: Name "Self" is not defined
     def register_function(self, name: str, func: Self) -> None:
+        # types:                                 ^
         self.environment.register_function(name, func)
 
     def get_unique_id(self) -> int:
@@ -827,6 +911,7 @@ class mcfunction:
     def pop_environment(self) -> None:
         self.environment = self.environment_stack.pop()
 
+    # types: no-untyped-def error: Function is missing a type annotation for one or more arguments
     def run_create(self, atid: str, relcoords, idx=None) -> bool:
         if atid not in self.selectors:
             print(f"Unable to create unknown entity: @{atid}")
@@ -877,6 +962,7 @@ class mcfunction:
         new_function_name: str | None = None,
         callable: bool = False,
         params: list[str] = [],
+        # types: name-defined error: Name "Self" is not defined
     ) -> Self:
         """Creates an empty function with a copy of the current environment."""
         return self.__class__(
@@ -885,18 +971,26 @@ class mcfunction:
             params=params,
         )
 
+    # types: valid-type error: Module "cb_script.block_types.block_base" is not valid as a type
+    # types: note: Perhaps you meant to use a protocol matching the module structure?
     def compile_blocks(self, lines: Iterable[block_base]) -> None:
+        # types:                             ^
         for block in lines:
             try:
+                # types: attr-defined error: block_base? has no attribute "compile"
                 block.compile(self)
+            # types: ^^^^^^^^
             except Exception as exc:
                 print(exc)
                 traceback.print_exception(exc)
                 raise CompileError(
+                    # types: attr-defined error: block_base? has no attribute "line"
                     f"Error compiling block at line {block.line}"
+                    # types:                            ^^^^^^^^^^^
                 ) from exc
 
     @property
+    # types: no-untyped-def error: Function is missing a return type annotation
     def parser(self):
         return self.environment.parser
 
@@ -934,6 +1028,8 @@ class mcfunction:
             print(e)
             raise CompileError(f'Unable to execute "{filename}"')
 
+    # types: no-untyped-def error: Function is missing a return type annotation
+    # types: no-untyped-def error: Function is missing a type annotation for one or more arguments
     def eval(self, expr: str | Buffer | CodeType, line):
         try:
             return eval(expr, globals(), self.get_python_env())
@@ -946,9 +1042,11 @@ class mcfunction:
     def add_pointer(self, id_: str, selector: str) -> None:
         self.environment.add_pointer(id_, selector)
 
+    # types: no-untyped-def error: Function is missing a type annotation for one or more arguments
     def add_block_definition(self, id_: str, definition) -> None:
         self.environment.add_block_definition(id_, definition)
 
+    # types: no-untyped-def error: Function is missing a return type annotation
     def get_block_definition(self, block_id: str):
         return self.environment.get_block_definition(block_id)
 
@@ -957,26 +1055,37 @@ class mcfunction:
     ) -> selector_definition | None:
         return self.environment.get_selector_definition(selector)
 
+    # types: no-untyped-def error: Function is missing a type annotation for one or more arguments
     def add_recipe(self, recipe) -> None:
         self.environment.add_recipe(recipe)
 
+    # types: no-untyped-def error: Function is missing a type annotation for one or more arguments
     def add_advancement(self, name: str, advancement) -> None:
         self.environment.add_advancement(name, advancement)
 
+    # types: no-untyped-def error: Function is missing a type annotation for one or more arguments
     def add_loot_table(self, name: str, loot_table) -> None:
         self.environment.add_loot_table(name, loot_table)
 
+    # types: no-untyped-def error: Function is missing a type annotation for one or more arguments
     def add_predicate(self, name: str, predicate) -> None:
         self.environment.add_predicate(name, predicate)
 
+    # types: no-untyped-def error: Function is missing a type annotation for one or more arguments
     def add_item_modifier(self, name: str, item_modifier) -> None:
         self.environment.add_item_modifier(name, item_modifier)
 
+    # types: no-untyped-def error: Function is missing a return type annotation
     def get_block_state_list(self, include_block_states: bool):
         return self.environment.get_block_state_list(include_block_states)
 
     def call_function(
-        self, sub_func: Self, sub_name: str, prefix: str = ""
+        # types: name-defined error: Name "Self" is not defined
+        self,
+        sub_func: Self,
+        sub_name: str,
+        prefix: str = "",
+        # types:            ^
     ) -> None:
         if sub_func.is_empty():
             return
@@ -997,17 +1106,23 @@ class mcfunction:
 
             self.add_command(cmd)
 
+    # types: name-defined error: Name "Self" is not defined
     def get_reset_function(self) -> Self | None:
+        # types:                    ^
         return self.environment.get_reset_function()
 
     def register_clock(self, id_: str) -> None:
         self.environment.register_clock(id_)
 
     @property
+    # types: name-defined error: Name "global_context" is not defined
     def global_context(self) -> global_context:
+        # types:                ^
         return self.environment.global_context
 
+    # types: name-defined error: Name "Self" is not defined
     def copy_environment_from(self, func: Self) -> None:
+        # types:                          ^
         self.environment = func.environment.clone()
 
     @property
@@ -1020,14 +1135,27 @@ class mcfunction:
             for l in self.environment.get_all_locals()
         ]
 
+    # types: no-untyped-def error: Function is missing a type annotation for one or more arguments
     def push_locals(self, locals_) -> None:
+        # types: no-untyped-call error: Call to untyped function "push_block" in typed context
         block = push_block(0, locals_)
+        # types: ^^^^^^^^^^^^^^^^^^^^^
+        # types: no-untyped-call error: Call to untyped function "compile" in typed context
         block.compile(self)
 
+    # types: ^^^^^^^^^^^^^^^^^^
+
+    # types: no-untyped-def error: Function is missing a type annotation
     def pop_locals(self, locals_):
+        # types: no-untyped-call error: Call to untyped function "pop_block" in typed context
         block = pop_block(0, locals_)
+        # types: ^^^^^^^^^^^^^^^^^^^^
+        # types: no-untyped-call error: Call to untyped function "compile" in typed context
         block.compile(self)
+
+    # types: ^^^^^^^^^^^^^^^^^^
 
     @property
+    # types: no-untyped-def error: Function is missing a return type annotation
     def predicates(self):
         return self.environment.predicates

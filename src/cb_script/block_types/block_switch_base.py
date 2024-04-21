@@ -1,9 +1,23 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from cb_script.CompileError import CompileError
+
+if TYPE_CHECKING:
+
+    from cb_script.mcfunction import mcfunction
+
 from cb_script.block_types.block_base import block_base
 from cb_script.CompileError import CompileError
 
 
 class block_switch_base(block_base):
-    def __init__(self):
+    def __init__(self, line: str, cases, default_case: bool) -> None:
+        super().__init__(line)
+        self.cases = cases
+        self.default_case = default_case
+
         self.default_case = None
         for case in self.cases:
             if case.is_default:
@@ -21,11 +35,11 @@ class block_switch_base(block_base):
         self.falling_block_nbt = {}
 
     # In child classes, can be used to initialize switch variables
-    def compile_initialization(self, func):
+    def compile_initialization(self, func: mcfunction):
         None
 
     # Create and call all required switch/case functions
-    def compile(self, func):
+    def compile(self, func: mcfunction):
         self.compile_initialization(func)
         self.blocks = func.get_block_state_list(
             include_block_states=self.include_block_states
@@ -79,7 +93,7 @@ class block_switch_base(block_base):
                 )
 
     # Gets a block state name in command format from a json block state object
-    def get_block_state_name(self, block, state):
+    def get_block_state_name(self, block: str, state):
         if "properties" in state:
             props = state["properties"]
 
@@ -100,7 +114,7 @@ class block_switch_base(block_base):
             return f'Name:"{block}"'
 
     # Gets a list of all block states matching some case (including the default case)
-    def get_block_state_list(self, func, blocks):
+    def get_block_state_list(self, func: mcfunction, blocks):
         self.block_state_list = {}
         self.block_list = {}
 
@@ -125,7 +139,7 @@ class block_switch_base(block_base):
         }
 
     # Finds a case matching a block state in command format
-    def get_matching_case(self, func, block, state):
+    def get_matching_case(self, func: mcfunction, block, state):
         for case in self.cases:
             if not case.is_default and case.matches(block, state):
                 return case
