@@ -42,6 +42,7 @@ include = ["*.py", "*.pyi", "**/pyproject.toml"]
 [tool.ruff.lint]
 select = [
     "I",     # isort
+    "UP",    # pyupgrade
 ]
 extend-ignore = [
     "E501",  # line-too-long
