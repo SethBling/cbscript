@@ -1,5 +1,6 @@
-from cb_script.CompileError import CompileError
 import json
+
+from cb_script.CompileError import CompileError
 
 
 def get_friendly_name(namespace):

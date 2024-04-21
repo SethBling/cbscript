@@ -1,25 +1,11 @@
-import new
 import unittest
 
 import environment
 import global_context
 import mcfunction
+import new
 import scriptparse
 import tellraw
-
-from selector_definition import selector_definition
-from scratch_tracker import scratch_tracker
-from cbscript import cbscript
-
-from mock_block import mock_block
-from mock_environment import mock_environment
-from mock_global_context import mock_global_context
-from mock_mcfunction import mock_mcfunction
-from mock_mcworld import mock_mcworld
-from mock_parsed import mock_parsed
-from mock_selector_definition import mock_selector_definition
-from mock_source_file import mock_source_file
-
 from block_types.array_assignment_block import array_assignment_block
 from block_types.array_definition_block import array_definition_block
 from block_types.block_tag_block import block_tag_block
@@ -50,25 +36,33 @@ from block_types.vector_assignment_scalar_block import (
     vector_assignment_scalar_block,
 )
 from block_types.while_block import while_block
-
+from cbscript import cbscript
 from data_types.const_number import const_number
-from data_types.python_identifier import python_identifier
 from data_types.interpreted_python import interpreted_python
+from data_types.python_identifier import python_identifier
 from data_types.relcoord import relcoord
 from data_types.relcoords import relcoords
-
+from mock_block import mock_block
+from mock_environment import mock_environment
+from mock_global_context import mock_global_context
+from mock_mcfunction import mock_mcfunction
+from mock_mcworld import mock_mcworld
+from mock_parsed import mock_parsed
+from mock_selector_definition import mock_selector_definition
+from mock_source_file import mock_source_file
 from scalar_expressions.arrayconst_expr import arrayconst_expr
 from scalar_expressions.arrayexpr_expr import arrayexpr_expr
 from scalar_expressions.binop_expr import binop_expr
 from scalar_expressions.create_expr import create_expr
 from scalar_expressions.dot_expr import dot_expr
-from scalar_expressions.func_expr import func_expr, factor
+from scalar_expressions.func_expr import factor, func_expr
 from scalar_expressions.num_expr import num_expr
 from scalar_expressions.scale_expr import scale_expr
 from scalar_expressions.selector_expr import selector_expr
 from scalar_expressions.selvar_expr import selvar_expr
 from scalar_expressions.unary_expr import unary_expr
-
+from scratch_tracker import scratch_tracker
+from selector_definition import selector_definition
 from vector_expressions.sel_vector_var_expr import sel_vector_var_expr
 from vector_expressions.vector_binop_scalar_expr import (
     vector_binop_scalar_expr,

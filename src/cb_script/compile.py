@@ -2,12 +2,11 @@
 # * ply
 # * pyyaml
 
-from cb_script import cbscript
+import os
 import sys
 import time
-from cb_script import source_file
-from cb_script import scriptparse
-import os
+
+from cb_script import cbscript, scriptparse, source_file
 
 if len(sys.argv) != 2:
     print("You must include a script filename.")

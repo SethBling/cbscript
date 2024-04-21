@@ -1,7 +1,8 @@
-import os
-import json
 import io
+import json
+import os
 import zipfile
+
 from cb_script.CompileError import CompileError
 
 

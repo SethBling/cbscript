@@ -4,7 +4,6 @@ ci:
   autoupdate_commit_msg: "[pre-commit.ci] pre-commit autoupdate"
   autoupdate_schedule: quarterly
   submodules: false
-  skip: [badgie]
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -31,3 +30,9 @@ repos:
     rev: 24.3.0
     hooks:
       - id: black
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.5
+    hooks:
+      - id: ruff
+        types: [file]
+        types_or: [python, pyi, toml]

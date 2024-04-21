@@ -1,5 +1,5 @@
-from cb_script.variable_types.var_base import var_base
 from cb_script.variable_types.scoreboard_var import scoreboard_var
+from cb_script.variable_types.var_base import var_base
 
 
 class array_expr_var(var_base):

@@ -1,4 +1,4 @@
-from cb_script.environment import isNumber, isInt
+from cb_script.environment import isInt, isNumber
 
 
 class const_number(object):

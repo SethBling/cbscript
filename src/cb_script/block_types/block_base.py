@@ -1,5 +1,6 @@
-from cb_script.CompileError import CompileError
 import traceback
+
+from cb_script.CompileError import CompileError
 
 
 class block_base(object):

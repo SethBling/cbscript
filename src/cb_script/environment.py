@@ -1,7 +1,8 @@
 import math
+
+from cb_script.CompileError import CompileError
 from cb_script.scratch_tracker import scratch_tracker
 from cb_script.selector_definition import selector_definition
-from cb_script.CompileError import CompileError
 
 
 def isNumber(s):

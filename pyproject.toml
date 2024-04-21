@@ -26,6 +26,23 @@ dependencies = [
 all = true
 disable_all_dunder_policy = true
 
+[tool.ruff.lint.isort]
+combine-as-imports = true
+
 [tool.black]
 line-length = 79
 target-version = ['py311']
+
+[tool.ruff]
+line-length = 79
+fix = true
+
+include = ["*.py", "*.pyi", "**/pyproject.toml"]
+
+[tool.ruff.lint]
+select = [
+    "I",     # isort
+]
+extend-ignore = [
+    "E501",  # line-too-long
+]

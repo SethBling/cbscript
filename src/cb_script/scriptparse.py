@@ -1,13 +1,13 @@
-from ply import yacc
 import traceback
+
 import scriptlex
 from block_types.advancement_definition_block import (
     advancement_definition_block,
 )
 from block_types.array_definition_block import array_definition_block
 from block_types.block_definition_block import block_definition_block
-from block_types.block_switch_block import block_switch_block
 from block_types.block_id_switch_block import block_id_switch_block
+from block_types.block_switch_block import block_switch_block
 from block_types.block_tag_block import block_tag_block
 from block_types.clock_section import clock_section
 from block_types.command_block import command_block
@@ -21,6 +21,9 @@ from block_types.for_selector_block import for_selector_block
 from block_types.function_call_block import function_call_block
 from block_types.function_section import function_section
 from block_types.import_block import import_block
+from block_types.item_modifier_definition_block import (
+    item_modifier_definition_block,
+)
 from block_types.item_tag_block import item_tag_block
 from block_types.loot_table_definition_block import loot_table_definition_block
 from block_types.macro_call_block import macro_call_block
@@ -29,12 +32,9 @@ from block_types.method_call_block import method_call_block
 from block_types.move_block import move_block
 from block_types.nbt_data_block import nbt_data_block
 from block_types.nbt_remove_block import nbt_remove_block
-from block_types.pop_block import pop_block
 from block_types.pointer_decl_block import pointer_decl_block
+from block_types.pop_block import pop_block
 from block_types.predicate_definition_block import predicate_definition_block
-from block_types.item_modifier_definition_block import (
-    item_modifier_definition_block,
-)
 from block_types.print_block import print_block
 from block_types.push_block import push_block
 from block_types.python_assignment_block import python_assignment_block
@@ -66,15 +66,16 @@ from block_types.with_items import with_items
 from data_types.block_case import block_case
 from data_types.const_number import const_number
 from data_types.const_string import const_string
-from data_types.number_macro_path import number_macro_path
 from data_types.interpreted_python import interpreted_python
-from data_types.relcoord_vector import relcoord_vector
+from data_types.number_macro_path import number_macro_path
 from data_types.relcoord import relcoord
+from data_types.relcoord_vector import relcoord_vector
 from data_types.relcoords import relcoords
 from nbt_types.block_nbt_path import block_nbt_path
 from nbt_types.entity_nbt_path import entity_nbt_path
 from nbt_types.nbt_json import nbt_json
 from nbt_types.storage_nbt_path import storage_nbt_path
+from ply import yacc
 from scalar_expressions.binop_expr import binop_expr
 from scalar_expressions.create_expr import create_expr
 from scalar_expressions.dot_expr import dot_expr

@@ -1,11 +1,12 @@
+import json
+import traceback
+
+from cb_script.block_types.pop_block import pop_block
+from cb_script.block_types.push_block import push_block
+from cb_script.CompileError import CompileError
 from cb_script.selector_definition import selector_definition
 from cb_script.source_file import source_file
 from cb_script.variable_types.scoreboard_var import scoreboard_var
-from cb_script.block_types.push_block import push_block
-from cb_script.block_types.pop_block import pop_block
-from cb_script.CompileError import CompileError
-import traceback
-import json
 
 
 def get_undecorated_selector_name(selector):

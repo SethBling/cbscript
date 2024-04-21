@@ -1,8 +1,9 @@
+import math
+
 from cb_script.scalar_expressions.scalar_expression_base import (
     scalar_expression_base,
 )
 from cb_script.variable_types.scoreboard_var import scoreboard_var
-import math
 
 
 def factor(n):

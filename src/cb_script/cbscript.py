@@ -1,12 +1,12 @@
-from cb_script import global_context
-from cb_script import mcworld
+import os
+import time
+import traceback
+
+from cb_script import global_context, mcworld
+from cb_script.CompileError import CompileError
 from cb_script.environment import environment
 from cb_script.mcfunction import mcfunction
 from cb_script.source_file import source_file
-from cb_script.CompileError import CompileError
-import traceback
-import time
-import os
 
 
 class cbscript(object):

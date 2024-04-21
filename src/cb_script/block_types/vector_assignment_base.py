@@ -1,6 +1,6 @@
 from cb_script.block_types.block_base import block_base
-from cb_script.variable_types.scoreboard_var import scoreboard_var
 from cb_script.CompileError import CompileError
+from cb_script.variable_types.scoreboard_var import scoreboard_var
 
 
 class vector_assignment_base(block_base):
