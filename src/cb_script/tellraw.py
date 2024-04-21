@@ -38,9 +38,9 @@ def formatJsonText(func, text):
     for segment, properties in parseTextFormatting(text):
         propertiesText = getPropertiesText(properties)
         if isinstance(segment, str):
-            formatted = formatted + ',{{"text":"{0}"{1}}}'.format(
-                segment.replace('"', '\\"'), getPropertiesText(properties)
-            )
+            text_data = segment.replace('"', '\\"')
+            properties_text = getPropertiesText(properties)
+            formatted += f',{{"text":"{text_data}"{properties_text}}}'
         else:
             unformatted, command = segment
             if unformatted == None:
@@ -104,15 +104,9 @@ def formatJsonText(func, text):
                     )
                 else:
                     action = "run_command"
-                formatted = (
-                    formatted
-                    + ',{{"text":"{0}","clickEvent":{{"action":"{1}","value":"{2}"}}{3}}}'.format(
-                        unformatted.replace('"', '\\"'),
-                        action,
-                        command,
-                        getPropertiesText(properties),
-                    )
-                )
+                text_data = unformatted.replace('"', '\\"')
+                properties_text = getPropertiesText(properties)
+                formatted += f',{{"text":"{text_data}","clickEvent":{{"action":"{action}","value":"{command}"}}{properties_text}}}'
 
     formatted = formatted + "]"
 
