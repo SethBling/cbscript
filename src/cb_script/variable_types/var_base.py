@@ -1,6 +1,6 @@
 # Base class for Minecraft variables. Each variable subclass must implement at least one of the get() functions.
 # If the variable is settable, it must implement set_value as well.
-class var_base(object):
+class var_base:
     # Returns a scoreboard objective for this variable.
     # If assignto isn't None, then this function may
     # use the assignto objective to opimtize data flow.

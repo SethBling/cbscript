@@ -2,7 +2,7 @@ from cb_script.CompileError import CompileError
 from cb_script.variable_types.virtualint_var import virtualint_var
 
 
-class vector_var_const_vector(object):
+class vector_var_const_vector:
     def __init__(self, value):
         self.value = value
 

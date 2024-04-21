@@ -1,4 +1,4 @@
-class entity_nbt_path(object):
+class entity_nbt_path:
     def __init__(self, selector, path):
         self.selector = selector
         self.path = path

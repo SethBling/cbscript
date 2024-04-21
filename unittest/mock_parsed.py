@@ -1,4 +1,4 @@
-class mock_parsed(object):
+class mock_parsed:
     def __init__(self, *args):
         self.p = [None] + list(args)
 

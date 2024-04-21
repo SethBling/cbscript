@@ -1,4 +1,4 @@
-class mock_global_context(object):
+class mock_global_context:
     def __init__(self):
         self.temp = 0
         self.scratch = {}

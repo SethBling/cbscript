@@ -2,7 +2,7 @@ from mock_environment import mock_environment
 from mock_selector_definition import mock_selector_definition
 
 
-class mock_mcfunction(object):
+class mock_mcfunction:
     def __init__(self):
         self.commands = []
         self.dollarid = {}

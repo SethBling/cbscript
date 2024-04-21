@@ -1,4 +1,4 @@
-class vector_binop_base(object):
+class vector_binop_base:
     def __init__(self, lhs, op, rhs):
         self.lhs = lhs
         self.op = op

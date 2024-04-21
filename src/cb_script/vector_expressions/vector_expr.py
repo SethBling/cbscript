@@ -1,4 +1,4 @@
-class vector_expr(object):
+class vector_expr:
     def __init__(self, exprs):
         self.exprs = exprs
 

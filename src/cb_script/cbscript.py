@@ -9,7 +9,7 @@ from cb_script.mcfunction import mcfunction
 from cb_script.source_file import source_file
 
 
-class cbscript(object):
+class cbscript:
     def __init__(self, source_file, parse_func):
         self.source_file = source_file
         self.parse = parse_func

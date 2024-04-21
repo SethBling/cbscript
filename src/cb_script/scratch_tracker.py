@@ -1,4 +1,4 @@
-class scratch_tracker(object):
+class scratch_tracker:
     def __init__(self, global_context):
         self.scratch = {}
         self.temp = {}

@@ -1,7 +1,7 @@
 from cb_script.CompileError import CompileError
 
 
-class number_macro_path(object):
+class number_macro_path:
     def __init__(self, id, params, path, type, scale=None):
         self.id = id
         self.params = params

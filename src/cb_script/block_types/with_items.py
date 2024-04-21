@@ -1,4 +1,4 @@
-class with_items(object):
+class with_items:
     def __init__(self, line, items):
         self.line = line
         self.items = items

@@ -1,4 +1,4 @@
-class scalar_expression_base(object):
+class scalar_expression_base:
     def const_value(self, func=None):
         return None
 

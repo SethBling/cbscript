@@ -1,7 +1,7 @@
 import time
 
 
-class mock_source_file(object):
+class mock_source_file:
     def __init__(self, base_name="unittest.cbscript", text=""):
         self.base_name = base_name
         self.text = text

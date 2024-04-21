@@ -1,4 +1,4 @@
-class block_nbt_path(object):
+class block_nbt_path:
     def __init__(self, coords, path):
         self.coords = coords
         self.path = path

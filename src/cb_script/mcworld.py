@@ -6,7 +6,7 @@ import zipfile
 from cb_script.CompileError import CompileError
 
 
-class mcworld(object):
+class mcworld:
     def __init__(self, leveldir, namespace):
         self.dir = leveldir
         self.zipbytes = io.BytesIO()

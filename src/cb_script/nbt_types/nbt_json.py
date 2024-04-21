@@ -1,4 +1,4 @@
-class nbt_json(object):
+class nbt_json:
     def __init__(self, json):
         self.json = json
 

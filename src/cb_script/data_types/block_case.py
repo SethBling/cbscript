@@ -1,4 +1,4 @@
-class block_case(object):
+class block_case:
     def __init__(self, block_name, props, lines, is_default):
         self.block_name = block_name
         self.lines = lines

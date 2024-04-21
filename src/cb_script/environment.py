@@ -33,7 +33,7 @@ def isInt(s):
         return False
 
 
-class environment(object):
+class environment:
     def __init__(self, global_context):
         self.dollarid = {}
         self.global_context = global_context

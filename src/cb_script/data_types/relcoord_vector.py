@@ -1,7 +1,7 @@
 from cb_script.CompileError import CompileError
 
 
-class relcoord_vector(object):
+class relcoord_vector:
     def __init__(self, line, type, value):
         self.type = type
         self.value = value

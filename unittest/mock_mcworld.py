@@ -1,7 +1,7 @@
 last_created = None
 
 
-class mock_mcworld(object):
+class mock_mcworld:
     def __init__(self, dir, namespace):
         self.dir = dir
         self.namespace = namespace

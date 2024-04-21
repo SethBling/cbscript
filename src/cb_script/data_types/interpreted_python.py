@@ -1,4 +1,4 @@
-class interpreted_python(object):
+class interpreted_python:
     def __init__(self, expr, line=0):
         self.expr = expr
         self.line = line

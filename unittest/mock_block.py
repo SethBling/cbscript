@@ -1,4 +1,4 @@
-class mock_block(object):
+class mock_block:
     def __init__(
         self, command="mock_block_command", raiseException=False, line=0
     ):

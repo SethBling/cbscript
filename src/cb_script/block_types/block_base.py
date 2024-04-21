@@ -3,7 +3,7 @@ import traceback
 from cb_script.CompileError import CompileError
 
 
-class block_base(object):
+class block_base:
     def compile(self, func):
         raise NotImplementedError("Section does not implement compile()")
 

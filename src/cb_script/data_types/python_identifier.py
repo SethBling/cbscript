@@ -1,4 +1,4 @@
-class python_identifier(object):
+class python_identifier:
     def __init__(self, id, negate=False):
         self.id = id
         self.negate = negate

@@ -1,7 +1,7 @@
 from cb_script.environment import isInt, isNumber
 
 
-class const_number(object):
+class const_number:
     def __init__(self, val):
         if not isNumber(val):
             raise Exception(f'Non-numeric value "{val}" for number.')

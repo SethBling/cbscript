@@ -21,7 +21,7 @@ def isNumber(s):
         return False
 
 
-class selector_definition(object):
+class selector_definition:
     def __init__(self, selector, env):
         self.parts = []
         self.scores_min = {}

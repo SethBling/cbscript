@@ -1,4 +1,4 @@
-class mock_environment(object):
+class mock_environment:
     def __init__(self):
         self.dollarid = {}
         self.functions = {}

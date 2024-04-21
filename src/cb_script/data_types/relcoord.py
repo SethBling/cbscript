@@ -1,4 +1,4 @@
-class relcoord(object):
+class relcoord:
     def __init__(self, type, coord):
         self.type = type
         self.coord = coord

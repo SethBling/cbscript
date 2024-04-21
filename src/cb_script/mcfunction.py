@@ -41,7 +41,7 @@ def real_command(cmd):
     return not cmd.startswith("#") and len(cmd) > 0
 
 
-class mcfunction(object):
+class mcfunction:
     def __init__(self, environment, callable=False, params=[]):
         self.commands = []
         self.environment = environment

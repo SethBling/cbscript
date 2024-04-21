@@ -1,4 +1,4 @@
-class storage_nbt_path(object):
+class storage_nbt_path:
     def __init__(self, target, path):
         self.target = target
         self.path = path

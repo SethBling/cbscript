@@ -2,7 +2,7 @@ import os
 import time
 
 
-class source_file(object):
+class source_file:
     def __init__(self, filename):
         self.filename = os.path.abspath(filename)
         self.modified = self.get_last_modified()
@@ -28,7 +28,7 @@ class source_file(object):
     def get_text(self, only_new_text=False):
         text = ""
         while len(text) == 0:
-            with open(self.filename, "r") as content_file:
+            with open(self.filename) as content_file:
                 if only_new_text:
                     content_file.seek(self.last_size)
                 text = content_file.read()

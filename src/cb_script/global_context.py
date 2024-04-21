@@ -25,7 +25,7 @@ def get_constant_name(c):
         return f"cm{-c}"
 
 
-class global_context(object):
+class global_context:
     def __init__(self, namespace):
         self.clocks = []
         self.functions = {}
@@ -176,7 +176,7 @@ class global_context(object):
             if self.block_state_list:
                 blocks = self.block_state_list
             else:
-                with open("blocks.json", "r") as f:
+                with open("blocks.json") as f:
                     blocks = json.load(f)
 
                 self.block_state_list = blocks
@@ -185,7 +185,7 @@ class global_context(object):
             if self.block_list:
                 blocks = self.block_list
             else:
-                with open("blocks.json", "r") as f:
+                with open("blocks.json") as f:
                     blocks = json.load(f)
 
                 id = 0

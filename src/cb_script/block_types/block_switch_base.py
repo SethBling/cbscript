@@ -93,7 +93,7 @@ class block_switch_base(block_base):
             props = state["properties"]
 
             return 'Name:"{}",Properties:{{{}}}'.format(
-                block, ",".join('{}:"{}"'.format(p, props[p]) for p in props)
+                block, ",".join(f'{p}:"{props[p]}"' for p in props)
             )
 
         else:

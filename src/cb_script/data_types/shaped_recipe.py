@@ -1,4 +1,4 @@
-class shaped_recipe(object):
+class shaped_recipe:
     def __init__(self, recipe_lines, keys, count, item, group):
         self.recipe_lines = recipe_lines
         self.keys = keys

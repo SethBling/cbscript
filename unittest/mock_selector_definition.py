@@ -1,4 +1,4 @@
-class mock_selector_definition(object):
+class mock_selector_definition:
     def __init__(self):
         self.scores_min = {}
         self.scores_max = {}

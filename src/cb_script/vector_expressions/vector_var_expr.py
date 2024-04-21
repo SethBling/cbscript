@@ -1,7 +1,7 @@
 from cb_script.variable_types.scoreboard_var import scoreboard_var
 
 
-class vector_var_expr(object):
+class vector_var_expr:
     def __init__(self, vector_id):
         self.vector_id = vector_id
 

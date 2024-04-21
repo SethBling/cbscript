@@ -1,4 +1,4 @@
-class const_string(object):
+class const_string:
     def __init__(self, val):
         self.val = val
 
