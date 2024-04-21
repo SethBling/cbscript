@@ -17,7 +17,7 @@ end
 
 define @RopeSegment = @Entity[type=block_display,tag=RopeSegment]
     create {block_state: {Name: "minecraft:brown_concrete", count: 0b}, teleport_duration: 0, interpolation_duration: 0, transformation:{left_rotation: [0f, 0f, 0f, 1f], translation: [0f, 0f, 0f], right_rotation: [0f, 0f, 0f, 1f], scale:[0.05f, 0.05f, 0.05f]}, Tags:["RopeSegment"]}
-    
+
     tele_dur: teleport_duration int 1
     interp_dur = interpolation_duration int 1
 end
@@ -48,14 +48,14 @@ $CounterMax = $CounterXNegZPos
 
 reset
     /scoreboard objectives add absorbed minecraft.custom:minecraft.damage_dealt_absorbed
-    
+
     /scoreboard objectives add normal_game trigger
     /scoreboard objectives add prev_game trigger
     /scoreboard objectives add next_game trigger
     /scoreboard objectives add restart_game trigger
 
     initialize_transforms()
-    
+
     tell @a "{G[\[Normal Game\]](/trigger normal_game set 1) {C[\[Prev Game\]](/trigger prev_game set 1) [\[Next Game\]](/trigger next_game set 1) {Y[\[Restart Game\]](/trigger restart_game set 1)"
 end
 
@@ -74,7 +74,7 @@ function clear_game()
     CubeInvRotInt = 200
     GravityGun = False
     @Player.gravity_cube = None
-    
+
     /bossbar remove score
     /bossbar add score ["Score"]
     /bossbar set score players @a
@@ -106,11 +106,11 @@ end
 
 function start_normal_game()
     clear_game()
-    
+
     gamemode = 1
-    
+
     /fill 0 56 0 0 67 0 minecraft:birch_fence
-    
+
     PoleRadius = 125
     PoleDiameter = PoleRadius * 2
     PoleHeight = 12000
@@ -119,7 +119,7 @@ function start_normal_game()
     with
         $(block_name) = "target"
     add_tether_block(1000, 60000, 1000)
-    
+
     /bossbar set score name "<-Counter    Normal    Clockwise->"
 
     finalize_game()
@@ -127,11 +127,11 @@ end
 
 function start_multi_game()
     clear_game()
-    
+
     gamemode = 5
 
     /fill 0 56 0 0 67 0 minecraft:birch_fence
-    
+
     PoleRadius = 125
     PoleDiameter = PoleRadius * 2
     PoleHeight = 12000
@@ -156,12 +156,12 @@ end
 
 function start_fat_game()
     clear_game()
-    
+
     gamemode = 2
 
-    
+
     /fill 0 56 0 0 67 0 minecraft:birch_planks
-    
+
     PoleRadius = 500
     PoleDiameter = PoleRadius * 2
     PoleHeight = 12000
@@ -178,11 +178,11 @@ end
 
 function start_obese_game()
     clear_game()
-    
+
     gamemode = 3
-    
+
     /fill -1 56 -1 1 67 1 minecraft:birch_planks
-    
+
     PoleRadius = 1500
     PoleDiameter = PoleRadius * 2
     PoleHeight = 12000
@@ -193,21 +193,21 @@ function start_obese_game()
     add_tether_block(2000, 60000, 0)
 
     /bossbar set score name "<-Counter    Obese    Clockwise->"
-    
+
     finalize_game()
 end
 
 function start_cup_game()
     clear_game()
-    
+
     gamemode = 4
 
     PunchPower = 3000
-    
+
     /fill -4 68 -4 4 71 4 minecraft:black_stained_glass
     /fill -3 69 -3 3 71 3 minecraft:air
     /fill 0 56 0 0 75 0 minecraft:birch_fence
-    
+
     PoleRadius = 125
     PoleDiameter = PoleRadius * 2
     PoleHeight = 12000
@@ -224,12 +224,12 @@ end
 
 function start_water_game()
     clear_game()
-    
+
     gamemode = 6
 
     /fill -9 56 -9 9 64 9 minecraft:water
     /fill 0 56 0 0 67 0 minecraft:birch_fence
-    
+
     PoleRadius = 125
     PoleDiameter = PoleRadius * 2
     PoleHeight = 12000
@@ -240,17 +240,17 @@ function start_water_game()
     add_tether_block(1000, 60000, 1000)
 
     /bossbar set score name "<-Counter    Water    Clockwise->"
-    
+
     finalize_game()
 end
 
 function start_gravity_game()
     clear_game()
-    
+
     gamemode = 7
-    
+
     /fill 0 56 0 0 67 0 minecraft:birch_fence
-    
+
     PoleRadius = 125
     PoleDiameter = PoleRadius * 2
     PoleHeight = 12000
@@ -261,13 +261,13 @@ function start_gravity_game()
     with
         $(block_name) = "target"
     add_tether_block(1000, 60000, 1000)
-    
+
     CubeSize = $Precision
     CubeInvRotInt = 400
     CubeInvMass = 200
 
     /bossbar set score name "<-Counter    Gravity Gun    Clockwise->"
-    
+
     finalize_game()
 end
 
@@ -301,7 +301,7 @@ end
 clock tick
     /kill @Position
     create @Position
-    
+
     as @Player at @s ~ ~ ~
         if @s.id
             id = @s.id
@@ -310,7 +310,7 @@ clock tick
             @s.id = player_id
             id = player_id
         end
-    
+
         as @PlayerInteraction if @s.id == id
             /tp @s ~ ~ ~
         else
@@ -318,22 +318,22 @@ clock tick
                 @s.id = id
             end
         end
-        
+
         if @s.normal_game
             start_normal_game()
             @s.normal_game = False
         end
-        
+
         if @s.next_game
             gamemode++
             if gamemode > $MaxGame
                 gamemode = 1
             end
             start_selected_game()
-        
+
             @s.next_game = False
         end
-        
+
         if @s.prev_game
             gamemode--
             if gamemode < 1
@@ -348,18 +348,18 @@ clock tick
             unless gamemode
                 gamemode = 1
             end
-            
+
             start_selected_game()
 
             @s.restart_game = False
         end
-        
+
         /scoreboard players enable @s normal_game
         /scoreboard players enable @s prev_game
         /scoreboard players enable @s next_game
         /scoreboard players enable @s restart_game
     end
-    
+
     as @PlayerInteraction
         id = @s.id
         as @Player if @s.id == id
@@ -367,7 +367,7 @@ clock tick
             /kill @s
         end
     end
-    
+
     as @PlayerInteraction
         on attacker
             at @s eyes
@@ -375,13 +375,13 @@ clock tick
                 world_eye_x = @Position.x
                 world_eye_y = @Position.y
                 world_eye_z = @Position.z
-                
+
                 /tp @Position ^ ^ ^1
                 world_eye_dx = @Position.x - world_eye_x
                 world_eye_dy = @Position.y - world_eye_y
                 world_eye_dz = @Position.z - world_eye_z
             end
-            
+
             if GravityGun
                 if @s.gravity_cube
                     gravity_cube = @s.gravity_cube
@@ -393,21 +393,21 @@ clock tick
                         collider.velocity_y = world_eye_dy
                         collider.velocity_z = world_eye_dz
                         collider_wake_up() with macros
-                        
+
                         as @GravityBlock if @s.collider_id == gravity_cube
                             @s.free = True
                         end
-                        
+
                         @s.gravity_cube = None
                     end
                 else
                     get_targeted_block()
-                    
+
                     if t < $GravityRange
                         x = x / $Precision * $Precision + $Half
                         y = y / $Precision * $Precision + $Half
                         z = z / $Precision * $Precision + $Half
-                        
+
                         got_block = False
 
                         at @Position
@@ -431,7 +431,7 @@ clock tick
                         end
                     end
                 end
-            else        
+            else
                 min_col_t = $Billion
 
                 # Find the nearest collider in the direction of the cursor ray
@@ -452,10 +452,10 @@ clock tick
                         end
                     end
                 end
-                
+
                 if min_col_t <= $AttackRange
                     # There was a ray intersection
-                    
+
                     @s.attacking = min_col
                     @s.attack_x = min_x
                     @s.attack_y = min_y
@@ -463,14 +463,14 @@ clock tick
                     @s.attack_dx = world_eye_dx
                     @s.attack_dy = world_eye_dy
                     @s.attack_dz = world_eye_dz
-                    
+
                 end
             end
         end
         /data remove entity @s attack
         /data remove entity @s interaction
     end
-    
+
     as @Player
         if @s.attacking
             with
@@ -482,36 +482,36 @@ clock tick
                 /particle minecraft:explosion ~ ~ ~ 0 0 0 0 1 force
                 /playsound minecraft:entity.generic.small_fall block @a ~ ~ ~ 1 0
             end
-        
+
             @s.attacking = 0
         end
-        
+
         if @s.gravity_cube
             at @s eyes
                 /tp @Position ^ ^ ^
                 world_eye_x = @Position.x
                 world_eye_y = @Position.y
                 world_eye_z = @Position.z
-                
+
                 /tp @Position ^ ^ ^1
                 world_eye_dx = @Position.x - world_eye_x
                 world_eye_dy = @Position.y - world_eye_y
                 world_eye_dz = @Position.z - world_eye_z
-            end        
-            
+            end
+
             hover_x = world_eye_x + world_eye_dx * 3
             hover_y = world_eye_y + world_eye_dy * 3
             hover_z = world_eye_z + world_eye_dz * 3
-            
+
             with
                 $(collider) = @s.gravity_cube
             do
                 define name collider = "collider_$(collider)"
-                
+
                 collider.velocity_x /= 2
                 collider.velocity_y /= 2
                 collider.velocity_z /= 2
-                
+
                 collider.velocity_x += (hover_x - collider.x) / 2
                 collider.velocity_y += (hover_y - collider.y) / 2
                 collider.velocity_z += (hover_z - collider.z) / 2
@@ -520,7 +520,7 @@ clock tick
             end
         end
     end
-    
+
     as @GravityBlock if @s.free at @s unless block ~ ~-0.6 ~ passthrough
         with
             $(collider) = @s.collider_id
@@ -542,39 +542,39 @@ clock tick
             local_att_x = 0
             local_att_y = CubeSize / 2
             local_att_z = 0
-            
+
             with
                 $(collider) = id
             collider_apply_spring_cable(spring_x, spring_y, spring_z, spring_neutral, spring_constant, local_att_x, local_att_y, local_att_z)
         end
     end
-        
+
     colliders_physics_tick()
     colliders_get_new_collisions()
     colliders_resolve_collisions()
     colliders_finalize_tick()
-    
+
     total_score = 0
     score_count = 0
-    
+
     as @TetherBlock at @s ~ ~-1.5 ~
         id = @s.collider_id
         segments = @s.segments
         free_length = @s.free_length
-        
+
         as @RopeSegment if @s.id == id and @s.segment == segments
             # Handle the last segment
-            
+
             with
                 $(collider) = id
             collider_local_to_world(0, 750, 0, True)
-            
+
             dx = world_x - @s.origin_x
             dy = world_y - @s.origin_y
             dz = world_z - @s.origin_z
             new_wrap_state = None
             unwrap = False
-            
+
             switch @s.wrap_state
                 case $Unwrapped
                     if dx < 0
@@ -594,7 +594,7 @@ clock tick
                 case $ClockXPosZPos
                     if dz < 0
                         # Unwrap
-                        unwrap = True                        
+                        unwrap = True
                     else if dx < 0
                         # Wrap
                         wrapped_portion = PoleDiameter * 1000 / dz
@@ -639,11 +639,11 @@ clock tick
                         new_wrap_state = $ClockXPosZPos
                     end
                 end
-                
+
                 case $CounterXPosZPos
                     if dx < 0
                         # Unwrap
-                        unwrap = True                        
+                        unwrap = True
                     else if dz < 0
                         # Wrap
                         wrapped_portion = PoleDiameter * 1000 / dx
@@ -689,21 +689,21 @@ clock tick
                     end
                 end
             end
-            
+
             if new_wrap_state
                 wrapped_dy = dy * wrapped_portion / 1000
                 wrap_y = @s.origin_y + wrapped_dy
 
                 # Compute the stretched length of the unbound tether
                 len = sqrt(dx*dx + dy*dy + dz*dz)
-            
+
                 # Compute the amount of tether that's bound
                 stretched_length = wrapped_portion * len / 1000
                 bound_length = wrapped_portion * free_length / 1000
                 free_length -= bound_length
 
                 @s.bound_length = bound_length
-                
+
                 if Debug
                     tell @a "Wrapping..."
                     tell @a "new_wrap_state: (new_wrap_state)"
@@ -719,10 +719,10 @@ clock tick
                 /execute store result storage $namespace:global scale[2] float 0.001 run scoreboard players get Global stretched_length
                 /data modify entity @s transformation.scale set from storage $namespace:global scale
                 /data modify entity @s start_interpolation set value 0b
-                
+
                 @s.interp_dur = 0
                 @s.tele_dur = 0
-                
+
                 bdx = wrap_x - @s.origin_x
                 bdy = wrap_y - @s.origin_y
                 bdz = wrap_z - @s.origin_z
@@ -730,7 +730,7 @@ clock tick
                 ix = bdx * 25 / bl
                 iy = bdy * 25 / bl
                 iz = bdz * 25 / bl
-                
+
                 @Position.<pos> = <@s.origin_x-ix, @s.origin_y-iy, @s.origin_z-iz>
                 at @Position
                     @Position.<pos> = <wrap_x+ix, wrap_y+iy, wrap_z+iz>
@@ -738,7 +738,7 @@ clock tick
                         /tp @s ~ ~ ~ ~ ~
                     end
                 end
-                
+
                 at @Position
                     as create @RopeSegment
                         segments++
@@ -751,7 +751,7 @@ clock tick
                     end
                 end
             end
-            
+
             if unwrap
                 /kill @s
                 segments--
@@ -760,10 +760,10 @@ clock tick
                 end
             end
         end
-        
+
         @s.segments = segments
         @s.free_length = free_length
-        
+
         as @RopeSegment if @s.id == id and @s.segment == segments
             if not new_wrap_state
                 dx = world_x - @s.origin_x
@@ -771,24 +771,24 @@ clock tick
                 dz = world_z - @s.origin_z
 
                 len = sqrt(dx*dx + dy*dy + dz*dz)
-                
+
                 /data modify storage $namespace:global scale set value [0.05f, 0.05f, 0.05f]
                 /execute store result storage $namespace:global scale[2] float 0.001 run scoreboard players get Global len
                 /data modify entity @s transformation.scale set from storage $namespace:global scale
                 /data modify entity @s start_interpolation set value 0b
-                
+
                 @s.tele_dur = 1
                 @s.interp_dur = 1
             end
-                
+
             @Position.<pos> = <@s.origin_x, @s.origin_y, @s.origin_z>
-            at @Position            
+            at @Position
                 @Position.<pos> = <world_x, world_y, world_z>
                 facing @Position
                     /tp @s ~ ~ ~ ~ ~
                 end
             end
-            
+
             if @s.wrap_state >= $ClockMin and @s.wrap_state <= $ClockMax
                 total_score += 110 - free_length * 60 / TetherLength
             else if @s.wrap_state >= $CounterMin and @s.wrap_state <= $CounterMax
@@ -806,11 +806,11 @@ clock tick
                 @s.origin_z = TetherZ
                 @s.wrap_state = $Unwrapped
             end
-            
+
             @s.segments = 1
         end
     end
-    
+
     total_score /= score_count
     /execute store result bossbar score value run scoreboard players get Global total_score
 end
@@ -819,7 +819,7 @@ function get_targeted_block()
     dx = world_eye_dx
     dy = world_eye_dy
     dz = world_eye_dz
-    
+
     if dx == 0 then dx = 1
     if dy == 0 then dy = 1
     if dz == 0 then dz = 1
@@ -827,45 +827,45 @@ function get_targeted_block()
     x = world_eye_x
     y = world_eye_y
     z = world_eye_z
-    
+
     next_x = x / $Precision * $Precision
     if dx > 0
         next_x += $Precision
     else
-        next_x -= 1   
+        next_x -= 1
     end
-    
+
     next_y = y / $Precision * $Precision
     if dy > 0
         next_y += $Precision
     else
         next_y -= 1
     end
-    
+
     next_z = z / $Precision * $Precision
     if dz > 0
         next_z += $Precision
     else
         next_z -= 1
     end
-    
+
     t = 0
 
     next_t_x = (next_x - world_eye_x) * $Precision / dx
     next_t_y = (next_y - world_eye_y) * $Precision / dy
     next_t_z = (next_z - world_eye_z) * $Precision / dz
-    
+
     @Position.<pos> = <x, y, z>
-    
+
     for i = 1 to 100
         at @Position if block ~ ~ ~ passthrough
             if next_t_x < next_t_y and next_t_x < next_t_z
                 t = next_t_x
 
                 x = next_x
-                y = world_eye_y + world_eye_dy * t / $Precision 
-                z = world_eye_z + world_eye_dz * t / $Precision 
-                
+                y = world_eye_y + world_eye_dy * t / $Precision
+                z = world_eye_z + world_eye_dz * t / $Precision
+
                 if dx > 0
                     next_x += $Precision
                 else
@@ -876,10 +876,10 @@ function get_targeted_block()
             else if next_t_y < next_t_z
                 t = next_t_y
 
-                x = world_eye_x + world_eye_dx * t / $Precision 
+                x = world_eye_x + world_eye_dx * t / $Precision
                 y = next_y
-                z = world_eye_z + world_eye_dz * t / $Precision 
-                
+                z = world_eye_z + world_eye_dz * t / $Precision
+
                 if dy > 0
                     next_y += $Precision
                 else
@@ -890,19 +890,19 @@ function get_targeted_block()
             else
                 t = next_t_z
 
-                x = world_eye_x + world_eye_dx * t / $Precision 
-                y = world_eye_y + world_eye_dy * t / $Precision 
+                x = world_eye_x + world_eye_dx * t / $Precision
+                y = world_eye_y + world_eye_dy * t / $Precision
                 z = next_z
-                
+
                 if dz > 0
                     next_z += $Precision
                 else
                     next_z -= $Precision
                 end
-                
+
                 next_t_z = (next_z - world_eye_z) * $Precision / dz
             end
-                
+
             @Position.<pos> = <x, y, z>
         else
             # Non-passthrough block

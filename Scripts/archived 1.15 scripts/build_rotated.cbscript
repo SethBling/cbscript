@@ -17,7 +17,7 @@ define @Entity = @e
 	rx = Rotation[1] float
 	on_ground = OnGround byte 1
 	no_gravity = NoGravity byte 1
-	
+
 	function get_facing_dir()
 		at @s rotated @s at ^ ^ ^1 do @s.<facing_dir> = here - @s.<pos>
 	end
@@ -40,7 +40,7 @@ define @Center = @Marker[center]
 			end
 			@rot = @Marker[rot, limit=1]
 			bottom_y = @s.y
-			
+
 			for angle = ry to ry + 360*scale by scale
 				/tp @base ~ ~ ~
 				/tp @rot ~ ~ ~
@@ -48,7 +48,7 @@ define @Center = @Marker[center]
 				@base.rx = 0
 				@rot.rx = 0
 				@rot.ry = angle
-				
+
 				for x = 1 to @s.size
 					for y = 1 to @s.size
 						at @base
@@ -89,11 +89,11 @@ clock main
 			/spreadplayers 0 0 1 1 false @s
 			/kill @s
 		end
-		
+
 		/setblock 0 1 0 stone
 		/execute store success score Global loaded run setblock 0 1 0 sandstone
-		
-		if loaded			
+
+		if loaded
 			size = @s.size
 			/kill @s
 			tell @a: Rotating structure with size (Global.size)

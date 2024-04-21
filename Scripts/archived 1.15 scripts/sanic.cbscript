@@ -69,14 +69,14 @@ end
 
 @Ring = @Entity[type=item,nbt={Item:{id:"minecraft:gold_nugget"}, OnGround:1b}]
 @Emerald = @Entity[type=item,nbt={Item:{id:"minecraft:emerald"}}]
-	
+
 reset
 	tell @a '{B[\[Summon Sanic\]](call sanic) {G[\[Summon Robuttnik\]](call robuttnik) {R[\[Kill All Sanics\]](call kill_sanics)'
-	
+
 	/team add super
     /team modify super color yellow
     /team modify super collisionRule never
-    
+
 end
 
 function sanic()
@@ -139,7 +139,7 @@ function kill_sanics()
 			as @s.rmini_blocks[$i]
 				/kill @s
 			end
-		end	
+		end
 	end
 	/kill @Sanic
 	/kill @Robuttnik
@@ -152,7 +152,7 @@ clock main
 			/effect give @s invisibility 1 1 true
 			@s.fire = 0
 			@s.foot_angle += 50000
-			
+
 			for $i in $range($len($SanicMiniblocks))
 				as @s.mini_blocks[$i] (@MiniBlock)
 					if $i == 0
@@ -182,7 +182,7 @@ clock main
 					end
 				end
 			end
-			
+
 			for $i in $range($len($SanicTinyblocks))
 				as @s.tiny_blocks[$i] (@TinyBlock)
 					$tinyblock = $SanicTinyblocks[$i]
@@ -197,7 +197,7 @@ clock main
 			end
 
 			/kill @Ring[distance=..2]
-			
+
 			if @Emerald[distance=..2]
 				@s.vy = 2000
 				/kill @Emerald[distance=..2]
@@ -207,7 +207,7 @@ clock main
 			if @s.pre_super and @s.vy <= 0
 				@s.pre_super = false
 				/particle flash ~ ~ ~ 0 0 0 0 1 force
-				
+
 				for $i in $range($len($SanicMiniblocks))
 					as @s.mini_blocks[$i] (@MiniBlock)
 						$miniblock = $SanicMiniblocks[$i]
@@ -217,7 +217,7 @@ clock main
 						/team join super @s
 					end
 				end
-				
+
 				for $i in $range($len($SanicTinyblocks))
 					as @s.tiny_blocks[$i] (@TinyBlock)
 						$tinyblock = $SanicTinyblocks[$i]
@@ -242,12 +242,12 @@ clock main
 			end
 		end
 	end
-	
+
 	for @robuttnik in @Robuttnik
 		at @s
 			/effect give @s invisibility 1 1 true
 			@s.fire = 0
-			
+
 			for $i in $range($len($RobuttnikMiniblocks))
 				as @s.rmini_blocks[$i] (@MiniBlock)
 					@s.rot_x = 0
@@ -265,14 +265,14 @@ clock main
 			/particle minecraft:flame ^ ^0.8 ^-1.4 0.1 0.1 0.1 0.05 5 force @a
 		end
 	end
-	
+
 	as @AITarget at @s
 		unless @Ring[distance=..4]
 			move @s ~ -100 ~
 			/kill @s
 		end
 	end
-	
+
 	as @Ring at @s
 		unless @AITarget[distance=..4]
 			as create @AITarget ~ ~100 ~

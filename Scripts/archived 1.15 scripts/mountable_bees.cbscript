@@ -7,7 +7,7 @@ import left_right_click_detector
 define @Pig : @Entity[type=pig, tag=SaddleHolder]
 	create {Tags:["SaddleHolder"], NoAI:1, Silent:1, Absorption:100}
 	saddle = Saddle byte 1
-	
+
 	bee: @Bee
 end
 
@@ -36,13 +36,13 @@ clock main
 		end
 		if @s[nbt={RootVehicle:{Entity:{Tags:["SaddleHolder"]}}}] and @s[nbt={SelectedItem:{id:"minecraft:poppy"}}]
 			@s.enable_click()
-			
+
 			unless @Position do create @Position
 			/tp @Position ~ ~ ~ ~ ~
 			<pos1> = @Position.<pos>
 			move @Position ^ ^ ^0.2
 			<delta> = @Position.<pos> - <pos1>
-			
+
 			at @s ~ ~-0.4 ~ as @Pig[sort=nearest,limit=1,distance=..0.1]
 				as @s.bee
 					if @s.dash
@@ -51,7 +51,7 @@ clock main
 					else
 						@s.<vel> = <delta>
 					end
-					
+
 					@s.rx = @Position.rx
 					@s.ry = @Position.ry
 				end
@@ -60,7 +60,7 @@ clock main
 			@s.disable_click()
 		end
 	end
-	
+
 	as @Pig at @s
 		/effect give @s invisibility 1 1 true
 		@s.absorption = 100
@@ -88,10 +88,10 @@ clock main
 			end
 		end
 	end
-	
+
 	as @Bee
 		as @s.pig
-		
+
 		else
 			@s.pig = None
 		end

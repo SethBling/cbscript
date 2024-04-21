@@ -2,14 +2,14 @@ import common
 
 define @Pushable: @Entity[type=armor_stand, tag=Pushable]
 	create {Tags:["Pushable"], Invisible:1b, Invulnerable:1b}
-	
+
 	disguise: @Disguise[distance=..2]
 	physics: @Physics[distance=..2]
-	
+
 	function get_velocity_signs()
 		vx = @s.vx
 		vz = @s.vz
-		
+
 		if vx > 0
 			sx = 1
 		end
@@ -24,7 +24,7 @@ define @Pushable: @Entity[type=armor_stand, tag=Pushable]
 		end
 		avx = abs(vx)
 		avz = abs(vz)
-		
+
 		havx = avx / 2
 		havz = avz / 2
 	end

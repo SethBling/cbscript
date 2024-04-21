@@ -15,7 +15,7 @@ reset
 		/team add $team
 		/team modify $team color $team
 	end
-	
+
 	running = False
 end
 
@@ -102,7 +102,7 @@ clock main
 			tell @a '{R{DTEST MARKER:{- End of episode (episode)!'
 		end
 		timer++
-		
+
 		/gamemode spectator @a[deaths > 0]
 		/scoreboard players set @a[gamemode=spectator] deaths 0
 	end

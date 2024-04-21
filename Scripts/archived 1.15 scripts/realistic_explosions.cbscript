@@ -17,18 +17,18 @@ define @ExplosionMarker: @Entity[type=area_effect_cloud,tag=ExplosionMarker]
 		WaitTime:-0x80000000
 	}
 	age: Age int 1
-	
+
 	function get_block_id()
 		switch block at ~ ~ ~
 			case air
-			
+
 			end
 			default
 				@s.block_id = $block_id
 			end
 		end
 	end
-	
+
 	function spawn_exploding_block()
 		<delta> = @s.<delta>
 		switch block @s.block_id
@@ -68,7 +68,7 @@ define @ParticleEmitter : @Entity[type=area_effect_cloud,tag=ParticleEmitter]
 end
 
 reset
-	
+
 end
 
 clock main
@@ -80,7 +80,7 @@ clock main
 		end
 	end
 	/kill @ExplosionMarker
-	
+
 	as @ParticleEmitter at @s
 		/particle explosion_emitter ~ ~ ~ 3 3 3 0 2 force @a
 		@s.age++
@@ -88,7 +88,7 @@ clock main
 			/kill @s
 		end
 	end
-	
+
 	as @ExplodingTNT at @s
 		if particles then create @ParticleEmitter
 		<base_pos> = @s.<pos> / scale * scale + <500, 0, 500>

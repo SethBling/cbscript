@@ -14,19 +14,19 @@ function increment()
 	[~ ~ ~].[Items] += {id:"minecraft:stone", Count:1, Slot:0}
 	while :{inv[-1]}
 		slot = :inv[-1].Slot
-		
+
 		:inv[-1].Count++
 		:{inv[-1]} += {Slot:0b}
-		
+
 		[~ ~ ~].{Items[0]} = :inv[-1]
-		
+
 		replace_with_loot_item(slot)
-		
+
 		remove :inv[-1]
 	end
-	
+
 	/setblock ~ ~ ~ air
-	
+
 	/gamerule sendCommandFeedback false
 end
 

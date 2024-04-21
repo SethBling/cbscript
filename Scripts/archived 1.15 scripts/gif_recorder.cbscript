@@ -37,7 +37,7 @@ $map_z = -64
 reset
 	/gamerule maxCommandChainLength 1000000000
 	/gamerule randomTickSpeed 0
-	
+
     /bossbar add progress "Progress"
     /bossbar set progress max 128
 
@@ -46,7 +46,7 @@ reset
 	unless @Texture do create @Texture
 
 	tell @a "{Y[\[Record\]](/function gif_recorder:record) [\[Setup\]](/function gif_recorder:setup)"
-	
+
 	@a.render = False
 	@a.recording = False
 
@@ -66,7 +66,7 @@ end
 
 function setup()
 	fill_ceiling()
-	
+
 	/bossbar set progress players @s
     for $x in $range($map_x-8, $map_x+128+8, 8)
 		$dx = $x - $map_x
@@ -115,7 +115,7 @@ clock recording
 				@s.<break_pos> = @s.<cursor_pos>
 			end
 		end
-		get_looking_at()		
+		get_looking_at()
 	end
 
 	for @player in @Player[recording]
@@ -140,7 +140,7 @@ end
 function stop_recording()
 	@s.last_frame = @s.frame - 1
 	@s.recording = False
-	
+
 	tell @s "{G[\[Render\]](/function gif_recorder:start_render)"
 end
 
@@ -176,14 +176,14 @@ clock render
 				@s.end_id = @s.start_id + @s.last_frame
 				@s.render_id = @s.map_id
 			end
-		end	
-		
+		end
+
 		if @s.render_id and @s.map_id == @s.render_id
 			@s.give_map_delay = 40
 			@s.render_id++
 		end
 	end
-	
+
 	@Player[give_map_delay].give_map_delay--
 	as @Player[give_map_delay == 1]
 		/replaceitem entity @s weapon map
@@ -227,11 +227,11 @@ function take_picture()
 	/bossbar set progress players @a
 	$clone_overlay(0, 63)
 	$clone_overlay(1, 69)
-	
+
 	at @s
 		/tp @Scan ~ ~1.8 ~ ~ ~
 	end
-	
+
 	move @Scan ^$Radius ^$Radius ^10
 	at $map_x-1 128 $map_z
 		col = 0
@@ -240,7 +240,7 @@ function take_picture()
 			row = 0
 			/execute store result bossbar progress value run scoreboard players get Global col
 			take_picture_col()
-			
+
 			col++
 			move @Scan ^-$PixelMove ^$Diameter ^
 			<x, y, z> = @Scan.<pos>
@@ -254,7 +254,7 @@ macro $take_picture_col_recurse($dy)
 		# Copy the block into the map area
 		/clone 0 1 0 0 1 0 ~ ~ ~
 		/fill ~ ~1 ~ ~ 253 ~ air
-		
+
 		# Move on to the next row
 		row++
 		move @Scan ^ ^-$PixelMove ^
@@ -271,18 +271,18 @@ function take_picture_col()
 	at @s ~ ~1.8 ~ facing @Scan
 		ray_trace_step()
 	end
-	
+
 	handled = False
 	if face_x
 		$take_picture_col_recurse(-1)
 		handled = True
 	end
-	
+
 	if face_y and not handled
 		$take_picture_col_recurse(1)
 		handled = True
 	end
-	
+
 	if face_z and not handled
 		$take_picture_col_recurse(0)
 		handled = True
@@ -297,7 +297,7 @@ function ray_trace_step()
 		at ^ ^ ^$Step do ray_trace_step()
 		handled = True
 	end
-	
+
 	if not handled
 		at ^ ^ ^-$Step
 			fine_step = 0
@@ -321,18 +321,18 @@ end
 
 function ray_trace_fine_step()
 	$FineStep = 0.02
-	
+
 	handled = False
 	if block ~ ~ ~ none and fine_step < 11
 		fine_step++
 		at ^ ^ ^$FineStep do ray_trace_fine_step()
 		handled = True
 	end
-	
+
 	if not handled
 		$create_map_block_at(0, 1, 0)
-		
-		# Compute which face was crossed first		
+
+		# Compute which face was crossed first
 		as @Position
 			/tp @s ~ ~ ~ ~ ~
 			<x2, y2, z2> = @s.<pos>
@@ -342,7 +342,7 @@ function ray_trace_fine_step()
 		<bx1, by1, bz1> = <x1, y1, z1> % 1000
 		<dx, dy, dz> = <x2, y2, z2> - <x1, y1, z1>
 		<bx2, by2, bz2> = <bx1, by1, bz1> + <dx, dy, dz>
-		
+
 		if bx2 > 1000
 			px = (1000-bx1) * 100 / dx
 		end
@@ -352,7 +352,7 @@ function ray_trace_fine_step()
 		if bx2 >= 0 and bx2 < 1000
 			px = 0
 		end
-		
+
 		if by2 > 1000
 			py = (1000-by1) * 100 / dy
 			top_face = False
@@ -366,7 +366,7 @@ function ray_trace_fine_step()
 		if by2 >= 0 and by2 < 1000
 			py = 0
 		end
-		
+
 		if bz2 > 1000
 			pz = (1000-bz1) * 100 / dz
 		end
@@ -376,7 +376,7 @@ function ray_trace_fine_step()
 		if bz2 >= 0 and bz2 < 1000
 			pz = 0
 		end
-		
+
 		if face_x and block ~ ~ ~ grass_block
 			$set_texture(70)
 		end
@@ -386,7 +386,7 @@ function ray_trace_fine_step()
 		if face_y and bottom_face and block ~ ~ ~ grass_block
 			$set_texture(70)
 		end
-		
+
 		if px
 			face_x = True
 			face_y = False
@@ -394,7 +394,7 @@ function ray_trace_fine_step()
 			u = by1
 			v = bz1
 		end
-		
+
 		if py
 			face_x = False
 			face_y = True
@@ -402,7 +402,7 @@ function ray_trace_fine_step()
 			u = bz1
 			v = bx1
 		end
-		
+
 		if pz
 			face_x = False
 			face_y = False
@@ -410,14 +410,14 @@ function ray_trace_fine_step()
 			u = by1
 			v = bx1
 		end
-		
+
 		if fine_step >= 11
 			face_x = False
 			face_y = True
 			face_z = False
 			/setblock 0 1 0 light_blue_wool
 		end
-		
+
 		$get_texture("oak_planks", 63)
 		$get_texture("bricks", 64)
 		$get_texture("spruce_leaves", 66)
@@ -434,7 +434,7 @@ clock draw
 	for @itemframe in @ItemFrame
 		map_id = 0
 		map_id = @s.map
-		
+
 		unless @s.start_id if map_id
 			as @Player
 				if map_id >= @s.start_id and map_id <= @s.end_id
@@ -444,12 +444,12 @@ clock draw
 				end
 			end
 		end
-		
+
 		if @s.start_id
 			@s.map++
 			if @s.map > @s.end_id then @s.map = @s.start_id
 		end
-		
+
 		unless @s.frame >= @s.start_id
 			@s.frame = @s.start_id
 			@s.map = @s.frame

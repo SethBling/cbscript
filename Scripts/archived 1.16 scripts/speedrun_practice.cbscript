@@ -295,7 +295,7 @@ define @Player = @Player
 		end
 		tell @s '{c[\[Restore from Death\]](/trigger Practice set $RestoreDeath){-'
 	end
-	
+
 	function perform_practice()
 		switch @s.Practice
 			case $DisplayOptions
@@ -419,7 +419,7 @@ define @Player = @Player
 					@s.strong_entrance = 2
 					/effect give @s resistance 5 4 true
 				end
-			end			
+			end
 			case $ResetEnd
 				reset_the_end(0)
 			end
@@ -503,15 +503,15 @@ define @Player = @Player
 				end
 			end
 		end
-		
+
 		if @s.Practice > 0
 			@s.display_options()
 		end
-		
+
 		@s.Practice = 0
 		/scoreboard players enable @s Practice
 	end
-	
+
 	function random_spot()
 		height = randint(2, 6)
 		switch height
@@ -521,7 +521,7 @@ define @Player = @Player
 			end
 		end
 	end
-	
+
 	function post_village_hotbar()
 		/clear
 		/replaceitem entity @s hotbar.0 stone_axe
@@ -539,11 +539,11 @@ define @Player = @Player
 		for $slot in $range(9, 18)
 			/replaceitem entity @s inventory.$slot white_bed
 		end
-		
+
 		/effect give @s minecraft:instant_health 1 10
 		/effect give @s minecraft:saturation 1 5
 	end
-	
+
 	function post_nether_hotbar()
 		/clear
 		/replaceitem entity @s hotbar.0 stone_axe
@@ -556,7 +556,7 @@ define @Player = @Player
 		/replaceitem entity @s hotbar.7 netherrack 64
 		/replaceitem entity @s hotbar.8 bread 64
 		/replaceitem entity @s weapon.offhand shield
-		
+
 		/replaceitem entity @s inventory.0 cobblestone 16
 		/replaceitem entity @s inventory.1 oak_planks 16
 		/replaceitem entity @s inventory.2 stone_hoe
@@ -564,11 +564,11 @@ define @Player = @Player
 		/replaceitem entity @s inventory.4 flint_and_steel
 		/replaceitem entity @s inventory.5 obsidian 5
 		/replaceitem entity @s inventory.6 respawn_anchor 2
-		
+
 		for $slot in $range(9, 23)
 			/replaceitem entity @s inventory.$slot white_bed
 		end
-		
+
 		/effect give @s minecraft:instant_health 1 10
 		/effect give @s minecraft:saturation 1 5
 	end
@@ -578,34 +578,34 @@ clock main
 	as @Player unless @s.logged_in == 1
 		@s.display_options()
 	end
-		
+
 	/scoreboard players reset * logged_in
 	@Player.logged_in = 1
 
 	@Player.perform_practice()
-	
+
 	as @Player[find_village] at @s
 		find_village()
 	end
-	
+
 	as @Player[strong_entrance] at @s
 		go_to_stronghold_entrance()
 	end
-	
+
 	mark_end_crystals()
-	
+
 	track_crystal_shots()
-	
+
 	track_dragon_damage()
-	
+
 	track_death()
-	
+
 	as @Player
 		@s.<prev_pos> = @s.<pos>
 		@s.prev_rx = @s.rx
 		@s.prev_ry = @s.ry
 	end
-	
+
 	in overworld
 		/kill @Position
 		/kill @Position2
@@ -621,7 +621,7 @@ clock main
 		/kill @Position2
 		/kill @Position3
 	end
-	
+
 	if @Player[no_enders,limit=1]
 		as @e[type=enderman]
 			move @s ~ ~-500 ~
@@ -654,7 +654,7 @@ end
 
 function ground_at_cursor{$distance}()
 	unless @Position do create @Position
-	
+
 	as @Position at ~ ~1.6 ~ at ^ ^ ^$distance
 		/tp @s ~ ~ ~
 		while True at @s if block ground
@@ -680,14 +680,14 @@ end
 
 function create_lava_pool()
 	ground_at_cursor{15}()
-	
+
 	dx = 0
 	dz = 0
 	for i = 1 to 100
 		mv = randint(0, 4)
 		r = randint(0, 7)
 		nr = randint(-6, 1)
-				
+
 		switch mv
 			case 0
 				if dx < r
@@ -725,7 +725,7 @@ function create_lava_column()
 	/setblock ~ ~ ~ lava
 	/setblock ~ ~-1 ~ stone
 	surround_with_stone()
-	
+
 	if depth == 2
 		/setblock ~ ~-1 ~ lava
 		/setblock ~ ~-2 ~ stone
@@ -779,28 +779,28 @@ function locate_nether_structure{$structure}()
 		else
 			$locate_nether_step(-1, 0)
 		end
-		
+
 		at @Position2 do dist = result
 			/locate $structure
-		
+
 		if xdist < dist
 			xdir *= -1
 		end
-		
+
 		zdist = dist
 		if zdir > 0
 			$locate_nether_step(0, 1)
 		else
 			$locate_nether_step(0, 1)
 		end
-		
+
 		at @Position2 do dist = result
 			/locate $structure
-		
+
 		if zdist < dist
 			zdir *= -1
 		end
-		
+
 		steps++
 	end
 end
@@ -836,28 +836,28 @@ function locate_overworld{$command}()
 		else
 			$locate_overworld_step(-1, 0)
 		end
-		
+
 		at @Position do dist = result
 			/$command
-		
+
 		if xdist < dist
 			xdir *= -1
 		end
-		
+
 		zdist = dist
 		if zdir > 0
 			$locate_overworld_step(0, 1)
 		else
 			$locate_overworld_step(0, -1)
 		end
-		
+
 		at @Position do dist = result
 			/$command
-		
+
 		if zdist < dist
 			zdir *= -1
 		end
-		
+
 		steps++
 	end
 end
@@ -878,11 +878,11 @@ end
 
 function go_to_stronghold_entrance()
 	@s.strong_entrance--
-	
+
 	if @s.strong_entrance == 0
 		in_stairs = False
 		/tp @s ~ 64 ~
-		for y = 64 to 0 by -1						
+		for y = 64 to 0 by -1
 			move @s ~ ~-1 ~
 			at @s
 				for $dx,$dz in [[1,1],[-1,1],[1,-1],[-1,-1]]
@@ -893,7 +893,7 @@ function go_to_stronghold_entrance()
 				if in_stairs and block ~ ~ ~ passthrough unless block ~ ~-1 ~ passthrough
 					y = 0
 				end
-			end		
+			end
 		end
 	end
 end
@@ -915,11 +915,11 @@ function find_village()
 		at @s
 			/spreadplayers ~ ~ 0 100 true @s
 		end
-		
+
 		@s.find_village = False
 		tell @s 'Found village!'
 	end
-	
+
 	if @s.find_village
 		go_to_random_village()
 	end
@@ -928,7 +928,7 @@ end
 function go_to_random_village()
 	randomize_overworld_position()
 
-	at @Position do locate_overworld{'locate village'}()	
+	at @Position do locate_overworld{'locate village'}()
 	/tp @s @Position
 	/effect give @s resistance 5 4 true
 end
@@ -936,7 +936,7 @@ end
 function randomize_overworld_position()
 	randx = randint(-1000000, 1000000)
 	randz = randint(-1000000, 1000000)
-	
+
 	in overworld unless @Position do create @Position
 	@Position.<pos> = <randx, 200, randz> * scale
 end
@@ -945,9 +945,9 @@ function mark_end_crystals()
 	as @Crystal	at @s unless @CrystalMarker[distance=..0.25]
 		in the_end unless @Position3 do create @Position3
 		create @CrystalMarker
-		
+
 		<pos> = @s.<pos>
-		
+
 		for dx = -2 to 2
 			for dy = -2 to 2
 				for dz = -2 to 2
@@ -959,7 +959,7 @@ function mark_end_crystals()
 			end
 		end
 	end
-	
+
 	at @EnderDragon[limit=1]
 		/bossbar set dragon players @Player[distance=..256]
 		/execute store result bossbar dragon value run data get entity @EnderDragon[limit=1] Health 1
@@ -982,7 +982,7 @@ function reset_the_end(perch)
 			east = randint(0, 2)
 			ry = 100 * scale + randint(-4000, 4000)
 			offset = randint(-2000, 2000)
-			
+
 			if east
 				@Position3.<pos> = <15000, ry, offset>
 				at @Position3
@@ -997,7 +997,7 @@ function reset_the_end(perch)
 		else if perch == $NSPerch
 			north = randint(0, 2)
 			ry = 100 * scale + randint(-4000, 4000)
-			
+
 			if north
 				@Position3.<pos> = <0, ry, 15000>
 				at @Position3
@@ -1012,7 +1012,7 @@ function reset_the_end(perch)
 		else
 			create @EnderDragon 0 100 0
 		end
-		
+
 		#<rand_offset> = <randint(-20000,20000),0,randint(-20000,20000)>
 		#as @EnderDragon
 		#	@s.<pos> += <rand_offset>
@@ -1024,16 +1024,16 @@ function reset_the_end(perch)
 		at @BarsMarker
 			/setblock ~ ~ ~ iron_bars
 		end
-		
+
 		/fill -2 40 -2 2 70 2 air replace end_portal
 		/fill 0 40 0 0 75 0 air replace dragon_egg
 		/fill -10 40 -10 10 75 10 air replace fire
-		
+
 		/bossbar add dragon "Ender Dragon"
 		/bossbar set dragon max 200
 		/bossbar set dragon color pink
 	end
-	
+
 	@Player.beds_clicked = 0
 end
 
@@ -1041,11 +1041,11 @@ function display_dimension()
 	if predicate in_overworld
 		tell @a 'overworld'
 	end
-	
+
 	if predicate in_the_nether
 		tell @a 'the_nether'
 	end
-	
+
 	if predicate in_the_end
 		tell @a 'the_end'
 	end
@@ -1067,18 +1067,18 @@ function track_crystal_shots()
 					@s.old_gamemode = 0
 				end
 				/gamemode spectator @s
-				
+
 				@s.tracking_shot = True
 			end
 		end
 	end
-	
+
 	as @Player[tracking_shot] at @s
 		if @Arrow[distance=..30,nbt={inGround:0b}]
 			@s.not_tracking = 0
 		else
 			@s.not_tracking++
-			
+
 			if @s.not_tracking < 10 and @s.prev_rx == @s.rx and @s.prev_ry == @s.ry
 			else
 				in the_end unless @Position3 do create @Position3
@@ -1101,12 +1101,12 @@ end
 
 function track_dragon_damage()
 	hp = @EnderDragon[limit=1].hp
-	
+
 	if hp < old_hp
 		damage = old_hp - hp
 		tell @Player '(damage) damage to dragon'
 	end
-	
+
 	if hp <= 0 and old_hp > 0
 		as @Player
 			tell @s "{wUsed {C(@s.beds_clicked) {wBeds"
@@ -1117,7 +1117,7 @@ function track_dragon_damage()
 		@Player.display_options()
 		/fill -10 40 -10 10 75 10 air replace fire
 	end
-	
+
 	old_hp = hp
 end
 
@@ -1142,7 +1142,7 @@ function track_death()
 				@s.last_dim = $End
 			end
 		end
-		
+
 		@s.prev_deaths = @s.deaths
 	end
 end

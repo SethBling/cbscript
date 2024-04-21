@@ -24,10 +24,10 @@ end
 
 define @MiniBlock = @Entity[type=armor_stand,name=MiniBlock]
 	create: {CustomName:"\"MiniBlock\"", Pose:{Head:[0.0001f,0f,0f]}, $marker}
-	
+
 	pose_rot_x = Pose.Head[0] float 1000
 	pose_rot_y = Pose.Head[1] float 1000
-	
+
 	function update()
 		as create @Marker
 			base_x = @s.x
@@ -38,14 +38,14 @@ define @MiniBlock = @Entity[type=armor_stand,name=MiniBlock]
 		@s.x = base_x + @s.dx
 		@s.y = base_y + @s.dy - 1700
 		@s.z = base_z + @s.dz
-		
+
 		/data merge entity @s {Pose:{Head:[0.0001f,0.0001f,0.0001f]}}
 		@s.pose_rot_x = @s.rot_x
 		@s.pose_rot_y = @s.rot_y
-		
+
 		my_rx = @s.rot_x
 		my_ry = @s.rot_y
-		
+
 		as create @Marker
 			x1 = @s.x
 			y1 = @s.y
@@ -54,24 +54,24 @@ define @MiniBlock = @Entity[type=armor_stand,name=MiniBlock]
 			@s.rx = my_rx
 			@s.ry = my_ry
 			move @s ^ ^0.287 ^
-			
+
 			dx = @s.x - x1
 			dy = @s.y - y1
 			dz = @s.z - z1
-			
+
 			/kill @s
 		end
-		
+
 		@s.x -= dx
 		@s.y -= dy
 		@s.z -= dz
-		
-		/data merge entity @s {Fire:32767s}	
-		
+
+		/data merge entity @s {Fire:32767s}
+
 		at @s rotated @s
 			/tp @s ~ ~ ~ 0 0
 		end
-	end	
+	end
 end
 
 reset

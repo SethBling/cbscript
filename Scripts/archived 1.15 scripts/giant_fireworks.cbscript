@@ -42,7 +42,7 @@ clock main
 		@s.age++
 		if @s.age == 40
 			/playsound minecraft:entity.firework_rocket.large_blast neutral @a ~ ~ ~ 1 0 0.7
-			
+
 			for ry = 0 to 350000 by 20000
 				for rx = -80000 to 80000 by 10000
 					as create @GiantItem ~2 ~-6 ~-4
@@ -56,13 +56,13 @@ clock main
 						end
 						@s.<vel> = <delta>
 						@s.vy /= 2
-						
+
 						/team join no_collision
 						/replaceitem entity @s weapon.mainhand blue_wool
 					end
 				end
 			end
-			
+
 			/kill @s
 		end
 	end

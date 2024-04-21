@@ -27,25 +27,25 @@ reset
     CubeSize = 1500
     CubeInvMass = 800
     CubeInvRotInt = 400
-    
+
     tell @a "Physics: {C[\[Load State\]](/function $namespace:load_state) {R[\[Destroy All Colliders\]](/function $namespace:destroy_colliders)"
 end
 
 clock tick
     define name collider = "collider_$(collider)"
-    
+
     /kill @Position
     create @Position
-    
+
     unless @Interaction
         at @nearest_player
             /summon minecraft:interaction ~ ~-5 ~ {width:10, height:10}
         end
     end
-    
+
     left_clicked = False
     right_clicked = False
-    
+
     as @Interaction
         on attacker
             left_clicked = True
@@ -67,7 +67,7 @@ clock tick
         world_eye_x = @Position.x
         world_eye_y = @Position.y
         world_eye_z = @Position.z
-        
+
         /tp @Position ^ ^ ^1
         world_eye_dx = @Position.x - world_eye_x
         world_eye_dy = @Position.y - world_eye_y
@@ -93,23 +93,23 @@ clock tick
                 end
             end
         end
-        
+
         if min_col_t < $Billion
             # There was a ray intersection
             $PunchPower = 1000
             with
                 $(collider) = min_col
             collider_apply_impulse(min_x, min_y, min_z, world_eye_dx * $PunchPower / scale, world_eye_dy * $PunchPower / scale, world_eye_dz * $PunchPower / scale)
-            
+
             save_state()
-            
+
             @Position.<pos> = <min_x, min_y, min_z>
             at @Position
                 /particle minecraft:crit ~ ~ ~ 0 0 0 0 1 force
             end
         end
     end
-    
+
     if right_clicked
         at @nearest_player ^ ^1.6 ^3
             /tp @Position ~ ~ ~
@@ -121,22 +121,22 @@ clock tick
         with
             $(block_name) = "command_block"
         add_collider(x, y, z)
-        
+
         tell @a "Physics: {C[\[Load State\]](/function $namespace:load_state) {R[\[Destroy All Colliders\]](/function $namespace:destroy_colliders)"
     end
-    
+
     colliders_physics_tick()
     colliders_get_new_collisions()
     colliders_resolve_collisions()
     colliders_finalize_tick()
-    
+
     if Particles
         for collision = 1 to max_collision
             with
                 $(collision) = collision
             do
                 define name collision = "collision_$(collision)"
-                
+
                 if collision.id
                     @Position.<pos> = <collision.x, collision.y, collision.z>
                     at @Position

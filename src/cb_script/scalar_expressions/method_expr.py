@@ -1,0 +1,14 @@
+from cb_script.scalar_expressions.scalar_expression_base import (
+    scalar_expression_base,
+)
+from cb_script.variable_types.scoreboard_var import scoreboard_var
+
+
+class method_expr(scalar_expression_base):
+    def __init__(self, method_call):
+        self.method_call = method_call
+
+    def compile(self, func, assignto=None):
+        self.method_call.compile(func)
+
+        return scoreboard_var("Global", "ReturnValue")

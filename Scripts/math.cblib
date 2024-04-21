@@ -11,13 +11,13 @@ function sqrt(_x)
     else if _x >= 455779651 and _x <= 2147483647
         sqrt.y = -2147483648 / (_x / 100000 + 26111) + 91181
     end
-    
+
     sqrt.y = (sqrt.y + _x / sqrt.y) / 2
-    
+
     if sqrt.y * sqrt.y > _x
         sqrt.y--
     end
-    
+
     return sqrt.y
 end
 
@@ -36,7 +36,7 @@ function sin(_sin_angle)
 		_sin_angle -= 180
 		mult = -1
 	end
-    
+
 	return 4000*_sin_angle*(180-_sin_angle)/(40500-_sin_angle*(180-_sin_angle)) * mult
 end
 
@@ -49,10 +49,10 @@ function sin_precise(_sin_angle)
 		_sin_angle -= 18000
 		mult = -1
 	end
-    
+
     _angle_sq = _sin_angle * (18000 - _sin_angle) / 100
-    
-    
+
+
 	return 4 * _angle_sq * 100 / (4050000 - _angle_sq) * mult
 end
 

@@ -15,11 +15,11 @@ end
 clock main
 	if q * 4 + r - t < m * t
 		tell @a '(m)'
-		
+
 		qp = q
 		rp = r
 		mp = m
-		
+
 		q *= 10
 		r = 10*(rp-mp*t)
 		m = (10*(3*qp+rp)) / t - 10*mp
@@ -30,7 +30,7 @@ clock main
 		kp = k
 		mp = m
 		xp = x
-		
+
 		q *= kp
 		r = (2*qp+rp)*xp
 		t *= xp

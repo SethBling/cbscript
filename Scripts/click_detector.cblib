@@ -26,7 +26,7 @@ function click_detector_tick()
         @s.fire = 0
         move @s ~ ~ ~
     end
-	
+
 	@ClickDetector.kill = True
     for @player in @Player
 		as @s.click
@@ -43,7 +43,7 @@ end
 # Run as an entity to create a click detector for that entity
 function create_click()
 	@s.destroy_click()
-	
+
 	at @s ~ ~50 ~
 		@s.click = create @ClickDetector
 		at @s ~ ~1.6 ~ at ^ ^ ^2 at ~ ~-0.6 ~
@@ -68,7 +68,7 @@ end
 
 function check_clicked()
 	click = False
-	
+
 	at @s ~ ~1.6 ~ at ^ ^ ^1.5 at ~ ~-0.6 ~
 		as @s.click (@ClickDetector)
 			/tp @s ~ ~ ~ ~ ~
@@ -78,6 +78,6 @@ function check_clicked()
 		end
 		if click then create_click()
 	end
-	
+
 	return click
 end

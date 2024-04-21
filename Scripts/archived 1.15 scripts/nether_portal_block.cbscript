@@ -4,21 +4,21 @@ desc "Nether portal cubes"
 import common
 
 define @PortalFacePos: @Entity[type=armor_stand]
-	create {Tags:["PortalFacePos", "NewPortalFacePos"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"falling_block", Time:1b, NoGravity:1b, BlockState:{Name:"nether_portal",Properties:{axis:"$portal_axis"}}, Tags:["PortalFace","NewPortalFace"]}]}			
+	create {Tags:["PortalFacePos", "NewPortalFacePos"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"falling_block", Time:1b, NoGravity:1b, BlockState:{Name:"nether_portal",Properties:{axis:"$portal_axis"}}, Tags:["PortalFace","NewPortalFace"]}]}
 end
 
 define @PortalFace: @Entity[type=falling_block, tag=PortalFace]
 	create {Tags:["PortalFace"],BlockState:{Name:"nether_portal",Properties:{axis:"$portal_axis"},NoGravity:1,Time:1}}
 	time: Time byte 1
-end	
+end
 
 define @PortalObsidianPos: @Entity[type=armor_stand]
-	create {Tags:["PortalObsidianPos", "NewPortalObsidianPos"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"falling_block", Time:1b, NoGravity:1b, BlockState:{Name:"obsidian"}, Tags:["PortalObsidian","NewPortalObsidian"]}]}			
+	create {Tags:["PortalObsidianPos", "NewPortalObsidianPos"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"falling_block", Time:1b, NoGravity:1b, BlockState:{Name:"obsidian"}, Tags:["PortalObsidian","NewPortalObsidian"]}]}
 end
 
 define @PortalObsidian: @Entity[type=falling_block, tag=PortalObsidian]
 	time: Time byte 1
-end	
+end
 
 reset
 	tell @Player '[\[Create Nether Portal Block\]](call create_block)'

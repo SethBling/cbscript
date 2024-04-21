@@ -20,7 +20,7 @@ function run_test()
 		unless @Marker[$i] do create @Marker[$i]
 		@Marker[$i].val = $i
 	end
-	
+
 	for i = 1 to 10000
 		idx = randint(1000)
 		switch idx
@@ -29,6 +29,6 @@ function run_test()
 			end
 		end
 	end
-	
+
 	tell @a '[\[Run Test\]](call run_test)'
 end

@@ -22,7 +22,7 @@ $StateLineAnimation = 2
 reset
 	unless game_state >= 0
 		game_state = $StateIntro
-		
+
 		/kill @Background
 		for $x in [1.5, 4.5]
 			for $y in [79, 82, 85, 88]
@@ -30,7 +30,7 @@ reset
 				create @Background <$pos>
 			end
 		end
-		
+
 		/kill @ScoreDigit
 		for i = 0 to 5
 			@Position.x = 12000 - i * 800
@@ -42,7 +42,7 @@ reset
 				end
 			end
 		end
-		
+
 		/kill @LevelDigit
 		for i = 0 to 1
 			@Position.x = 11000 - i * 800
@@ -54,7 +54,7 @@ reset
 				end
 			end
 		end
-		
+
 		/kill @LineDigit
 		for i = 0 to 2
 			@Position.x = 11000 - i * 800
@@ -73,11 +73,11 @@ reset
 	if game_state == $StateIntro
 		tell @a '{GLeft click{- with a {GTetris item{- to start the game.'
 	end
-	
+
 	/scoreboard objectives add shift minecraft.custom:minecraft.sneak_time
 	/scoreboard objectives add jump minecraft.custom:minecraft.jump
 	/scoreboard objectives add login minecraft.custom:minecraft.leave_game
-	
+
 	update_score(0)
 	update_level(0)
 	update_lines(0)
@@ -358,12 +358,12 @@ function restart_game()
 	update_lines(0)
 	level = 0
 	update_level(0)
-	
+
 	/kill @FallingBlock
 	/kill @NextBlock
 	spawn_random()
 	spawn_new_piece = True
-	
+
 	game_state = $StateFalling
 end
 
@@ -372,25 +372,25 @@ function spawn_shape(shape)
 	falling_y = 18
 	falling_rotation = 0
 	falling_shape = next_shape
-	
+
 	as @NextBlock
 		@s.next = False
 		@s.falling = True
 	end
 	reposition_falling()
-	
+
 	next_shape = shape
-	
+
 	@Position.x = 9000
 	@Position.y = 80300
 	@Position.z = -700
-	
+
 	at @Position
 		switch shape
 			case $shape in $range($len($shape_offsets))
 				for $i in $range(4)
 					$dx, $dy = $shape_offsets[$shape][0][$i]
-					
+
 					$dx = $Scale * $dx
 					$dy = $Scale * $dy
 
@@ -404,7 +404,7 @@ function spawn_shape(shape)
 							@s.update()
 						end
 					end
-					
+
 				end
 				rotation = 0
 			end
@@ -420,7 +420,7 @@ function space_available(x, y, shape, rotation)
 				case $r in $range(4)
 					for $i in $range(4)
 						$dx, $dy = $shape_offsets[$shape][$r][$i]
-						
+
 						cx = x + $dx
 						cy = y + $dy
 
@@ -433,7 +433,7 @@ function space_available(x, y, shape, rotation)
 			end
 		end
 	end
-	
+
 	return available
 end
 
@@ -491,7 +491,7 @@ function reposition_falling()
 					case $r in $range(4)
 						for $i in $range(4)
 							$dx, $dy = $shape_offsets[$shape][$r][$i]
-							
+
 							$dx = $Scale * $dx
 							$dy = $Scale * $dy
 
@@ -521,7 +521,7 @@ function land()
 	@Position.x = 300 + falling_x * 600
 	@Position.y = 79300 + falling_y * 600
 	@Position.z = -500
-	
+
 	at @Position
 		switch falling_shape
 			case $shape in $range($len($shape_offsets))
@@ -531,7 +531,7 @@ function land()
 							as @FallingBlock[block_num == $i]
 								@s.falling = False
 								@s.fixed = True
-								
+
 								$dx, $dy = $shape_offsets[$shape][$r][$i]
 								@s.block_x = falling_x + $dx
 								@s.block_y = falling_y + $dy
@@ -542,9 +542,9 @@ function land()
 			end
 		end
 	end
-	
+
 	check_for_full_lines()
-	
+
 	if line_count > 0 and line_count < 4
 		as @Player at @s
 			/playsound item.trident.riptide_1 block @s ~ ~ ~ 0.5 0
@@ -556,9 +556,9 @@ function land()
 			/playsound block.beacon.activate block @s ~ ~ ~ 1 2
 		end
 	end
-	
+
 	switch line_count
-		case 0 
+		case 0
 			update_score(drop_streak)
 		end
 		case 1
@@ -574,15 +574,15 @@ function land()
 			update_score(1200 + drop_streak)
 		end
 	end
-	
+
 	update_lines(line_count)
 	if lines >= (level+1)*10
 		update_level(1)
 	end
-	
+
 	drop_streak = 0
 	@Player.drop_cooldown = 8
-	
+
 	spawn_new_piece = True
 	fall_timer = 0
 end
@@ -601,7 +601,7 @@ function check_for_full_lines()
 				line_complete = False
 			end
 		end
-		
+
 		if line_complete
 			full_lines[line_count] = y
 			line_count++
@@ -642,10 +642,10 @@ end
 
 clock main
 	unless @Position do create @Position
-	
+
 	as @Player at @s
 		/effect give @s saturation 1 0 true
-	
+
 		if @s.was_holding unless @s[nbt={SelectedItem:{id:"minecraft:carrot_on_a_stick",tag:{display:{Name:"{\"text\":\"Tetris\"}"}}}}]
 			dummy = 0
 			if success
@@ -660,16 +660,16 @@ clock main
 				end
 			end
 		end
-	
+
 		if @s[nbt={SelectedItem:{id:"minecraft:carrot_on_a_stick",tag:{display:{Name:"{\"text\":\"Tetris\"}"}}}}]
 			@s.enable_click()
-			
+
 			if @s.jump
 				if game_state == $StateFalling
 					rotate_left()
 				end
 			end
-			
+
 			if @s.shift
 				@s.drop_cooldown--
 				if @s.drop_cooldown <= 0
@@ -683,22 +683,22 @@ clock main
 						drop_streak++
 					end
 				end
-				
+
 				@s.was_shifting = True
 			else
 				@s.drop_cooldown = 0
 				@s.was_shifting = False
 				drop_streak = 0
 			end
-			
+
 			@s.was_holding = True
 		else
 			@s.disable_click()
 			@s.drop_cooldown = 0
-			
+
 			@s.was_holding = False
 		end
-		
+
 		if @s.login
 			tell @s 'Running {GTetris{- by SethBling and MrMakistein.'
 			tell @s 'Click {B{U[here](call give_tetris_item){- to get a Tetris item to play.'
@@ -706,7 +706,7 @@ clock main
 				tell @s '{GLeft click{- with a {GTetris item{- to start the game.'
 			end
 		end
-		
+
 		@s.right_click = 0
 		@s.shift = 0
 		@s.jump = 0
@@ -750,13 +750,13 @@ clock main
 				for i = 0 to line_count-1
 					clear_line(full_lines[i])
 				end
-				
+
 				fall_timer = 0
 				game_state = $StateFalling
 			end
 		end
 	end
-	
+
 	as @ScoreDigit at @s facing @Player[limit=1, sort=nearest]
 		/tp @s ~ ~ ~ ~ 0
 	end
@@ -784,7 +784,7 @@ function update_score(add_amount)
 	if score > 999999
 		score = 999999
 	end
-	
+
 	score_remainder = score
 	for i = 0 to 5
 		as @ScoreDigit if @s.score_digit == i
@@ -809,7 +809,7 @@ function update_lines(add_amount)
 	if lines > 999
 		lines = 999
 	end
-	
+
 	lines_remainder = lines
 	for i = 0 to 2
 		as @LineDigit if @s.line_digit == i
@@ -834,7 +834,7 @@ function update_level(add_amount)
 	if level > 99
 		level = 99
 	end
-	
+
 	level_remainder = level
 	for i = 0 to 2
 		as @LevelDigit if @s.level_digit == i

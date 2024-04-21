@@ -13,7 +13,7 @@ reset
     /scoreboard objectives add absorbed minecraft.custom:minecraft.damage_dealt_absorbed
 
     initialize_transforms()
-    
+
     CubeSize = 1500
     CubeInvMass = 800
     CubeInvRotInt = 400
@@ -21,7 +21,7 @@ end
 
 clock tick
     define name collider = "collider_$(collider)"
-    
+
     # Apply gravity, integrate linear/angular velocity
     for collider = 1 to max_collider
         with
@@ -29,7 +29,7 @@ clock tick
         do
             if not collider.sleeping
                 collider_physics_tick() with macros
-                
+
                 water_here = False
                 with
                     $(x) = collider.x / $Precision
@@ -43,42 +43,42 @@ clock tick
                     unless collider.buoyancy
                         collider.buoyancy = 200
                     end
-                
+
                     water_above = False
                     with
                         $(y) = collider.y / $Precision + 1
                     do
                         /$execute if block $(x) $(y) $(z) minecraft:water run scoreboard players set Global water_above 1
                     end
-                    
+
                     if water_above
                         submerged = $Precision
                     else
                         submerged = $Precision - collider.y % $Precision
                     end
-                    
+
                     collider.velocity_y += submerged * collider.buoyancy / $Precision
-                    
+
                     collider.velocity_x *= 9
                     collider.velocity_x /= 10
                     collider.velocity_y *= 9
                     collider.velocity_y /= 10
                     collider.velocity_z *= 9
                     collider.velocity_z /= 10
-                    
+
                     collider.rotation_x *= 9
                     collider.rotation_x /= 10
                     collider.rotation_y *= 9
                     collider.rotation_y /= 10
                     collider.rotation_z *= 9
                     collider.rotation_z /= 10
-                    
+
                     collider_wake_up() with macros
                 end
             end
         end
     end
-    
+
     # Update the penetration and normal for active collisions
     update_active_collisions()
 
@@ -93,7 +93,7 @@ clock tick
             end
         end
     end
-    
+
     # Get collisions between each pair of colliders
     for col1 = 1 to max_collider
         for col2 = col1+1 to max_collider
@@ -103,11 +103,11 @@ clock tick
             get_collider_collider_collision()
         end
     end
-    
+
     # Remove all new collisions, except for new collisions that have
     # the deepest penetration for a collider
     cull_collisions()
-    
+
     # Merge collision indices down so that there aren't any empties
     merge_collisions_down()
 
@@ -133,9 +133,9 @@ function destroy_colliders()
     for destroy.collider = max_collider to 1 by -1
         destroy_collider()
     end
-    
+
     /kill @PhysicsBlock
-    
+
     max_collider = 0
 end
 
@@ -144,19 +144,19 @@ function destroy_collider()
         $(collider) = destroy.collider
     do
         define name collider = "collider_$(collider)"
-        
+
         if max_collider == collider.id
             max_collider--
         end
-        
+
         as @PhysicsBlock
             if @s.collider_id == collider.id
                 /kill @s
             end
         end
-        
+
         /scoreboard players reset collider_$(collider)
-        
+
         for vertex = 0 to 7
             with
                 $(vertex) = vertex
@@ -164,7 +164,7 @@ function destroy_collider()
                 /scoreboard players reset collider_$(collider)_v$(vertex)
             end
         end
-        
+
         for axis = 0 to 2
             with
                 $(axis) = axis
@@ -202,11 +202,11 @@ function add_collider()
     with
         $(collider) = id
     create_collider(new.x, new.y, new.z, CubeSize, CubeInvMass, CubeInvRotInt)
-    
+
     as @PhysicsBlock[age == 1]
         @s.block_type = block_type
     end
-    
+
     unless id <= max_collider
         max_collider = id
     end
@@ -224,7 +224,7 @@ function get_unused_collider_id()
             end
         end
     end
-    
+
     return return_id
 end
 
@@ -234,7 +234,7 @@ function test_update_collision()
             $(collision) = collision
         do
             define name collision = "collision_$(collision)"
-            
+
             old_id = collision.id
             old_type = collision.type
             old_pen = collision.pen
@@ -245,7 +245,7 @@ function test_update_collision()
             old_ny = collision.ny
             old_nz = collision.nz
             update_collision() with macros
-            
+
             same = True
             unless old_pen == collision.pen
                 same = False
@@ -268,7 +268,7 @@ function test_update_collision()
             unless old_nz == collision.nz
                 same = False
             end
-            
+
             unless same
                 tell @a "Collision #(old_id) changed"
                 if old_type == $CollisionCubePointWorldFace
@@ -302,7 +302,7 @@ function clear_save_state()
             /scoreboard players reset save_state_collider_$(collider)
         end
     end
-    
+
     for collision_iter = 1 to save_state.max_collision
         with
             $(collision) = collision_iter
@@ -310,7 +310,7 @@ function clear_save_state()
             /scoreboard players reset save_state_collision_$(collision)
         end
     end
-    
+
     /scoreboard players reset save_state
 end
 
@@ -318,46 +318,46 @@ function save_state()
     clear_save_state()
 
     save_state.max_collider = max_collider
-    
+
     for collider_iter = 1 to max_collider
         with
             $(collider) = collider_iter
         do
             define name collider = "collider_$(collider)"
             define name save_state = "save_state_collider_$(collider)"
-            
+
             if collider.id
                 save_state.id = collider.id
-            
+
                 save_state.x = collider.x
                 save_state.y = collider.y
                 save_state.z = collider.z
-                
+
                 save_state.velocity_x = collider.velocity_x
                 save_state.velocity_y = collider.velocity_y
                 save_state.velocity_z = collider.velocity_z
-                
+
                 save_state.rotation_x = collider.rotation_x
                 save_state.rotation_y = collider.rotation_y
                 save_state.rotation_z = collider.rotation_z
-                
+
                 save_state.size = collider.size
-                
+
                 save_state.inv_mass = collider.inv_mass
                 save_state.inv_rot_int = collider.inv_rot_int
-                
+
                 save_state.w = collider.w
                 save_state.i = collider.i
                 save_state.j = collider.j
                 save_state.k = collider.k
-                
+
                 save_state.recent_motion = collider.recent_motion
                 save_state.recent_rotation = collider.recent_rotation
                 save_state.sleeping = collider.sleeping
             end
         end
     end
-    
+
     save_state.max_collision = max_collision
 
     for collision_iter = 1 to max_collision
@@ -371,15 +371,15 @@ function save_state()
                 save_state.id = collision.id
                 save_state.active = collision.active
                 save_state.pen = collision.pen
-                
+
                 save_state.x = collision.x
                 save_state.y = collision.y
                 save_state.z = collision.z
-                
+
                 save_state.nx = collision.nx
                 save_state.ny = collision.ny
                 save_state.nz = collision.nz
-                
+
                 save_state.type = collision.type
                 save_state.collider1 = collision.collider1
                 save_state.collider2 = collision.collider2
@@ -412,41 +412,41 @@ function load_state()
     collision_frame = 0
 
     max_collider = save_state.max_collider
-    
+
     for collider_iter = 1 to save_state.max_collider
         with
             $(collider) = collider_iter
         do
             define name collider = "collider_$(collider)"
             define name save_state = "save_state_collider_$(collider)"
-            
+
             if save_state.id
                 create_collider(save_state.x, save_state.y, save_state.z, save_state.size, save_state.inv_mass, save_state.inv_rot_int) with macros
-            
+
                 collider.velocity_x = save_state.velocity_x
                 collider.velocity_y = save_state.velocity_y
                 collider.velocity_z = save_state.velocity_z
-                
+
                 collider.rotation_x = save_state.rotation_x
                 collider.rotation_y = save_state.rotation_y
                 collider.rotation_z = save_state.rotation_z
-                
+
                 collider.w = save_state.w
                 collider.i = save_state.i
                 collider.j = save_state.j
                 collider.k = save_state.k
-                
+
                 collider_quaternion_to_transform() with macros
-                
+
                 collider.recent_motion = save_state.recent_motion
                 collider.recent_rotation = save_state.recent_rotation
                 collider.sleeping = save_state.sleeping
-                
+
                 collider_set_transform() with macros
             end
         end
     end
-    
+
     max_collision = save_state.max_collision
 
     for collision_iter = 1 to save_state.max_collision
@@ -460,15 +460,15 @@ function load_state()
                 collision.id = save_state.id
                 collision.active = save_state.active
                 collision.pen = save_state.pen
-                
+
                 collision.x = save_state.x
                 collision.y = save_state.y
                 collision.z = save_state.z
-                
+
                 collision.nx = save_state.nx
                 collision.ny = save_state.ny
                 collision.nz = save_state.nz
-                
+
                 collision.type = save_state.type
                 collision.collider1 = save_state.collider1
                 collision.collider2 = save_state.collider2

@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools >= 64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cb_script"
+version = "0.0.0"
+authors = [
+  { name="SethBling", email="sethbling@gmail.com" },
+]
+description = "CBScript for Minecraft"
+readme = {file = "README.md", content-type = "text/markdown"}
+license = {file = "LICENSE"}
+requires-python = ">=3.11"
+dependencies = [
+    "ply",
+    "pyyaml",
+]
+
+[project.urls]
+"Source" = "https://github.com/SethBling/cbscript"
+"Bug Tracker" = "https://github.com/SethBling/cbscript/issues"
+
+
+[tool.pycln]
+all = true
+disable_all_dunder_policy = true
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+
+[tool.black]
+line-length = 79
+target-version = ['py311']
+
+[tool.ruff]
+line-length = 79
+fix = true
+
+include = ["*.py", "*.pyi", "**/pyproject.toml"]
+
+[tool.ruff.lint]
+select = [
+    "I",     # isort
+    "UP",    # pyupgrade
+]
+extend-ignore = [
+    "E501",  # line-too-long
+]
