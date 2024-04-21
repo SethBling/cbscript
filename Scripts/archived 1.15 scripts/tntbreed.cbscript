@@ -9,7 +9,7 @@ define @TNT: @Entity[type=tnt]
 end
 
 @Gunpowder = @Entity[type=item,nbt={Item:{id:"minecraft:gunpowder"}}]
-	
+
 reset
 
 end
@@ -21,7 +21,7 @@ clock main
 				at @s facing @player
 					/tp @s ~ ~ ~ ~ ~
 				end
-				
+
 				if @s.hop_timer > 0
 					@s.hop_timer--
 				else
@@ -31,14 +31,14 @@ clock main
 						@s.hop_timer = 50
 					end
 				end
-				
+
 				if @s.fuse < 32
 					@s.fuse += 16
 				end
 			end
 		end
 	end
-	
+
 	as @TNT at @s
 		if @Gunpowder[distance=..1]
 			/kill @Gunpowder[distance=..1]

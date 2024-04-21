@@ -22,7 +22,7 @@ clock main
 			end
 		end
 	end
-	
+
 	for @frame in @ItemFrame
 		unless @s.{Item} at @s align xyz at ~0.5 ~0.5 ~0.5
 			@s.no_text = False

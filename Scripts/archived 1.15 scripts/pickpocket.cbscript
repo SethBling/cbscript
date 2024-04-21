@@ -30,9 +30,9 @@ end
 
 clock main
 	@StealItem.live = False
-	
+
 	@Player.pickpocketing = False
-	
+
 	for @player in @Player
 		at @s
 			pickpocketed = False
@@ -41,7 +41,7 @@ clock main
 				@s.pickpocketing = True
 			end
 			if @s.always_show then pickpocketed = True
-			
+
 			if pickpocketed
 				for $slot in $range(27)
 					handled = False
@@ -76,7 +76,7 @@ clock main
 			end
 		end
 	end
-	
+
 	for @player in @Player[pickpocketing]
 		@s.was_stealing = @s.stealing
 		@s.stealing = None
@@ -87,7 +87,7 @@ clock main
 				rx = @Position.rx
 				ry = @Position.ry
 			end
-			
+
 			at ~ ~1.7 ~ at ^ ^ ^3 as @StealItem[distance=..3, has_item]
 				at @s ^-0.0625 ^0.5 ^0.375 at ~ ~-1 ~ facing @player
 					/tp @Position ~ ~ ~ ~ ~
@@ -99,7 +99,7 @@ clock main
 				end
 			end
 		end
-		
+
 		handled = False
 		if @s.stealing and @s.stealing == @s.was_stealing
 			handled = True
@@ -131,18 +131,18 @@ clock main
 				tell @s 'Stole (count)x(@Item[new]) from (@Player[target,limit=1])'
 			end
 		end
-		
+
 		if @s.was_stealing and not @s.stealing
 			/bossbar set pickpocket players
 		end
-		
+
 		if not handled then @s.steal_progress = 0
-		
+
 	end
 	as @Player[not pickpocketing]
 		@s.destroy_click()
 	end
-	
+
 	/kill @StealItem[not live]
 	@a.pickpocket = 0
 end

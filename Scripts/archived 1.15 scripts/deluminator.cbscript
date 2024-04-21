@@ -17,7 +17,7 @@ define @Entity = @e
 	rx = Rotation[1] float
 	on_ground = OnGround byte 1
 	no_gravity = NoGravity byte 1
-	
+
 	function get_facing_dir()
 		at @s rotated @s at ^ ^ ^1 do @s.<facing_dir> = here - @s.<pos>
 	end
@@ -60,7 +60,7 @@ clock main
 			/kill @s
 		end
 	end
-	
+
 	for @torch in @Torch
 		as @s.player(@Player)
 			<player_pos> = @s.<pos>

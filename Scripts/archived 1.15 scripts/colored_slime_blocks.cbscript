@@ -102,7 +102,7 @@ $Piston = 2
 
 define @SlimeMarker: @Entity[type=area_effect_cloud,tag=SlimeMarker]
 	create {Tags:["SlimeMarker"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
-	
+
 	array piston_types[6]
 end
 
@@ -148,15 +148,15 @@ reset
 		$c = $Colors[$i]
 		/scoreboard objectives add place_slime$i minecraft.used:minecraft.$c
 	end
-	
+
 	unless push_limit > 0
 		push_limit = 12
 	end
-	
+
 	tell @a 'Loaded {RColored {GSlime {BBlocks{- by SethBling'
 end
 
-clock main	
+clock main
 	as @PushMarker[move_timer > 0]
 		@s.move_timer--
 		if @s.move_timer == 0
@@ -178,7 +178,7 @@ clock main
 			/kill @s
 		end
 	end
-	
+
 	as @SlimeMarker at @s
 		if @s.move_timer
 			@s.move_timer--
@@ -213,7 +213,7 @@ clock main
 					if [Moving].face == $d and [Moving].extending == 0 and [Moving].source == 1 and [Moving].progress == 0 and @s.piston_types[$d] == $StickyPiston
 						at @s
 							$dx, $dy, $dz = $PullDeltas[$d]
-							
+
 							$op = $OppositeDir[$d]
 							@s.move_dir = $op
 							@s.move_timer = 3
@@ -221,12 +221,12 @@ clock main
 						end
 					end
 				end
-				
+
 				# 0-tick push then pull
 				at ~<$PullDeltas[$d]>
 					if [Moving].face == $d and [Moving].extending == 0 and [Moving].source == 1 and [Moving].progress == 0
 						/say 0 tick
-					
+
 						$op = $OppositeDir[$d]
 						at @s
 							get_pushable_list{$d}(True)
@@ -240,7 +240,7 @@ clock main
 						end
 					end
 				end
-				
+
 				# Regular 3 tick push
 				at ~<$Deltas[$d]>
 					if [Moving].face == $d and [Moving].extending and not [Moving].source and [Moving].progress == 0
@@ -252,13 +252,13 @@ clock main
 					end
 				end
 			end
-			
+
 			at @s unless block ~ ~ ~ sticky unless block ~ ~ ~ barrier if @s.move_timer == 0
 				/kill @s
 			end
 		end
 	end
-	
+
 	@MovingBlockPos.move_timer--
 	@MovingBlock.move_timer--
 	as @MovingBlockPos
@@ -283,7 +283,7 @@ clock main
 			/kill @s
 		end
 	end
-		
+
 	as @Player at @s eyes ^ ^ ^
 		for $i in $range(16)
 			$color = $Colors[$i]
@@ -301,12 +301,12 @@ clock main
 					end
 					steps++
 				end
-				
+
 				@s.place_slime[$i] = False
 			end
 		end
 	end
-	
+
 	as @ObserverScheduler at @s
 		for $d in ['north', 'south', 'east', 'west', 'up', 'down']
 			if block ~ ~ ~ observer[facing=$d,powered=false]
@@ -324,11 +324,11 @@ end
 # Enacts a recursive push/pull
 function get_pushable_list{$d}(instant)
 	push_count = 0
-	
+
 	at @s
 		recursive_pushed{$d}()
 	end
-	
+
 	if push_count <= push_limit
 		at @BreakMarker
 			/setblock ~ ~ ~ air destroy
@@ -357,7 +357,7 @@ function get_pushable_list{$d}(instant)
 				@s.move_timer = 3
 				/setblock ~ ~ ~ barrier
 				/setblock ~$dx ~$dy ~$dz barrier
-				
+
 				block_id = @s.block_id
 				$mdx = $dx / 2.0
 				$mdy = $dy / 2.0
@@ -423,11 +423,11 @@ function recursive_pushed{$d}()
 			at ~<$Deltas[$d]>
 				recursive_pushed{$d}()
 			end
-			
+
 			for $i in $range(16)
 				$color = $Colors[$i]
 				$dx, $dy, $dz = $Deltas[$d]
-				
+
 				# Check one block over for a piston tile entity with a sticky color
 				sticky_color = -1
 				/execute if data block ~$dx ~$dy ~$dz {blockState:{Name:"minecraft:$color"}} run scoreboard players set Global sticky_color $i
@@ -466,18 +466,18 @@ function recursive_push{$d, $force_sticky}()
 				sticky = True
 			end
 		end
-			
+
 		if sticky
 			for $side_delta in $SideDeltas[$d]
 				at ~<$side_delta> unless @Pushing[distance=..0.1,limit=1]
 					get_pushable{$d}()
-					
+
 					if $force_sticky
 						check_force_sticky()
-					else					
+					else
 						check_sticky()
 					end
-					
+
 					recursive_create_push{$d}()
 				end
 			end
@@ -527,13 +527,13 @@ end
 
 function get_pushable{$direction}()
 	pushable = $Undefined
-	
+
 	$dx,$dy,$dz = $Deltas[$direction]
-	
+
 	/execute if data block ~$dx ~$dy ~$dz {id:"minecraft:piston", source:0b, progress:0.0f, extending:1b, facing: $direction} run scoreboard players set Global pushable $Pushed
 	$op = $OppositeDir[$direction]
 	/execute if data block ~$dx ~$dy ~$dz {id:"minecraft:piston", source:0b, progress:0.0f, extending:0b, facing: $op} run scoreboard players set Global pushable $Pushed
-	
+
 	get_pushable_here()
 end
 
@@ -541,7 +541,7 @@ function get_pushable_here()
 	if pushable == $Undefined
 		/execute if data block ~ ~ ~ {} run scoreboard players set Global pushable $BlockPush
 	end
-	
+
 	if pushable == $Undefined
 		if block ~ ~ ~ piston[extended=false]
 			pushable = $Pushable

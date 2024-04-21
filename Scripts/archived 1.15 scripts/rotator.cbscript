@@ -24,7 +24,7 @@ advancement placed_rotator {
 define @Player: @Player
 	function placed_rotator()
 		/advancement revoke @s only rotator:placed_rotator
-		
+
 		at @s eyes ^ ^ ^
 			steps = 0
 			while steps < 60 at feet ^ ^ ^0.1
@@ -32,7 +32,7 @@ define @Player: @Player
 					if block ~ ~ ~ redstone_lamp
 						steps = 1000000
 						as create @RotatorMarker
-							
+
 						end
 					end
 				end
@@ -66,7 +66,7 @@ end
 clock main
 	as @RotatorMarker at @s
 		# Check for piston pushes, and move if so
-		
+
 		unless block ~ ~ ~ redstone_lamp
 			moved = False
 			for $direction in $range(6)
@@ -74,10 +74,10 @@ clock main
 					$dx, $dy, $dz = $Deltas[$direction]
 					moved_dir = False
 					/execute if data block ~$dx ~$dy ~$dz {id:"minecraft:piston", source:0b, progress:0.0f, extending:1b, facing: $direction} run scoreboard players set Global moved_dir 1
-					
+
 					$op = $OppositeDir[$direction]
 					/execute if data block ~$dx ~$dy ~$dz {id:"minecraft:piston", source:0b, progress:0.0f, extending:0b, facing: $op} run scoreboard players set Global moved_dir 1
-					
+
 					if moved_dir
 						moved = True
 						@s.moving_timer = 3
@@ -85,14 +85,14 @@ clock main
 					end
 				end
 			end
-			
+
 			unless @s.moving_timer > 0
 				/kill @s
 			else
 				moving_timer--
 			end
 		end
-		
+
 		if @s.powered
 			if block ~ ~ ~ redstone_lamp[lit=false]
 				@s.powered = False
@@ -136,10 +136,10 @@ end
 function rotate_clockwise(id)
 	switch block id
 		case piston[extended=true]
-		
+
 		end
 		case sticky_piston[extended=true]
-		
+
 		end
 		case *[facing=north]
 			$rotated_block_state = $block_state.$replace('facing=north', 'facing=east')

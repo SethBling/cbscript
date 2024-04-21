@@ -57,12 +57,12 @@ function create_slope()
 			else if block ~ ~ ~-1 air unless block ~ ~ ~1 air
 				ry = 180000
 			end
-			
+
 			unless ry == -1
 				@s.ry = ry
 				@Marker.current = False
 				@s.current = True
-				
+
 				for $i in $range($len($offsets))
 					rotated @s at ^<$offsets[$i]>
 						@s.blocks[$i] = create @MiniBlock ^ ^-1.6 ^-0.22
@@ -95,7 +95,7 @@ function create_slope()
 				if @s.ry == 270000
 					/setblock ~ ~ ~ tripwire[north=true,south=true]
 				end
-				
+
 				as create @Physics ~ ~-1 ~
 					/tp @s ~ ~ ~
 					@s.ry = ry
@@ -147,14 +147,14 @@ clock main
 			/kill @s
 		end
 	end
-	
+
 	as @Player
 		if @s.slide at @s if @Slope[distance=..1.3,limit=1]
 			@s.slide_count++
 		else
 			@s.slide_count = 0
 		end
-		
+
 		at @s[slide_count] rotated @Slope[distance=..1.3,limit=1]
 			switch @s.slide_count
 				case $i in $range(50)
@@ -162,7 +162,7 @@ clock main
 					$vdist = -$dist
 					/tp @s ^ ^$vdist ^$dist
 				end
-				case 50 to 100000	
+				case 50 to 100000
 					$dist = $float(50) * 0.01
 					$vdist = -$dist
 					/tp @s ^ ^$vdist ^$dist
@@ -174,7 +174,7 @@ clock main
 				end
 			end
 		end
-		
+
 		if @s[nbt={"SelectedItem":{tag:{display:{Name:"{\"text\":\"Sloper\"}"}}}}] and @s.create_slope
 			steps = 0
 			at @s ~ ~1.6 ~
@@ -188,14 +188,14 @@ clock main
 			end
 		end
 	end
-	
+
 	@Player.create_slope = False
-	
+
 	as @Player[slide] at @s rotated @Slope[distance=..1,limit=1]
 		/tp @s ^ ^ ^0.1
 	end
 	@Player.slide = 0
-	
+
 	as @MiniBlock[slope]
 		@s.fire = 10
 	end

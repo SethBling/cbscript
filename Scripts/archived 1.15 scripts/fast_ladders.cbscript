@@ -18,7 +18,7 @@ clock main
 				/tp @s ~ ~ ~
 			end
 		end
-			
+
 		@s.prev_y = @s.y
 	end
 end

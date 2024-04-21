@@ -160,25 +160,25 @@ end
 
 clock teleport
 	@Player.cooldown += 0
-	
+
 	at @Player do create @Tracker
-	
+
 	@Tracker.age++
 	/kill @Tracker[age >= 3]
-	
+
 	if @Player.cooldown > 0 then @Player.cooldown--
-	
+
 	if @Player.shift > 0 and @Player.cooldown == 0
 		@Current = @Tracker[age==2,limit=1]
 		@Prev = @Tracker[age==1,limit=1]
 		dx = @Current.x - @Prev.x
 		dz = @Current.z - @Prev.z
-		
+
 		do_teleport = True
 		if dx == 0 and dz == 0
 			do_teleport = False
 		end
-		
+
 		if do_teleport
 			at @Current
 				/tp @Current ~ ~ ~ facing entity @Prev
@@ -189,40 +189,40 @@ clock teleport
 			at @Player
 				/teleport @Current ~ ~ ~
 			end
-			
+
 			@Player.cooldown = 5
-			
-			continue = True		
+
+			continue = True
 			ticks = 0
 
 			while ticks < 40
 				continue = False
 				at @Current if block ~ ~ ~ horizontally_non_colliding then continue = True
-				
+
 				if continue
 					at @Current
 						/tp @Current ^ ^ ^0.25
 					end
 				end
-				
+
 				if not continue
 					at @Current
 						/tp @Current ^ ^ ^-1
 					end
 					ticks = 40
 				end
-				
+
 				ticks = ticks + 1
 			end
-		
+
 			at @Current
 				/teleport @Player ~ ~ ~
 				/playsound minecraft:entity.enderman.teleport player @Player
 			end
 		end
-		
+
 		/kill @Tracker
 	end
-	
+
 	if @Player.shift > 0 then @Player.shift = 0
 end

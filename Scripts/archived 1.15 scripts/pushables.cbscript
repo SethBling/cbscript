@@ -36,12 +36,12 @@ function remove_here()
 	/kill @FakeBlock[distance=..1]
 	/kill @SolidBlock[distance=..1]
 end
-	
+
 function create_block()
 	align xyz at ~0.5 ~ ~0.5
 		as create @Pushable
 			@s.physics = create @Physics
-			
+
 			for $block_type in $BlockTypes
 				if block ~ ~ ~ $block_type
 					/summon armor_stand ~ ~ ~ {Tags:["Disguise", "New"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"falling_block", Time:1b, NoGravity:1b, BlockState:{Name:"minecraft:$block_type"}, Tags:["FakeBlock"]}]}
@@ -78,7 +78,7 @@ function create_block()
 				@s.disguise = &@Disguise[tag=New, limit=1]
 			end
 			/tag @Disguise[tag=New] remove New
-			
+
 			if not handled then @s.disguise = create @Disguise
 		end
 	end
@@ -102,15 +102,15 @@ clock main
 			end
 			@s[sound_cooldown > 0].sound_cooldown--
 		end
-		
+
 		@s.holding_wand = False
 		@s[nbt={SelectedItem:{id:"minecraft:carrot_on_a_stick"}}].holding_wand = True
-		
+
 		if not @s.holding_wand
 			@s.wand_active = False
 			@s.controlling = None
-		end	
-		
+		end
+
 		if @s.use_wand
 			handled = False
 			if @s.wand_active
@@ -126,10 +126,10 @@ clock main
 					end
 				end
 			end
-		
+
 			@s.use_wand = False
 		end
-		
+
 		if @s.wand_active
 			at @s ~ ~1 ~ at ^ ^ ^3
 				<target> = here
@@ -147,7 +147,7 @@ clock main
 			end
 		end
 	end
-	
+
 	for @pushable in @Pushable
 		at @s as @Pushable[distance= .. 1] at @s
 			unless @s._id == @pushable._id
@@ -163,7 +163,7 @@ clock main
 			end
 		end
 	end
-	
+
 	as @Pushable at @s
 		as @s.disguise
 			/tp @s ~ ~ ~
@@ -171,9 +171,9 @@ clock main
 		as @s.physics
 			/tp @s ~ ~ ~
 		end
-	
+
 		<xb, yb, zb> = @s.<pos> % 1000
-		
+
 		stairs_east = False
 		/execute if block ~0.25 ~ ~ #minecraft:stairs[facing=east,half=bottom] run scoreboard players set Global stairs_east 1
 		if stairs_east
@@ -184,7 +184,7 @@ clock main
 				@s.vy += 350
 			end
 		end
-		
+
 		stairs_west = False
 		/execute if block ~-0.26 ~ ~ #minecraft:stairs[facing=west,half=bottom] run scoreboard players set Global stairs_west 1
 		if stairs_west
@@ -195,7 +195,7 @@ clock main
 				@s.vy += 350
 			end
 		end
-		
+
 		stairs_south = False
 		/execute if block ~ ~ ~0.25 #minecraft:stairs[facing=south,half=bottom] run scoreboard players set Global stairs_south 1
 		if stairs_south
@@ -206,7 +206,7 @@ clock main
 				@s.vy += 350
 			end
 		end
-		
+
 		stairs_north = False
 		/execute if block ~ ~ ~-0.26 #minecraft:stairs[facing=north,half=bottom] run scoreboard players set Global stairs_north 1
 		if stairs_north
@@ -217,7 +217,7 @@ clock main
 				@s.vy += 350
 			end
 		end
-		
+
 		if @s.hot at @s if block ~ ~ ~ air
 			/setblock ~ ~ ~ fire
 		end
@@ -227,14 +227,14 @@ clock main
 		end
 		if @s.cold do @s.fire_timer = 0
 	end
-	
+
 	as @FakeBlock
 		@s.on_ground = False
 		@s.time = 1
 	end
-	
+
 	/effect give @SolidBlock invisibility 1000000 1 true
-	
+
 	for @player in @Player[sneak_dist > 0]
 		at @s ~ ~1 ~ at ^ ^ ^1
 			as @Pushable[distance = ..1,limit=1,sort=nearest]
@@ -247,22 +247,22 @@ clock main
 				end
 			end
 		end
-	
+
 		@s.sneak_dist = 0
-	end	
-	
-		
+	end
+
+
 	as @Pushable[bishop]
 		@s.get_velocity_signs()
-		
+
 		avg = (avx + avz) / 2
 		@s.vx = sx * avg
 		@s.vz = sz * avg
 	end
-	
+
 	as @Pushable[rook]
 		@s.get_velocity_signs()
-		
+
 		if avx > avz
 			@s.vz = 0
 		end
@@ -270,10 +270,10 @@ clock main
 			@s.vx = 0
 		end
 	end
-	
+
 	as @Pushable[queen]
 		@s.get_velocity_signs()
-		
+
 		handled = False
 		if havx > avz
 			@s.vz = 0
@@ -287,9 +287,9 @@ clock main
 			avg = (avx + avz) / 2
 			@s.vx = sx * avg
 			@s.vz = sz * avg
-		end			
+		end
 	end
-	
+
 	as @Pushable[knight]
 		if @s.on_ground
 			@s.ground_timer++
@@ -313,9 +313,8 @@ clock main
 			@s.vx = avz / 2 * sx
 		end
 	end
-	
+
 	as @Pushable[lock_x]
 		@s.vx = 0
 	end
 end
-

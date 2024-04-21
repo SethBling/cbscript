@@ -34,13 +34,13 @@ function on_creeper_damage()
 	if @s.lockout
 		/advancement revoke @s only thrust:thrust_damage
 		/effect clear @s resistance
-		
+
 		/tag @Player remove current
 		/tag @s add current
 		@player = @Player[tag=current]
-		
+
 		<old_pos> = @s.<old_pos>
-		
+
 		unless @Position do create @Position
 		as @Position
 			@s.<pos> = <old_pos>
@@ -84,16 +84,16 @@ function armor_stand_thrust()
 			end
 			@s.motion = create @Motion
 			@s.<old_pos> = @s.<pos>
-			
+
 			at @s do get_aim()
 			id = &@s
-			
+
 			as @s.motion
 				@s.<vel> = <aim> * 3
 				@s.player = id
 			end
 		end
-		
+
 		if @s.on_ground unless @s.was_on_ground if @s.motion
 			as @s.motion
 				/kill @s
@@ -103,19 +103,19 @@ function armor_stand_thrust()
 		@s.was_on_ground = @s.on_ground
 		<delta> = @s.<pos> - @s.<old_pos>
 		as @s.motion
-			
+
 			@s.<vel> += <delta> * 5
 			at @s
 				/tp @player 0 0 0
 				/tp @player ~ ~ ~
 			end
-			
+
 			if @s.on_ground
 				/kill @s
 				@player.motion = None
 			end
 		end
 		@s.<old_pos> = @s.<pos>
-		
+
 	end
 end

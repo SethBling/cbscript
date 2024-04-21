@@ -20,24 +20,24 @@ $Billion = 1000000000
 reset
     anim = 0
     rot_anim = 0
-    
+
     unless @Position do create @Position
-    
+
     /kill @e[type=block_display]
-    
+
     for col = 0 to 3
         for row = 0 to 2
             @Position.<pos> = <col * 5000, 67000 - row * 5000, 0>
             at @Position
                 /summon minecraft:block_display ~ ~ ~ {block_state:{Name:"minecraft:command_block",Count:0b}, interpolation_duration: 0, teleport_duration: 1, Tags:["transform_demo"]}
             end
-            
+
             @Demo.age++
             as @Demo[age == 1]
                 @s.row = row
                 @s.col = col
                 @s.idx = col + row * 4
-                
+
                 if col == row
                     @s.base = 1000
                 else
@@ -46,8 +46,8 @@ reset
             end
         end
     end
-    
-    /summon minecraft:block_display -10 57 0 {block_state:{Name:"minecraft:command_block",Count:0b}, interpolation_duration: 0, teleport_duration: 1, Tags:["rot_trans"]}    
+
+    /summon minecraft:block_display -10 57 0 {block_state:{Name:"minecraft:command_block",Count:0b}, interpolation_duration: 0, teleport_duration: 1, Tags:["rot_trans"]}
 end
 
 clock tick
@@ -70,8 +70,8 @@ clock tick
                 # Restore
                 frame = anim - 80
                 val = -3000 + frame * 150 + @s.base
-            end            
-            
+            end
+
             if val < $Billion
                 /data modify storage $namespace:global transformation set value [1f,0f,0f,0f,0f,1f,0f,0f,0f,0f,1f,0f,0f,0f,0f,1f]
                 /execute store result storage $namespace:global transformation[$(idx)] float 0.001 run scoreboard players get Global val
@@ -84,14 +84,14 @@ clock tick
     if anim >= 110
         anim = 0
     end
-    
+
     as @rot_trans
         if rot_anim <= 0
             /data modify storage $namespace:global rot_trans set value [1f,0f,0f,0f,0f,1f,0f,0f,0f,0f,1f,0f,0f,0f,0f,1f]
             /data modify entity @s transformation set from storage $namespace:global rot_trans
             /data modify entity @s start_interpolation set value 0b
         end
-        
+
         rot_anim++
 
         idx = rot_anim / 15
@@ -103,10 +103,10 @@ clock tick
                 if idx == $idx
                     $starting_val = $starting_vals[$idx]
                     $val = $vals[$idx]
-                    
+
                     delta = $val - $starting_val
                     val = $starting_val + delta * frame / 10
-                    
+
                     with
                         $(idx) = idx
                     do
@@ -117,10 +117,10 @@ clock tick
                 end
             end
         end
-        
+
         if rot_anim >= 15 * 12 + 55
             rot_anim = -20
         end
-    
+
     end
 end

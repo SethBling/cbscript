@@ -28,6 +28,6 @@ $Pitches = [
 
 macro $playsound($sound, $note)
 	$pitch = $Pitches[$note]
-	
+
 	/playsound minecraft:$sound block @a ~ ~ ~ 1 $pitch
 end

@@ -41,7 +41,7 @@ clock main
 			end
 		end
 	end
-	
+
 	for @firework in @Firework
 		if @s.multi at @s
 			if @s.life == @s.lifetime - 10
@@ -58,7 +58,7 @@ clock main
 			end
 		end
 	end
-	
+
 	as @Player[nbt={"SelectedItem":{id:"minecraft:stick",tag:{display:{Name:"{\"text\":\"Sparkler\"}"}}}}] at @s eyes ^ ^ ^1
 		/particle flame ~ ~ ~ 0 0 0 0.005 1 force @a
 		@s.audio_cooldown--
@@ -67,7 +67,7 @@ clock main
 			@s.audio_cooldown = rand(5)
 		end
 	end
-	
+
 	as @Player[nbt={"SelectedItem":{id:"minecraft:fishing_rod",tag:{display:{Name:"{\"text\":\"Sparkler\"}"}}}}] at @s eyes ^-0.5 ^-0.1 ^0.7
 		/particle flame ~ ~ ~ 0 0 0 0.005 1 force @a
 		@s.audio_cooldown--
@@ -76,7 +76,7 @@ clock main
 			@s.audio_cooldown = rand(5)
 		end
 	end
-	
+
 	as @PopIt at @s
 		if @s.tracker
 			as @s.tracker
@@ -91,7 +91,7 @@ clock main
 			end
 		end
 	end
-	
+
 	as @Marker[popit] at @s
 		as @s.popit (@PopIt)
 		else

@@ -34,12 +34,12 @@ end
 reset
 	/team add katamari
 	/team modify katamari collisionRule pushOtherTeams
-	
+
 	move @Ball ~ -100 ~
 	/kill @Ball
 	/kill @Angle
 	/kill @e[stuck > 0]
-	
+
 	as @a at @s ~ ~1.6 ~ at ^ ^ ^5
 		@s.ball = create @Ball
 		as @s.ball
@@ -49,7 +49,7 @@ reset
 			/team join katamari @s
 		end
 	end
-	
+
 	Debug = 0
 end
 
@@ -59,7 +59,7 @@ clock main
 		at @s ~ ~1.6 ~ at ^ ^ ^5
 			create @Marker
 		end
-		
+
 		@CurMarker = @Marker[limit=1]
 		@CurMarker.nonstick = True
 		as @CurMarker
@@ -71,21 +71,21 @@ clock main
 			end
 			move @s ~ ~0.3 ~
 		end
-		
+
 		as @s.ball(@Ball)
 			@Ball.current_ball = True
 			@CurBall = @Ball[current_ball,limit=1]
 			dx = @CurMarker.x - @s.x
 			dz = @CurMarker.z - @s.z
-			
+
 			do_roll = False
 			speedsq = @s.vx^2 + @s.vz^2
 			if speedsq >= 2000
 				do_roll = True
 			end
-			
+
 			dist = sqrt(dx^2 + dz^2)
-			
+
 			@s.vx /= 3
 			@s.vz /= 3
 			at @s if @CurMarker[distance=..5] and dist > 100
@@ -94,43 +94,43 @@ clock main
 				if speedsq < 2000 at @s unless block ~ ~-1.5 ~ air
 					@s.vy = 30
 				end
-				
+
 				@s.vx = dx * 60 / dist
 				@s.vz = dz * 60 / dist
-				
+
 				do_roll = True
 			end
 			at @s unless @CurMarker[distance=..5]
 				@s.vx = 0
 				@s.vz = 0
 			end
-			
-			if do_roll				
+
+			if do_roll
 				roll_rotate_entities()
 			end
-			
+
 			ballx = @CurBall.x
 			bally = @CurBall.y
 			ballz = @CurBall.z
-							
+
 			for @CurEnt in @Entity[stuck]
 				@s.x = ballx + @s.dx
 				@s.y = bally + @s.dy
 				@s.z = ballz + @s.dz
 			end
-			
+
 			/data merge entity @s {OnGround:0b}
-			
+
 			at @s
 				for @CurEntity in @Entity[type=!player,distance=..5]
 					unless @s.nonstick
 						@s.dx = @s.x - ballx
 						@s.dy = @s.y - bally
 						@s.dz = @s.z - ballz
-						
+
 						distsq = @s.dx^2 + @s.dy^2 + @s.dz^2
 						sizesq = (2 * @CurBall.radius)^2
-						
+
 						@s.mass = 20
 						@s[type=chicken].mass = 15
 						@s[type=pig].mass = 35
@@ -201,7 +201,7 @@ clock main
 						@s[type=zombie_pigman].mass = 50
 						@s[type=zombie_villager].mass = 50
 						mass_ratio = @CurBall.mass / @s.mass
-						
+
 						if distsq < sizesq and mass_ratio > 4
 							@s.nonstick = True
 							@s.stuck = @CurBall
@@ -217,13 +217,13 @@ clock main
 					end
 				end
 			end
-			
+
 			@Ball.current_ball = False
 		end
-		
-		
+
+
 		/kill @CurMarker
-	end	
+	end
 end
 
 function roll_rotate_entities()
@@ -234,7 +234,7 @@ function roll_rotate_entities()
 	ballvx = @s.vx
 	ballvy = @s.vy
 	ballvz = @s.vz
-	
+
 	# Get direction of movement
 	as create @Angle
 		@s.forward = True
@@ -243,7 +243,7 @@ function roll_rotate_entities()
 		@s.y = bally + ballvy
 		@s.z = ballz + ballvz
 	end
-	
+
 	# Get perpendicular "roll axis"
 	as create @Angle
 		@s.left = True
@@ -262,52 +262,52 @@ function roll_rotate_entities()
 	mradius = -radius
 	rollarc = 4000 / @CurBall.radius
 	minradsq = radius^2 * 3 / 4
-	
+
 	/kill @Angle
 
 	# Handle each entity
 	as @Entity if @s.stuck == @CurBall._id
 		@s.current = True
 		@CurEnt = @e[current,limit=1]
-	
+
 		curdx = @s.dx
 		curdy = @s.dy
 		curdz = @s.dz
-		
+
 		# Teleport to the same position relative to the ball
 		@s.x = ballx + curdx
 		@s.y = bally + curdy
 		@s.z = ballz + curdz
-		
+
 		# Get offset projected onto roll axis
 		dot = ((@s.dx * leftx) + (@s.dy * lefty) + (@s.dz * leftz)) / 256
 		px = dot * leftx / 256
 		py = dot * lefty / 256
 		pz = dot * leftz / 256
-		
+
 		if dot > radius then dot = r
 		if dot < mradius then dot = mradius
-		
+
 		as create @Angle
 			/tp @s @CurBall
 			# Start at projected location along roll axis
 			@s.x = ballx + px
 			@s.y = bally + py
 			@s.z = ballz + pz
-			
+
 			# Roll angle about roll axis
 			at @s
 				/tp @s ~ ~ ~ facing entity @CurEnt
 			end
-			
+
 			obj_angle = @s.ry
-			
+
 			roll_dir = 1
 			arc_delta = (((obj_angle - roll_angle) + 360) % 360)
 			if arc_delta > 90 and arc_delta < 270
 				roll_dir = -1
 			end
-			
+
 			# Entity is behind the roll axis, roll upward
 			if roll_dir == -1
 				ang = @s.rx
@@ -317,7 +317,7 @@ function roll_rotate_entities()
 				if ang < flipangle
 					flip = True
 				end
-					
+
 				if flip
 					@s.rx = -180 + rollarc - ang
 					@s.ry += 180
@@ -326,17 +326,17 @@ function roll_rotate_entities()
 					@s.rx = ang - rollarc
 				end
 			end
-			
+
 			# Entity is in front of the roll axis, roll downward
 			if roll_dir == 1
 				ang = @s.rx
-				
+
 				flip = False
 				flipangle = 90 - rollarc
 				if ang > flipangle
 					flip = True
 				end
-					
+
 				if flip
 					@s.rx = 180 - rollarc - ang
 					@s.ry += 180
@@ -347,10 +347,10 @@ function roll_rotate_entities()
 			end
 
 			x_angle = @s.rx
-			
+
 			# Get unit vector of rolled angle
 			move @s ^ ^ ^1
-			
+
 			dirx = @s.x - (ballx + px)
 			diry = @s.y - (bally + py)
 			dirz = @s.z - (ballz + pz)
@@ -361,23 +361,23 @@ function roll_rotate_entities()
 		pdx = curdx - px
 		pdy = curdy - py
 		pdz = curdz - pz
-		
+
 		pdist = sqrt(pdx^2 + pdy^2 + pdz^2)
-		
+
 		# Add roll axis projected vector with offset from projection
 		@s.dx = px + (dirx * pdist / 256)
 		@s.dy = py + (diry * pdist / 256)
 		@s.dz = pz + (dirz * pdist / 256)
-		
+
 		distsq = @s.dx^2 + @s.dy^2 + @s.dz^2
-				
+
 		# Store new entity offset
 		@s.x = ballx + @s.dx
 		@s.y = bally + @s.dy
 		@s.z = ballz + @s.dz
-		
+
 		@s.current = False
-		
+
 		if Debug > 0
 			tell @a: leftxyz (Global.leftx) (Global.lefty) (Global.leftz)
 			tell @a: curdxyz (Global.curdx) (Global.curdy) (Global.curdz)

@@ -10,7 +10,7 @@ end
 
 reset
 	/kill @Frame
-	
+
 	for dx = 0 to 4 by 1
 		for dy = 0 to 0 by 1
 			for dz = 0 to 4 by 1
@@ -47,7 +47,7 @@ clock main
 		update = False
 		unless map == @s.prev_map do update = True
 		unless rotation == @s.prev_rotation do update = True
-		
+
 		if update
 			at (<-800, 55, 151> + <@s.puzzle_x*5, 0, @s.puzzle_z*5>) * 1000
 				switch map

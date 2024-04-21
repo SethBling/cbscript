@@ -35,7 +35,7 @@ clock main
 		unless @s.player > 0 at @s
 			@s.player = @Player[distance=..3,limit=1]
 		end
-		
+
 		as @s.player(@Player)
 			@s.<bobber> = @bobber.<pos>
 			@s.bobber = @bobber
@@ -45,9 +45,9 @@ clock main
 		if @s.bobber
 			bobber_exists = False
 			as @s.bobber
-				bobber_exists = True			
+				bobber_exists = True
 			end
-		
+
 			if not bobber_exists
 				@FlyingMachine[distance=..2,limit=1].<prev_vel> += (@s.<bobber> - @s.<pos>) / 40
 				@s.bobber = None

@@ -25,7 +25,7 @@ end
 clock main
 	for @m1 in @Magnet
 		for @m2 in @Magnet
-			
+
 		end
 	end
 end

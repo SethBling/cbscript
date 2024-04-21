@@ -17,7 +17,7 @@ define @Entity = @e
 	rx = Rotation[1] float
 	on_ground = OnGround byte 1
 	no_gravity = NoGravity byte 1
-	
+
 	function get_facing_dir()
 		at @s rotated @s at ^ ^ ^1 do @s.<facing_dir> = here - @s.<pos>
 	end
@@ -33,7 +33,7 @@ define @Ball = @Entity[type=slime,name=Ball,limit=1]
 	create: {CustomName:"\"Ball\"", Silent:1b, Size:1, Invulnerable:1}
 	size = Size int 1
 	hp = AbsorptionAmount float 1
-end 
+end
 
 reset
 	/tp @Ball ~ -200 ~
@@ -48,12 +48,12 @@ end
 
 clock main
 	<movement> = @Player.<prev> - @Player.<pos>
-	
+
 	dot = <movement> * @Player.<facing_dir> / 1000
-	
+
 	rolling_dot = rolling_dot * 4 / 5 + dot / 5
 	angle = 45000 + rolling_dot * 50
-	
+
 	as @Player at @s rotated @s
 		as create @Marker
 			/tp @s @Player
@@ -70,7 +70,7 @@ clock main
 		/tp @Player ~ ~ ~
 		@Player.<prev> = here
 	end
-	
+
 	at @Player
 		as create @Marker
 			/tp @s @Player
@@ -83,7 +83,7 @@ clock main
 			/kill @s
 		end
 	end
-	
+
 	as @Ball
 		@s.on_ground = False
 		@s.<vel> += <grav> / 5

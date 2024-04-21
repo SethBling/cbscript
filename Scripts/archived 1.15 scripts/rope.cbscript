@@ -17,7 +17,7 @@ end
 define @Segment = @Entity[type=slime,name=Segment]
 	create: {CustomName:"{\"text\":\"Segment\"}", Invulnerable:1b, Silent:1b}
 	on_ground = OnGround byte 1
-	
+
 	function create_children()
 		/team join rope
 		if n == 0
@@ -32,23 +32,23 @@ define @Segment = @Entity[type=slime,name=Segment]
 			end
 		end
 	end
-	
+
 	function apply_tension()
 		if @s.next
 			my_x = @s.x
 			my_y = @s.y
 			my_z = @s.z
-			
+
 			as @s.next(@Segment)
 				dx = @s.x - my_x
 				dy = @s.y - my_y
 				dz = @s.z - my_z
-				
+
 				dvx = dx * 80 / 100
 				dvy = dy * 80 / 100
 				dvz = dz * 80 / 100
-				
-				
+
+
 				dvsq = dvx^2 + dvy^2 + dvz^2
 				while dvsq > 100000000
 					dvx /= 2
@@ -56,21 +56,21 @@ define @Segment = @Entity[type=slime,name=Segment]
 					dvz /= 2
 					dvsq = dvx^2 + dvy^2 + dvz^2
 				end
-				
+
 				@s.vx -= dvx
 				@s.vy -= dvy
 				@s.vz -= dvz
 
 				@s.on_ground = False
-				
-				if @s.last				
+
+				if @s.last
 					stuck = False
 					at @s unless block ~ ~-1 ~ air then stuck = True
 					at @s unless block ~1 ~ ~ air then stuck = True
 					at @s unless block ~ ~ ~1 air then stuck = True
 					at @s unless block ~-1 ~ ~ air then stuck = True
 					at @s unless block ~ ~ ~-1 air then stuck = True
-					
+
 					@s.stuck = False
 					/data merge entity @s {NoGravity:0b}
 					if stuck and dvsq < 10000000
@@ -82,21 +82,21 @@ define @Segment = @Entity[type=slime,name=Segment]
 					end
 				end
 			end
-			
+
 			@s.vx += dvx
 			@s.vy += dvy
 			@s.vz += dvz
-			
+
 			as @s.next(@Segment)
 				@s.apply_tension()
 			end
-			
+
 			#@s.vx = @s.vx * 99 / 100
 			#@s.vy = @s.vy * 99 / 100
 			#@s.vz = @s.vz * 99 / 100
 		end
 	end
-	
+
 	function throw()
 		@s.vx += throwx
 		@s.vy += throwy
@@ -127,7 +127,7 @@ function create_rope()
 		@s.create_children()
 	end
 	@s.last = last
-	
+
 	at @s ~ ~200 ~
 		@s.click = create @ClickDetector
 	end
@@ -143,7 +143,7 @@ reset
 	/kill @ClickDetector
 	/kill @Marker
 	/kill @Physics
-	
+
 	/team add rope
 	/team modify rope collisionRule pushOtherTeams
 
@@ -156,7 +156,7 @@ end
 
 clock main
 	for @CurPlayer in @Player
-		at @s ~ ~1.6 ~ rotated @s at ^ ^ ^15		
+		at @s ~ ~1.6 ~ rotated @s at ^ ^ ^15
 			as @s.rope(@Segment)
 				/tp @s ~ ~ ~
 				@s.apply_tension()
@@ -166,13 +166,13 @@ clock main
 			clicked = False
 			as @s.click(@ClickDetector)
 				/tp @s ~ ~ ~
-			
+
 				if @s.hp <= 97
 					clicked = True
 				end
 				@s.hp = 100
 			end
-			
+
 			if clicked
 				stuck = False
 				as @s.last do stuck = @s.stuck
@@ -183,13 +183,13 @@ clock main
 						y1 = @s.y + 2000
 						z1 = @s.z
 					end
-					
+
 					as @s.physics(@Physics)
 						/team join rope
 						dx = (x1 - @s.x) / 10
 						dy = (y1 - @s.y) / 10
 						dz = (z1 - @s.z) / 10
-						
+
 						@s.vx = dx
 						@s.vy = dy
 						@s.vz = dz
@@ -215,7 +215,7 @@ clock main
 						@s.throw()
 					end
 				end
-				
+
 				if @s.rope == 0
 					create_rope()
 					as create @Marker

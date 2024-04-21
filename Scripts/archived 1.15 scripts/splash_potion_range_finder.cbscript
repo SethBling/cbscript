@@ -18,20 +18,20 @@ clock main
 	for @player in @Player
 		holding_potion = False
 		/execute if entity @s[nbt={SelectedItem:{id:"minecraft:splash_potion"}}] run scoreboard players set Global holding_potion 1
-		
+
 		if holding_potion
 			unless @Position do create @Position
 			as @Position
 				at @player
 					/tp @s ~ ~ ~ ~ ~
 				end
-				
+
 				<pos> = @s.<pos>
 				move @s ^ ^ ^1
 				<delta> = (@s.<pos> - <pos>) / 2
-				
+
 				<pos> += <0, 23000, 0>
-				
+
 				for i = 1 to 100
 					<delta> *= 990
 					<delta> /= 1000

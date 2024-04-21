@@ -44,7 +44,7 @@ function get_water_level()
 	for $level in $range(8)
 		/execute if block ~ ~ ~ water[level=$level] run scoreboard players set Global level $level
 	end
-	
+
 	return level
 end
 
@@ -60,9 +60,9 @@ clock main
 				at ^ ^-1 ^1 do forward_level = get_water_level()
 				at ^ ^-1 ^ do here_level = get_water_level()
 				at ^ ^-1 ^-1 do backward_level = get_water_level()
-				
+
 				id = &@s
-				if forward_level >= 0 and here_level >= 0 and backward_level >= 0 and forward_level > here_level and here_level > backward_level						
+				if forward_level >= 0 and here_level >= 0 and backward_level >= 0 and forward_level > here_level and here_level > backward_level
 					@s.spin_vel += 1000
 					as @Spoke if @s.mill == id
 						@s.spin_vel += 1000
@@ -71,7 +71,7 @@ clock main
 			end
 		end
 	end
-	
+
 	as @Spoke at @s
 		@s.spin_vel *= 98
 		@s.spin_vel /= 100
@@ -79,7 +79,7 @@ clock main
 		@s.rot_x %= 360000
 		@Position.<pos> = @s.<location>
 		at @Position
-			@s.update()	
+			@s.update()
 		end
 	end
 	as @Watermill at @s
@@ -122,7 +122,7 @@ clock main
 		as @Player[distance=..8,placed_mill]
 			ry = @s.ry
 		end
-		
+
 		as create @Watermill
 			@s.ry = ry
 			id = &@s
@@ -139,20 +139,20 @@ clock main
 				@s.mill = id
 			end
 		end
-		
+
 		/tp @s ~ -200 ~
 		/kill @s
 	end
-	
+
 	@Player.placed_mill = False
-	
+
 	as @Player[crafted_mill]
 		while @s.crafted_mill
 			mill_eggs = result
 			/clear @s sheep_spawn_egg{mill:1b}
 			normal_eggs = result
 			/clear @s sheep_spawn_egg
-			
+
 			while mill_eggs > 0
 				/give @s sheep_spawn_egg{mill:1b, EntityTag:{Tags:["SpawnMill"]}, display:{Name:"{\"text\":\"Watermill\"}"}} 1
 				mill_eggs--

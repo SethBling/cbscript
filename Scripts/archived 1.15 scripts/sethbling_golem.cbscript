@@ -34,16 +34,16 @@ end
 define @Golem : @Entity[type=armor_stand, tag=SethBlingGolem]
 	left_arm_rx : Pose.LeftArm[0] float
 	left_arm_ry : Pose.LeftArm[1] float
-	
+
 	right_arm_rx : Pose.RightArm[0] float
 	right_arm_ry : Pose.RightArm[1] float
-	
+
 	array arm_state[2]
 	array arm_block[2]
 	array state_delay[2]
 	array next_state[2]
 	array arm_target[2]
-	
+
 	create {
 		ShowArms: 1,
 		Invulnerable: 1,
@@ -55,11 +55,11 @@ define @Golem : @Entity[type=armor_stand, tag=SethBlingGolem]
 			LeftArm: [0.001f, 0.001f, 0.001f]
 		}
 	}
-	
+
 	function point_at(pointx, pointy, pointz, arm)
 		unless @Position do create @Position
 		@Position.<pos> = <pointx, pointy, pointz>
-		
+
 		if arm == $RightArm
 			at @s ^-0.3 ^1 ^ facing @Position
 				/tp @Position ~ ~ ~ ~ ~
@@ -74,7 +74,7 @@ define @Golem : @Entity[type=armor_stand, tag=SethBlingGolem]
 			@s.lt_ry = @Position.ry - @s.ry
 		end
 	end
-	
+
 	function move_arm(arm)
 		$MoveAmount = 5000
 		if arm == $RightArm
@@ -87,17 +87,17 @@ define @Golem : @Entity[type=armor_stand, tag=SethBlingGolem]
 			@s.left_arm_ry = result_ry
 		end
 	end
-	
+
 	function get_random_target_block(arm)
 		found_target = False
 		create @Position
 		find_step = 0
-		
+
 		while not found_target and find_step < 100
 			at @s eyes ^ ^ ^
 				/tp @Position ~ ~ ~
 			end
-			
+
 			@Position.rx = randint(-90000, 90000)
 			@Position.ry = randint(0, 360000)
 			at @Position
@@ -118,11 +118,11 @@ define @Golem : @Entity[type=armor_stand, tag=SethBlingGolem]
 					step++
 				end
 			end
-			
+
 			find_step++
 		end
 	end
-	
+
 	function run_ai()
 		for arm = $LeftArm to $RightArm
 			switch @s.arm_state[arm]
@@ -217,7 +217,7 @@ define @Golem : @Entity[type=armor_stand, tag=SethBlingGolem]
 					else
 						player_found = False
 					end
-					
+
 					if player_found
 						@s.point_at(x, y+1000, z, arm)
 						@s.arm_state[arm] = $ArmPointAtPlayer
@@ -232,18 +232,18 @@ define @Golem : @Entity[type=armor_stand, tag=SethBlingGolem]
 						@s.<vel> = (<pos> - @s.<pos>) / 15 + <0, 400, 0>
 						@s.no_gravity = False
 					end
-					@s.arm_state[arm] = $ArmIdle				
+					@s.arm_state[arm] = $ArmIdle
 				end
 			end
 		end
 	end
-	
+
 	function delay_next_state(arm, delay, state)
 		@s.state_delay[arm] = delay
 		@s.next_state[arm] = state
 		@s.arm_state[arm] = $ArmWaiting
 	end
-	
+
 	function move_position_to_arm_socket(arm)
 		create @Position
 		if arm == $LeftArm at @s ^0.3 ^1 ^
@@ -252,7 +252,7 @@ define @Golem : @Entity[type=armor_stand, tag=SethBlingGolem]
 			/tp @Position ~ ~ ~
 		end
 	end
-	
+
 	function put_block_at_arm_end(arm)
 		@s.move_position_to_arm_socket(arm)
 		if arm == $RightArm
@@ -267,7 +267,7 @@ define @Golem : @Entity[type=armor_stand, tag=SethBlingGolem]
 			/tp @s @Position
 		end
 	end
-	
+
 	function destroy()
 		for arm = 1 to 2
 			as @s.arm_block[arm]
@@ -311,7 +311,7 @@ function get_updated_rotations(rx, ry, trx, try, amount)
 		main = dry
 		slope = drx * 1000 / dry
 	end
-	
+
 	if main > amount
 		delta = amount
 		rotation_done = False
@@ -322,9 +322,9 @@ function get_updated_rotations(rx, ry, trx, try, amount)
 		delta = main
 		rotation_done = True
 	end
-	
+
 	other = slope * delta / 1000
-	
+
 	if adrx > adry
 		result_rx = rx + delta
 		result_ry = ry + other

@@ -9,7 +9,7 @@ function recurse(x, y)
 		recurse(x-1, y+1)
 		tell @a '(x) (y)'
 	end
-end	
+end
 
 function factorial(n)
 	if n <= 1
