@@ -9,7 +9,7 @@ class block_switch_block(block_switch_base):
         self.cases = cases
         self.include_block_states = include_block_states
 
-        super(block_switch_block, self).__init__()
+        super().__init__()
 
     def case_condition(self, func, block_state):
         return f"block {self.coords.get_value(func)} {block_state}"

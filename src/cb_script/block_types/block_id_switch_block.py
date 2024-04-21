@@ -9,7 +9,7 @@ class block_id_switch_block(block_switch_base):
         self.cases = cases
         self.include_block_states = include_block_states
 
-        super(block_id_switch_block, self).__init__()
+        super().__init__()
 
     def compile_initialization(self, func):
         try:
