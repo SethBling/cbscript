@@ -1,4 +1,4 @@
-from variable_types.scoreboard_var import scoreboard_var
+from cb_script.variable_types.scoreboard_var import scoreboard_var
 
 
 class vector_here_expr(object):

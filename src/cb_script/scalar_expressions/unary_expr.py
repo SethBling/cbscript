@@ -1,5 +1,7 @@
-from .scalar_expression_base import scalar_expression_base
-from variable_types.virtualint_var import virtualint_var
+from cb_script.scalar_expressions.scalar_expression_base import (
+    scalar_expression_base,
+)
+from cb_script.variable_types.virtualint_var import virtualint_var
 
 
 class unary_expr(scalar_expression_base):

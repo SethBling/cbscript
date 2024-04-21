@@ -1,5 +1,7 @@
-from .scalar_expression_base import scalar_expression_base
-from variable_types.selector_id_var import selector_id_var
+from cb_script.scalar_expressions.scalar_expression_base import (
+    scalar_expression_base,
+)
+from cb_script.variable_types.selector_id_var import selector_id_var
 
 
 class create_expr(scalar_expression_base):

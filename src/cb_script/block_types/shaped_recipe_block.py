@@ -1,5 +1,5 @@
-from .block_base import block_base
-from data_types.shaped_recipe import shaped_recipe
+from cb_script.block_types.block_base import block_base
+from cb_script.data_types.shaped_recipe import shaped_recipe
 
 
 class shaped_recipe_block(block_base):

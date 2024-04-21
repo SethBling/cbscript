@@ -2,11 +2,11 @@
 # * ply
 # * pyyaml
 
-import cbscript
+from cb_script import cbscript
 import sys
 import time
-import source_file
-import scriptparse
+from cb_script import source_file
+from cb_script import scriptparse
 import os
 
 if len(sys.argv) != 2:

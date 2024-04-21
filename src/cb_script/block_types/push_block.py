@@ -1,5 +1,5 @@
-from .block_base import block_base
-from variable_types.storage_path_var import storage_path_var
+from cb_script.block_types.block_base import block_base
+from cb_script.variable_types.storage_path_var import storage_path_var
 
 
 class push_block(block_base):

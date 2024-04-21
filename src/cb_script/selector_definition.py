@@ -1,4 +1,4 @@
-from CompileError import CompileError
+from cb_script.CompileError import CompileError
 
 
 def split_qualifier(qualifier):

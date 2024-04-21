@@ -1,4 +1,4 @@
-from .block_base import block_base
+from cb_script.block_types.block_base import block_base
 
 
 class item_modifier_definition_block(block_base):

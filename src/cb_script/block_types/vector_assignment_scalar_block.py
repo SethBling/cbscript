@@ -1,4 +1,4 @@
-from .vector_assignment_base import vector_assignment_base
+from cb_script.block_types.vector_assignment_base import vector_assignment_base
 
 
 class vector_assignment_scalar_block(vector_assignment_base):

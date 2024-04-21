@@ -1,4 +1,4 @@
-from .block_base import block_base
+from cb_script.block_types.block_base import block_base
 
 
 class selector_assignment_block(block_base):

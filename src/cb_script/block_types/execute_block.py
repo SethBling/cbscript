@@ -1,5 +1,5 @@
-from .execute_base import execute_base
-from CompileError import CompileError
+from cb_script.block_types.execute_base import execute_base
+from cb_script.CompileError import CompileError
 import traceback
 
 

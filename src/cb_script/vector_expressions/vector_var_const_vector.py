@@ -1,5 +1,5 @@
-from variable_types.virtualint_var import virtualint_var
-from CompileError import CompileError
+from cb_script.variable_types.virtualint_var import virtualint_var
+from cb_script.CompileError import CompileError
 
 
 class vector_var_const_vector(object):

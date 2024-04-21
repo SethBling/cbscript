@@ -1,4 +1,4 @@
-from variable_types.var_base import var_base
+from cb_script.variable_types.var_base import var_base
 
 
 class scoreboard_var(var_base):

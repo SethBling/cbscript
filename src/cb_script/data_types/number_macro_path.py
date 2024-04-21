@@ -1,4 +1,4 @@
-from CompileError import CompileError
+from cb_script.CompileError import CompileError
 
 
 class number_macro_path(object):

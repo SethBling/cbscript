@@ -1,6 +1,6 @@
-from .var_base import var_base
-from .scoreboard_var import scoreboard_var
-from CompileError import CompileError
+from cb_script.variable_types.var_base import var_base
+from cb_script.variable_types.scoreboard_var import scoreboard_var
+from cb_script.CompileError import CompileError
 
 
 class command_var(var_base):

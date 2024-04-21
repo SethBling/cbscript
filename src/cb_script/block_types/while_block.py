@@ -1,4 +1,4 @@
-from .execute_base import execute_base
+from cb_script.block_types.execute_base import execute_base
 
 
 class while_block(execute_base):

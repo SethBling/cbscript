@@ -1,4 +1,4 @@
-from .vector_binop_base import vector_binop_base
+from cb_script.vector_expressions.vector_binop_base import vector_binop_base
 
 
 class vector_binop_scalar_expr(vector_binop_base):

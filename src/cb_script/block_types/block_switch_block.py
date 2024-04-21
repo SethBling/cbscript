@@ -1,5 +1,5 @@
-from .block_switch_base import block_switch_base
-from CompileError import CompileError
+from cb_script.block_types.block_switch_base import block_switch_base
+from cb_script.CompileError import CompileError
 
 
 class block_switch_block(block_switch_base):

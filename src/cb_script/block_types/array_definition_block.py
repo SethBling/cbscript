@@ -1,7 +1,7 @@
-from .block_base import block_base
-from .command_block import command_block
-from variable_types.scoreboard_var import scoreboard_var
-from CompileError import CompileError
+from cb_script.block_types.block_base import block_base
+from cb_script.block_types.command_block import command_block
+from cb_script.variable_types.scoreboard_var import scoreboard_var
+from cb_script.CompileError import CompileError
 
 
 class array_definition_block(block_base):

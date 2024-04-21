@@ -1,5 +1,5 @@
-from .block_base import block_base
-import tellraw
+from cb_script.block_types.block_base import block_base
+from cb_script import tellraw
 
 
 class tell_block(block_base):

@@ -1,5 +1,5 @@
-from .relcoord import relcoord
-from .const_string import const_string
+from cb_script.data_types.relcoord import relcoord
+from cb_script.data_types.const_string import const_string
 
 
 class relcoords(object):

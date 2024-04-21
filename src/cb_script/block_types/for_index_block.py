@@ -1,6 +1,6 @@
-from .block_base import block_base
+from cb_script.block_types.block_base import block_base
 import traceback
-from CompileError import CompileError
+from cb_script.CompileError import CompileError
 
 
 class for_index_block(block_base):

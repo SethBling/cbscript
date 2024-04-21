@@ -1,9 +1,9 @@
-import global_context
-import mcworld
-from environment import environment
-from mcfunction import mcfunction
-from source_file import source_file
-from CompileError import CompileError
+from cb_script import global_context
+from cb_script import mcworld
+from cb_script.environment import environment
+from cb_script.mcfunction import mcfunction
+from cb_script.source_file import source_file
+from cb_script.CompileError import CompileError
 import traceback
 import time
 import os

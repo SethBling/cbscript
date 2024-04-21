@@ -1,4 +1,6 @@
-from .scalar_expression_base import scalar_expression_base
+from cb_script.scalar_expressions.scalar_expression_base import (
+    scalar_expression_base,
+)
 
 
 class binop_expr(scalar_expression_base):

@@ -2,7 +2,7 @@ import os
 import json
 import io
 import zipfile
-from CompileError import CompileError
+from cb_script.CompileError import CompileError
 
 
 class mcworld(object):

@@ -1,6 +1,6 @@
-from .call_block_base import call_block_base
-from mcfunction import mcfunction
-from variable_types.scoreboard_var import scoreboard_var
+from cb_script.block_types.call_block_base import call_block_base
+from cb_script.mcfunction import mcfunction
+from cb_script.variable_types.scoreboard_var import scoreboard_var
 
 
 class template_function_call_block(call_block_base):

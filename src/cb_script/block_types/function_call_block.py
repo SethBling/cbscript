@@ -1,4 +1,4 @@
-from .call_block_base import call_block_base
+from cb_script.block_types.call_block_base import call_block_base
 
 
 class function_call_block(call_block_base):
