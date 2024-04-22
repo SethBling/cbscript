@@ -13,6 +13,10 @@ $CollisionCubeFaceWorldPoint = 2
 $CollisionCubeEdgeWorldEdge = 3
 $CollisionCubeFaceCubePoint = 4
 $CollisionCubeEdgeCubeEdge = 5
+$CollisionSphereWorld = 6
+
+$Cube = 1
+$Sphere = 2
 
 define @PhysicsBlock = @Entity[type=item_display,tag=physics_block]
 
@@ -144,8 +148,12 @@ function is_air()
     /execute if block $(x) $(y) $(z) #$namespace:passthrough run scoreboard players set Global air 1
 end
 
-function create_collider(x, y, z, size, inv_mass, inv_rot_int)
+function create_collider(x, y, z, size, inv_mass, inv_rot_int, shape)
     define name collider = "collider_$(collider)"
+    
+    unless shape
+        shape = $Cube
+    end
     
     /scoreboard players set collider_$(collider) id $(collider)
     
@@ -156,6 +164,7 @@ function create_collider(x, y, z, size, inv_mass, inv_rot_int)
     collider.halfsize = size / 2
     collider.inv_mass = inv_mass
     collider.inv_rot_int = inv_rot_int
+    collider.shape = shape
     
     collider.w = $Precision
     collider.i = 0
@@ -173,6 +182,10 @@ function create_collider(x, y, z, size, inv_mass, inv_rot_int)
     as @PhysicsBlock[age == 1]
         /scoreboard players set @s collider_id $(collider)
         @s.<pos> = <x, y, z>
+        
+        if shape == $Sphere
+            /data modify entity @s item.tag.CustomModelData set value 1
+        end
     end
 end
 
@@ -638,6 +651,34 @@ end
 
 function collider_calculate_vertex_world_positions()
     define name collider = "collider_$(collider)"
+
+    shape = collider.shape
+    
+    if shape == $Sphere
+        sphere_calculate_bounds() with macros
+    else
+        cube_calculate_vertex_world_positions() with macros
+    end
+end
+
+function sphere_calculate_bounds()
+    define name collider = "collider_$(collider)"
+
+    x = collider.x
+    y = collider.y
+    z = collider.z
+    halfsize = collider.halfsize
+    
+    collider.min_x = collider.x - halfsize
+    collider.max_x = collider.x + halfsize
+    collider.min_y = collider.y - halfsize
+    collider.max_y = collider.y + halfsize
+    collider.min_z = collider.z - halfsize
+    collider.max_z = collider.z + halfsize
+end
+
+function cube_calculate_vertex_world_positions()
+    define name collider = "collider_$(collider)"
     
     halfsize = collider.size / 2
     
@@ -864,6 +905,206 @@ function collider_calculate_vertex_world_positions()
 end
 
 function get_collider_world_collisions()
+    define name collider = "collider_$(collider)"
+    
+    shape = collider.shape
+    
+    if shape == $Sphere
+        get_sphere_world_collisions() with macros
+    else
+        get_cube_world_collisions() with macros
+    end
+end
+
+function get_sphere_world_collisions()
+    define name collider = "collider_$(collider)"
+    
+    x = collider.x
+    y = collider.y
+    z = collider.z
+    halfsize = collider.halfsize
+
+    block_start_x = (collider.min_x + collider.max_pen) / $Precision * $Precision
+    block_start_y = (collider.min_y + collider.max_pen) / $Precision * $Precision
+    block_start_z = (collider.min_z + collider.max_pen) / $Precision * $Precision
+    block_end_x = ((collider.max_x - collider.max_pen) / $Precision + 1) * $Precision
+    block_end_y = ((collider.max_y - collider.max_pen) / $Precision + 1) * $Precision
+    block_end_z = ((collider.max_z - collider.max_pen) / $Precision + 1) * $Precision
+    
+    for block_x = block_start_x to block_end_x by $Precision
+        test_x = block_x / $Precision
+        block_max_x = block_x + $Precision
+        
+        for block_y = block_start_y to block_end_y by $Precision
+            test_y = block_y / $Precision
+            block_max_y = block_y + $Precision
+            
+            for block_z = block_start_z to block_end_z by $Precision
+                test_z = block_z / $Precision
+                
+                with
+                    $(x) = test_x
+                    $(y) = test_y
+                    $(z) = test_z
+                is_air()
+                
+                unless air
+                    block_max_z = block_z + $Precision
+
+                    # Get the closest point in each dimension
+                    if x < block_x
+                        cx = block_x
+                    else if x > block_max_x
+                        cx = block_max_x
+                    else
+                        cx = x
+                    end
+
+                    if y < block_y
+                        cy = block_y
+                    else if y > block_max_y
+                        cy = block_max_y
+                    else
+                        cy = y
+                    end
+
+                    if z < block_z
+                        cz = block_z
+                    else if z > block_max_z
+                        cz = block_max_z
+                    else
+                        cz = z
+                    end
+                    
+                    dx = x - cx
+                    dy = y - cy
+                    dz = z - cz
+                    
+                    distsq = dx*dx + dy*dy + dz*dz
+                    
+                    if distsq < halfsize*halfsize
+                        # Collision occurred. Get the penetration.
+                        
+                        if DebugCollisions
+                            tell @a "Sphere #(collider.id) - (block_x), (block_y), (block_z) collision"
+                        end
+                        
+                        if distsq == 0
+                            # The center of the sphere is inside the block
+                            # Find the closest face as the exit point
+                            
+                            # Compute the vector from the center of the
+                            # block to the center of the sphere.
+                            dx = x - (block_x + $Half)
+                            dy = y - (block_y + $Half)
+                            dz = z - (block_z + $Half)
+                            
+                            if dx > 0
+                                adx = dx
+                            else
+                                adx = -dx
+                            end
+                            
+                            if dy > 0
+                                ady = dy
+                            else
+                                ady = -dy
+                            end
+                            
+                            if dz > 0
+                                adz = dz
+                            else
+                                adz = -dz
+                            end
+                            
+                            if adx > ady and adx > adz
+                                # Exit along the x axis
+                                if dx > 0
+                                    nx = $Precision
+                                else
+                                    nx = -$Precision
+                                end
+                                
+                                ny = 0
+                                nz = 0
+                                pen = $Precision - adx
+                            else if ady > adz
+                                # Exit along the y axis
+                                if dy > 0
+                                    ny = $Precision
+                                else
+                                    ny = -$Precision
+                                end
+                                
+                                nx = 0
+                                nz = 0
+                                pen = $Precision - ady
+                            else
+                                # Exit along the z axis
+                                if dz > 0
+                                    nz = $Precision
+                                else
+                                    nz = -$Precision
+                                end
+                                
+                                nx = 0
+                                ny = 0
+                                pen = $Precision - adz
+                            end
+                        else
+                            dist = sqrt(distsq)
+                            pen = halfsize - dist
+                        end
+                        
+                        if pen > collider.max_pen
+                            id = get_unused_collision_id()
+                            
+                            # This collision surpasses the previous maximium penetration
+                            collider.max_pen = pen
+                            collider.max_pen_col = id
+
+                            with
+                                $(collision) = id
+                            do
+                                define name collision = "collision_$(collision)"
+                                
+                                collision.id = id
+                                collision.type = $CollisionSphereWorld
+                                collision.pen = pen
+                                
+                                collision.collider1 = collider.id
+                                
+                                collision.x = cx
+                                collision.y = cy
+                                collision.z = cz
+                                
+                                if distsq > 0
+                                    nx = dx * $Precision / dist
+                                    ny = dy * $Precision / dist
+                                    nz = dz * $Precision / dist
+                                end
+                                
+                                collision.nx = nx
+                                collision.ny = ny
+                                collision.nz = nz
+                                
+                                collision.block_x = block_x
+                                collision.block_y = block_y
+                                collision.block_z = block_z
+                                
+                                if DebugCollisions
+                                    tell @a " at (cx), (cy), (cz) with norm (nx), (ny), (nz) pen: (pen)"
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+function get_cube_world_collisions()
     define name collider = "collider_$(collider)"
     define name collider_a0 = "collider_$(collider)_a0"
     define name collider_a1 = "collider_$(collider)_a1"
@@ -2488,6 +2729,130 @@ function update_collision()
                 end
             else
                 delete_collision() with macros
+            end
+        end
+    else if type == $CollisionSphereWorld
+        with
+            $(collider) = collision.collider1
+        do
+            block_x = collision.block_x
+            block_y = collision.block_y
+            block_z = collision.block_z
+            
+            block_max_x = block_x + $Precision
+            block_max_y = block_y + $Precision
+            block_max_z = block_z + $Precision
+            
+            x = collider.x
+            y = collider.y
+            z = collider.z
+            halfsize = collider.halfsize
+
+            if x < block_x
+                cx = block_x
+            else if x > block_max_x
+                cx = block_max_x
+            else
+                cx = x
+            end
+
+            if y < block_y
+                cy = block_y
+            else if y > block_max_y
+                cy = block_max_y
+            else
+                cy = y
+            end
+
+            if z < block_z
+                cz = block_z
+            else if z > block_max_z
+                cz = block_max_z
+            else
+                cz = z
+            end
+            
+            dx = x - cx
+            dy = y - cy
+            dz = z - cz
+            
+            dist = sqrt(dx*dx + dy*dy + dz*dz)
+            collision.x = cx
+            collision.y = cy
+            collision.z = cz
+            
+            if dist == 0
+                # The center of the sphere is inside the block
+                # Find the closest face as the exit point
+                # Computer the normal as the direction from the center of
+                # the block to the center of the sphere.
+                
+                dx = x - (block_x + $Half)
+                dy = y - (block_y + $Half)
+                dz = z - (block_z + $Half)
+                
+                if dx > 0
+                    adx = dx
+                else
+                    adx = -dx
+                end
+                
+                if dy > 0
+                    ady = dy
+                else
+                    ady = -dy
+                end
+                
+                if dz > 0
+                    adz = dz
+                else
+                    adz = -dz
+                end
+                
+                if adx > ady and adx > adz
+                    if dx > 0
+                        nx = $Precision
+                    else
+                        nx = -$Precision
+                    end
+                    
+                    ny = 0
+                    nz = 0
+                    pen = $Precision - adx
+                else if ady > adz
+                    if dy > 0
+                        ny = $Precision
+                    else
+                        ny = -$Precision
+                    end
+                    
+                    nx = 0
+                    nz = 0
+                    pen = $Precision - ady
+                else
+                    if dz > 0
+                        nz = $Precision
+                    else
+                        nz = -$Precision
+                    end
+                    
+                    ny = 0
+                    nz = 0
+                    pen = $Precision - adz
+                end
+                
+                collision.pen = pen
+                collision.nx = nx
+                collision.ny = ny
+                collision.nz = nz
+            else
+                pen = halfsize - dist
+                
+                collision.pen = pen
+            
+                collision.nx = dx * $Precision / dist
+                collision.ny = dy * $Precision / dist
+                collision.nz = dz * $Precision / dist
             end
         end
     else
