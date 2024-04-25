@@ -116,15 +116,16 @@ def p_parsed_expr(p):
 	
 #### Program
 def p_program(p):
-	'''program : optcomments dir string newlines optdesc file_params top_level_blocks'''
+	'''program : optcomments dir string newlines optdesc optdata file_params top_level_blocks'''
 	p[0] = {}
 	p[0]['dir'] = p[3]
 	p[0]['desc'] = p[5]
+	p[0]['data'] = p[6]
 
-	for param_name in p[6]:
-		p[0][param_name] = p[6][param_name]
+	for param_name in p[7]:
+		p[0][param_name] = p[7][param_name]
 	
-	p[0]['lines'] = p[7]
+	p[0]['lines'] = p[8]
 	
 ### Lib
 def p_lib(p):
@@ -162,7 +163,15 @@ def p_file_param(p):
 		raise SyntaxError(f'Unknown file parameter: "{p[1]}" at line {p.lineno(1)}')
 	
 	p[0] = (p[1], int(p[2]))
-	
+
+def p_optdata(p):
+	'''optdata : data string newlines
+			   | empty'''	
+	if len(p) < 4:
+		p[0] = None
+	else:
+		p[0] = p[2]
+
 #### Sections
 def p_section_commented(p):
 	'''section_commented : optcomments section'''
