@@ -5,7 +5,7 @@ import common
 
 define @Dozer: @Entity[type=minecart,tag=Dozer]
 	create {Tags:["Dozer"],Invulnerable:1b}
-	
+
 	looky: Passengers[0].Rotation[0] float
 	lookx: Passengers[0].Rotation[1] float
 end
@@ -29,8 +29,8 @@ clock main
 			<pos> = @Position.<pos>
 			move @Position ^ ^ ^1
 			<look> = @Position.<pos> - <pos>
-			
+
 			@s.<vel> += <look> / 5
-		end	
+		end
 	end
 end

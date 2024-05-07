@@ -53,7 +53,7 @@ define @Player : @Player
 			}
 		}
 	}
-	
+
 	predicate survival {
 		condition: 'entity_properties',
 		entity: 'this',
@@ -79,7 +79,7 @@ clock main
 	at @Player if predicate night
 		/say night
 	end
-	
+
 	as @Player[survival]
 		/say survival
 	end

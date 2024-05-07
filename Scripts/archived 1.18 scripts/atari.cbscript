@@ -383,12 +383,12 @@ $BaseCycles = {
 	0xD8: 2,
 	0xB8: 2,
 	0x38: 2,
-	0x78: 2, 
-	0xF8: 2, 
-	0xEA: 2, 
-	0xCA: 2, 
-	0x88: 2, 
-	0xE8: 2, 
+	0x78: 2,
+	0xF8: 2,
+	0xEA: 2,
+	0xCA: 2,
+	0x88: 2,
+	0xE8: 2,
 	0xC8: 2
 }
 
@@ -517,10 +517,10 @@ function global_reset()
 
 	/kill @Beam
 	/kill @Buffer
-	
+
 	create @Beam 0 0 0
 	create @Buffer 0 0 0
-	
+
 	for $addr in $MemoryAddresses
 		/scoreboard objectives add Memory$addr dummy
 		/scoreboard players set Global Memory$addr 0
@@ -530,20 +530,20 @@ function global_reset()
 			/scoreboard objectives add GRP$playerBit$bit dummy
 		end
 	end
-	
+
 	# Fill in the pallete from 0, 0, -8 to 3, 15, -1
 	for $color_data in $atari_colors
 		$color = $color_data[0]
 		$minlum = $color_data[1]
 		$maxlum = $color_data[2]
 		$material = $color_data[3]
-		
+
 		$y = $color
 		$zmin = $minlum - 8
 		$zmax = $maxlum - 8
 		/fill 0 $y $zmin 3 $y $zmax $material
 	end
-	
+
 	# Clear the existing screen
 	/fill 0 0 0 159 100 0 air
 	/fill 0 101 0 159 200 0 air
@@ -553,7 +553,7 @@ function global_reset()
 	# Color mode, reset and select buttons released
 	# SWCHB
 	Memory642 = 0b00001011
-	
+
 	Addr = 0
 	PC = 0
 	A = 0
@@ -566,12 +566,12 @@ function global_reset()
 	Negative = False
 	Interrupt = False
 	Decimal = False
-	
+
 	HMOVE = False
 	HMCLR = False
 	RESP0 = False
 	RESP1 = False
-	
+
 	for $player in $range(2)
 		NUSIZ[$player] = 0
 		GRP[$player] = 0
@@ -579,11 +579,11 @@ function global_reset()
 		PV[$player] = 0
 		ReflectP[$player] = False
 	end
-	
+
 	VBLANK = True
 	INPT45Control = False
 	Scan = -68
-	
+
 	# Initialize Palettes from Color 0 Lum 0
 	COLUPF = 0
 	/clone 0 0 -8 3 0 -8 0 254 -2
@@ -593,7 +593,7 @@ function global_reset()
 	/clone 0 0 -8 3 0 -8 0 252 -1
 	COLUP1 = 0
 	/clone 0 0 -8 3 0 -8 0 253 -1
-	
+
 	ReflectPF = 0
 	Clock = 0
 	ClockRate = 3
@@ -601,36 +601,36 @@ function global_reset()
 	RunProcessor = True
 	GameTicks = 0
 	Delay = 0
-	
+
 	Halt = False
 	Step = 0
 	Frame = 0
 	FrameSkip = 1
 	Skipped = 0
 	MCTick = 0
-	
+
 	Up = False
 	Down = False
 	Left = False
 	Right = False
 	Button = False
 	LatchedButton = False
-	
+
 	Difficulty0 = 0
 	Difficulty1 = 0
 	ColorMode = True
 	SelectSwitch = True
 	ResetSwitch = True
-	
+
 	/tp @Beam 10 250 0
-	
+
 	StepsPerTick = 500
-	
+
 	read_whole_rom()
 	get_vectors()
 
 	PC = Reset	# Atari
-	
+
 	as @a
 		draw_controller()
 	end
@@ -688,14 +688,14 @@ function check_right_click()
 			@s.right_click = False
 			as create @Marker
 				/tp @s ~ ~ ~ ~ ~
-				
+
 				# Raycast to find the block on the crosshair
 				for i = 1 to 200
 					move @s ^ ^ ^2
 					at @s
 						/particle minecraft:campfire_cosy_smoke ~ ~ ~
 					end
-					
+
 					# Find the lowest x,y,z coordinate in the block
 					at @s unless block ~ ~ ~ air
 						for j = 1 to 256
@@ -717,7 +717,7 @@ function check_right_click()
 					tell @a "Loading ROM at (ROMX), (ROMY), (ROMZ)..."
 					global_reset()
 				end
-				
+
 				/kill @s
 			end
 		end
@@ -768,7 +768,7 @@ end
 function button()
 	WasPressed = Button
 	if WasPressed then Button = False
-	unless WasPressed 
+	unless WasPressed
 		Button = True
 		LatchedButton = True
 	end
@@ -809,15 +809,15 @@ function read_whole_rom()
 			for z = 0 to 0x0F
 				@s.z = ROMZ + z
 
-				at @s 
+				at @s
 					# Read Byte
 					val = 0
 					for $bit in $range(8)
 						$exp = 2 ** $bit
 						if block ~ ~$bit ~ stone do val += $exp
-					end	
+					end
 				end
-				
+
 				ROM[(z+0xF0)*0x100 + x] = val
 			end
 		end
@@ -837,7 +837,7 @@ function read_3bytes_rom(addr)
 	# 6507 only has 13 address pins
 	addr %= 0x2000
 	addr += 0xE000
-	
+
 	switch addr
 		case $addr in $range(0xF000, 0xFFFD)
 			$addr2 = $addr+1
@@ -860,7 +860,7 @@ function read_addr(addr)
 	raw_addr = addr
 	# 6507 only has 13 address pins
 	addr %= 0x2000
-	
+
 	# Atari Stack Mirroring
 	if addr >= 0x100 and addr < 0x200
 		addr -= 0x100
@@ -868,9 +868,9 @@ function read_addr(addr)
 	if addr == $INSTAT
 		update_clock()
 	end
-	
+
 	$read_mirrors = $"lambda a: [a % 0x10 + i for i in range(0x00, 0x80, 0x10)]"
-	
+
 	switch addr
 		case $addr in $MemoryAddresses
 			/scoreboard players operation Global ReturnValue = Global Memory$addr
@@ -916,7 +916,7 @@ function read_addr(addr)
 			unless Down do val += 0x20
 			unless Left do val += 0x40
 			unless Right do val += 0x80
-			
+
 			return val
 		end
 		case $SWCHB
@@ -947,7 +947,7 @@ function read_addr(addr)
 			return CXP0P1 * 0x80 + CXM0M1 * 0x40
 		end
 	end
-	
+
 	if addr == $INTIM
 		update_clock()
 		return Ticks
@@ -961,7 +961,7 @@ end
 clock main
 	/gamerule sendCommandFeedback true
 	/effect give @a night_vision 1000000 0 true
-	
+
 	check_right_click()
 
 	if GRStep
@@ -973,7 +973,7 @@ clock main
 	MCTick++
 	for step = 0 to StepsPerTick
 		skip = Frame % FrameSkip
-				
+
 		if RunProcessor > 0
 			read_instruction()
 			get_base_cycles()
@@ -1001,7 +1001,7 @@ function read_instruction()
 	Addr = PC
 	read_3bytes_rom(Addr)
 	Instruction = rom1
-	
+
 	# Get the opcode's function
 	AddrMode = Instruction % 0x20
 	OpFamily = Instruction / 0x20
@@ -1016,14 +1016,14 @@ function read_instruction()
 			Function = $func
 		end
 	end
-	
+
 	switch Instruction
 		case $op in $OpCodes
 			$func = $OpCodes[$op]
 			Function = $func
 		end
 	end
-	
+
 	switch Function
 		case $LENGTH1LOW to $LENGTH1HIGH
 			OpLength = 1
@@ -1035,7 +1035,7 @@ function read_instruction()
 			OpLength = 3
 		end
 	end
-	
+
 	Push = 0
 	Pull = 0
 	Write = False	# Write Byte to instructed memory address
@@ -1067,7 +1067,7 @@ function get_addressing_mode()
 	YIndexPost = False
 	Constant = False
 	Accumulator = False
-	
+
 	# Get Non-Standard Addressing Modes
 	switch Instruction
 		case $op in $AddrModes
@@ -1086,10 +1086,10 @@ function get_addressing_mode()
 
 	MemoryOp = False
 	if Function >= $LENGTHVARLOW and Function <= $LENGTHVARHIGH then MemoryOp = True
-	
+
 	# JMP (addr)
 	if Instruction == 0x6C then AddrAbs = True
-	
+
 	if MemoryOp
 		switch AddrMode
 			case 0x01
@@ -1125,7 +1125,7 @@ function get_addressing_mode()
 				AddrZP = True
 				XIndexPre = True
 				Cycles = 4
-				
+
 				if Instruction == 0x96
 					XIndexPre = False
 					YIndexPre = True
@@ -1146,7 +1146,7 @@ function get_addressing_mode()
 				XIndexPre = True
 				Cycles = 4
 				if Write then Cycles++
-				
+
 				if Instruction == 0xBE
 					XIndexPre = False
 					YIndexPre = True
@@ -1159,7 +1159,7 @@ function get_addressing_mode()
 		if AddrZP		then OpLength = 2
 		if AddrAbs		then OpLength = 3
 	end
-	
+
 	# Read+write functions take an extra 2 cycles
 	switch Function
 		case $readwrite in [$ASL, $LSR, $ROL, $ROR, $INC, $DEC]
@@ -1175,26 +1175,26 @@ function get_pc_data()
 		# Read Operand 1
 		Addr++
 		Op1 = rom2
-		
+
 		if OpLength >= 3
 			# Read Operand 2
 			Addr++
 			Op2 = rom3
-			
+
 			Op12 = Op2 * 0x100 + Op1
 		end
 	end
-	
+
 	if Debug
 		display_instruction()
 	end
-	
+
 	if PC == BreakOnExecute
 		tell @a "Executed break point at (Addr). {G[\[Continue\]](/scoreboard players set Global Halt 0) {R[\[Remove Breakpoint\]](/scoreboard players set Global BreakOnExecute -1)"
 		display_instruction()
 		Halt = True
 	end
-	
+
 	PC += OpLength
 	if PC >= 0x10000 then PC -= 0x10000
 end
@@ -1207,10 +1207,10 @@ function display_instruction()
 	hex_number(X, 12, 2)
 	hex_number(Y, 14, 2)
 	hex_number(Stack, 16, 2)
-	
+
 	# Get the mnemonic for the current instruction
 	mnemonic()
-	
+
 	switch OpLength
 		case 1
 			tell @a "$(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic)"
@@ -1245,7 +1245,7 @@ function display_instruction()
 		case 3
 			hex_number(Op1, 4, 2)
 			hex_number(Op2, 6, 2)
-			
+
 			Handled = False
 			if XIndexPre
 				tell @a "$(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit6)(@digit7)(@digit4)(@digit5),X"
@@ -1254,7 +1254,7 @@ function display_instruction()
 			if YIndexPre
 				tell @a "$(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit6)(@digit7)(@digit4)(@digit5),Y"
 				Handled = True
-			end				
+			end
 			if not Handled
 				tell @a "$(@digit0)(@digit1)(@digit2)(@digit3): (@mnemonic) $(@digit6)(@digit7)(@digit4)(@digit5)"
 			end
@@ -1273,47 +1273,47 @@ function run_branch_instruction()
 		switch Function
 			case $BCC
 				get_pc_data()
-			
+
 				if not Carry 	then branch()
 			end
 			case $BCS
 				get_pc_data()
-			
+
 				if Carry 		then branch()
 			end
 			case $BEQ
 				get_pc_data()
-			
+
 				if Zero 		then branch()
 			end
 			case $BNE
 				get_pc_data()
-			
+
 				if not Zero 	then branch()
 			end
 			case $BMI
 				get_pc_data()
-			
+
 				if Negative 	then branch()
 			end
 			case $BPL
 				get_pc_data()
-			
+
 				if not Negative then branch()
 			end
 			case $BVS
 				get_pc_data()
-			
+
 				if Overflow 	then branch()
 			end
 			case $BVC
 				get_pc_data()
-			
+
 				if not Overflow then branch()
 			end
 		end
 	end
-	
+
 	if Debug and DisplayCycles
 		tell @a "\   (Cycles) cycles"
 	end
@@ -1322,19 +1322,19 @@ end
 function branch()
 	# 1 cycle penalty for branching
 	Cycles++
-	
+
 	BranchAmount = Op1
 	if BranchAmount >= 0x80 then BranchAmount -= 0x100
-	
+
 	OldPage = PC / 0x100
-	
+
 	PC += BranchAmount
-	
+
 	NewPage = PC / 0x100
-	
+
 	# Additional 1 cycle penalty for crossing a page boundary
 	unless OldPage == NewPage do Cycles++
-	
+
 	if PC >= 0x10000 then PC -= 0x10000
 	if PC < 0 then PC += 0x10000
 end
@@ -1350,8 +1350,8 @@ function operate_memory_bus()
 	end
 
 	if Accumulator then Byte = A
-	if Constant then Byte = Op1	
-end	
+	if Constant then Byte = Op1
+end
 
 # Move the memory pointer to the direct-addressed memory
 function move_to_direct_addr()
@@ -1374,7 +1374,7 @@ end
 # Read the direct-addressed memory
 function read_direct()
 	SavedAddr = Addr
-	
+
 	if Pull
 		Addr++
 		if Addr >= 0x100 then Addr -= 0x100
@@ -1383,28 +1383,28 @@ function read_direct()
 	if Addr >= 0
 		Byte2 = -1
 		Byte = read_addr(Addr)
-		
+
 		if Pull >= 2
 			Addr++
 			if Addr >= 0x100 then Addr -= 0x100
 			Byte2 = read_addr(Addr)
-			
+
 			if Pull == 3
 				Addr++
 				if Addr >= 0x100 then Addr -= 0x100
-				
+
 				Byte3 = read_addr(Addr)
 			end
 		end
-		
+
 		Stack += Pull
 		if Stack >= 0x100 then Stack -= 0x100
-		
+
 		if Indirect
 			Addr++
 			Byte2 = read_addr(Addr)
 		end
-		
+
 		if Instruction == 0x6C
 			Addr++
 			Byte2 = read_addr(Addr)
@@ -1412,7 +1412,7 @@ function read_direct()
 	end
 
 	Addr = SavedAddr
-	
+
 	if Debug and Addr >= 0
 		hex_number(Addr, 0, 4)
 		hex_number(Byte, 4, 2)
@@ -1432,7 +1432,7 @@ function move_to_indirect_addr()
 	if Indirect
 		Addr = Byte2 * 0x100 + Byte
 		if YIndexPost
-			Addr += Y	
+			Addr += Y
 			if Addr >= 0x10000 then Addr -= 0x10000
 		end
 
@@ -1443,7 +1443,7 @@ function move_to_indirect_addr()
 			tell @a "\   Memory Indirect Read at Addr $(@digit0)(@digit1)(@digit2)(@digit3) -- Byte: $(@digit4)(@digit5)"
 			clear_digits()
 		end
-	end	
+	end
 end
 
 # Run processor instructions
@@ -1452,14 +1452,14 @@ function run_instruction()
 	DecodeP = False	# Decode the processor status bits
 	Compare = -1	# Compare to this value to set N and Z bits
 	TestZN = -1		# Test this value for N and Z bits
-	
+
 	if Function == $BRK
 		GetP = True
 		tell @a "BRK at address (PC) A=(A) X=(X) Y=(Y) S=(Stack) Scan=(@Beam.Scan)"
 		Halt = True
 	end
 	if Function == $PHP then GetP = True
-	
+
 	if GetP
 		P = 0
 		if Negative 	then P += 0x80
@@ -1469,28 +1469,28 @@ function run_instruction()
 		if Zero			then P += 0x02
 		if Carry		then P += 0x01
 	end
-	
+
 	switch Function
 		case $ADC
 			operate_memory_bus()
-			
+
 			if Decimal
 				la = A % 0x10
 				ha = A / 0x10
 				lb = Byte % 0x10
 				hb = Byte / 0x10
-				
+
 				la += lb + Carry
 				Carry = la / 10
 				la %= 10
-				
+
 				ha += hb
 				ha += Carry
 				Carry = ha / 10
 				ha %= 10
 				A = ha * 0x10 + la
 			end
-			
+
 			unless Decimal
 				SignedA = A
 				if SignedA >= 0x80 then SignedA -= 0x100
@@ -1498,10 +1498,10 @@ function run_instruction()
 				if SignedByte >= 0x80 then SignedByte -= 0x100
 				SignedA += SignedByte
 				SignedA += Carry
-				
+
 				Overflow = True
 				if SignedA >= -0x80 and SignedA <= 0x7F then Overflow = False
-			
+
 				A += Byte
 				A += Carry
 				Carry = False
@@ -1510,42 +1510,42 @@ function run_instruction()
 					A -= 0x100
 				end
 			end
-			
+
 			TestZN = A
 		end
 		case $AND
 			operate_memory_bus()
-			
+
 			Byte2 = 0
 			for $exp in [128, 64, 32, 16, 8, 4, 2, 1]
 				if A >= $exp and Byte >= $exp then Byte2 += $exp
-				
+
 				if Byte >= $exp then Byte -= $exp
 				if A >= $exp then A -= $exp
 			end
 			A = Byte2
-			
+
 			TestZN = A
 		end
 		case $ASL
 			operate_memory_bus()
-			
+
 			Byte *= 2
 			Carry = False
 			if Byte >= 0x100
 				Carry = True
 				Byte -= 0x100
 			end
-			
+
 			TestZN = Byte
 		end
 		case $BIT
 			operate_memory_bus()
-			
+
 			Byte2 = A
 			Zero = True
 			Negative = False
-				
+
 			if Byte2 >= 0x80
 				# If there are any bits in common, Zero is cleared
 				if Byte >= 0x80 then Zero = False
@@ -1561,60 +1561,60 @@ function run_instruction()
 			for $exp in [64, 32, 16, 8, 4, 2, 1]
 				# If there are any bits in common, Zero is cleared
 				if Byte2 >= $exp and Byte >= $exp then Zero = False
-				
+
 				if Byte >= $exp then Byte -= $exp
 				if Byte2 >= $exp then Byte2 -= $exp
 			end
 		end
 		case $BRK
 			operate_memory_bus()
-			
+
 			P += 16 # Set the break flag for the processor status
-			
+
 			Byte = PC / 0x100
 			Byte2 = PC % 0x100
 			Byte3 = P
 
-			PC = NMI		
+			PC = NMI
 		end
 		case $CLC
 			get_pc_data()
-			
+
 			Carry = False
 		end
 		case $CLD
 			get_pc_data()
-		
+
 			Decimal = False
 		end
 		case $CLI
 			get_pc_data()
-		
+
 			Interrupt = False
 		end
 		case $CLV
 			get_pc_data()
-		
+
 			Overflow = False
 		end
 		case $CMP
 			operate_memory_bus()
-			
+
 			Compare = A
 		end
 		case $CPX
 			operate_memory_bus()
-			
+
 			Compare = X
 		end
 		case $CPY
 			operate_memory_bus()
-			
+
 			Compare = Y
 		end
 		case $DEC
 			operate_memory_bus()
-			
+
 			Byte--
 			if Byte < 0 then Byte += 0x100
 
@@ -1622,7 +1622,7 @@ function run_instruction()
 		end
 		case $DEX
 			get_pc_data()
-		
+
 			X--
 			if X < 0 then X += 0x100
 
@@ -1630,7 +1630,7 @@ function run_instruction()
 		end
 		case $DEY
 			get_pc_data()
-		
+
 			Y--
 			if Y < 0 then Y += 0x100
 
@@ -1638,22 +1638,22 @@ function run_instruction()
 		end
 		case $EOR
 			operate_memory_bus()
-			
+
 			Byte2 = 0
 			for $exp in [128, 64, 32, 16, 8, 4, 2, 1]
 				if A >= $exp and Byte < $exp then Byte2 += $exp
 				if A < $exp and Byte >= $exp then Byte2 += $exp
-				
+
 				if Byte >= $exp then Byte -= $exp
 				if A >= $exp then A -= $exp
 			end
 			A = Byte2
-			
+
 			TestZN = A
 		end
 		case $INC
 			operate_memory_bus()
-			
+
 			Byte++
 			if Byte >= 0x100 then Byte -= 0x100
 
@@ -1661,33 +1661,33 @@ function run_instruction()
 		end
 		case $INX
 			get_pc_data()
-		
+
 			X++
 			if X >= 0x100 then X -= 0x100
 			TestZN = X
 		end
 		case $INY
 			get_pc_data()
-		
+
 			Y++
 			if Y >= 0x100 then Y -= 0x100
 			TestZN = Y
 		end
-		case $JMP			
+		case $JMP
 			if Instruction == 0x6C
 				operate_memory_bus()
-				
+
 				PC = Byte2 * 0x100 + Byte
 			end
 			if Instruction == 0x4C
 				get_pc_data()
-				
+
 				PC = Op12
 			end
 		end
 		case $JSR
 			operate_memory_bus()
-		
+
 			PC--
 			Byte = PC / 0x100
 			Byte2 = PC % 0x100
@@ -1695,25 +1695,25 @@ function run_instruction()
 		end
 		case $LDA
 			operate_memory_bus()
-			
+
 			A = Byte
 			TestZN = A
 		end
 		case $LDX
 			operate_memory_bus()
-			
+
 			X = Byte
 			TestZN = X
 		end
 		case $LDY
 			operate_memory_bus()
-			
+
 			Y = Byte
 			TestZN = Y
 		end
 		case $LSR
 			operate_memory_bus()
-			
+
 			Carry = Byte % 2
 			Byte /= 2
 
@@ -1724,44 +1724,44 @@ function run_instruction()
 		end
 		case $ORA
 			operate_memory_bus()
-			
+
 			Byte2 = 0
 			for $exp in [128, 64, 32, 16, 8, 4, 2, 1]
 				if A >= $exp then Byte2 += $exp
 				if A < $exp and Byte >= $exp then Byte2 += $exp
-				
+
 				if Byte >= $exp then Byte -= $exp
 				if A >= $exp then A -= $exp
 			end
 			A = Byte2
-			
+
 			TestZN = A
 		end
 		case $PHA
 			operate_memory_bus()
-			
+
 			Byte = A
 		end
 		case $PHP
 			operate_memory_bus()
-			
+
 			Byte = P
 		end
 		case $PLA
 			operate_memory_bus()
-			
+
 			A = Byte
 			TestZN = A
 		end
 		case $PLP
 			operate_memory_bus()
-			
+
 			P = Byte
 			DecodeP = True
 		end
 		case $ROL
 			operate_memory_bus()
-			
+
 			LowBit = Carry
 			Byte *= 2
 			Carry = False
@@ -1773,7 +1773,7 @@ function run_instruction()
 		end
 		case $ROR
 			operate_memory_bus()
-			
+
 			LowBit = Byte % 2
 			Byte /= 2
 			if Carry then Byte += 0x80
@@ -1783,42 +1783,42 @@ function run_instruction()
 		end
 		case $RTI
 			operate_memory_bus()
-			
+
 			PC = Byte3 * 0x100 + Byte2
 			P = Byte
 			DecodeP = True
 		end
 		case $RTS
 			operate_memory_bus()
-			
+
 			PC = Byte2 * 0x100 + Byte + 1
 		end
 		case $SBC
 			operate_memory_bus()
-			
+
 			if Decimal
 				la = A % 0x10
 				ha = A / 0x10
 				lb = Byte % 0x10
 				hb = Byte / 0x10
-				
+
 				la -= lb + 1 - Carry
 				Carry = 1
 				if la < 0
 					Carry = 0
 					la += 10
 				end
-				
+
 				ha -= hb + 1 - Carry
 				Carry = 1
 				if ha < 0
 					Carry = 0
 					ha += 10
 				end
-				
+
 				A = ha * 0x10 + la
 			end
-			
+
 			unless Decimal
 				SignedA = A
 				if SignedA >= 0x80 then SignedA -= 0x100
@@ -1826,86 +1826,86 @@ function run_instruction()
 				if SignedByte >= 0x80 then SignedByte -= 0x100
 				SignedA -= SignedByte
 				if not Carry then SignedA--
-				
+
 				Overflow = True
 				if SignedA >= -0x80 and SignedA <= 0x7F then Overflow = False
-				
+
 				A -= Byte
 				if not Carry then A--
 				Carry = True
 				if A < 0 then Carry = False
 				if A < 0 then A += 0x100
 			end
-			
+
 			TestZN = A
 		end
 		case $SEC
 			get_pc_data()
-		
+
 			Carry = True
 		end
 		case $SED
 			get_pc_data()
-		
+
 			Decimal = True
 		end
 		case $SEI
 			get_pc_data()
-		
+
 			Interrupt = True
 		end
 		case $STA
 			operate_memory_bus()
-			
+
 			Byte = A
 		end
 		case $STX
 			operate_memory_bus()
-			
+
 			Byte = X
 		end
 		case $STY
 			operate_memory_bus()
-			
+
 			Byte = Y
 		end
 		case $TAX
 			get_pc_data()
-		
+
 			X = A
 			TestZN = X
 		end
 		case $TAY
 			get_pc_data()
-		
+
 			Y = A
 			TestZN = Y
 		end
 		case $TSX
 			get_pc_data()
-		
+
 			X = Stack
 			TestZN = X
 		end
 		case $TXA
 			get_pc_data()
-		
+
 			A = X
 			TestZN = A
 		end
 		case $TXS
 			get_pc_data()
-		
+
 			Stack = X
 		end
 		case $TYA
 			get_pc_data()
-		
+
 			A = Y
 			TestZN = A
 		end
 	end
-	
+
 	# Set new values for the processor status flags, from byte P
 	if DecodeP
 		Negative = False
@@ -1914,7 +1914,7 @@ function run_instruction()
 		Interrupt = False
 		Zero = False
 		Carry = False
-		
+
 		if P >= 0x80
 			Negative = True
 			P -= 0x80
@@ -1922,7 +1922,7 @@ function run_instruction()
 		if P >= 0x40
 			Overflow = True
 		end
-		
+
 		P %= 0x10
 		if P >= 0x08
 			Decimal = True
@@ -1940,20 +1940,20 @@ function run_instruction()
 			Carry = True
 		end
 	end
-	
+
 	if Compare >= 0
 		Result = Compare - Byte
 		Carry = False
 		if Result >= 0 then Carry = True
 		if Result < 0 then Result += 0x100
-		
+
 		TestZN = Result
 	end
 
 	if TestZN >= 0
 		Zero = False
 		if TestZN == 0 then Zero = True
-		
+
 		Negative = False
 		if TestZN >= 0x80 then Negative = True
 	end
@@ -1964,15 +1964,15 @@ function get_pixel_count()
 	Pixels = Cycles * 3
 	# Account for previously delayed register write
 	Pixels -= Delay
-	
+
 	# Find the delay for the current register write
 	get_delay()
 	Pixels += Delay
-	
+
 	if Write and Addr == $WSYNC
 		Pixels = $ScreenWidth - Scan
-	end	
-	
+	end
+
 	Clock += Pixels
 end
 
@@ -1984,7 +1984,7 @@ function update_clock()
 	if Ticks < 0
 		# INSTAT Register Underflow
 		Memory645 = 0b11000000
-		
+
 		Ticks *= ClockRate
 		Ticks /= 3
 		Ticks -= Clock / 3
@@ -2046,7 +2046,7 @@ function draw_beam()
 			/tp @s ~ 250 ~
 			ScanLine = 0
 		end
-		
+
 		# Mark beam start point for color filling
 		if Scan >= 0
 			start_point = Scan
@@ -2054,16 +2054,16 @@ function draw_beam()
 		if Scan < 0
 			start_point = 0
 		end
-		
+
 		end_point = Scan + Pixels - 1
 		if end_point >= $ScreenWidth
 			$ScreenEnd = $ScreenWidth - 1
 			end_point = $ScreenEnd
 		end
-		
+
 		# Draw all the pixels
 		draw_range(start_point, end_point)
-		
+
 		Scan += Pixels
 
 		if Scan >= $ScreenWidth
@@ -2100,13 +2100,13 @@ function draw_pixels{$x, $reflect}()
 			/execute unless blocks 0 254 -3 0 254 -3 $x ~ 0 all run clone 0 254 -3 0 254 -3 $x ~ ~
 			PFPixel = False
 		end
-		
+
 		draw_sprites_missiles_ball()
-		
+
 		x++
-		
+
 		$sub_pixel = ($x+1) % 4
-		
+
 		if $sub_pixel != 0 and $x+1 < $ScreenWidth
 			draw_pixels{$x+1, $reflect}()
 		end
@@ -2128,15 +2128,15 @@ function draw_four_pixels{$x, $reflect}()
 			/execute unless blocks 0 254 -3 3 254 -3 $x ~ 0 all run clone 0 254 -3 3 254 -3 $x ~ 0
 			PFPixel = False
 		end
-		
+
 		for $step in $range(4)
 			if x <= x2
 				draw_sprites_missiles_ball()
-				
+
 				x++
 			end
 		end
-		
+
 		if $x+4 < $ScreenWidth
 			draw_four_pixels{$x+4, $reflect}()
 		end
@@ -2145,7 +2145,7 @@ end
 
 # Draw pixel at x for ball, sprites and missiles
 function draw_sprites_missiles_ball()
-	draw_ball_pixel()	
+	draw_ball_pixel()
 	draw_sprite_pixel{0}()
 	draw_sprite_pixel{1}()
 	draw_missile_pixel{0}()
@@ -2159,10 +2159,10 @@ function draw_ball_pixel()
 		if x >= BLX and x < BallEnd
 			@Self.x = x
 			at @Self
-				/clone 0 254 -2 0 254 -2 ~ ~ ~				
+				/clone 0 254 -2 0 254 -2 ~ ~ ~
 			end
 			BallPixel = True
-			
+
 			if PFPixel then CXBLPF = True
 		end
 	end
@@ -2172,10 +2172,10 @@ end
 function draw_sprite_pixel{$player}()
 	if GRP[$player]
 		PlayerPixel[$player] = False
-		
+
 		dx = (x - PX[$player]) / Stretch[$player]
 		copy = dx / Spread[$player]
-		
+
 		if copy >= 0 and copy < Copies[$player]
 			if ReflectP[$player] do bit = dx % Spread[$player]
 			unless ReflectP[$player] then bit = 7 - (dx % Spread[$player])
@@ -2190,7 +2190,7 @@ function draw_sprite_pixel{$player}()
 								$y = 252 + $player
 								/clone 0 $y -1 0 $y -1 ~ ~ ~
 							end
-							
+
 							PlayerPixel[$player] = True
 							if $player == 1
 								if PlayerPixel[0] then CXP0P1 = True
@@ -2210,7 +2210,7 @@ function draw_sprite_pixel{$player}()
 								if $player == 1
 									CXP1BL = True
 								end
-							end									
+							end
 						end
 					end
 				end
@@ -2223,10 +2223,10 @@ end
 function draw_missile_pixel{$player}()
 	if ENAM[$player]
 		MissilePixel[$player] = False
-		
+
 		dx = x - MX[$player]
 		copy = dx / Spread[$player]
-		
+
 		if copy >= 0 and copy < Copies[$player]
 			bit = dx % Spread[$player]
 			if bit >= 0 and bit < MissileSize[$player]
@@ -2235,9 +2235,9 @@ function draw_missile_pixel{$player}()
 					$y = 252 + $player
 					/clone 0 $y -1 0 $y -1 ~ ~ ~
 				end
-				
+
 				MissilePixel[$player] = True
-				
+
 				if $player == 1
 					if MissilePixel[0] then CXM0M1 = True
 				end
@@ -2289,23 +2289,23 @@ function write_to_memory()
 			clear_digits()
 			Halt = True
 		end
-		
+
 		if not Accumulator
 			write_addr(Addr, Byte)
 		end
-		
+
 		if Accumulator then A = Byte
 	end
-	
+
 	if Push >= 1
 		Addr = Stack # + 256 # Atari stack mirroring
 		write_addr(Addr, Byte)
-		
+
 		if Push >= 2
 			Addr--
 			if Addr < 0 then Addr += 0x100
 			write_addr(Addr, Byte2)
-			
+
 			if Push >= 3
 				Addr--
 				if Addr < 0 then Addr += 0x100
@@ -2313,7 +2313,7 @@ function write_to_memory()
 				write_addr(Addr, Byte3)
 			end
 		end
-		
+
 		Stack -= Push
 		if Stack < 0 then Stack += 0x100
 	end
@@ -2326,18 +2326,18 @@ function write_addr(addr, val)
 		tell @a "\   Memory Write at Addr $(@digit0)(@digit1)(@digit2)(@digit3) -- Byte: $(@digit4)(@digit5)"
 		clear_digits()
 	end
-	
+
 	# Atari Stack Mirroring
 	if addr >= 0x100 and addr < 0x200
 		addr -= 0x100
 	end
-	
+
 	if addr == BreakOnWrite
 		tell @a "Wrote (val) to break point (Addr). {G[\[Continue\]](/scoreboard players set Global Halt 0) {R[\[Remove Breakpoint\]](/scoreboard players set Global BreakOnWrite -1)"
 		display_instruction()
 		Halt = True
 	end
-	
+
 	$write_mirrors = $"lambda a: [a % 0x40 + i for i in range(0, 0x80, 0x40)]"
 	switch addr
 		case $addr in $MemoryAddresses
@@ -2381,14 +2381,14 @@ function write_addr(addr, val)
 		case $i in $write_mirrors($COLUBK)
 			unless Byte == COLUBK
 				COLUBK = Byte
-				
+
 				Lum = (COLUBK % 0x10) / 2
 				Color = (COLUBK / 0x10)
-				
+
 				as @Buffer
 					@s.y = Color
 					@s.z = Lum - 8
-					
+
 					at @s
 						/clone 0 ~ ~ 3 ~ ~ 0 254 -3
 					end
@@ -2398,14 +2398,14 @@ function write_addr(addr, val)
 		case $i in $write_mirrors($COLUPF)
 			unless Byte == COLUPF
 				COLUPF = Byte
-				
+
 				Lum = (COLUPF % 0x10) / 2
 				Color = (COLUPF / 0x10)
-				
+
 				as @Buffer
 					@s.y = Color
 					@s.z = Lum - 8
-					
+
 					at @s
 						/clone 0 ~ ~ 3 ~ ~ 0 254 -2
 					end
@@ -2413,16 +2413,16 @@ function write_addr(addr, val)
 			end
 		end
 		case $i in $write_mirrors($COLUP0)
-			unless Byte == COLUP0				
+			unless Byte == COLUP0
 				COLUP0 = Byte
-				
+
 				Lum = (COLUP0 % 0x10) / 2
 				Color = (COLUP0 / 0x10)
-				
+
 				as @Buffer
 					@s.y = Color
 					@s.z = Lum - 8
-					
+
 					at @s
 						/clone 0 ~ ~ 0 ~ ~ 0 252 -1
 					end
@@ -2430,16 +2430,16 @@ function write_addr(addr, val)
 			end
 		end
 		case $i in $write_mirrors($COLUP1)
-			unless Byte == COLUP1				
+			unless Byte == COLUP1
 				COLUP1 = Byte
-				
+
 				Lum = (COLUP1 % 0x10) / 2
 				Color = (COLUP1 / 0x10)
-				
+
 				as @Buffer
 					@s.y = Color
 					@s.z = Lum - 8
-					
+
 					at @s
 						/clone 0 ~ ~ 0 ~ ~ 0 253 -1
 					end
@@ -2452,14 +2452,14 @@ function write_addr(addr, val)
 			if not VBLANK and was_vblank
 				Frame++
 			end
-			
+
 			INPT45Control = (Byte / 0x40) % 2
 			LatchedButton = Button
 		end
 		case $i in $write_mirrors($PF0)
 			unless Byte == PF0
 				PF0 = Byte
-				
+
 				PFByte = PF0 / 0x10
 				for $bit in $range(4)
 					PFBit[$bit] = PFByte % 2
@@ -2470,7 +2470,7 @@ function write_addr(addr, val)
 		case $i in $write_mirrors($PF1)
 			unless Byte == PF1
 				PF1 = Byte
-				
+
 				PFByte = PF1
 				for $bit in $range(8)
 					PFBit[$bit+4] = PFByte / 0x80
@@ -2482,7 +2482,7 @@ function write_addr(addr, val)
 		case $i in $write_mirrors($PF2)
 			unless Byte == PF2
 				PF2 = Byte
-				
+
 				PFByte = PF2
 				for $bit in $range(8)
 					PFBit[$bit+12] = PFByte % 2
@@ -2507,13 +2507,13 @@ function write_addr(addr, val)
 			if VDELP1
 				GRP1A = Byte
 			end
-			if VDELP0 
+			if VDELP0
 				GRP[0] = GRP0A
 				$UpdateGRPBits(0)
 			end
 			if VDELBL
 				ENABL = ENABLA
-				
+
 				# Make sure ball-object collisions aren't triggered while disabled
 				BallPixel = False
 			end
@@ -2547,15 +2547,15 @@ function write_addr(addr, val)
 			VDELBL = Byte % 2
 		end
 		case $i in $write_mirrors($VDELP1)
-			VDELP1 = Byte % 2 
+			VDELP1 = Byte % 2
 		end
 		case $TIM1T to $TIM1024T
 			Ticks = Byte - 1
 			Clock = 0
-			
+
 			# Clear INSTAT Read Flag
 			Memory645 %= 0x80
-			
+
 			if Addr == $TIM1T then ClockRate = 3
 			if Addr == $TIM8T then ClockRate = 24
 			if Addr == $TIM64T then ClockRate = 192
@@ -2563,7 +2563,7 @@ function write_addr(addr, val)
 		end
 		case $i in $write_mirrors($CTRLPF)
 			ReflectPF = Byte % 2
-			
+
 			switch (Byte / 0x10) % 0x04
 				case $bits in $range(4)
 					$size = 2 ** $bits
@@ -2574,14 +2574,14 @@ function write_addr(addr, val)
 		end
 		case $i in $write_mirrors($ENAM0)
 			ENAM[0] = (Byte / 2) % 2
-			
+
 			# Make sure missile-object collisions aren't triggered while disabled
 			MissilePixel[0] = False
 		end
 		case $i in $write_mirrors($ENAM1)
 			ENAM[1] = (Byte / 2) % 2
 			# Make sure missile-object collisions aren't triggered while disabled
-			MissilePixel[1] = False	
+			MissilePixel[1] = False
 		end
 		case $i in $write_mirrors($ENABL)
 			if VDELBL
@@ -2596,7 +2596,7 @@ function write_addr(addr, val)
 		case $i in $write_mirrors($RESP0)
 			PX[0] = Scan + 5
 			if PX[0] < 0 then PX[0] = 3
-		end	
+		end
 		case $i in $write_mirrors($RESP1)
 			PX[1] = Scan + 5
 			if PX[1] < 0 then PX[1] = 3
@@ -2635,7 +2635,7 @@ function write_addr(addr, val)
 			CXM1BL = False
 			CXBLPF = False
 			CXP0P1 = False
-			CXM0M1 = False			
+			CXM0M1 = False
 		end
 	end
 end
@@ -2643,7 +2643,7 @@ end
 macro $UpdateGRPBits($player)
 	# Make sure player-object collisions aren't triggered while disabled
 	PlayerPixel[$player] = False
-	
+
 	GRP = GRP[$player]
 	for $bit in $range(8)
 		bit = GRP % 2
@@ -2696,7 +2696,7 @@ macro $UpdateNumSize($player)
 			Copies[$player] = 1
 		end
 	end
-	
+
 	MissileSizeBits = (NUSIZ[$player] / 0x10) % 0x04
 	switch MissileSizeBits
 		case $bits in $range(4)

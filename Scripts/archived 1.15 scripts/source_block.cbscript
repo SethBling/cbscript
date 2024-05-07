@@ -54,7 +54,7 @@ clock main
 				end
 			end
 		end
-		
+
 		switch dist
 			case $dist in $range(30)
 				$volume = 2 - ($dist / 30.0)
@@ -69,10 +69,10 @@ clock main
 				end
 			end
 		end
-		
+
 		unless @Position do create @Position
 		unless @Position2 do create @Position2
-		
+
 		as @Player[distance=..30]
 			@Position.<pos> = <pos>
 			at @s ~ ~0.5 ~
@@ -81,10 +81,10 @@ clock main
 			at @Position facing @Position2
 				/tp @Position ~ ~ ~ ~ ~
 			end
-			
+
 			<delta> = @s.<pos> - <pos>
 			dist = sqrt(<delta> * <delta>) / 1000
-			
+
 			mag = 30 - dist
 
 			prog = 0
@@ -99,7 +99,7 @@ clock main
 								/particle instant_effect ~ ~ ~ 0.1 0.1 0.1 0 1 force
 							end
 						end
-						
+
 						if randint(0, $i*100) == 0
 							/effect give @s night_vision 1 0 true
 						end

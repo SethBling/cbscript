@@ -15,7 +15,7 @@ end
 @Player = @Entity[type=player]
 
 reset
-	/scoreboard objectives add shot minecraft.used:minecraft.bow	
+	/scoreboard objectives add shot minecraft.used:minecraft.bow
 end
 
 clock main

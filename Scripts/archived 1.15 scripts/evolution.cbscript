@@ -53,7 +53,7 @@ $GeneNames = [
 	'Target AI: TNT Cooldown',
 	'Target AI: TNT Fuse',
 ]
-	
+
 
 $SlotNames = [
 	'feet',
@@ -77,7 +77,7 @@ define @Body : @Entity[type=zombie, tag=Body]
 	array genes[$NumGenes]
 	custom_name_visible: CustomNameVisible byte 1
 	is_baby: IsBaby byte 1
-	
+
 	function set_rotation()
 		unless @Position do create @Position
 		/tp @Position ~ ~ ~ ~ ~
@@ -87,7 +87,7 @@ define @Body : @Entity[type=zombie, tag=Body]
 		@s.boredom++
 		@s.targetting = True
 	end
-	
+
 	function initialize()
 		for $slot in $range(4)
 			$slot_name = $SlotNames[$slot]
@@ -100,14 +100,14 @@ define @Body : @Entity[type=zombie, tag=Body]
 			end
 			/execute store result entity @s ArmorItems[$slot].tag.display.color int 1 run scoreboard players get Global color
 		end
-		
+
 		@s.cooldown = 20
 		@s.boredom = 0
 		@s.force_wander = 0
 		@s.rot_y = rand(0, 360000)
 		@s.children = 0
 	end
-	
+
 	function update_energy()
 		switch @s.energy
 			case $e in $range(1000)
@@ -118,12 +118,12 @@ define @Body : @Entity[type=zombie, tag=Body]
 			end
 		end
 	end
-	
+
 	function create_adult()
 		@Body.current = False
 		@s.current = True
 		@baby = @Body[current,distance=0,limit=1]
-		
+
 		at @s
 			as create @Body
 				/tp @s ~ ~ ~ ~ ~
@@ -176,7 +176,7 @@ function create_body()
 		for gene = 0 to $NumGenes-1
 			@s.genes[gene] = rand($GeneMax)
 		end
-		
+
 		@s.is_baby = True
 		@s.energy = 100
 		@s.generation = 0
@@ -206,13 +206,13 @@ function walls()
 	/fill -100 54 -100 100 100 -101 stone_bricks
 	/fill -100 54 100 100 100 101 stone_bricks
 	/fill -100 54 -100 -101 100 100 stone_bricks
-	/fill 100 54 -100 101 100 100 stone_bricks	
+	/fill 100 54 -100 101 100 100 stone_bricks
 end
 
 reset
 	tell @a '{G[\[Create Body\]](call create_body) {R[\[Kill Bodies\]](call kill_all_bodies) {B[\[Populate 40\]](call populate40) {W[\[Create Walls\]](call walls)'
 	as @Body do @s.custom_name_visible = True
-	
+
 	$NewGenes = []
 	for $gene in $NewGenes
 		as @Body
@@ -224,7 +224,7 @@ end
 clock main
 	<jitter> = <rand(-20,20),0,rand(-20,20)>
 	rand_wander = rand(-30, 30)
-	
+
 	unless @Position do create @Position
 
 	for @body in @Body
@@ -232,25 +232,25 @@ clock main
 			@s.age++
 			@s.fire = 0
 			/effect give @s minecraft:slowness 1 10 true
-			
+
 			@s.part_cooldown--
-			
+
 			@s.<vel> += <jitter> * @s.genes[$Jitter] / 1000
-			
+
 			@s.vy += (@s.genes[$AntiGrav] - $GeneMax / 2) * 180 / $GeneMax
 			@s.targetting = False
-			
+
 			at ~ ~0.5 ~ if block ^ ^ ^1 air
 				@s.blocked = False
 			else
 				@s.blocked = True
 			end
-			
+
 			if @s.boredom > @s.genes[$BoredomTime]
 				@s.force_wander = @s.genes[$BoredomWander]
 				@s.boredom = 0
 			end
-			
+
 			if @s.force_wander
 				@s.force_wander--
 				if @s.part_cooldown <= 0
@@ -260,8 +260,8 @@ clock main
 					@s.part_cooldown = 3
 				end
 			end
-			
-			
+
+
 			@s.wander = True
 
 			@s.willing = False
@@ -274,7 +274,7 @@ clock main
 					@s.part_cooldown = 4
 				end
 			end
-			
+
 			@s.seeking_mate = False
 			if @s.willing
 				as @Body[distance=1..$SightRange,sort=nearest,limit=1,willing]
@@ -283,17 +283,17 @@ clock main
 					at @body facing @s
 						@body.set_rotation()
 					end
-					
+
 					at @s if @body[distance=..2]
 						/particle flash ~ ~ ~ 0 0 0 0 1 force
 						@s.willing = False
 						@body.willing = False
-						
+
 						@s.boredom = 0
 						@body.boredom = 0
-						
+
 						baby_energy = @s.genes[$BabyEnergy] / 5 + @body.genes[$BabyEnergy] / 5
-						
+
 						@s.energy -= @s.genes[$BabyEnergy] / 5
 						@s.update_energy()
 						@body.energy -= @body.genes[$BabyEnergy] / 5
@@ -302,18 +302,18 @@ clock main
 						@Body.mate = False
 						@s.mate = True
 						@mate = @Body[mate,limit=1,distance=..5]
-						
+
 						as create @Body
 							for $gene in $range($NumGenes)
 								randomize_gene = rand(16)
-								
+
 								if randomize_gene == 0
 									@s.genes[$gene] = rand($GeneMax)
 								else
 									prop = rand(100)
 									@s.genes[$gene] = @body.genes[$gene] * prop / 100 + @mate.genes[$gene] * (100-prop) / 100 + rand(-$MutationRate,$MutationRate)
 								end
-								
+
 								if @s.genes[$gene] < 0
 									@s.genes[$gene] = 0
 								end
@@ -324,41 +324,41 @@ clock main
 							@s.energy = baby_energy
 							@s.is_baby = True
 							@s.update_energy()
-							
+
 							if @body.generation > @mate.generation
 								@s.generation = @body.generation + 1
 							else
 								@s.generation = @mate.generation + 1
 							end
-							
+
 							@body.children++
 							@mate.children++
-							
+
 							@s.initialize()
 						end
 					end
 				end
 			end
-			
+
 			unless @s.seeking_mate if @s.force_wander == 0 as @Food[distance=..$SightRange,limit=1,sort=nearest]
 				@body.wander = False
 				at @body facing @s
 					@body.set_rotation()
 				end
 			end
-			
+
 			if @s.wander
 				if @s.blocked
 					@s.rot_y += (@s.genes[$BlockedWander] - ($GeneMax / 2)) * 30
 				end
-				
+
 				@s.ry = @s.rot_y
 				@s.rot_y += rand_wander * @s.genes[$WanderDRY]
 				@s.rx = 0
-				
+
 				@s.boredom = 0
 			end
-			
+
 			@s[cooldown > 0].cooldown--
 			if @s.cooldown == 0 at @s
 				if @s.blocked
@@ -379,8 +379,8 @@ clock main
 						fuse = @s.genes[$WanderFuse]
 					end
 				end
-				
-				
+
+
 				as @Position
 					/tp @s ~ ~ ~ ~ ~
 					<start> = @s.<pos>
@@ -393,13 +393,13 @@ clock main
 				at ~ ~1 ~
 					@s.energy--
 					@s.update_energy()
-					
+
 					as create @TNTCarrier
 						/tp @s ~ ~ ~ ~ ~
 						@s.fuse = fuse * 80 / $GeneMax
 						id = &@s
 					end
-					
+
 					as create @TNTPhysics
 						/tp @s ~ ~ ~ ~ ~
 						@s.<vel> = <up> * (up - $GeneMax / 2) / $GeneMax
@@ -407,7 +407,7 @@ clock main
 						/playsound minecraft:entity.tnt.primed hostile @a
 						@s.carrier = id
 					end
-					
+
 					as @DummyTNT[distance=..2] unless @s.initialized
 						@s.fuse = fuse * 80 / $GeneMax + 1
 						v = @s.fuse
@@ -415,7 +415,7 @@ clock main
 					end
 				end
 			end
-			
+
 			food_eaten = 0
 			/execute store result score Global food_eaten run kill @Food[distance=..1]
 			@s.energy += food_eaten * 20
@@ -423,11 +423,11 @@ clock main
 			if food_eaten > 0
 				@s.boredom = 0
 			end
-		
+
 			if @s.energy <= 0
 				/kill @s
 			end
-			
+
 			if @s.age > $AdultTicks and @s.is_baby == 1
 				@s.create_adult()
 				/tp @s ~ -100 ~
@@ -435,14 +435,14 @@ clock main
 			end
 		end
 	end
-	
+
 	as @DummyTNT at @s
 		if @s.fuse == @s.prev_fuse
 			# This is necessary because TNT doesn't tick down if it's far enough away
 			/kill @s
 		end
 		@s.prev_fuse = @s.fuse
-		
+
 		if @s.fuse == 1
 			/particle minecraft:explosion ~ ~ ~ 2 2 2 0 5 force
 			/playsound minecraft:entity.generic.explode hostile @a
@@ -452,13 +452,13 @@ clock main
 				<x2, y2, z2> = @s.<pos>
 				y2 += scale
 				distsq = ((x1-x2)^2 + (y1-y2)^2 + (z1-z2)^2) / scale
-				
+
 				@s.<vel> += ((@s.<pos> + <0, scale, 0>) - <pos>) * scale * 3 / distsq
 			end
 			/kill @s
 		end
 	end
-	
+
 	as @TNTPhysics at @s
 		as @s.carrier
 			/tp @s ~ ~ ~ ~ ~
@@ -466,7 +466,7 @@ clock main
 			/kill @s
 		end
 	end
-	
+
 	cleanup_timer++
 	if cleanup_timer >= 20
 		cleanup()
@@ -488,14 +488,14 @@ clock hover
 			@s.glowing = False
 		end
 	end
-	
+
 	as @Body[hover_timer == 10]
 		for $gene in $range($NumGenes)
 			val = @s.genes[$gene]
 			$gene_name = $GeneNames[$gene]
 			tell @a '(val) - $gene_name'
 		end
-		
+
 		age = @s.age / 1200
 		tell @a 'Age: (age) minutes'
 		generation = @s.generation
@@ -505,18 +505,18 @@ clock hover
 	end
 end
 
-function cleanup()		
+function cleanup()
 	as @TNTCarrier
 		unless @s.fuse > 0
 			/kill @s
-		end			
+		end
 	end
 
 	as @Food
 		@s.on_ground = False
 		@s.time = 1
 	end
-	
+
 	as @FoodCarrier
 		unless @s.time > 0
 			/kill @s

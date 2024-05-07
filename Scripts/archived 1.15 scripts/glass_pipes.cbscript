@@ -33,10 +33,10 @@ define @Marker: @Marker
 					@s.done = True
 				else
 					@s.initialize = False
-					
+
 					<x, y, z> = @s.<moving>
 					<was_moving> = -@s.<moving>
-					
+
 					searching = True
 					first = True
 					while searching
@@ -46,7 +46,7 @@ define @Marker: @Marker
 						else
 							r = rand(0, 6)
 						end
-						
+
 
 						switch r
 							case $i in $range(6)
@@ -71,7 +71,7 @@ end
 
 define @Player: @Player
 	marker: @Marker
-	
+
 	function get_facing_dir()
 		rx = @s.rx
 		ry = @s.ry % 360000
@@ -101,21 +101,21 @@ function is_pipe()
 	else
 		glass_x = 0
 	end
-	
+
 	if block ~ ~1 ~ glass and block ~ ~-1 ~ glass
 		glass_y = 1
 	else
 		glass_y = 0
 	end
-	
+
 	if block ~ ~ ~1 glass and block ~ ~ ~-1 glass
 		glass_z = 1
 	else
 		glass_z = 0
 	end
-	
+
 	glass = glass_x + glass_y + glass_z
-	
+
 	if glass == 2 and block ~ ~ ~ air
 		return True
 	else
@@ -142,7 +142,7 @@ function is_entry()
 			unless block ~ ~$d ~$d3 air do start_yz = 0
 		end
 	end
-	
+
 	if start_xy + start_xz + start_yz > 0
 		return True
 	else
@@ -158,7 +158,7 @@ clock main
 				unless @Position do create @Position
 				/tp @Position ~ ~ ~ ~ ~
 				@Position.<pos> += @s.<moving> * 750
-				
+
 				at @Position if block ~ ~ ~ air
 					if @player.pipe_slow
 						@s.<pos> += @s.<moving> * 250
@@ -170,15 +170,15 @@ clock main
 						@s.x = @s.x / 1000 * 1000 + 500
 					end
 					if my == 0
-						@s.y = @s.y / 1000 * 1000 
+						@s.y = @s.y / 1000 * 1000
 					end
 					if mz == 0
 						@s.z = @s.z / 1000 * 1000 + 500
 					end
-					
+
 					@s.ry = @player.ry
 					@s.rx = @player.rx
-					
+
 					/tp @player ~ 128 ~
 					at @s
 						/tp @player ~ ~ ~
@@ -195,7 +195,7 @@ clock main
 									at @s
 										/tp @player ~ ~ ~
 									end
-								
+
 									/kill @s
 									@player.travel = None
 									@player.force_exit = True
@@ -205,7 +205,7 @@ clock main
 						else
 							@s.exit_junction = False
 						end
-					end				
+					end
 				else
 					@s.pick_dir()
 					if @s.done
@@ -237,7 +237,7 @@ clock main
 				end
 			end
 		end
-		
+
 		if @s.pipe_sound > 0 at @s
 			switch @s.pipe_sound
 				case 15

@@ -216,43 +216,43 @@ $blocks = [
 
 function respawn_square()
 	shape = 0
-	
+
 	spawn_shape()
 end
 
 function respawn_line()
 	shape = 1
-	
+
 	spawn_shape()
 end
 
 function respawn_l()
 	shape = 2
-	
+
 	spawn_shape()
 end
 
 function respawn_lr()
 	shape = 3
-	
+
 	spawn_shape()
 end
 
 function respawn_s()
 	shape = 4
-	
+
 	spawn_shape()
 end
 
 function respawn_z()
 	shape = 5
-	
+
 	spawn_shape()
 end
 
 function respawn_t()
 	shape = 6
-	
+
 	spawn_shape()
 end
 
@@ -265,7 +265,7 @@ function spawn_shape()
 			at @s ~ ~1.6 ~ at ^ ^ ^3
 				for $i in $range(4)
 					$dx, $dy = $shape_offsets[$shape][0][$i]
-					
+
 					$dx = $Scale * $dx
 					$dy = $Scale * $dy
 
@@ -278,7 +278,7 @@ function spawn_shape()
 							@s.update()
 						end
 					end
-					
+
 				end
 				as create @Marker
 					@s.bottom_left = True
@@ -291,19 +291,19 @@ end
 
 function rotate_left()
 	rotation--
-	
+
 	reorient()
 end
 
 function rotate_right()
 	rotation++
-	
+
 	reorient()
 end
 
 function reorient()
 	rotation %= 4
-	
+
 	at @Marker[bottom_left,limit=1]
 		switch shape
 			case $shape in $range($len($shape_offsets))
@@ -311,7 +311,7 @@ function reorient()
 					case $r in $range(4)
 						for $i in $range(4)
 							$dx, $dy = $shape_offsets[$shape][$r][$i]
-							
+
 							$dx = $Scale * $dx
 							$dy = $Scale * $dy
 

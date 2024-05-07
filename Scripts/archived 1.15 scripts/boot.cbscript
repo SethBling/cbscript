@@ -17,7 +17,7 @@ define @Entity = @e
 	rx = Rotation[1] float
 	on_ground = OnGround byte 1
 	no_gravity = NoGravity byte 1
-	
+
 	function get_facing_dir()
 		at @s rotated @s at ^ ^ ^1 do <facing_dir> = here - @s.<pos>
 	end
@@ -40,7 +40,7 @@ end
 reset
 	/kill @HorseBase
 	/kill @Horse
-	
+
 	at @Player do create @HorseBase
 end
 
@@ -50,10 +50,10 @@ clock main
 		@s.no_gravity = True
 		<x, y, z> = @s.<pos>
 		tell @a: (Global.x) (Global.y) (Global.z)
-		
+
 		<vx, vy, vz> = @s.<vel>
 		tell @a: (Global.vx) (Global.vy) (Global.vz)
-		
+
 		@s.vy = 100
 	end
 end

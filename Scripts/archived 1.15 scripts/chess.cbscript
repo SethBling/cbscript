@@ -40,9 +40,9 @@ define @Piece : @Entity[tag=Piece]
 			dc = valid_col - @s.col
 			my_row = @s.row
 			my_col = @s.col
-			
+
 			valid_move = True
-			
+
 			if @s.type == $King
 				if dc == 2
 					as @Piece[type==$Rook] if @s.row == my_row and @s.col == 7
@@ -56,7 +56,7 @@ define @Piece : @Entity[tag=Piece]
 					if check then valid_move = False
 				end
 			end
-			
+
 			if @s.type == $Pawn
 				if valid_row == ep_row and valid_col == ep_col
 					as @Piece[moved_2]
@@ -64,33 +64,33 @@ define @Piece : @Entity[tag=Piece]
 					end
 				end
 			end
-			
+
 			@s.row = valid_row
 			@s.col = valid_col
-			
+
 			if this_color == $White
 				other_color = $Black
 			else
 				other_color = $White
 			end
-			
+
 			as @Piece[type==$King] if @s.color == this_color
 				king_row = @s.row
 				king_col = @s.col
 			end
-			
+
 			as @Piece if @s.color == other_color and @s.row >= 0
 				if @s.square_in_range(king_row, king_col)
 					valid_move = False
 				end
 			end
-			
-			
+
+
 			as @Piece
 				@s.row = @s.undo_row
 				@s.col = @s.undo_col
 			end
-				
+
 			return valid_move
 		else
 			return False
@@ -101,10 +101,10 @@ define @Piece : @Entity[tag=Piece]
 		color = @s.color
 		dr = target_row - @s.row
 		dc = target_col - @s.col
-		
+
 		adc = abs(dc)
 		adr = abs(dr)
-		
+
 		switch @s.type
 			case $Pawn
 				if @s.color == $Black
@@ -114,7 +114,7 @@ define @Piece : @Entity[tag=Piece]
 					edr = dr
 					er = @s.row
 				end
-				
+
 				if er == 1 and edr == 2 and dc == 0
 					return @s.path_available(True, False)
 				else if edr == 1 and dc == 0
@@ -191,12 +191,12 @@ define @Piece : @Entity[tag=Piece]
 						castle_col = 0
 						target_col = 1
 					end
-					
+
 					castle_available = False
 					as @Piece[type==$Rook] if @s.color == color and not @s.has_moved and @s.col == castle_col
 						castle_available = True
 					end
-					
+
 					if castle_available
 						return @s.path_available(True, False)
 					else
@@ -209,7 +209,7 @@ define @Piece : @Entity[tag=Piece]
 			end
 		end
 	end
-	
+
 	function path_available(blocked_by_enemy, requires_enemy)
 		# Only call this function if the target is in-line, diagonally or horizontally/vertically
 		# Set target_row and target_col before calling
@@ -218,7 +218,7 @@ define @Piece : @Entity[tag=Piece]
 		color = @s.color
 		ur = sign(target_row-row)
 		uc = sign(target_col-col)
-		
+
 		finished = False
 		step = 0
 		while not finished
@@ -229,7 +229,7 @@ define @Piece : @Entity[tag=Piece]
 				tell @Player 'Error, non-terminating loop trying to move from (source_row), (source_col) to (target_row), (target_col)'
 				finished = True
 			end
-			
+
 			row += ur
 			col += uc
 			if row == target_row and col == target_col
@@ -327,7 +327,7 @@ function create_piece(piece_type, piece_color, square_row, square_col)
 		@s.x = GameX + square_row*2000 + 1000
 		@s.z = GameZ + square_col*2000 + 1000
 		@s.y = GameY
-		
+
 		at @s
 			switch piece_type
 				case $Pawn
@@ -381,7 +381,7 @@ function create_piece(piece_type, piece_color, square_row, square_col)
 		@s.row = square_row
 		@s.col = square_col
 		@s.has_moved = False
-		
+
 		at @s
 			if piece_color == $White
 				/tp @s ~ ~ ~ -90 ~
@@ -444,17 +444,17 @@ define @Player : @Player
 			end
 		end
 	end
-	
+
 	function join_white()
 		/team join white
 		@s.team = $White
 	end
-	
+
 	function join_black()
 		/team join black
 		@s.team = $Black
 	end
-	
+
 	function promotion()
 		if @s.team == current_player
 			if game_state == $StatePromotion
@@ -475,7 +475,7 @@ define @Player : @Player
 			tell @s "It's not your turn!"
 		end
 	end
-	
+
 	function start_game()
 		if game_state == $StateNone
 			current_player = $White
@@ -485,14 +485,14 @@ define @Player : @Player
 			/kill @InvisPiece
 			create_starting_pieces()
 			switch_state($StatePlayerUnselected)
-			
+
 			tell @Player 'Starting new game!'
 			tell @Player '{R[\[Concede\]](/trigger concede)'
 		else
 			tell @s 'The game has already started.'
 		end
 	end
-	
+
 	function concede()
 		@Player.conceded = False
 		@s.conceded = True
@@ -502,10 +502,10 @@ define @Player : @Player
 				tell @Player '(@a[conceded]) has conceded for team $color_name!'
 			end
 		end
-		
+
 		switch_state($StateNone)
 	end
-	
+
 	function cancel_move()
 		if @s.team == current_player
 			switch_state($StatePlayerUnselected)
@@ -513,7 +513,7 @@ define @Player : @Player
 			tell @s "It's not your turn!"
 		end
 	end
-	
+
 	function get_hover_coords()
 		unless @Position do create @Position
 		at @s eyes ^ ^ ^ as @Position
@@ -532,11 +532,11 @@ define @Player : @Player
 			hover_col = (ground_z - GameZ) / 2000
 		end
 	end
-	
+
 	function click_callback()
 		unless @Position do create @Position
 		handled = False
-		
+
 		switch game_state
 			case $StatePlayerUnselected
 				get_hover_coords()
@@ -548,11 +548,11 @@ define @Player : @Player
 							end
 						end
 					end
-					
+
 					@Piece.current_piece = False
 					@s.current_piece = True
 					@s.selectable = False
-					
+
 					switch_state($StatePlayerSelected)
 					handled = True
 				else
@@ -569,7 +569,7 @@ define @Player : @Player
 								/kill @s
 							end
 						end
-						
+
 						unless @Position do create @Position
 						as @Position
 							@s.x = GameX + hover_row * 2000 + 1000
@@ -583,9 +583,9 @@ define @Player : @Player
 								my_col = @s.col
 								@s.row = hover_row
 								@s.col = hover_col
-								
+
 								@s.has_moved = True
-								
+
 								if @s.type == $King
 									if dc == 2 as @Piece[type==$Rook, col==7] if @s.row == my_row
 										as @Position
@@ -611,24 +611,24 @@ define @Player : @Player
 										end
 									end
 								end
-								
+
 								if @s.type == $Pawn and @s.row == ep_row and @s.col == ep_col
 									/kill @Piece[moved_2]
 									as @KnightRider at @s unless @Piece[distance=..2]
 										/kill @s
 									end
 								end
-								
+
 								ep_row = -1
 								ep_col = -1
 								@Piece.moved_2 = False
-								
+
 								if @s.type == $Pawn and abs(dr) == 2
 									@s.moved_2 = True
 									ep_row = my_row + sign(dr)
 									ep_col = my_col
 								end
-								
+
 								promote = False
 								if @s.color == $White and @s.row == 7 and @s.type == $Pawn
 									promote = True
@@ -636,7 +636,7 @@ define @Player : @Player
 								if @s.color == $Black and @s.row == 0 and @s.type == $Pawn
 									promote = True
 								end
-								
+
 								if promote
 									@Piece.promote_piece = False
 									@s.promote_piece = True
@@ -691,12 +691,12 @@ function unhighlight_all()
 	at @Position
 		/clone ~ ~-2 ~ ~15 ~-2 ~15 ~ ~-1 ~
 	end
-	
+
 	as @Piece
 		@s.glowing = False
 		@s.selectable = False
 	end
-	
+
 	unless game_state == $StatePlayerSelected
 		move @InvisPiece ~ -200 ~
 		/kill @InvisPiece
@@ -708,12 +708,12 @@ reset
 	/team add white
 	/team modify white color white
 	/team modify white displayName "White"
-	
+
 	/team remove black
 	/team add black
 	/team modify black color black
 	/team modify white displayName "Black"
-	
+
 	for $trigger in $Triggers
 		/scoreboard objectives add $trigger trigger
 	end
@@ -724,7 +724,7 @@ reset
 	unless current_player >= 0
 		current_player = $White
 	end
-	
+
 	unless GameX >= -10000000
 		GameX = 0
 	end
@@ -734,24 +734,24 @@ reset
 	unless GameZ >= -10000000
 		GameZ = 0
 	end
-	
+
 	@Player.display_menu()
 end
 
 function switch_state(new_state)
 	exit_state(game_state)
-	
+
 	game_state = new_state
-	
+
 	enter_state(game_state)
-	
+
 	@Player.display_menu()
 end
 
 function exit_state(state)
 	switch state
 		case $StateNone
-			
+
 		end
 	end
 end
@@ -764,16 +764,16 @@ function enter_state(state)
 		end
 		case $StatePlayerUnselected
 			unhighlight_all()
-			
+
 			check = False
 			as @Piece if @s.color == other_player
 				if @s.square_in_range(cur_king_row, cur_king_col)
 					check = True
 				end
 			end
-			
+
 			any_valid_moves = False
-			
+
 			as @Piece
 				@s.glowing = False
 				@s.selectable = False
@@ -782,7 +782,7 @@ function enter_state(state)
 						cur_king_row = @s.row
 						cur_king_col = @s.col
 					end
-				
+
 					for test_row = 0 to 7
 						for test_col = 0 to 7
 							if @s.valid_move(test_row, test_col)
@@ -794,26 +794,26 @@ function enter_state(state)
 					end
 				end
 			end
-			
+
 			if current_player == $White
 				other_player = $Black
 			else
 				other_player = $White
 			end
-			
+
 			if check and not any_valid_moves
 				if other_player == $White
 					title @Player 10 100 10 'Check mate!'
 					subtitle @Player 10 100 10 '{D{WWhite{-{D wins!'
-					
+
 					tell @Player 'Check mate! {D{WWhite{-{D wins!'
 				else
 					title @Player 10 100 10 'Check mate!'
 					subtitle @Player 10 100 10 '{D{KBlack{-{D wins!'
-					
+
 					tell @Player 'Check mate! {D{KBlack{-{D wins!'
 				end
-				
+
 				switch_state($StateNone)
 			else if check
 				if current_player == $White
@@ -827,15 +827,15 @@ function enter_state(state)
 				if current_player == $White
 					title @Player 10 100 10 '{DStale Mate!'
 					subtitle @Player 10 100 10 '{D{WWhite{-{D has no valid moves. Game over!'
-					
+
 					tell @Player '{DStale Mate! {D{WWhite{-{D has no valid moves. Game over!'
 				else
 					title @Player 10 100 10 '{DStale Mate!'
 					subtitle @Player 10 100 10 '{D{KBlack{-{D has no valid moves. Game over!'
-					
+
 					tell @Player '{DStale Mate! {D{KBlack{-{D has no valid moves. Game over!'
 				end
-				
+
 				switch_state($StateNone)
 			end
 		end
@@ -852,16 +852,16 @@ end
 function run_state(state)
 	switch state
 		case $StateNone
-		
-		end		
+
+		end
 		case $StatePlayerUnselected
 			@Piece.selected = False
 			as @Player
 				if @s.team == current_player
 					@s.enable_click()
-					
+
 					@s.get_hover_coords()
-					
+
 					as @Piece if @s.row == hover_row and @s.col == hover_col and @s.selectable at @s
 						@s.selected = True
 						@s.was_selected = True
@@ -871,7 +871,7 @@ function run_state(state)
 					@s.disable_click()
 				end
 			end
-			
+
 			as @Piece[not selected, was_selected] at @s
 				/clone ~-1 ~-2 ~-1 ~ ~-2 ~ ~-1 ~-1 ~-1
 				@s.was_selected = False
@@ -885,13 +885,13 @@ function run_state(state)
 			as @InvisKnightRider
 				/effect give @s invisibility 10 0 true
 			end
-			
+
 			as @Player
 				if @s.team == current_player
 					@s.enable_click()
-					
+
 					@s.get_hover_coords()
-					
+
 					as @InvisPiece if @s.row == hover_row and @s.col == hover_col at @s
 						@s.selected = True
 						@s.was_selected = True
@@ -901,7 +901,7 @@ function run_state(state)
 					@s.disable_click()
 				end
 			end
-			
+
 			as @InvisPiece[not selected, was_selected] at @s
 				/clone ~-1 ~-2 ~-1 ~ ~-2 ~ ~-1 ~-1 ~-1
 				@s.was_selected = False
@@ -923,7 +923,7 @@ end
 clock main
 	run_state(game_state)
 	clear_triggers()
-	
+
 	as @Entity
 		@s.fire = 0
 	end

@@ -32,7 +32,7 @@ function refresh()
 	$create_control_block(-794, 56, 89, 2, "gold_block")
 	$create_control_block(-792, 56, 89, 3, "iron_block")
 	$create_control_block(-790, 56, 89, 4, "emerald_block")
-	
+
 	at @p
 		seg = 0
 		while seg < $NumSegments
@@ -57,20 +57,20 @@ function refresh()
 					end
 					@s.seg = seg
 					@s.piece = piece
-					
+
 					@s.nonstick = True
 				end
 			end
-			
+
 			as create @Marker
 				@s.seg = seg
 				@s.drx = -25000
 				@s.dry = 20000
-				
+
 				@s.nonstick = True
 			end
 		end
-		
+
 		as create @MiniBlock
 			/replaceitem entity @s armor.head white_banner
 			@s.claw_left = True
@@ -82,7 +82,7 @@ function refresh()
 			@s.nonstick = True
 		end
 	end
-	
+
 	@Physics.nonstick = True
 	@SolidBlock.nonstick = True
 	@Disguise.nonstick = True
@@ -103,10 +103,10 @@ function apply_rotation()
 			if @s.drx < -180000
 				@s.drx += 360000
 			end
-			
+
 			crx += @s.drx
 			cry += @s.dry
-			
+
 			local_ry = cry
 			local_rx = crx
 
@@ -130,7 +130,7 @@ function apply_rotation()
 					@s.rot_y = local_ry
 					@s.update()
 				end
-				
+
 				move @s ^ ^ ^0.6
 			end
 			<arm_pos> = @s.<pos>
@@ -140,10 +140,10 @@ end
 
 clock main
 	live = False
-	
+
 	apply_rotation()
 	basedist = tdist
-	
+
 	if @Entity[hooked, not drop]
 		@MiniBlock[claw_left].rot_x = 165000
 		@MiniBlock[claw_right].rot_x = 165000
@@ -154,7 +154,7 @@ clock main
 		@MiniBlock[claw_right].rot_x = 135000
 		@MiniBlock[claw_right].rot_y = 180000
 	end
-		
+
 	at @Marker[seg==$NumSegments]
 		@MiniBlock[claw_left].update()
 		@MiniBlock[claw_right].update()
@@ -168,15 +168,15 @@ clock main
 			end
 		end
 	end
-	
-	
+
+
 	@Entity[hooked, not drop, limit=1].<pos> = <arm_pos> - <0, 2000, 0>
 	/data merge entity @Entity[hooked, not drop, limit=1] {NoGravity:1b}
 	/data merge entity @Entity[hooked, drop, limit=1] {NoGravity:0b}
 
 	move @MiniBlock ~ ~ ~
 	move @Entity[hooked, not drop, limit=1] ~ ~ ~
-	
+
 	@Marker[seg==1].dry = (@Pushable[arm_control==1,limit=1].z * 20) % 360000 - 180000
 	@Marker[seg==2].drx = (@Pushable[arm_control==2,limit=1].z * 20 - 100000) % 360000 - 180000
 	@Marker[seg==3].dry = (@Pushable[arm_control==3,limit=1].z * 20) % 360000 - 180000
@@ -184,11 +184,11 @@ clock main
 
 	drop = False
 	/execute if block -787 56 91 redstone_lamp[lit=true] run scoreboard players set Global drop 1
-	
+
 	if drop
 		@Entity[hooked].drop = True
 	end
-	
+
 	as @Entity[hooked, drop] at @s unless @MiniBlock[claw_left,distance=..3]
 		@s.hooked = False
 		@s.drop = False

@@ -10,11 +10,11 @@ array Mapping[0 to $NumBlocks-1]
 
 reset
 	tell @a '[\[Start Randomizing\]](call start_randomizing)'
-	
+
 	for i = 0 to $NumBlocks-1
 		Mapping[i] = i
 	end
-	
+
 	for i = 0 to $NumBlocks-2
 		j = randint(i, $NumBlocks)
 		val1 = Mapping[i]
@@ -28,9 +28,9 @@ clock main
 	unless @Position do create @Position
 	doTileDrops = result
 		/gamerule doTileDrops
-		
+
 	/gamerule doTileDrops false
-	
+
 	as @Player at @s
 		if Randomize
 			if MidChunk
@@ -43,7 +43,7 @@ clock main
 			end
 		end
 	end
-	
+
 	if doTileDrops
 		/gamerule doTileDrops true
 	end
@@ -54,13 +54,13 @@ function find_fresh_chunk(x, z)
 	CenterZ = z / 16 * 16
 	SubX = 0
 	SubZ = 0
-	
-	for search_size = 0 to 15			
+
+	for search_size = 0 to 15
 		MinX = CenterX - search_size * 16
 		MaxX = CenterX + search_size * 16
 		MinZ = CenterZ - search_size * 16
 		MaxZ = CenterZ + search_size * 16
-		
+
 		for d = -search_size to search_size
 			ChunkX = MinX
 			ChunkZ = MinZ + d * 16
@@ -83,7 +83,7 @@ function find_fresh_chunk(x, z)
 					end
 				end
 			end
-			
+
 			if MidChunk
 				d = 1000
 			end

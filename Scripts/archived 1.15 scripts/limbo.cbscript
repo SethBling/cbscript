@@ -77,7 +77,7 @@ define @BoyPos : 0-0-0-0-0xB0110C (@Entity[type=area_effect_cloud])
 				}
 			}
 		]
-	}	
+	}
 end
 
 define @Boy : 0-0-0-0-0xB01 (@Entity[type=armor_stand])
@@ -101,13 +101,13 @@ function reload()
 	/kill @Boy
 
 	/tp @Player $ResetX $ResetY $ResetZ 90 0
-	
+
 	/kill @Vindicator
 	/kill @Creeper
 	/kill @Spider
 	create @Vindicator -259 86.0 148
 	create @Creeper -259 86 146
-	
+
 	dead_amount = 0
 	dead = False
 end
@@ -115,7 +115,7 @@ end
 clock main
 	unless @BoyPos do create @BoyPos $GameX 86 164.5
 	unless @BoyPhysics do create @BoyPhysics $GameX 86 164.5
-	
+
 	as @Entity[run]
 		@s.ry = 180000
 		move @s ~ ~ ~-0.4
@@ -123,12 +123,12 @@ clock main
 			/kill @s
 		end
 	end
-	
-	as @Player[limit=1] at @s				
+
+	as @Player[limit=1] at @s
 		at @s eyes
 			/particle minecraft:squid_ink ^ ^ ^0.15 3 3 3 0 3000 force
 		end
-		
+
 		if dead
 			if dead_amount < 100
 				dead_amount += 4
@@ -142,13 +142,13 @@ clock main
 				end
 			end
 			@BoyPhysics.vz /= 2
-				
+
 			if @s.z > @BoyPhysics.z + 200
 				@BoyPhysics.vz += 170
 				if @BoyPhysics.vz > 300
 					@BoyPhysics.vz = 300
 				end
-				
+
 				if running_amount < 100
 					running_amount += 10
 				end
@@ -157,7 +157,7 @@ clock main
 				if @BoyPhysics.vz < -300
 					@BoyPhysics.vz = -300
 				end
-				
+
 				if running_amount < 100
 					running_amount += 10
 				end
@@ -166,7 +166,7 @@ clock main
 					running_amount -= 10
 				end
 			end
-			
+
 			if @BoyPhysics.on_ground
 				if @BoyPhysics.vz > 0
 					@Boy.ry = 0
@@ -175,13 +175,13 @@ clock main
 					@Boy.ry = 180000
 				end
 			end
-		
+
 			at @BoyPos
 				if block ~ ~0.5 ~ death
 					dead = True
 				end
 			end
-					
+
 			if @BoyPos and @BoyPos.z < 154000
 				@Vindicator.run = True
 				@Creeper.run = True
@@ -195,25 +195,25 @@ clock main
 				z1 = @BoyPos.z
 				z2 = @s.z
 				y = @BoyPos.y
-				
+
 				if @BoyPos.z >= @s.z and @BoyPos.z <= @s.z + 5000 and @BoyPos.y >= 85000
 					dead = True
 				end
 			end
 		end
-		
+
 		as @Spider
 			if @s.z < 0
 				/kill @s
 			end
 		end
-		
+
 		at @BoyPhysics ~ ~-0.5 ~
 			/tp @BoyPos ~ ~ ~
 			@BoyPos.air = 0
 			@BoyPos.air = 1
 		end
-		
+
 		if @s.z < @BoyPhysics.z - 750
 			/setblock ~ ~ ~-1 barrier
 		else
@@ -225,9 +225,9 @@ clock main
 			/setblock ~ ~ ~1 air
 		end
 
-		
+
 		get_pose()
-		
+
 		@s.jumped = 0
 	end
 end
@@ -252,7 +252,7 @@ end
 function get_blended(slot)
 	temp_pose = running_pose(slot) * running_amount / 100
 	pose = (death_pose(slot) * dead_amount + temp_pose * (100 - dead_amount)) / 100
-	
+
 	return pose
 end
 

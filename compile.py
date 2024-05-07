@@ -10,8 +10,8 @@ import scriptparse
 import os
 
 if len(sys.argv) != 2:
-	print("You must include a script filename.")
-	exit()
+    print("You must include a script filename.")
+    exit()
 
 source = source_file.source_file(sys.argv[1])
 
@@ -22,9 +22,10 @@ script.try_to_compile()
 
 
 def run():
-	while True:
-		script.check_for_update()
-			
-		time.sleep(1)
-	
+    while True:
+        script.check_for_update()
+
+        time.sleep(1)
+
+
 run()

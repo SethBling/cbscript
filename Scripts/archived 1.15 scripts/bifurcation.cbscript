@@ -13,7 +13,7 @@ end
 
 reset
 	/kill @Branch
-	
+
 	tell @a "{G[\[Create Tree\]](call create_tree)"
 end
 
@@ -32,11 +32,11 @@ clock main
 	growth_clock++
 	if growth_clock >= 20
 		growth_clock = 0
-		
+
 		as @Branch
 			@s.radius += 200
 		end
-		
+
 		as @Branch[leaf]
 			@s.leaf = False
 			<growth> = (@s.<growth> + <0, 100, 0>) * 9 / 10
@@ -52,7 +52,7 @@ clock main
 				end
 			end
 		end
-		
+
 		as @Branch at @s
 			unless @Position do create @Position
 			for dx = -@s.radius to @s.radius by 200
@@ -75,6 +75,6 @@ clock main
 				end
 			end
 		end
-		
+
 	end
 end

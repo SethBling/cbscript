@@ -16,6 +16,6 @@ end
 
 clock main
 	as @Player[limit=1]
-		
+
 	end
 end

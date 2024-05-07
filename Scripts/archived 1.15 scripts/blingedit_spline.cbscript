@@ -52,7 +52,7 @@ define @Player = @Entity[type=player]
 							end
 						end
 					end
-					
+
 					for x = box_xmin to box_xmax
 						percent = (x - box_xmin) * 100 / (box_xmax - box_xmin)
 						/execute store result bossbar progress value run scoreboard players get Global percent
@@ -62,17 +62,17 @@ define @Player = @Entity[type=player]
 							weighted_y = 0
 							first = True
 							@s.<pos> = <x, box_ymin, z>
-							
+
 							at @s
 								as @Marker[control_point, sort=nearest, limit=10]
 									dx = @s.x - x
 									dz = @s.z - z
 									dist = dx^2+dz^2
-									
+
 									weight = 10000 / (10*dist + 1)
 									weighted_y += weight * (@s.height * 10 + 5)
 									total_weight += weight
-									
+
 									if first
 										first = False
 										nearest_dist = dist
@@ -85,13 +85,13 @@ define @Player = @Entity[type=player]
 										@s.closest = True
 									end
 								end
-								
+
 								@s.<pos> = @Marker[control_point, closest, limit=1].<pos>
 								@s.y = @Marker[control_point, closest, limit=1].height
 								at @s
 									/clone ~ ~ ~ ~ ~ ~ 0 1 0
 								end
-								
+
 								@s.<pos> = <x, (weighted_y / total_weight) / 10, z>
 								at @s
 									/clone 0 1 0 0 1 0 ~ ~ ~
@@ -99,7 +99,7 @@ define @Player = @Entity[type=player]
 							end
 						end
 					end
-					
+
 					/kill @Marker[control_point]
 					/kill @s
 				end

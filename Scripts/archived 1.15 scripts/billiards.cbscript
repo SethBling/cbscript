@@ -42,7 +42,7 @@ function create_balls()
 	]
 		$dx = $dx * 0.36
 		$dz = $dz * 0.36
-		
+
 		at ~$dx ~0.3 ~$dz
 			as create @MiniBlock
 				@s.billiard_ball = True
@@ -81,7 +81,7 @@ clock trigger
 			tell_buttons()
 		end
 	end
-	
+
 	@a.Billiards = 0
 	/scoreboard players enable @a Billiards
 end
@@ -92,7 +92,7 @@ function is_moving()
 		return False
 	else
 		return True
-	end	
+	end
 end
 
 clock main
@@ -105,13 +105,13 @@ clock main
 		@s.<v> = <vx, 0, vz>
 		/playsound block.wood.hit ambient @a ~ ~ ~ 1 2
 	end
-	
+
 	as @Arrow
 		if @s.in_ground
 			/kill @s
 		end
 	end
-	
+
 	for @ball in @Ball
 		@s.<v> *= 98
 		@s.<v> /= 100
@@ -123,12 +123,12 @@ clock main
 			z++
 		end
 		@s.<v> = <x, y, z>
-	
+
 		<v1> = @s.<v>
 		<pos1> = @s.<pos>
 		<x1, y1, z1> = <v1>
 		p1 = <v1>*<v1>
-		
+
 		at @s
 			while @Ball[distance=0.001..0.69, limit=1]
 				as @Ball[distance=0.001..0.69]
@@ -140,20 +140,20 @@ clock main
 			moving1 = is_moving()
 			if @s.y > 54590 as @Ball[distance=0.001..0.7]
 				moving2 = is_moving()
-				
+
 				if not moving1 and not moving2
 				else if @s.y > 54590
 					<v2> = @s.<v>
 					<x2, y2, z2> = <v2>
 					p2 = <v2>*<v2>
 					<pos2> = @s.<pos>
-					
+
 					@s.<v> -= (<v2>-<v1>)*(<pos2>-<pos1>)*(<pos2>-<pos1>)/((<pos2>-<pos1>)*(<pos2>-<pos1>))
 					@ball.<v> -= (<v1>-<v2>)*(<pos1>-<pos2>)*(<pos1>-<pos2>)/((<pos1>-<pos2>)*(<pos1>-<pos2>))
 					/playsound block.wood.hit ambient @a ~ ~ ~ 1 2
 				end
 			end
-			
+
 			for $dx, $dz in [
 				(0, 1),
 				(0, -1),
@@ -183,7 +183,7 @@ clock main
 				end
 			end
 		end
-		
+
 		at @s ~ ~1.2 ~
 			if block ~-0.3 ~-0.1 ~-0.3 air and block ~0.3 ~-0.5 ~-0.3 air and block ~-0.3 ~-0.5 ~0.3 air and block ~0.3 ~-0.5 ~0.3 air
 				@s.<v> -= <0, 80, 0>
@@ -192,7 +192,7 @@ clock main
 				@s.<v> = <x, 0, z>
 			end
 		end
-		
+
 		@s.<pos> += @s.<v>
 	end
 end

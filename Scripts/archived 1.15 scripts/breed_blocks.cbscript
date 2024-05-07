@@ -22,7 +22,7 @@ $Piston = 4
 $Mario = [
 	(0, 12),
 	(4, 12),
-	(12, 12), 
+	(12, 12),
 	(20, 8),
 	(24, 12),
 	(32, 15),
@@ -167,10 +167,10 @@ clock main
 			end
 		end
 	end
-	
+
 	for $i in $range($len($Blocks))
 		$breed_item = $Blocks[$i][1]
-		
+
 		for @pushable in @Pushable[breed_type == $i]
 			at @s
 				if @s.hop_cooldown > 0
@@ -199,8 +199,8 @@ clock main
 						/playsound minecraft:entity.slime.jump neutral @a
 					end
 				end
-				
-				
+
+
 				if @s.willing
 					at ~ ~1 ~
 						if @s.heart_cooldown > 0
@@ -221,18 +221,18 @@ clock main
 						sticky = False
 						@Pushable[willing, distance=0.1..1.2, breed_type == $i,limit=1].target = True
 					end
-					
+
 					as @Entity[target]
 						@s.willing = 0
 						@pushable.willing = 0
 						breed_type = @s.breed_type
 						as create @BabyBlock ~ 300 ~
 							$block_type, $breed_item, $particle = $Blocks[$i]
-							
+
 							@s.breed_type = $i
-							
+
 							/tp @s ~ ~ ~
-							
+
 							id = &@s
 							@s.tinyblock = create @TinyBlock
 							@s.sticky = sticky
@@ -245,12 +245,12 @@ clock main
 									/replaceitem entity @s weapon.mainhand $block_type
 								end
 							end
-							
+
 							/particle minecraft:$particle ~ ~ ~ 0.5 0.5 0.5 0.5 10 normal
 							/summon experience_orb
 							/summon experience_orb
 							/summon experience_orb
-						
+
 							if @s.breed_type == $NoteBlock
 								$num_songs = $len($Songs)
 								@s.song = rand(0, $num_songs)
@@ -276,7 +276,7 @@ clock main
 						@s.willing = 300
 					end
 				end
-				
+
 				@s.solidify++
 				if @s.solidify >= 100
 					unless @Position do create @Position
@@ -298,7 +298,7 @@ clock main
 								end
 							end
 						end
-						
+
 						as @SolidBlock[distance=..2]
 							@s.kill_me = True
 						end
@@ -311,7 +311,7 @@ clock main
 			end
 		end
 	end
-	
+
 	as @Slime unless @s[tag=BabyBlock] at @s
 		if success
 		/kill @e[type=item,nbt={Item:{id:"minecraft:iron_ingot"}},distance=..2]
@@ -327,14 +327,14 @@ clock main
 			@s.willing--
 		end
 	end
-	
+
 	/tp @SolidBlock[kill_me] ~ -200 ~
-	
+
 	as @BabyBlock at @s
 		switch @s.song
 			case $s in $range($len($Songs))
 				$song = $Songs[$s]
-				
+
 				for $note in $song
 					$t = $note[0]
 					$p = $note[1]
@@ -344,7 +344,7 @@ clock main
 				end
 			end
 		end
-	
+
 		@s.age++
 		/effect give @s invisibility 10 1 true
 		as @s.tinyblock

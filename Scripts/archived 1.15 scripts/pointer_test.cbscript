@@ -34,13 +34,13 @@ clock main
 			/say Marked snowball
 		end
 	end
-	
+
 	for @Current in @Snowball
 		as @s.tracker
 			/tp @s @Current
 		end
-	end	
-	
+	end
+
 	for @Current in @Snowmarker
 		tracking = False
 		as @s.snowball

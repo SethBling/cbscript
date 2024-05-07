@@ -12,8 +12,7 @@ clock main
 		if @s.y > @s.prev_y
 			tell @s "Going up!"
 		end
-		
+
 		@s.prev_y = @s.y
 	end
 end
-

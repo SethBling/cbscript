@@ -20,42 +20,42 @@ clock main
 #		/gamerule doTileDrops true
 #		/effect give @s night_vision 100 0 true
 #	end
-	
+
 	unless @Position do create @Position
-	
+
 	as @Player[gamemode=!spectator]
 		at @s eyes
 			/tp @Position ^ ^ ^
 		end
 		@Position.rx = @s.rx
 		@Position.ry = @s.ry
-		
+
 		<x1, y1, z1> = @Position.<pos>
-		
+
 		move @Position ^ ^ ^1
-		
+
 		<x2, y2, z2> = @Position.<pos>
 		<dx, dy, dz> = <x2, y2, z2> - <x1, y1, z1>
 		adx = abs(dx)
 		ady = abs(dy)
 		adz = abs(dz)
-		
+
 		at @s eyes
 			/tp @Position ^ ^ ^
 		end
-		
-		
+
+
 		for step = 1 to 100
 			<x, y, z> = @Position.<pos>
-			
+
 			distsq = ((x - x1)/100)^2 + ((y - y1)/100)^2 + ((z - z1)/100)^2
 			if distsq <= 28 * (scale / 100) * (scale / 100)
 				at @Position
 					mine_block()
 				end
-				
+
 				$Large = 1000000000
-			
+
 				if dx == 0
 					xcomp = $Large
 					x_dx = $Large
@@ -66,7 +66,7 @@ clock main
 					if dx < 0
 						xcomp -= scale + 1
 					end
-					
+
 					x_dx = xcomp
 					x_dy = xcomp * dy / dx
 					x_dz = xcomp * dz / dx
@@ -82,7 +82,7 @@ clock main
 					if dy < 0
 						ycomp -= scale + 1
 					end
-					
+
 					y_dx = ycomp * dx / dy
 					y_dy = ycomp
 					y_dz = ycomp * dz / dy
@@ -95,22 +95,22 @@ clock main
 					z_dz = $Large
 				else
 					zcomp = scale - z % scale
-					
+
 					if dz < 0
 						zcomp -= scale + 1
 					end
-					
+
 					z_dx = zcomp * dx / dz
 					z_dy = zcomp * dy / dz
 					z_dz = zcomp
 				end
-					
+
 				if debug_cursor
 					if @s.selected_slot + 1 == step
 						at @Position
 							/particle minecraft:bubble
 						end
-						
+
 						title @a 0 10 0 ""
 						ix = x / scale
 						fx = x % scale
@@ -122,7 +122,7 @@ clock main
 					end
 				end
 
-				
+
 				# Use the most sensitive axis to determine which dimension
 				# has the smallest step (since the step will always be largest
 				# along that axis)
@@ -144,7 +144,7 @@ function move_along_smallest(x_d, y_d, z_d)
 	x_ad = abs(x_d)
 	y_ad = abs(y_d)
 	z_ad = abs(z_d)
-	
+
 	if x_ad < y_ad and x_ad < z_ad
 		@Position.<pos> += <x_dx, x_dy, x_dz>
 	else if y_ad < z_ad

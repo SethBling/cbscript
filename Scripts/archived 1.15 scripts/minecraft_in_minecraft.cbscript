@@ -15,17 +15,17 @@ $screen_z_max = $screen_z
 
 define @Marker = @Entity[type=area_effect_cloud,name=Marker]
 	create: {"CustomName":"\"Marker\"", Duration:-1,Age:-2147483648,WaitTime:-2147483648}
-	
+
 	function move_to_coordinates()
 		rem = frame
 		y = rem / 128
 		rem %= 128
-		
+
 		z = rem - 64
-		
+
 		y *= 64000
 		z *= 1000
-		
+
 		@s.x = -64000
 		@s.y = y
 		@s.z = z
@@ -35,13 +35,13 @@ end
 define @Camera = @Entity[type=armor_stand, tag=Camera]
 	create: {Tags:["Camera"], Invulnerable:1b, NoBasePlate:0b}
 end
-	
+
 reset
 	/gamerule maxCommandChainLength 1000000000
 
 	/kill @Marker
 	/kill @Camera
-	
+
 	tell @a: {y\      [[look up](/function minecraft_in_minecraft:look_up)\]
 	tell @a: {y\[[look left](/function minecraft_in_minecraft:look_left)\] {y\[[look right](/function minecraft_in_minecraft:look_right)\]
 	tell @a: {y\      [[look down](/function minecraft_in_minecraft:look_down)\]
@@ -50,9 +50,9 @@ reset
 		create @Camera
 		/tp @Camera @s
 	end
-	
+
 	move_forward = False
-	
+
 	$background_z: screen_z + 1
 	/fill $screen_x $screen_y $background_z $screen_x_max $screen_y_max $background_z light_blue_concrete
 end
@@ -116,8 +116,8 @@ function ray_trace()
 		unless block ~ ~ ~ none
 			/clone ~ ~ ~ ~ ~ ~ 0 1 0
 		end
-			
-		if block ~ ~ ~ none 
+
+		if block ~ ~ ~ none
 			at ^ ^ ^1
 				ray_trace()
 			end
@@ -131,7 +131,7 @@ function get_converted_block()
 		/clone 0 1 0 0 1 0 0 3 0
 		handled = True
 	end
-	
+
 	if not handled
 		if block 0 1 0 lime_concrete
 			/setblock 0 3 0 lime_concrete
@@ -224,7 +224,7 @@ clock rendering
 	/gamerule sendCommandFeedback true
 
 	period--
-	
+
 	if move_forward
 		as @Camera at @s ^ ^ ^1
 			if @s.on_ground
@@ -236,27 +236,27 @@ clock rendering
 			end
 		end
 	end
-	
-	
+
+
 	if period <= 0
 		period = 15
 
-		
+
 		/fill $screen_x $screen_y $screen_z $screen_x_max $screen_y_max $screen_z_max air
-	
+
 		as @Camera at @s ~ ~1.6 ~ rotated @s
 			for $row in: range(height)
 				for $col in: range(width)
-				
+
 					$left: col - 23.5
 					$up: row - 23.5
 					step = 0
 					/setblock 0 1 0 barrier
 					/setblock 0 3 0 barrier
 					/execute facing ^$left ^$up ^30 run function minecraft_in_minecraft:ray_trace
-					
+
 					get_converted_block()
-					
+
 					$x: screen_x + col
 					$y: screen_y + row
 					$z: screen_z

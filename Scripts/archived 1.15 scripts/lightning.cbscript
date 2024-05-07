@@ -14,7 +14,7 @@ end
 clock main
 	as @Lightning
 		<x, y, z> = @s.<pos>
-		
+
 		tell @a '(x) (y) (z)'
 	end
 end

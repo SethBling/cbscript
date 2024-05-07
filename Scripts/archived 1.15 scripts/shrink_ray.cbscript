@@ -46,16 +46,16 @@ clock main
 		@p.shooting = True
 		/kill @s
 	end
-	
+
 	at @a[shooting]
 		create @Source
 		/tp @Source @p
-		
+
 		create @Dest
 		/tp @Dest @p
-		
+
 		move @Dest ~ ~1.6 ~
-		
+
 		step = 0
 		while step < 200
 			step++
@@ -65,21 +65,21 @@ clock main
 				/particle minecraft:end_rod ^ ^ ^5 0.25 0.25 0.25 0 5 force @a
 			end
 		end
-		
+
 		if step < 300
 			/kill @Source
 			/kill @Dest
 		end
-		
+
 		if @Dest
-			/playsound 
+			/playsound
 		end
-		
+
 		at @Dest ~-8 ~-8 ~-8 do create @Scanner
 		destx = @Dest[limit=1].x
 		desty = @Dest[limit=1].y
 		destz = @Dest[limit=1].z
-		
+
 		as @Scanner
 			/execute at @s align xyz run tp @s ~ ~ ~
 			x = 0
@@ -119,26 +119,26 @@ clock main
 			sumz += @s.z
 			count++
 		end
-		
+
 		@Mini[not calc].avex = sumx / count
 		@Mini[not calc].avey = sumy / count
 		@Mini[not calc].avez = sumz / count
-		
+
 		@Mini.calc = True
-		
+
 		@a.shooting = False
 		/kill @Scanner
 		/kill @Source
 		/kill @Dest
 		pitch = 0
 	end
-	
+
 	if @Mini[not miniature]
 		i=0
 		convert = count / 80 + 1
 		while i < convert
 			i++
-			as @Mini[not miniature, sort=random, limit=1]	
+			as @Mini[not miniature, sort=random, limit=1]
 				at @s ~-0.5625 ~0.375 ~-0.125
 					for $bl in: blocks
 						/execute if block ~ ~ ~ $bl run replaceitem entity @s weapon.mainhand $bl
@@ -154,7 +154,7 @@ clock main
 			end
 		end
 	end
-	
+
 	unless @Mini[not miniature]
 		i = 0
 		while i < convert
@@ -165,23 +165,23 @@ clock main
 				dx = @s.x - @s.avex
 				dy = @s.y - @s.avey
 				dz = @s.z - @s.avez
-				
+
 				dx = dx * 6 / 16
 				dz = dz * 6 / 16
 				dy = dy * 6 / 16
-				
+
 				@s.x = @s.avex + dx
 				@s.y = @s.avey + dy
 				@s.z = @s.avez + dz
 
-				move @s ~ ~ ~		
-				
+				move @s ~ ~ ~
+
 				@s.finalized = True
 			end
 			i++
 		end
 	end
-	
+
 	if @Mini[not miniature]
 		pitch++
 		for $p in: range(90)
@@ -199,7 +199,7 @@ clock main
 			end
 		end
 	end
-	
+
 	unless @Mini[not miniature] if @Mini[not finalized]
 		pitch--
 		for $p in: range(90)

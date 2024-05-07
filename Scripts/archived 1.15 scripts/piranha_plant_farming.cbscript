@@ -13,11 +13,11 @@ $BigHead	= 5
 
 define @Plant : @Entity[type=area_effect_cloud, tag=PiranhaPlant]
 	create {Tags:["PiranhaPlant"], Duration:-1,Age:-2147483648,WaitTime:-2147483648}
-	
+
 	array stalk[0 to 7]
 	array miniblocks[0 to 11]
 	array mouth[0 to 5]
-	
+
 	function kill()
 		for $i in $range(8)
 			as @s.stalk[$i]
@@ -45,7 +45,7 @@ end
 
 reset
 	/scoreboard objectives add plant_wheat minecraft.used:minecraft.wheat_seeds
-	
+
 	tell @a '{G[\[Give Piranha Plant Seed\]](call give_seed)'
 end
 
@@ -73,9 +73,9 @@ clock main
 			@s.holding_seed = False
 		end
 	end
-	
+
 	@Player.plant_wheat = 0
-	
+
 	as @Plant at @s
 		stage = -1
 		for $i in $range(8)
@@ -190,7 +190,7 @@ clock main
 						end
 					end
 				end
-				
+
 				for $i in $range(6)
 					id = &@s
 					as @s.mouth[$i]
@@ -226,22 +226,22 @@ clock main
 			if stage == 7
 				@s.anim_timer = 0
 			end
-			
+
 			@s.current_stage = stage
 		end
 		if stage == 7
 			update_anim_timer()
-			
+
 			if @s.shoot_fire
 				if @s.anim_timer == 80
 					spawn_fireball()
 				end
-				
+
 				if @s.anim_timer == 100
 					spawn_fireball()
 				end
 			end
-			
+
 			if @s.eat_time > 0
 				@s.eat_time--
 			end
@@ -255,9 +255,9 @@ clock main
 			end
 		end
 	end
-	
-	
-				
+
+
+
 	as @Entity[type=armor_stand]
 		if @s.type == $Mouth
 			update_anim_timer()
@@ -271,7 +271,7 @@ clock main
 					@s.dy += 120
 				end
 			end
-			
+
 			@s.fire = 10
 			switch @s.anim_timer % 15
 				case 0 to 6
@@ -284,19 +284,19 @@ clock main
 				end
 			end
 		end
-		
+
 		if @s.type == $Stalk and @s.segment >= 4 and @s.stage == 7
 			update_anim_timer()
 			@s.fire = 10
 			small_updown()
 		end
-		
+
 		if @s.type == $Leaf and @s.stage == 7
 			update_anim_timer()
 			@s.fire = 10
 			small_updown()
 		end
-	
+
 		if @s.type == $BigHead
 			update_anim_timer()
 			@s.fire = 10
@@ -312,7 +312,7 @@ clock main
 			end
 		end
 	end
-	
+
 	as @Fireball at @s
 		/effect give @s invisibility 10 0 true
 		kill = False
@@ -324,7 +324,7 @@ clock main
 		end
 		@s.vx = @s.dx
 		@s.vz = @s.dz
-		
+
 		at ~ ~-1 ~ if @Player[distance=..1.2]
 			/effect give @Player[distance=..1.2] instant_damage 1 0 true
 			kill = True
@@ -339,7 +339,7 @@ clock main
 			/kill @s
 		end
 	end
-	
+
 	for @seeds in @Entity[type=item,nbt={Item:{id:"minecraft:wheat_seeds", Count:1b}}]
 		at @s unless @s[nbt={Item:{tag:{piranha:1b}}}] as @Entity[type=item,nbt={Item:{id:"minecraft:mushroom_stew",Count:1b}},distance=..0.5,limit=1] at @s
 			/kill @s

@@ -19,7 +19,7 @@ end
 define @Frame = @Entity[type=item_frame]
 	map = Item.tag.map int 1
 	silent = Silent byte 1
-end	
+end
 
 reset
 	/kill @Marker
@@ -34,7 +34,7 @@ function setup()
 	tell @s: Running setup. This may take several minutes...
 	/setworldspawn 0 201 0
 	/tp @s 0 201 3
-	
+
 	for $cx in: range(-3, 10)
 		for $cz in: range(-10, 10)
 			$xmin: cx*8
@@ -77,7 +77,7 @@ clock recording
 					@s.frame = @player.frame
 				end
 			end
-			
+
 			as @Marker if @s.owner == @player._id
 				@s.age++
 			end
@@ -98,8 +98,8 @@ function ray_trace()
 		unless block ~ ~ ~ none
 			/clone ~ ~ ~ ~ ~ ~ 0 1 0
 		end
-			
-		if block ~ ~ ~ none 
+
+		if block ~ ~ ~ none
 			at ^ ^ ^1
 				ray_trace()
 			end
@@ -233,10 +233,10 @@ clock rendering
 					end
 				end
 
-				
+
 				/kill @Pixel
 			end
-			
+
 			/kill @s
 		end
 
@@ -258,7 +258,7 @@ clock playing
 	for @player in @a[playing]
 		@s.frame++
 		frame = @s.frame
-		
+
 		if @s.frame == @s.end_frame
 			@s.playing = False
 			tell @s: {GDone playing!

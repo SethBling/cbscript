@@ -2,28 +2,28 @@ import common
 
 define @MiniBlock: @Entity[type=armor_stand,tag=MiniBlock]
 	create {Tags:["MiniBlock"], Pose:{Head:[0.0001f,0f,0f]}, Marker:1b, Invisible:1b, NoGravity:1b, Invulnerable:1b, Silent:1b}
-	
+
 	pose_rot_x: Pose.Head[0] float
 	pose_rot_y: Pose.Head[1] float
-	
+
 	function update()
 		at ~ ~-1.7 ~
 			/tp @s ~ ~ ~
 		end
-		
+
 		/data merge entity @s {Pose:{Head:[0.0001f,0.0001f,0.0001f]}}
 		@s.pose_rot_x = @s.rot_x
 		@s.pose_rot_y = @s.rot_y
-		
+
 		move @s ^ ^0.287 ^
 		@s.rx = @s.rot_x
 		@s.ry = @s.rot_y
 		move @s ^ ^-0.287 ^
-		
-		/data merge entity @s {Fire:32767s}	
-		
+
+		/data merge entity @s {Fire:32767s}
+
 		at @s rotated @s
 			/tp @s ~ ~ ~ 0 0
 		end
-	end	
+	end
 end

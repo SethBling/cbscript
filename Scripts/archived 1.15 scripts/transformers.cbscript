@@ -9,15 +9,15 @@ define @TransformerBlockPos : @Entity[type=armor_stand, tag=TransformerBlockPos]
 		y_axis = True
 		z_axis = True
 		blocked = False
-		
+
 		<x, y, z> = @s.<pos>
 		<dest_x, dest_y, dest_z> = @s.<dest>
-		
+
 		/tp @Position @s
-		
+
 		@s.check_axis_blocked(rand(3))
 		@s.<stop1> = <stop>
-		
+
 		r = rand(2)
 		if r == 0
 			if x_axis
@@ -38,7 +38,7 @@ define @TransformerBlockPos : @Entity[type=armor_stand, tag=TransformerBlockPos]
 		end
 		@s.check_axis_blocked(axis)
 		@s.<stop2> = <stop>
-		
+
 		if x_axis
 			axis = 0
 		else if y_axis
@@ -47,7 +47,7 @@ define @TransformerBlockPos : @Entity[type=armor_stand, tag=TransformerBlockPos]
 			axis = 2
 		end
 		@s.check_axis_blocked(axis)
-		
+
 		if not blocked
 			@s.stops = 2
 		end
@@ -93,10 +93,10 @@ define @TransformerBlockPos : @Entity[type=armor_stand, tag=TransformerBlockPos]
 				end
 			end
 		end
-		
+
 		<stop> = <x, y, z>
 	end
-	
+
 	function check_blocked()
 		at @s
 			if @TransformerBlockPos[distance=..0.01] then blocked = True
@@ -117,15 +117,15 @@ end
 
 reset
 	/gamerule maxCommandChainLength 1000000000
-	
+
 	/scoreboard objectives add use_transformer minecraft.used:minecraft.carrot_on_a_stick
-	
+
 	unless anim_ticks > 0
 		anim_ticks = 1
 	end
-	
+
 	tell @a 'Loaded Transformers by SethBling'
-	
+
 	tell @a '[\[Animate 1->2\]](call animate12)'
 	tell @a 'Animation Speed: [\[Slow\]](call slow) [\[Fast\]](call fast)'
 end
@@ -152,9 +152,9 @@ end
 
 function trigger_animation(id1, id2)
 	@BlockMarker.matched = False
-	
+
 	as @BlockMarker if @s.structure_id == id1 at @s
-		block_id = @s.block_id 
+		block_id = @s.block_id
 		matched = False
 		as @BlockMarker[not matched, sort=random]
 			dummy = 0
@@ -164,19 +164,19 @@ function trigger_animation(id1, id2)
 				<delta> = @s.<delta>
 			end
 		end
-		
-		
+
+
 		@Position.<pos> = <center1> + @s.<delta> + <500, 0, 500>
 		at @Position
 			create_transformer_block(block_id)
 			/setblock ~ ~ ~ air
 		end
-		
+
 		as @NewTransformerBlock
 			p = &@s
 			/tag @s remove NewTransformerBlock
 		end
-		
+
 		as @NewTransformerBlockPos
 			@s.<dest> = <center1> + <delta> + <500, 0, 500>
 			@s.block_id = block_id
@@ -189,7 +189,7 @@ end
 
 clock main
 	unless @Position do create @Position
-	
+
 	as @Player at @s
 		if @s[nbt={"SelectedItem":{tag:{display:{Name:"{\"text\":\"Transformer\"}"}}}}] and @s.use_transformer
 			steps = 0
@@ -203,10 +203,10 @@ clock main
 				end
 			end
 		end
-		
+
 		@s.use_transformer = 0
 	end
-	
+
 	init_timer++
 	if init_timer >= anim_ticks
 		init_timer = 0
@@ -224,7 +224,7 @@ clock main
 					end
 				end
 			end
-			
+
 			if not succeeded
 				as @TransformerBlockPos[not initiated,sort=random,limit=1]
 					@s.initiated = True
@@ -234,14 +234,14 @@ clock main
 			end
 		end
 	end
-	
-	
+
+
 	as @TransformerBlockPos[initiated] at @s
 		$AnimationTimeSteps = 8
 		@s.age++
-		
+
 		stop = (@s.age+($AnimationTimeSteps-1)) / $AnimationTimeSteps
-		
+
 		if stop > @s.stops
 			<dest> = @s.<dest>
 		else if stop == 1
@@ -249,7 +249,7 @@ clock main
 		else if stop == 2
 			<dest> = @s.<stop2>
 		end
-		
+
 		if @s.age % $AnimationTimeSteps == 0
 			@s.<pos> = <dest>
 			if stop > @s.stops
@@ -263,7 +263,7 @@ clock main
 			end
 		end
 	end
-	
+
 	as @TransformerBlock
 		@s.time = 1
 		if @s.kill
@@ -276,7 +276,7 @@ function finish_animation()
 	at @s
 		set_block(@s.block_id)
 	end
-	
+
 	as @s.trans_block
 		@s.kill = True
 		/kill @s
@@ -290,7 +290,7 @@ function compute_center()
 	ymin = 0
 	first = True
 	count = 0
-	
+
 	as @BlockMarker if @s.structure_id == structure_id
 		<x, y, z> = @s.<pos>
 		if first
@@ -305,11 +305,11 @@ function compute_center()
 		sz += z
 		count++
 	end
-	
+
 	cx = sx / count / 1000 * 1000
 	cz = sz / count / 1000 * 1000
 	<center> = <cx, ymin, cz>
-	
+
 	as @BlockMarker if @s.structure_id == structure_id
 		@s.<delta> = @s.<pos> - <center>
 	end
@@ -319,20 +319,20 @@ function select_structure()
 	tell @a 'Mapping structure...'
 	block_count = 0
 	structure_id++
-	
+
 	map_structure_recursive()
-	
+
 	@BlockMarker.counted = False
 	matching = True
 	# Check that each block has a matching block in structure_1
 	as @BlockMarker
 		dummy = 0
-	
+
 		# Only continue if it's matching
 		if matching and @s.structure_id == structure_id
 			matched = False
 			id = @s.block_id
-			
+
 			# Find a matching uncounted block in structure_1
 			as @BlockMarker[not counted]
 				# Do not continue if there was a match already
@@ -344,27 +344,27 @@ function select_structure()
 					end
 				end
 			end
-			
+
 			if not matched
 				matching = False
 			end
 		end
 	end
-	
+
 	# Check that there are no remaining blocks in structure_1
 	as @BlockMarker[not counted] if @s.structure_id == structure_1
 		matching = False
 	end
-	
+
 	compute_center()
 	if matching
 		structure_2 = structure_id
 		<center2> = <center>
 		<min2> = <xmin, ymin, zmin>
 		<max2> = <xmax, ymax, zmax>
-		
+
 		get_combined_bounding_box()
-		
+
 		anim_ready = True
 		tell @a 'Structure matches!'
 		tell @a '[\[Animate 1->2\]](call animate12)'
@@ -376,7 +376,7 @@ function select_structure()
 		<max1> = <xmax, ymax, zmax>
 		anim_ready = False
 	end
-	
+
 	@BlockMarker.keep = False
 	as @BlockMarker if @s.structure_id == structure_1
 		@s.keep = True
@@ -385,13 +385,13 @@ function select_structure()
 		@s.keep = True
 	end
 	/kill @BlockMarker[not keep]
-	
+
 	tell @a 'Blocks: (block_count)'
 	if block_count > 0
 		<xmin, ymin, zmin> /= 1000
 		<xmax, ymax, zmax> /= 1000
 	end
-	
+
 	@BlockMarker.counted = False
 	as @BlockMarker
 		dummy = 0
@@ -413,7 +413,7 @@ function get_combined_bounding_box()
 	<dxmax1, dymax1, dzmax1> = <max1> - <center1>
 	<dxmin2, dymin2, dzmin2> = <min2> - <center2>
 	<dxmax2, dymax2, dzmax2> = <max2> - <center2>
-	
+
 	if dxmin1 < dxmin2
 		dxmin = dxmin1
 	else
@@ -429,7 +429,7 @@ function get_combined_bounding_box()
 	else
 		dzmin = dzmin2
 	end
-	
+
 	if dxmax1 < dxmax2
 		dxmax = dxmax1
 	else
@@ -482,7 +482,7 @@ function map_structure_recursive()
 			end
 		end
 		block_count++
-		
+
 		for $delta in [
 			(0, 0, 1),
 			(0, 0, -1),
@@ -501,7 +501,7 @@ end
 function create_transformer_block(id)
 	switch block id
 		default
-			/summon armor_stand ~ ~ ~ {Tags:["TransformerBlockPos", "NewTransformerBlockPos"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"falling_block", Time:1b, NoGravity:1b, BlockState:{$falling_block_nbt}, Tags:["TransformerBlock","NewTransformerBlock"]}]}			
+			/summon armor_stand ~ ~ ~ {Tags:["TransformerBlockPos", "NewTransformerBlockPos"], Marker:1b, Invisible:1b, Invulnerable:1b, NoGravity:1b, Passengers:[{id:"falling_block", Time:1b, NoGravity:1b, BlockState:{$falling_block_nbt}, Tags:["TransformerBlock","NewTransformerBlock"]}]}
 		end
 	end
 end

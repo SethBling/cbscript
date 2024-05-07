@@ -11,56 +11,56 @@ $Half = 500
 $Billion = 1000000000
 reset
     unless @Position do create @Position
-    
+
     do_reset = True
 end
 
 function do_reset()
     initialize_transforms()
-    
+
     /team add red
     /team add green
-    
+
     /team modify red color dark_purple
     /team modify green color aqua
 
     CubeSize = 1500
     CubeInvMass = 800
     CubeInvRotInt = 200
-    
+
     if block 0 54 0 sandstone
         destroy_colliders()
-        
+
         for axis = 0 to 14
             with
                 $(block_name) = "chain_command_block"
             add_collider(x1 + axis * 6000, y1 + 58000, z1)
-            
+
             with
                 $(block_name) = "repeating_command_block"
             add_collider(x2 + axis * 6000, y2 + 58000, z2)
         end
-        
+
         for axis = 0 to 14
             with
                 $(block_name) = "cyan_stained_glass"
             add_collider(x1 + axis * 6000, y1 + 58000, z1)
-            
+
             with
                 $(block_name) = "purple_stained_glass"
             add_collider(x2 + axis * 6000, y2 + 58000, z2)
         end
 
-        
+
         pair = 1
         init_cubes()
-    
+
         as @PhysicsBlock
-            /data modify entity @s interpolation_duration set value 0            
-            
+            /data modify entity @s interpolation_duration set value 0
+
             if @s.collider_id <= 30
                 @s.glowing = True
-                
+
                 if @s.collider_id % 2 == 0
                     /team join red
                 else
@@ -68,9 +68,9 @@ function do_reset()
                 end
             end
         end
-        
+
         tell_options()
-    
+
         do_reset = False
     end
 end
@@ -88,7 +88,7 @@ function prev_pair()
     init_cubes()
     tell_options()
 end
-        
+
 function next_pair()
     pair++
     if pair > $MaxPair
@@ -104,7 +104,7 @@ function init_cubes()
         i1 = 1000
         j1 = 700
         k1 = 500
-        
+
         x1 = 0
         y1 = 0
         z1 = -1000
@@ -113,18 +113,18 @@ function init_cubes()
         i2 = 800
         j2 = 200
         k2 = 600
-        
+
         x2 = 0
         y2 = 0
         z2 = 1100
     end
-    
+
     if pair == 2
         w1 = 500
         i1 = 1000
         j1 = 700
         k1 = 500
-        
+
         x1 = 0
         y1 = 0
         z1 = -900
@@ -133,18 +133,18 @@ function init_cubes()
         i2 = 800
         j2 = 200
         k2 = 600
-        
+
         x2 = 0
         y2 = 0
         z2 = 1050
     end
-    
+
     if pair == 3
         w1 = 500
         i1 = 1000
         j1 = 700
         k1 = 500
-        
+
         x1 = 0
         y1 = 0
         z1 = -925
@@ -153,7 +153,7 @@ function init_cubes()
         i2 = 800
         j2 = 200
         k2 = 600
-        
+
         x2 = 0
         y2 = 0
         z2 = 1075
@@ -164,7 +164,7 @@ function init_cubes()
         i1 = 3000
         j1 = 700
         k1 = 700
-        
+
         x1 = 700
         y1 = 0
         z1 = -700
@@ -173,14 +173,14 @@ function init_cubes()
         i2 = 800
         j2 = 1000
         k2 = 200
-        
+
         x2 = 0
         y2 = 0
         z2 = 1050
     end
-    
+
     define name collider = "collider_$(collider)"
-    
+
     for axis = 0 to 14
         with
             $(collider) = axis * 2 + 1
@@ -189,10 +189,10 @@ function init_cubes()
             collider.y = y1 + 58000
             collider.z = z1
             collider_set_orientation(w1, i1, j1, k1) with macros
-            
+
             collider_calculate_vertex_world_positions() with macros
         end
-        
+
         with
             $(collider) = axis * 2 + 2
         do
@@ -211,10 +211,10 @@ function init_cubes()
             collider.y = y1 + 58000
             collider.z = z1
             collider_set_orientation(w1, i1, j1, k1) with macros
-            
+
             collider_calculate_vertex_world_positions() with macros
         end
-        
+
         with
             $(collider) = axis * 2 + 2 + 30
         do
@@ -226,12 +226,12 @@ function init_cubes()
             collider_calculate_vertex_world_positions() with macros
         end
     end
-    
+
     with
         $(collider1) = 1
         $(collider2) = 2
-    get_axes()   
-    
+    get_axes()
+
     scale_amount = 1500
 end
 
@@ -241,9 +241,9 @@ clock tick
     end
 
     colliders_finalize_tick()
-    
+
     scale_amount -= 20
-    
+
     if scale_amount < -500
         scale_amount = 1500
     end
@@ -253,11 +253,11 @@ clock tick
     if amount > 1000
         amount = 1000
     end
-    
+
     if amount < 20
         amount = 20
     end
-    
+
     get_scaling_transforms(amount)
 end
 
@@ -266,13 +266,13 @@ function get_axes()
     define name axis_1 = "axis_$(axis_1)"
     define name collider_axis_2 = "collider_$(collider2)_a$(axis_1)"
     define name axis_2 = "axis_$(axis_2)"
-    
+
     for axis = 0 to 2
         with
             $(axis_1) = axis
             $(axis_2) = axis+3
         do
-            
+
             axis_1.x = collider_axis_1.x
             axis_1.y = collider_axis_1.y
             axis_1.z = collider_axis_1.z
@@ -280,7 +280,7 @@ function get_axes()
             axis_2.x = collider_axis_2.x
             axis_2.y = collider_axis_2.y
             axis_2.z = collider_axis_2.z
-            
+
             for axis_2 = 0 to 2
                 with
                     $(axis_1) = axis
@@ -289,17 +289,17 @@ function get_axes()
                 do
                     define name collider_axis_2 = "collider_$(collider2)_a$(axis_2)"
                     define name axis = "axis_$(axis)"
-                    
+
                     x = (collider_axis_1.y * collider_axis_2.z - collider_axis_1.z * collider_axis_2.y) / $Precision
                     y = (collider_axis_1.z * collider_axis_2.x - collider_axis_1.x * collider_axis_2.z) / $Precision
                     z = (collider_axis_1.x * collider_axis_2.y - collider_axis_1.y * collider_axis_2.x) / $Precision
-                    
+
                     s = sqrt(x*x + y*y + z*z)
-                    
+
                     x = x * $Precision / s
                     y = y * $Precision / s
                     z = z * $Precision / s
-                    
+
                     axis.x = x
                     axis.y = y
                     axis.z = z
@@ -319,26 +319,26 @@ function get_scaling_transforms(amount)
             ny = axis.y
             nz = axis.z
         end
-        
+
         nxx = nx * nx / $Precision
         nxy = nx * ny / $Precision
         nxz = nx * nz / $Precision
         nyy = ny * ny / $Precision
         nyz = ny * nz / $Precision
         nzz = nz * nz / $Precision
-        
+
         with
             $(collider1) = axis*2 + 1
             $(collider2) = axis*2 + 2
         do
             define name collider1 = "collider_$(collider1)"
             define name collider2 = "collider_$(collider2)"
-            
+
             ox = (collider1.x + collider2.x) / 2
             oy = (collider1.y + collider2.y) / 2
             oz = (collider1.z + collider2.z) / 2
         end
-        
+
         scale_00 = $Precision + ((amount - $Precision) * ($Precision - nxx)) / $Precision
         scale_01 = (-(amount - $Precision) * nxy) / $Precision
         scale_02 = (-(amount - $Precision) * nxz) / $Precision
@@ -348,11 +348,11 @@ function get_scaling_transforms(amount)
         scale_20 = (-(amount - $Precision) * nxz) / $Precision
         scale_21 = (-(amount - $Precision) * nyz) / $Precision
         scale_22 = $Precision + ((amount - $Precision) * ($Precision - nzz)) / $Precision
-        
+
         with
             $(collider) = axis*2 + 1
         collider_multiply_transform()
-        
+
         with
             $(collider) = axis*2 + 2
         collider_multiply_transform()
@@ -361,7 +361,7 @@ end
 
 function collider_multiply_transform()
     define name collider = "collider_$(collider)"
-    
+
     id = collider.id
     size = collider.size
 
@@ -376,13 +376,13 @@ function collider_multiply_transform()
             t_20 = collider.t20
             t_21 = collider.t21
             t_22 = collider.t22
-            
+
             with
                 $(m1) = "Global scale"
                 $(m2) = "Global t"
                 $(out) = "Global new_t"
             matrix_multiply()
-            
+
             dcx = @s.x - ox
             dcy = @s.y - oy
             dcz = @s.z - oz
@@ -393,9 +393,9 @@ function collider_multiply_transform()
             dpx = px - @s.x
             dpy = py - @s.y
             dpz = pz - @s.z
-            
+
             interp = ($Precision - amount)
-            
+
             /data modify storage $namespace:global transformation set value [1f,0f,0f,0f,0f,1f,0f,0f,0f,0f,1f,0f,0f,0f,0f,1f]
             d00 = new_t_00 * size / $Precision
             d01 = new_t_01 * size / $Precision
@@ -416,7 +416,7 @@ function collider_multiply_transform()
                 $downscale = 1.0 / $Precision
                 /execute store result storage $namespace:global transformation[$idx] float $downscale run scoreboard players get Global $var
             end
-    
+
             #@s.x = collider.x
             #@s.y = collider.y
             #@s.z = collider.z
