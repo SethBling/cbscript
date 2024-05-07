@@ -144,6 +144,18 @@ function add_collider(x, y, z)
     end
 end
 
+function add_sphere(x, y, z)
+    id = get_unused_collider_id()
+
+    with
+        $(collider) = id
+    create_collider(x, y, z, CubeSize, CubeInvMass, CubeInvRotInt, $Sphere)
+    
+    unless id <= max_collider
+        max_collider = id
+    end
+end
+
 function get_unused_collider_id()
     for collider = 1 to max_collider+1
         with
@@ -194,6 +206,8 @@ function save_state()
 
             if collider.id
                 save_state.id = collider.id
+
+                save_state.shape = collider.shape
 
                 save_state.x = collider.x
                 save_state.y = collider.y
@@ -287,7 +301,7 @@ function load_state()
             define name save_state = "save_state_collider_$(collider)"
 
             if save_state.id
-                create_collider(save_state.x, save_state.y, save_state.z, save_state.size, save_state.inv_mass, save_state.inv_rot_int) with macros
+                create_collider(save_state.x, save_state.y, save_state.z, save_state.size, save_state.inv_mass, save_state.inv_rot_int, save_state.shape) with macros
 
                 collider.velocity_x = save_state.velocity_x
                 collider.velocity_y = save_state.velocity_y

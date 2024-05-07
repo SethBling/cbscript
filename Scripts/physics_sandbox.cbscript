@@ -28,7 +28,7 @@ reset
     CubeInvMass = 800
     CubeInvRotInt = 400
 
-    tell @a "Physics: {C[\[Load State\]](/function $namespace:load_state) {R[\[Destroy All Colliders\]](/function $namespace:destroy_colliders)"
+    tell_options()
 end
 
 clock tick
@@ -118,11 +118,17 @@ clock tick
             z = @Position.z
         end
 
-        with
-            $(block_name) = "command_block"
-        add_collider(x, y, z)
+        if mode == $Sphere
+            with
+                $(block_name) = "target"
+            add_sphere(x, y, z)
+        else
+            with
+                $(block_name) = "target"
+            add_collider(x, y, z)
+        end
 
-        tell @a "Physics: {C[\[Load State\]](/function $namespace:load_state) {R[\[Destroy All Colliders\]](/function $namespace:destroy_colliders)"
+        tell_options()
     end
 
     colliders_physics_tick()
@@ -146,4 +152,18 @@ clock tick
             end
         end
     end
+end
+
+function tell_options()
+    tell @a "Physics: {C[\[Load State\]](/function $namespace:load_state) {R[\[Destroy All Colliders\]](/function $namespace:destroy_colliders) {Y[\[Cubes\]](/function $namespace:cube_mode) {y[\[Spheres\]](/function $namespace:sphere_mode)"
+end
+
+function cube_mode()
+    mode = $Cube
+    tell @a "New colliders will be {Ycubes{-."
+end
+
+function sphere_mode()
+    mode = $Sphere
+    tell @a "New colliders will be {yspheres{-."
 end
