@@ -1818,9 +1818,11 @@ def p_advancement_definition(p):
 
 #### Loot Tables
 def p_loot_table_type(p):
-	'''loot_table_type : block'''
+	'''loot_table_type : block
+                        |   entity'''
 	types = {
 		'block': 'blocks',
+		'entity': 'entities',
 	}
 	if p[1] not in types:
 		raise SyntaxError(f'Invalid loot table type "{p[1]}" at line {p.lineno(1)}.')
