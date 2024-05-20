@@ -58,13 +58,13 @@ def formatJsonText(func, text):
 							target = storage_parts[0]
 						formatted = formatted + f',{{"nbt":"{storage_parts[1]}","storage":"{target}"}}'
 					else:
-						formatted = formatted + f',{{"score":{{"name":"Global","objective":"{parts[0]}"{getPropertiesText(properties)}}}}}'
+						formatted = formatted + f',{{"score":{{"name":"Global","objective":"}}{parts[0]}"{getPropertiesText(properties)}}}'
 				if len(parts) == 2:
 					name = parts[0]
 					name_def = func.get_name_definition(parts[0])
 					if name_def:
 						name = name_def
-					formatted = formatted + f',{{"score":{{"name":"{name}","objective":"{parts[1]}"{getPropertiesText(properties)}}}}}'
+					formatted = formatted + f',{{"score":{{"name":"{name}","objective":"{parts[1]}"}}{parts[0]}"{getPropertiesText(properties)}}}'
 			elif command == None:
 				formatted = formatted + f',{{"text":"{0}"{1}}}'.format(unformatted.replace('"', '\\"'), getPropertiesText(properties))
 			else:
