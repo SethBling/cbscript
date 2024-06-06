@@ -5,7 +5,7 @@ import re
 
 '''
 {C for color
-{#FFFFFF for custom hex color
+{#FFFFFF for a custom hex color
 {U for underline, {u to exit underline, same for {D bold, {S strikethrough and {I italic
 {- to clear formatting
 [text](command) for a command click event
@@ -128,7 +128,6 @@ def parseTextFormatting(text):
 	properties = {"color": None, "bold": False, "underlined": False, "italic": False, "strikethrough": False}
 	
 	hex_char_regex = re.compile("[A-Fa-f0-9]", re.IGNORECASE)
-	color_string = ""
 
 	for ch in text:
 		if ch == "\\" and not escaped:
@@ -185,22 +184,22 @@ def parseTextFormatting(text):
 			else:
 				seg = seg + ch
 		elif mode == CUSTOM_COLOR:
-			if len(color_string) < 6:
+			if len(seg) < 6:
 				if hex_char_regex.match(ch) is None:
 					raise CompileError(f'Unexpected hex color character {{{ch} in tell command')
 				
-				color_string += ch
+				seg += ch
 			else:
-				color_string += ch
-				properties["color"] = color_string
-				color_string = ""
+				seg += ch
+				properties["color"] = seg
+				seg = ""
 				mode = NONE
 		elif mode == PROPERTY:
 			if ch in COLORS:
 				properties["color"] = COLORS[ch]
 			elif ch == "#":
 				mode = CUSTOM_COLOR
-				color_string += "#"
+				seg += "#"
 			elif ch == "-":
 				properties["color"] = None
 				properties["bold"] = False
