@@ -13,7 +13,7 @@ class selector_id_var(var_base):
 		func.register_objective('_unique')
 		func.register_objective('_id')
 		func.add_command('scoreboard players add Global _unique 1')
-		func.add_command(f'execute unless score {self.selector} _id matches 1.. run scoreboard players operation {0} _id = Global _unique')
+		func.add_command(f'execute unless score {self.selector} _id matches 1.. run scoreboard players operation {self.selector} _id = Global _unique')
 		
 	# Returns a scoreboard objective for this variable.
 	# If assignto isn't None, then this function may
